@@ -1,0 +1,47 @@
+{
+  "brand": {
+    "name": "EngConnect"
+  },
+  "auth": {
+    "login": {
+      "title": "Chào mừng trở lại! Vui lòng đăng nhập vào tài khoản của bạn.",
+      "email": "Email",
+      "emailPlaceholder": "ban@example.com",
+      "password": "Mật khẩu",
+      "passwordPlaceholder": "Nhập mật khẩu của bạn",
+      "rememberMe": "Ghi nhớ đăng nhập",
+      "forgotPassword": "Quên mật khẩu?",
+      "loginButton": "Đăng nhập",
+      "orLoginWith": "đăng nhập",
+      "noAccount": "Chưa có tài khoản?",
+      "signUp": "Đăng ký"
+    },
+    "register": {
+      "title": "Tạo Tài Khoản",
+      "subtitle": "Tham gia cùng hàng nghìn người học và gia sư trên toàn thế giới",
+      "joinAs": "Tôi muốn tham gia với vai trò:",
+      "student": "Học viên",
+      "tutor": "Gia sư",
+      "fullName": "Họ và tên",
+      "fullNamePlaceholder": "Nguyễn Văn A",
+      "email": "Email",
+      "emailPlaceholder": "ban@example.com",
+      "password": "Mật khẩu",
+      "passwordPlaceholder": "Tối thiểu 8 ký tự",
+      "confirmPassword": "Xác nhận mật khẩu",
+      "confirmPasswordPlaceholder": "Nhập lại mật khẩu",
+      "agreeToTerms": "Tôi đồng ý với",
+      "termsAndConditions": "Điều khoản và Điều kiện",
+      "and": "và",
+      "privacyPolicy": "Chính sách Bảo mật",
+      "createAccountButton": "Tạo tài khoản",
+      "orSignUpWith": "đăng ký",
+      "haveAccount": "Đã có tài khoản?",
+      "signIn": "Đăng nhập"
+    },
+    "social": {
+      "google": "Google",
+      "facebook": "Facebook"
+    }
+  }
+}
