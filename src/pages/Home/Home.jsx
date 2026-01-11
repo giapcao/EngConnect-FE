@@ -120,13 +120,6 @@ const Home = () => {
     },
   ];
 
-  const stats = [
-    { value: "10K+", label: "Active Students" },
-    { value: "500+", label: "Expert Tutors" },
-    { value: "50K+", label: "Lessons Completed" },
-    { value: "4.9", label: "Average Rating" },
-  ];
-
   // Auto-rotate testimonials
   useEffect(() => {
     const interval = setInterval(() => {
@@ -139,31 +132,38 @@ const Home = () => {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
-      transition: { staggerChildren: 0.1 },
+      transition: { staggerChildren: 0.2, delayChildren: 0.1 },
     },
   };
 
   const itemVariants = {
     hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.6 },
+    },
   };
 
   return (
     <div
       className="min-h-screen"
-      style={{ backgroundColor: colors.background.page }}
+      style={{ backgroundColor: colors.background.light }}
     >
       <Header />
 
       {/* Hero Section */}
-      <section className="py-16 px-6 md:px-12">
+      <section
+        className="py-16 px-6 md:px-12"
+        style={{ backgroundColor: colors.background.page }}
+      >
         <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             {/* Left Content */}
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5 }}
+              transition={{ duration: 0.8 }}
             >
               <span
                 className="inline-block px-4 py-2 rounded-full text-sm font-medium mb-6"
@@ -182,8 +182,7 @@ const Home = () => {
                 Master English with{" "}
                 <span style={{ color: colors.primary.main }}>
                   Expert Tutors
-                </span>{" "}
-                Worldwide
+                </span>
               </h1>
 
               <p
@@ -210,13 +209,12 @@ const Home = () => {
                   Start Learning Free
                 </Button>
                 <Button
-                  variant="bordered"
                   size="lg"
                   radius="full"
                   className="font-semibold text-lg px-8 h-14"
                   style={{
-                    borderColor: colors.border.medium,
-                    color: colors.text.primary,
+                    backgroundColor: colors.primary.lightest,
+                    color: colors.text.main,
                   }}
                 >
                   Watch Demo
@@ -272,7 +270,7 @@ const Home = () => {
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
+              transition={{ duration: 0.8, delay: 0.3 }}
               className="hidden lg:block"
             >
               <img
@@ -285,51 +283,17 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Stats Section */}
-      <section
-        className="py-16 border-y"
-        style={{
-          backgroundColor: colors.background.light,
-          borderColor: colors.border.light,
-        }}
-      >
-        <div className="max-w-7xl mx-auto px-6 md:px-12">
-          <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            className="grid grid-cols-2 md:grid-cols-4 gap-8"
-          >
-            {stats.map((stat) => (
-              <motion.div
-                key={stat.label}
-                variants={itemVariants}
-                className="text-center"
-              >
-                <div
-                  className="text-3xl sm:text-4xl font-bold mb-2"
-                  style={{ color: colors.primary.main }}
-                >
-                  {stat.value}
-                </div>
-                <div style={{ color: colors.text.secondary }}>{stat.label}</div>
-              </motion.div>
-            ))}
-          </motion.div>
-        </div>
-      </section>
-
       {/* Features Section */}
       <section
         className="py-20 px-6 md:px-12"
-        style={{ backgroundColor: colors.background.page }}
+        style={{ backgroundColor: colors.background.gray }}
       >
         <div className="max-w-7xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
+            transition={{ duration: 0.7 }}
             className="text-center mb-16"
           >
             <h2
@@ -358,10 +322,9 @@ const Home = () => {
             {features.map((feature) => (
               <motion.div key={feature.title} variants={itemVariants}>
                 <Card
-                  className="h-full border hover:border-primary transition-colors"
+                  className="h-full hover:border-primary transition-colors shadow-none"
                   style={{
                     backgroundColor: colors.background.light,
-                    borderColor: colors.border.light,
                   }}
                 >
                   <CardBody className="p-6">
@@ -403,6 +366,7 @@ const Home = () => {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
+            transition={{ duration: 0.7 }}
             className="text-center mb-16"
           >
             <h2
@@ -493,13 +457,14 @@ const Home = () => {
       {/* Featured Tutors Section */}
       <section
         className="py-20 px-6 md:px-12"
-        style={{ backgroundColor: colors.background.page }}
+        style={{ backgroundColor: colors.background.gray }}
       >
         <div className="max-w-7xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
+            transition={{ duration: 0.7 }}
             className="text-center mb-16"
           >
             <h2
@@ -552,10 +517,9 @@ const Home = () => {
             ].map((tutor) => (
               <motion.div key={tutor.name} variants={itemVariants}>
                 <Card
-                  className="border overflow-hidden"
+                  className="overflow-hidden shadow-none"
                   style={{
                     backgroundColor: colors.background.light,
-                    borderColor: colors.border.light,
                   }}
                 >
                   <CardBody className="p-0">
@@ -621,7 +585,8 @@ const Home = () => {
               className="font-semibold px-8"
               style={{
                 borderColor: colors.primary.main,
-                color: colors.primary.main,
+                backgroundColor: colors.primary.main,
+                color: colors.text.white,
               }}
               endContent={<ArrowRight className="w-5 h-5" />}
             >
@@ -641,6 +606,7 @@ const Home = () => {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
+            transition={{ duration: 0.7 }}
             className="text-center mb-16"
           >
             <h2
@@ -667,13 +633,13 @@ const Home = () => {
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
-                  transition={{ delay: index * 0.1 }}
+                  transition={{ duration: 0.6, delay: index * 0.15 }}
                   className="flex-shrink-0 w-80"
                 >
                   <Card
-                    className="h-full border"
+                    className="h-full shadow-none"
                     style={{
-                      backgroundColor: colors.background.page,
+                      backgroundColor: colors.background.gray,
                       borderColor: colors.border.light,
                     }}
                   >
@@ -752,6 +718,7 @@ const Home = () => {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
+            transition={{ duration: 0.7 }}
           >
             <h2
               className="text-3xl sm:text-4xl font-bold mb-6"
@@ -778,19 +745,6 @@ const Home = () => {
                 onPress={() => navigate("/register")}
               >
                 Get Started Free
-              </Button>
-              <Button
-                variant="bordered"
-                size="lg"
-                radius="full"
-                className="font-semibold text-lg px-10 h-14"
-                style={{
-                  borderColor: colors.text.white,
-                  color: colors.text.white,
-                }}
-                onPress={() => navigate("/login")}
-              >
-                Sign In
               </Button>
             </div>
           </motion.div>

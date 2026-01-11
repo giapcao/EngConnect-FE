@@ -2,11 +2,15 @@ import React, { useState } from "react";
 import { Input, Button, Link, Checkbox } from "@heroui/react";
 import { Eye, EyeOff } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import * as MotionLib from "framer-motion";
 import BrandLogo from "../../../components/Authentication/BrandLogo";
 import SocialLogin from "../../../components/Authentication/SocialLogin";
 import colors from "../../../constants/colors";
 import illustrationImage from "../../../assets/images/Saly-1.png";
 import "./Login.css";
+
+// eslint-disable-next-line no-unused-vars
+const { motion } = MotionLib;
 
 const Login = () => {
   const navigate = useNavigate();
@@ -35,11 +39,21 @@ const Login = () => {
   return (
     <div className="login-container">
       <div className="login-content">
-        <div className="login-illustration">
+        <motion.div
+          className="login-illustration"
+          initial={{ opacity: 0, x: -50 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.8 }}
+        >
           <img src={illustrationImage} alt="Student illustration" />
-        </div>
+        </motion.div>
 
-        <div className="login-form-wrapper">
+        <motion.div
+          className="login-form-wrapper"
+          initial={{ opacity: 0, x: 50 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.8, delay: 0.2 }}
+        >
           <div className="login-header">
             <BrandLogo />
 
@@ -165,7 +179,7 @@ const Login = () => {
               Sign up
             </Link>
           </div>
-        </div>
+        </motion.div>
       </div>
     </div>
   );

@@ -14,6 +14,8 @@ import {
   BookOpen,
   Star,
   MoveRight,
+  Phone,
+  MapPin,
 } from "lucide-react";
 import { colors } from "../../constants/colors";
 
@@ -121,28 +123,6 @@ const Footer = () => {
                 native tutors and achieve fluency with AI-powered tools.
               </p>
 
-              {/* Quick Stats */}
-              <div className="flex gap-6">
-                {[
-                  { icon: Users, label: "10K+ Students" },
-                  { icon: BookOpen, label: "500+ Tutors" },
-                  { icon: Star, label: "4.9 Rating" },
-                ].map((stat) => (
-                  <div key={stat.label} className="flex items-center gap-1.5">
-                    <stat.icon
-                      className="w-4 h-4"
-                      style={{ color: colors.primary.main }}
-                    />
-                    <span
-                      className="text-xs font-medium"
-                      style={{ color: colors.text.secondary }}
-                    >
-                      {stat.label}
-                    </span>
-                  </div>
-                ))}
-              </div>
-
               {/* Newsletter */}
               <div>
                 <p
@@ -154,14 +134,14 @@ const Footer = () => {
                 <form onSubmit={handleSubscribe} className="flex gap-2">
                   <Input
                     type="email"
-                    placeholder="your@email.com"
+                    placeholder="Email address..."
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     size="sm"
                     radius="lg"
                     className="flex-1"
                     classNames={{
-                      inputWrapper: "border h-10",
+                      inputWrapper: "h-10",
                     }}
                     startContent={
                       <Mail
@@ -193,10 +173,14 @@ const Footer = () => {
                 {Object.entries(footerLinks).map(([title, links]) => (
                   <div key={title}>
                     <h4
-                      className="text-xs font-semibold uppercase tracking-wider mb-4"
+                      className="text-sm font-bold uppercase tracking-wider mb-4 pb-2 relative inline-block"
                       style={{ color: colors.text.primary }}
                     >
                       {title}
+                      <span
+                        className="absolute bottom-0 left-0 h-0.5 w-1/2"
+                        style={{ backgroundColor: colors.primary.main }}
+                      />
                     </h4>
                     <ul className="space-y-2.5">
                       {links.map((link) => (
@@ -215,10 +199,14 @@ const Footer = () => {
             {/* Social Column */}
             <div className="lg:col-span-3">
               <h4
-                className="text-xs font-semibold uppercase tracking-wider mb-4"
+                className="text-sm font-bold uppercase tracking-wider mb-4 pb-2 relative inline-block"
                 style={{ color: colors.text.primary }}
               >
                 Follow Us
+                <span
+                  className="absolute bottom-0 left-0 h-0.5 w-1/2"
+                  style={{ backgroundColor: colors.primary.main }}
+                />
               </h4>
               <div className="flex gap-3">
                 {socialLinks.map((social) => (
@@ -228,7 +216,7 @@ const Footer = () => {
                     aria-label={social.label}
                     className="w-11 h-11 rounded-lg flex items-center justify-center transition-all duration-200 hover:scale-110"
                     style={{
-                      backgroundColor: colors.background.page,
+                      backgroundColor: colors.background.input,
                       color: colors.text.secondary,
                     }}
                   >
@@ -237,21 +225,57 @@ const Footer = () => {
                 ))}
               </div>
 
-              {/* Contact Email */}
+              {/* Contact Information */}
               <div className="mt-6">
                 <p
-                  className="text-sm font-semibold uppercase tracking-wider mb-2"
+                  className="text-sm font-bold uppercase tracking-wider mb-3 pb-2 relative inline-block"
                   style={{ color: colors.text.primary }}
                 >
                   Contact
+                  <span
+                    className="absolute bottom-0 left-0 h-0.5 w-1/2"
+                    style={{ backgroundColor: colors.primary.main }}
+                  />
                 </p>
-                <a
-                  href="mailto:hello@engconnect.com"
-                  className="text-base hover:underline transition-colors"
-                  style={{ color: colors.primary.main }}
-                >
-                  hello@engconnect.com
-                </a>
+                <div className="flex flex-wrap gap-6">
+                  {/* Email */}
+                  <a
+                    href="mailto:hello@engconnect.com"
+                    className="flex items-center gap-2 text-sm hover:underline transition-colors"
+                    style={{ color: colors.text.secondary }}
+                  >
+                    <Mail
+                      className="w-4 h-4"
+                      style={{ color: colors.primary.main }}
+                    />
+                    <span>hello@engconnect.com</span>
+                  </a>
+
+                  {/* Hotline */}
+                  <a
+                    href="tel:+84123456789"
+                    className="flex items-center gap-2 text-sm hover:underline transition-colors"
+                    style={{ color: colors.text.secondary }}
+                  >
+                    <Phone
+                      className="w-4 h-4"
+                      style={{ color: colors.primary.main }}
+                    />
+                    <span>+84 123 456 789</span>
+                  </a>
+
+                  {/* Address */}
+                  <div
+                    className="flex items-center gap-2 text-sm"
+                    style={{ color: colors.text.secondary }}
+                  >
+                    <MapPin
+                      className="w-4 h-4 flex-shrink-0"
+                      style={{ color: colors.primary.main }}
+                    />
+                    <span>7Đ. D1, Long Thạnh Mỹ, Thủ Đức, TP.HCM</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -263,7 +287,7 @@ const Footer = () => {
         className="border-t"
         style={{
           borderColor: colors.border.light,
-          backgroundColor: colors.background.page,
+          backgroundColor: colors.background.gray,
         }}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">

@@ -1,11 +1,15 @@
 import React, { useState } from "react";
 import { Input, Button, Link, Checkbox } from "@heroui/react";
 import { useNavigate } from "react-router-dom";
+import * as MotionLib from "framer-motion";
 import BrandLogo from "../../../components/Authentication/BrandLogo";
 import SocialLogin from "../../../components/Authentication/SocialLogin";
 import colors from "../../../constants/colors";
 import illustrationImage from "../../../assets/images/Saly-10.png";
 import "./Register.css";
+
+// eslint-disable-next-line no-unused-vars
+const { motion } = MotionLib;
 
 const Register = () => {
   const navigate = useNavigate();
@@ -42,11 +46,21 @@ const Register = () => {
   return (
     <div className="register-container">
       <div className="register-content">
-        <div className="register-illustration">
+        <motion.div
+          className="register-illustration"
+          initial={{ opacity: 0, x: -50 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.8 }}
+        >
           <img src={illustrationImage} alt="Student illustration" />
-        </div>
+        </motion.div>
 
-        <div className="register-form-wrapper">
+        <motion.div
+          className="register-form-wrapper"
+          initial={{ opacity: 0, x: 50 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.8, delay: 0.2 }}
+        >
           <div className="register-header">
             <BrandLogo />
 
@@ -253,7 +267,7 @@ const Register = () => {
               Sign in
             </Link>
           </div>
-        </div>
+        </motion.div>
       </div>
     </div>
   );

@@ -1,8 +1,11 @@
+import { main } from "framer-motion/client";
+
 export const colors = {
   // Primary colors
   primary: {
     main: '#3B82F6',      
-    light: '#60A5FA',     
+    light: '#60A5FA',
+    lightest: '#E7EFFD',     
     dark: '#2563EB',     
     hover: '#2563EB',
     accent: '#4A90E2',
@@ -24,6 +27,7 @@ export const colors = {
 
   // Text colors
   text: {
+    main: '#3B82F6',
     primary: '#111827',
     heading: '#1B2128',
     dark: '#1D2026',
