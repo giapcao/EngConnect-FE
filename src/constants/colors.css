@@ -25,6 +25,10 @@
   --color-border-medium: #D1D5DB;
   --color-border-dark: #9CA3AF;
 
+  /* Button colors */
+  --color-button-primary-light-bg: #E7EFFD;
+  --color-button-primary-light-text: #3B82F6;
+
   /* State colors */
   --color-state-error: #EF4444;
   --color-state-success: #10B981;
@@ -62,6 +66,10 @@
   --color-border-light: #334155;
   --color-border-medium: #475569;
   --color-border-dark: #64748B;
+
+  /* Button colors */
+  --color-button-primary-light-bg: rgba(96, 165, 250, 0.2);
+  --color-button-primary-light-text: #93C5FD;
 
   /* State colors */
   --color-state-error: #F87171;

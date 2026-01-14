@@ -17,28 +17,33 @@ import {
   Phone,
   MapPin,
 } from "lucide-react";
-import { colors } from "../../constants/colors";
+import { useTranslation } from "react-i18next";
+import { useThemeColors } from "../../hooks/useThemeColors";
+import { useTheme } from "../../contexts/ThemeContext";
 
 const Footer = () => {
   const [email, setEmail] = useState("");
+  const { t } = useTranslation();
+  const colors = useThemeColors();
+  const { theme } = useTheme();
 
   const footerLinks = {
     learn: [
-      { name: "Find Tutors", href: "/tutors" },
-      { name: "Browse Courses", href: "/courses" },
-      { name: "Pricing", href: "/pricing" },
-      { name: "How It Works", href: "/how-it-works" },
+      { name: t("footer.learn.findTutors"), href: "/tutors" },
+      { name: t("footer.learn.browseCourses"), href: "/courses" },
+      { name: t("footer.learn.pricing"), href: "/pricing" },
+      { name: t("footer.learn.howItWorks"), href: "/how-it-works" },
     ],
     company: [
-      { name: "About", href: "/about" },
-      { name: "Blog", href: "/blog" },
-      { name: "Contact", href: "/contact" },
+      { name: t("footer.company.about"), href: "/about" },
+      { name: t("footer.company.blog"), href: "/blog" },
+      { name: t("footer.company.contact"), href: "/contact" },
     ],
     support: [
-      { name: "Help Center", href: "/help" },
-      { name: "Community", href: "/community" },
-      { name: "Become a Tutor", href: "/teach" },
-      { name: "FAQs", href: "/faqs" },
+      { name: t("footer.support.helpCenter"), href: "/help" },
+      { name: t("footer.support.community"), href: "/community" },
+      { name: t("footer.support.becomeATutor"), href: "/teach" },
+      { name: t("footer.support.faqs"), href: "/faqs" },
     ],
   };
 
@@ -119,34 +124,41 @@ const Footer = () => {
                 className="text-base leading-relaxed max-w-xs"
                 style={{ color: colors.text.secondary }}
               >
-                The #1 platform for personalized English learning. Connect with
-                native tutors and achieve fluency with AI-powered tools.
+                {t("footer.brand.description")}
               </p>
 
               {/* Newsletter */}
               <div>
                 <p
                   className="text-sm font-medium mb-3"
-                  style={{ color: colors.text.primary }}
+                  style={{ color: colors.text.secondary, fontWeight: "600" }}
                 >
-                  Subscribe to our newsletter
+                  {t("footer.newsletter.title")}
                 </p>
                 <form onSubmit={handleSubscribe} className="flex gap-2">
                   <Input
                     type="email"
-                    placeholder="Email address..."
+                    placeholder={t("footer.newsletter.placeholder")}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     size="sm"
                     radius="lg"
                     className="flex-1"
                     classNames={{
-                      inputWrapper: "h-10",
+                      inputWrapper: `h-10 !transition-colors !duration-200 ${
+                        theme === "dark"
+                          ? "!bg-gray-800 !border-gray-700 hover:!bg-gray-700 data-[hover=true]:!bg-gray-700 group-data-[focus=true]:!bg-gray-800"
+                          : "hover:bg-gray-50"
+                      }`,
+                      input:
+                        theme === "dark"
+                          ? "!text-gray-200 placeholder:!text-gray-500"
+                          : "",
                     }}
                     startContent={
                       <Mail
-                        className="w-4 h-4"
-                        style={{ color: colors.text.secondary }}
+                        className="w-5 h-5 ml-2"
+                        style={{ color: colors.text.tertiary }}
                       />
                     }
                   />
@@ -202,7 +214,7 @@ const Footer = () => {
                 className="text-sm font-bold uppercase tracking-wider mb-4 pb-2 relative inline-block"
                 style={{ color: colors.text.primary }}
               >
-                Follow Us
+                {t("footer.social.title")}
                 <span
                   className="absolute bottom-0 left-0 h-0.5 w-1/2"
                   style={{ backgroundColor: colors.primary.main }}
@@ -231,7 +243,7 @@ const Footer = () => {
                   className="text-sm font-bold uppercase tracking-wider mb-3 pb-2 relative inline-block"
                   style={{ color: colors.text.primary }}
                 >
-                  Contact
+                  {t("footer.contact.title")}
                   <span
                     className="absolute bottom-0 left-0 h-0.5 w-1/2"
                     style={{ backgroundColor: colors.primary.main }}
@@ -293,18 +305,23 @@ const Footer = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
             <p className="text-xs" style={{ color: colors.text.secondary }}>
-              © {new Date().getFullYear()} EngConnect. All rights reserved.
+              © {new Date().getFullYear()} EngConnect.{" "}
+              {t("footer.bottom.rights")}
             </p>
 
             <div className="flex items-center gap-4">
-              {["Privacy", "Terms", "Cookies"].map((item) => (
+              {[
+                { key: "privacy", label: t("footer.bottom.privacy") },
+                { key: "terms", label: t("footer.bottom.terms") },
+                { key: "cookies", label: t("footer.bottom.cookies") },
+              ].map((item) => (
                 <Link
-                  key={item}
-                  href={`/${item.toLowerCase()}`}
+                  key={item.key}
+                  href={`/${item.key}`}
                   className="text-xs transition-colors duration-200 hover:underline"
                   style={{ color: colors.text.secondary }}
                 >
-                  {item}
+                  {item.label}
                 </Link>
               ))}
             </div>
@@ -320,7 +337,7 @@ const Footer = () => {
                 className="text-xs"
                 style={{ color: colors.text.secondary }}
               >
-                Made in Vietnam
+                {t("footer.bottom.madeIn")}
               </span>
             </div>
           </div>

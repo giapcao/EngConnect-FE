@@ -1,10 +1,17 @@
 import { useTranslation } from "react-i18next";
-import { Button } from "@heroui/react";
-import { Globe } from "lucide-react";
-import colors from "../../constants/colors";
+import {
+  Button,
+  Dropdown,
+  DropdownTrigger,
+  DropdownMenu,
+  DropdownItem,
+} from "@heroui/react";
+import { Globe, ChevronDown } from "lucide-react";
+import { useThemeColors } from "../../hooks/useThemeColors";
 
 const LanguageSwitcher = () => {
   const { i18n } = useTranslation();
+  const colors = useThemeColors();
 
   const changeLanguage = (lng) => {
     i18n.changeLanguage(lng);
@@ -13,42 +20,58 @@ const LanguageSwitcher = () => {
 
   const currentLanguage = i18n.language;
 
+  const languages = [
+    { key: "en", label: "English", short: "EN" },
+    { key: "vi", label: "Tiếng Việt", short: "VI" },
+  ];
+
+  const currentLang =
+    languages.find((lang) => lang.key === currentLanguage) || languages[0];
+
   return (
-    <div className="flex items-center gap-2">
-      <Globe className="w-4 h-4" style={{ color: colors.text.secondary }} />
-      <Button
-        size="sm"
-        variant={currentLanguage === "en" ? "solid" : "light"}
-        onClick={() => changeLanguage("en")}
-        className="min-w-unit-12"
+    <Dropdown>
+      <DropdownTrigger>
+        <Button
+          variant="flat"
+          size="sm"
+          className="font-medium"
+          startContent={<Globe className="w-4 h-4" />}
+          endContent={<ChevronDown className="w-3.5 h-3.5" />}
+          style={{
+            color: colors.text.secondary,
+            backgroundColor: colors.background.gray,
+          }}
+        >
+          {currentLang.short}
+        </Button>
+      </DropdownTrigger>
+      <DropdownMenu
+        aria-label="Language selection"
+        selectedKeys={[currentLanguage]}
+        selectionMode="single"
+        onSelectionChange={(keys) => {
+          const selectedKey = Array.from(keys)[0];
+          changeLanguage(selectedKey);
+        }}
         style={{
-          backgroundColor:
-            currentLanguage === "en" ? colors.primary.main : "transparent",
-          color:
-            currentLanguage === "en"
-              ? colors.text.white
-              : colors.text.secondary,
+          backgroundColor: colors.background.card,
         }}
       >
-        EN
-      </Button>
-      <Button
-        size="sm"
-        variant={currentLanguage === "vi" ? "solid" : "light"}
-        onClick={() => changeLanguage("vi")}
-        className="min-w-unit-12"
-        style={{
-          backgroundColor:
-            currentLanguage === "vi" ? colors.primary.main : "transparent",
-          color:
-            currentLanguage === "vi"
-              ? colors.text.white
-              : colors.text.secondary,
-        }}
-      >
-        VI
-      </Button>
-    </div>
+        {languages.map((lang) => (
+          <DropdownItem
+            key={lang.key}
+            style={{
+              color:
+                currentLanguage === lang.key
+                  ? colors.primary.main
+                  : colors.text.primary,
+            }}
+          >
+            {lang.label}
+          </DropdownItem>
+        ))}
+      </DropdownMenu>
+    </Dropdown>
   );
 };
 

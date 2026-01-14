@@ -1,5 +1,3 @@
-import { main } from "framer-motion/client";
-
 export const colors = {
   // Primary colors
   primary: {
@@ -45,6 +43,14 @@ export const colors = {
     dark: '#9CA3AF',      
   },
 
+  // Button colors
+  button: {
+    primaryLight: {
+      background: '#E7EFFD',
+      text: '#3B82F6',
+    },
+  },
+
   // State colors
   state: {
     error: '#EF4444',     
@@ -64,6 +70,7 @@ export const primaryColors = colors.primary;
 export const backgroundColors = colors.background;
 export const textColors = colors.text;
 export const borderColors = colors.border;
+export const buttonColors = colors.button;
 export const stateColors = colors.state;
 export const socialColors = colors.social;
 

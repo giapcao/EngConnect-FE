@@ -1,10 +1,12 @@
 import React, { useState } from "react";
-import { Input, Button, Link, Checkbox } from "@heroui/react";
+import { Input, Button, Link, Checkbox, Image } from "@heroui/react";
 import { useNavigate } from "react-router-dom";
 import * as MotionLib from "framer-motion";
+import { useTranslation } from "react-i18next";
 import BrandLogo from "../../../components/Authentication/BrandLogo";
 import SocialLogin from "../../../components/Authentication/SocialLogin";
-import colors from "../../../constants/colors";
+import { useThemeColors } from "../../../hooks/useThemeColors";
+import { useTheme } from "../../../contexts/ThemeContext";
 import illustrationImage from "../../../assets/images/Saly-10.png";
 import "./Register.css";
 
@@ -13,6 +15,9 @@ const { motion } = MotionLib;
 
 const Register = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
+  const colors = useThemeColors();
+  const { theme } = useTheme();
   const [userType, setUserType] = useState("Student");
   const [agreeToTerms, setAgreeToTerms] = useState(false);
   const [formData, setFormData] = useState({
@@ -44,7 +49,10 @@ const Register = () => {
   };
 
   return (
-    <div className="register-container">
+    <div
+      className="register-container"
+      style={{ backgroundColor: colors.background.light }}
+    >
       <div className="register-content">
         <motion.div
           className="register-illustration"
@@ -52,7 +60,7 @@ const Register = () => {
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.8 }}
         >
-          <img src={illustrationImage} alt="Student illustration" />
+          <Image src={illustrationImage} alt="Student illustration" />
         </motion.div>
 
         <motion.div
@@ -68,17 +76,20 @@ const Register = () => {
               className="text-center mb-6"
               style={{ color: colors.text.secondary }}
             >
-              Join thousands of learners and tutors worldwide
+              {t("auth.register.subtitle")}
             </p>
           </div>
-          <div className="register-card">
+          <div
+            className="register-card"
+            style={{ backgroundColor: colors.background.light }}
+          >
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
                 <label
-                  className="block text-base font-medium mb-3"
+                  className="block text-sm font-medium mb-3"
                   style={{ color: colors.text.primary }}
                 >
-                  I want to join as:
+                  {t("auth.register.joinAs")}
                 </label>
                 <div className="flex gap-4">
                   <Button
@@ -97,7 +108,7 @@ const Register = () => {
                     }}
                     onClick={() => setUserType("Student")}
                   >
-                    Student
+                    {t("auth.register.student")}
                   </Button>
                   <Button
                     type="button"
@@ -115,7 +126,7 @@ const Register = () => {
                     }}
                     onClick={() => setUserType("Tutor")}
                   >
-                    Tutor
+                    {t("auth.register.tutor")}
                   </Button>
                 </div>
               </div>
@@ -123,40 +134,60 @@ const Register = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label
-                    className="block text-base font-medium mb-2"
+                    className="block text-sm font-medium mb-2"
                     style={{ color: colors.text.primary }}
                   >
-                    Full Name
+                    {t("auth.register.fullName")}
                   </label>
                   <Input
                     type="text"
                     name="fullName"
-                    placeholder="Full name"
+                    placeholder={t("auth.register.fullNamePlaceholder")}
                     value={formData.fullName}
                     onChange={handleChange}
                     variant="flat"
                     size="lg"
-                    style={{ backgroundColor: colors.background.input }}
+                    classNames={{
+                      inputWrapper: `!transition-colors !duration-200 ${
+                        theme === "dark"
+                          ? "!bg-gray-800 !border-gray-700 hover:!bg-gray-700 data-[hover=true]:!bg-gray-700 group-data-[focus=true]:!bg-gray-800"
+                          : "hover:bg-gray-50"
+                      }`,
+                      input:
+                        theme === "dark"
+                          ? "!text-gray-200 placeholder:!text-gray-500"
+                          : "",
+                    }}
                     required
                   />
                 </div>
 
                 <div>
                   <label
-                    className="block text-base font-medium mb-2"
+                    className="block text-sm font-medium mb-2"
                     style={{ color: colors.text.primary }}
                   >
-                    Email
+                    {t("auth.register.email")}
                   </label>
                   <Input
                     type="email"
                     name="email"
-                    placeholder="Email address"
+                    placeholder={t("auth.register.emailPlaceholder")}
                     value={formData.email}
                     onChange={handleChange}
                     variant="flat"
                     size="lg"
-                    style={{ backgroundColor: colors.background.input }}
+                    classNames={{
+                      inputWrapper: `!transition-colors !duration-200 ${
+                        theme === "dark"
+                          ? "!bg-gray-800 !border-gray-700 hover:!bg-gray-700 data-[hover=true]:!bg-gray-700 group-data-[focus=true]:!bg-gray-800"
+                          : "hover:bg-gray-50"
+                      }`,
+                      input:
+                        theme === "dark"
+                          ? "!text-gray-200 placeholder:!text-gray-500"
+                          : "",
+                    }}
                     required
                   />
                 </div>
@@ -165,20 +196,30 @@ const Register = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label
-                    className="block text-base font-medium mb-2"
+                    className="block text-sm font-medium mb-2"
                     style={{ color: colors.text.primary }}
                   >
-                    Password
+                    {t("auth.register.password")}
                   </label>
                   <Input
                     type="password"
                     name="password"
-                    placeholder="Create password"
+                    placeholder={t("auth.register.passwordPlaceholder")}
                     value={formData.password}
                     onChange={handleChange}
                     variant="flat"
                     size="lg"
-                    style={{ backgroundColor: colors.background.input }}
+                    classNames={{
+                      inputWrapper: `!transition-colors !duration-200 ${
+                        theme === "dark"
+                          ? "!bg-gray-800 !border-gray-700 hover:!bg-gray-700 data-[hover=true]:!bg-gray-700 group-data-[focus=true]:!bg-gray-800"
+                          : "hover:bg-gray-50"
+                      }`,
+                      input:
+                        theme === "dark"
+                          ? "!text-gray-200 placeholder:!text-gray-500"
+                          : "",
+                    }}
                     minLength={8}
                     required
                   />
@@ -186,20 +227,30 @@ const Register = () => {
 
                 <div>
                   <label
-                    className="block text-base font-medium mb-2"
+                    className="block text-sm font-medium mb-2"
                     style={{ color: colors.text.primary }}
                   >
-                    Confirm Password
+                    {t("auth.register.confirmPassword")}
                   </label>
                   <Input
                     type="password"
                     name="confirmPassword"
-                    placeholder="Confirm password"
+                    placeholder={t("auth.register.confirmPasswordPlaceholder")}
                     value={formData.confirmPassword}
                     onChange={handleChange}
                     variant="flat"
                     size="lg"
-                    style={{ backgroundColor: colors.background.input }}
+                    classNames={{
+                      inputWrapper: `!transition-colors !duration-200 ${
+                        theme === "dark"
+                          ? "!bg-gray-800 !border-gray-700 hover:!bg-gray-700 data-[hover=true]:!bg-gray-700 group-data-[focus=true]:!bg-gray-800"
+                          : "hover:bg-gray-50"
+                      }`,
+                      input:
+                        theme === "dark"
+                          ? "!text-gray-200 placeholder:!text-gray-500"
+                          : "",
+                    }}
                     minLength={8}
                     required
                   />
@@ -216,21 +267,21 @@ const Register = () => {
                   }}
                 >
                   <span style={{ color: colors.text.secondary }}>
-                    I agree to the{" "}
+                    {t("auth.register.agreeToTerms")}{" "}
                     <Link
                       href="#"
                       size="sm"
                       style={{ color: colors.primary.main }}
                     >
-                      Terms and Conditions
+                      {t("auth.register.termsAndConditions")}
                     </Link>{" "}
-                    and{" "}
+                    {t("auth.register.and")}{" "}
                     <Link
                       href="#"
                       size="sm"
                       style={{ color: colors.primary.main }}
                     >
-                      Privacy Policy
+                      {t("auth.register.privacyPolicy")}
                     </Link>
                   </span>
                 </Checkbox>
@@ -246,25 +297,25 @@ const Register = () => {
                   color: colors.text.white,
                 }}
               >
-                Create Account
+                {t("auth.register.createAccount")}
               </Button>
 
-              <SocialLogin text="sign up" />
+              <SocialLogin text={t("auth.register.socialText")} />
             </form>
           </div>
           <div
-            className="text-center"
+            className="text-center text-lg"
             style={{ width: "100%", maxWidth: "580px" }}
           >
             <span style={{ color: colors.text.secondary }}>
-              Already have an account?{" "}
+              {t("auth.register.hasAccount")}{" "}
             </span>
             <Link
               onClick={() => navigate("/login")}
-              className="cursor-pointer"
+              className="cursor-pointer text-lg font-semibold"
               style={{ color: colors.primary.main }}
             >
-              Sign in
+              {t("auth.register.signIn")}
             </Link>
           </div>
         </motion.div>

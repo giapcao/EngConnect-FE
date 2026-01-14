@@ -2,46 +2,156 @@
   "brand": {
     "name": "EngConnect"
   },
+  "nav": {
+    "home": "Trang chủ",
+    "findTutors": "Tìm gia sư",
+    "courses": "Khóa học",
+    "pricing": "Bảng giá",
+    "about": "Giới thiệu",
+    "signIn": "Đăng nhập",
+    "getStarted": "Bắt đầu"
+  },
+  "home": {
+    "hero": {
+      "badge": "Nền tảng học tập hỗ trợ AI",
+      "title": "Thành thạo tiếng Anh với",
+      "titleHighlight": "Gia sư chuyên nghiệp",
+      "titleEnd": "Toàn cầu",
+      "description": "Kết nối với gia sư được chứng nhận để học 1-1 theo cách riêng của bạn. Học theo tốc độ của bạn với phản hồi hỗ trợ AI và đạt được sự lưu loát nhanh hơn bao giờ hết.",
+      "startLearning": "Bắt đầu học miễn phí",
+      "watchDemo": "Xem Demo",
+      "lovedBy": "Được yêu thích bởi hơn 10,000 học viên"
+    },
+    "features": {
+      "title": "Tại sao chọn",
+      "description": "Trải nghiệm tương lai của việc học ngôn ngữ với nền tảng sáng tạo được thiết kế cho thành công của bạn",
+      "expertTutors": {
+        "title": "Gia sư chuyên nghiệp",
+        "description": "Học từ người bản ngữ được chứng nhận với nhiều năm kinh nghiệm giảng dạy"
+      },
+      "flexibleSchedule": {
+        "title": "Lịch linh hoạt",
+        "description": "Đặt lịch học 24/7 phù hợp hoàn hảo với lối sống bận rộn của bạn"
+      },
+      "customCurriculum": {
+        "title": "Chương trình tùy chỉnh",
+        "description": "Lộ trình học cá nhân hóa được thiết kế theo mục tiêu cụ thể của bạn"
+      },
+      "affordablePricing": {
+        "title": "Giá cả hợp lý",
+        "description": "Giáo dục chất lượng cao với mức giá phải chăng"
+      }
+    },
+    "howItWorks": {
+      "title": "Cách thức",
+      "titleHighlight": "Hoạt động",
+      "description": "Bắt đầu trong vài phút và khởi đầu hành trình đến sự lưu loát",
+      "step1": {
+        "title": "Tìm gia sư",
+        "description": "Duyệt cộng đồng đa dạng các gia sư được chứng nhận và tìm người phù hợp với phong cách học của bạn"
+      },
+      "step2": {
+        "title": "Đặt lịch học",
+        "description": "Chọn khung giờ thuận tiện từ lịch trống của gia sư và đặt ngay lập tức"
+      },
+      "step3": {
+        "title": "Bắt đầu học",
+        "description": "Tham gia buổi học video trực tiếp, luyện tập với công cụ AI và theo dõi tiến độ"
+      }
+    },
+    "tutors": {
+      "title": "Gặp gỡ",
+      "titleHighlight": "Gia sư hàng đầu",
+      "description": "Học từ các nhà giáo dục giàu kinh nghiệm đam mê thành công của bạn",
+      "native": "Bản ngữ",
+      "lessons": "buổi học",
+      "viewAll": "Xem tất cả gia sư"
+    },
+    "testimonials": {
+      "title": "Học viên",
+      "titleHighlight": "Nói gì",
+      "description": "Tham gia cùng hàng nghìn học viên hài lòng đã đạt được mục tiêu"
+    },
+    "cta": {
+      "title": "Sẵn sàng bắt đầu hành trình?",
+      "description": "Tham gia cùng hàng nghìn học viên đang cải thiện tiếng Anh với EngConnect. Buổi học đầu tiên miễn phí!",
+      "button": "Bắt đầu miễn phí"
+    }
+  },
+  "footer": {
+    "brand": {
+      "description": "Nền tảng số 1 cho việc học tiếng Anh cá nhân hóa. Kết nối với gia sư bản ngữ và đạt được sự lưu loát với công cụ hỗ trợ AI."
+    },
+    "newsletter": {
+      "title": "Đăng ký nhận bản tin",
+      "placeholder": "Địa chỉ email..."
+    },
+    "learn": {
+      "findTutors": "Tìm gia sư",
+      "browseCourses": "Duyệt khóa học",
+      "pricing": "Bảng giá",
+      "howItWorks": "Cách hoạt động"
+    },
+    "company": {
+      "about": "Giới thiệu",
+      "blog": "Blog",
+      "contact": "Liên hệ"
+    },
+    "support": {
+      "helpCenter": "Trung tâm trợ giúp",
+      "community": "Cộng đồng",
+      "becomeATutor": "Trở thành gia sư",
+      "faqs": "Câu hỏi thường gặp"
+    },
+    "social": {
+      "title": "Theo dõi"
+    },
+    "contact": {
+      "title": "Liên hệ"
+    },
+    "bottom": {
+      "rights": "Đã đăng ký bản quyền.",
+      "privacy": "Bảo mật",
+      "terms": "Điều khoản",
+      "cookies": "Cookie",
+      "madeIn": "Sản xuất tại Việt Nam"
+    }
+  },
   "auth": {
     "login": {
-      "title": "Chào mừng trở lại! Vui lòng đăng nhập vào tài khoản của bạn.",
+      "subtitle": "Chào mừng trở lại! Vui lòng đăng nhập vào tài khoản của bạn.",
       "email": "Email",
-      "emailPlaceholder": "ban@example.com",
+      "emailPlaceholder": "Tên người dùng hoặc địa chỉ email...",
       "password": "Mật khẩu",
-      "passwordPlaceholder": "Nhập mật khẩu của bạn",
+      "passwordPlaceholder": "Mật khẩu",
       "rememberMe": "Ghi nhớ đăng nhập",
       "forgotPassword": "Quên mật khẩu?",
       "loginButton": "Đăng nhập",
-      "orLoginWith": "đăng nhập",
+      "socialText": "Hoặc đăng nhập với",
       "noAccount": "Chưa có tài khoản?",
       "signUp": "Đăng ký"
     },
     "register": {
-      "title": "Tạo Tài Khoản",
       "subtitle": "Tham gia cùng hàng nghìn người học và gia sư trên toàn thế giới",
       "joinAs": "Tôi muốn tham gia với vai trò:",
       "student": "Học viên",
       "tutor": "Gia sư",
       "fullName": "Họ và tên",
-      "fullNamePlaceholder": "Nguyễn Văn A",
+      "fullNamePlaceholder": "Họ và tên",
       "email": "Email",
-      "emailPlaceholder": "ban@example.com",
+      "emailPlaceholder": "Địa chỉ email",
       "password": "Mật khẩu",
-      "passwordPlaceholder": "Tối thiểu 8 ký tự",
+      "passwordPlaceholder": "Tạo mật khẩu",
       "confirmPassword": "Xác nhận mật khẩu",
-      "confirmPasswordPlaceholder": "Nhập lại mật khẩu",
+      "confirmPasswordPlaceholder": "Xác nhận mật khẩu",
       "agreeToTerms": "Tôi đồng ý với",
       "termsAndConditions": "Điều khoản và Điều kiện",
       "and": "và",
       "privacyPolicy": "Chính sách Bảo mật",
-      "createAccountButton": "Tạo tài khoản",
-      "orSignUpWith": "đăng ký",
-      "haveAccount": "Đã có tài khoản?",
+      "createAccount": "Tạo tài khoản",
+      "socialText": "Hoặc đăng ký với",
+      "hasAccount": "Đã có tài khoản?",
       "signIn": "Đăng nhập"
-    },
-    "social": {
-      "google": "Google",
-      "facebook": "Facebook"
     }
   }
 }

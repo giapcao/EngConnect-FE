@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { Button, Card, CardBody } from "@heroui/react";
+import { Button, Card, CardBody, Image } from "@heroui/react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   Award,
   Calendar,
@@ -11,11 +12,13 @@ import {
   Globe,
   Clock,
   TrendingUp,
+  Sparkles,
 } from "lucide-react";
 import * as MotionLib from "framer-motion";
 import Header from "../../components/Header/Header";
 import Footer from "../../components/Footer/Footer";
-import { colors } from "../../constants/colors";
+import { useThemeColors } from "../../hooks/useThemeColors";
+import { useTheme } from "../../contexts/ThemeContext";
 
 // eslint-disable-next-line no-unused-vars
 const { motion } = MotionLib;
@@ -34,6 +37,9 @@ import tutorProfile3 from "../../assets/images/tutor-profile-3.png";
 
 const Home = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
+  const colors = useThemeColors();
+  const { theme } = useTheme();
   const [activeTestimonial, setActiveTestimonial] = useState(0);
 
   const testimonials = [
@@ -96,27 +102,23 @@ const Home = () => {
   const features = [
     {
       icon: Users,
-      title: "Expert Tutors",
-      description:
-        "Learn from certified native speakers with years of teaching experience",
+      title: t("home.features.expertTutors.title"),
+      description: t("home.features.expertTutors.description"),
     },
     {
       icon: Calendar,
-      title: "Flexible Schedule",
-      description:
-        "Book lessons 24/7 that fit perfectly into your busy lifestyle",
+      title: t("home.features.flexibleSchedule.title"),
+      description: t("home.features.flexibleSchedule.description"),
     },
     {
       icon: BookOpen,
-      title: "Custom Curriculum",
-      description:
-        "Personalized learning paths designed around your specific goals",
+      title: t("home.features.customCurriculum.title"),
+      description: t("home.features.customCurriculum.description"),
     },
     {
       icon: Award,
-      title: "Affordable Pricing",
-      description:
-        "Premium quality education at prices that won't break the bank",
+      title: t("home.features.affordablePricing.title"),
+      description: t("home.features.affordablePricing.description"),
     },
   ];
 
@@ -172,16 +174,17 @@ const Home = () => {
                   color: colors.primary.main,
                 }}
               >
-                AI-Powered Learning Platform
+                <Sparkles className="inline-block mr-2 w-4 h-4" />
+                {t("home.hero.badge")}
               </span>
 
               <h1
                 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight mb-6"
                 style={{ color: colors.text.primary }}
               >
-                Master English with{" "}
+                {t("home.hero.title")}{" "}
                 <span style={{ color: colors.primary.main }}>
-                  Expert Tutors
+                  {t("home.hero.titleHighlight")}
                 </span>
               </h1>
 
@@ -189,9 +192,7 @@ const Home = () => {
                 className="text-lg mb-8 max-w-xl leading-relaxed"
                 style={{ color: colors.text.secondary }}
               >
-                Connect with certified tutors for personalized 1-on-1 lessons.
-                Learn at your own pace with AI-assisted feedback and achieve
-                fluency faster than ever.
+                {t("home.hero.description")}
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 mb-10">
@@ -206,18 +207,18 @@ const Home = () => {
                   onPress={() => navigate("/register")}
                   endContent={<ArrowRight className="w-5 h-5" />}
                 >
-                  Start Learning Free
+                  {t("home.hero.startLearning")}
                 </Button>
                 <Button
                   size="lg"
                   radius="full"
                   className="font-semibold text-lg px-8 h-14"
                   style={{
-                    backgroundColor: colors.primary.lightest,
-                    color: colors.text.main,
+                    backgroundColor: colors.button.primaryLight.background,
+                    color: colors.button.primaryLight.text,
                   }}
                 >
-                  Watch Demo
+                  {t("home.hero.watchDemo")}
                 </Button>
               </div>
 
@@ -260,7 +261,7 @@ const Home = () => {
                     className="text-sm"
                     style={{ color: colors.text.secondary }}
                   >
-                    Loved by 10,000+ students
+                    {t("home.hero.lovedBy")}
                   </p>
                 </div>
               </div>
@@ -273,10 +274,11 @@ const Home = () => {
               transition={{ duration: 0.8, delay: 0.3 }}
               className="hidden lg:block"
             >
-              <img
+              <Image
+                isBlurred
                 src={heroImage}
                 alt="Online learning interface"
-                className="w-full h-auto rounded-2xl"
+                className="w-full h-auto rounded-2xl m-3"
               />
             </motion.div>
           </div>
@@ -300,15 +302,14 @@ const Home = () => {
               className="text-3xl sm:text-4xl font-bold mb-4"
               style={{ color: colors.text.primary }}
             >
-              Why Choose{" "}
+              {t("home.features.title")}{" "}
               <span style={{ color: colors.primary.main }}>EngConnect?</span>
             </h2>
             <p
               className="text-lg max-w-2xl mx-auto"
               style={{ color: colors.text.secondary }}
             >
-              Experience the future of language learning with our innovative
-              platform designed for your success
+              {t("home.features.description")}
             </p>
           </motion.div>
 
@@ -373,13 +374,16 @@ const Home = () => {
               className="text-3xl sm:text-4xl font-bold mb-4"
               style={{ color: colors.text.primary }}
             >
-              How It <span style={{ color: colors.primary.main }}>Works</span>
+              {t("home.howItWorks.title")}{" "}
+              <span style={{ color: colors.primary.main }}>
+                {t("home.howItWorks.titleHighlight")}
+              </span>
             </h2>
             <p
               className="text-lg max-w-2xl mx-auto"
               style={{ color: colors.text.secondary }}
             >
-              Get started in minutes and begin your journey to fluency
+              {t("home.howItWorks.description")}
             </p>
           </motion.div>
 
@@ -394,23 +398,20 @@ const Home = () => {
               {
                 step: "01",
                 icon: Globe,
-                title: "Find Your Tutor",
-                description:
-                  "Browse our diverse community of certified tutors and find the perfect match for your learning style",
+                title: t("home.howItWorks.step1.title"),
+                description: t("home.howItWorks.step1.description"),
               },
               {
                 step: "02",
                 icon: Clock,
-                title: "Book a Lesson",
-                description:
-                  "Choose a convenient time slot from your tutor's availability and book instantly",
+                title: t("home.howItWorks.step2.title"),
+                description: t("home.howItWorks.step2.description"),
               },
               {
                 step: "03",
                 icon: TrendingUp,
-                title: "Start Learning",
-                description:
-                  "Join your live video lesson, practice with AI tools, and track your progress",
+                title: t("home.howItWorks.step3.title"),
+                description: t("home.howItWorks.step3.description"),
               },
             ].map((item) => (
               <motion.div
@@ -471,14 +472,16 @@ const Home = () => {
               className="text-3xl sm:text-4xl font-bold mb-4"
               style={{ color: colors.text.primary }}
             >
-              Meet Our{" "}
-              <span style={{ color: colors.primary.main }}>Top Tutors</span>
+              {t("home.tutors.title")}{" "}
+              <span style={{ color: colors.primary.main }}>
+                {t("home.tutors.titleHighlight")}
+              </span>
             </h2>
             <p
               className="text-lg max-w-2xl mx-auto"
               style={{ color: colors.text.secondary }}
             >
-              Learn from experienced educators passionate about your success
+              {t("home.tutors.description")}
             </p>
           </motion.div>
 
@@ -536,7 +539,7 @@ const Home = () => {
                           color: colors.text.primary,
                         }}
                       >
-                        {tutor.flag} Native
+                        {tutor.flag} {t("home.tutors.native")}
                       </span>
                     </div>
                     <div className="p-5">
@@ -567,7 +570,7 @@ const Home = () => {
                           </span>
                         </div>
                         <span style={{ color: colors.text.secondary }}>
-                          {tutor.lessons}+ lessons
+                          {tutor.lessons}+ {t("home.tutors.lessons")}
                         </span>
                       </div>
                     </div>
@@ -579,7 +582,6 @@ const Home = () => {
 
           <div className="text-center mt-12">
             <Button
-              variant="bordered"
               size="lg"
               radius="full"
               className="font-semibold px-8"
@@ -590,7 +592,7 @@ const Home = () => {
               }}
               endContent={<ArrowRight className="w-5 h-5" />}
             >
-              View All Tutors
+              {t("home.tutors.viewAll")}
             </Button>
           </div>
         </div>
@@ -613,14 +615,16 @@ const Home = () => {
               className="text-3xl sm:text-4xl font-bold mb-4"
               style={{ color: colors.text.primary }}
             >
-              What Our{" "}
-              <span style={{ color: colors.primary.main }}>Students Say</span>
+              {t("home.testimonials.title")}{" "}
+              <span style={{ color: colors.primary.main }}>
+                {t("home.testimonials.titleHighlight")}
+              </span>
             </h2>
             <p
               className="text-lg max-w-2xl mx-auto"
               style={{ color: colors.text.secondary }}
             >
-              Join thousands of satisfied learners who've achieved their goals
+              {t("home.testimonials.description")}
             </p>
           </motion.div>
 
@@ -724,14 +728,13 @@ const Home = () => {
               className="text-3xl sm:text-4xl font-bold mb-6"
               style={{ color: colors.text.white }}
             >
-              Ready to Start Your Journey?
+              {t("home.cta.title")}
             </h2>
             <p
               className="text-lg mb-10 max-w-2xl mx-auto opacity-90"
               style={{ color: colors.text.white }}
             >
-              Join thousands of students who are already improving their English
-              with EngConnect. Your first lesson is free!
+              {t("home.cta.description")}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button
@@ -744,7 +747,7 @@ const Home = () => {
                 }}
                 onPress={() => navigate("/register")}
               >
-                Get Started Free
+                {t("home.cta.button")}
               </Button>
             </div>
           </motion.div>

@@ -1,10 +1,11 @@
 import { useTheme } from "../../contexts/ThemeContext";
 import { Button } from "@heroui/react";
 import { Sun, Moon } from "lucide-react";
-import colors from "../../constants/colors";
+import { useThemeColors } from "../../hooks/useThemeColors";
 
 const ThemeSwitcher = () => {
   const { theme, toggleTheme } = useTheme();
+  const colors = useThemeColors();
 
   return (
     <Button

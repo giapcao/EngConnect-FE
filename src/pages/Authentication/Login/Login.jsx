@@ -1,11 +1,13 @@
 import React, { useState } from "react";
-import { Input, Button, Link, Checkbox } from "@heroui/react";
+import { Input, Button, Link, Checkbox, Image } from "@heroui/react";
 import { Eye, EyeOff } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import * as MotionLib from "framer-motion";
+import { useTranslation } from "react-i18next";
 import BrandLogo from "../../../components/Authentication/BrandLogo";
 import SocialLogin from "../../../components/Authentication/SocialLogin";
-import colors from "../../../constants/colors";
+import { useThemeColors } from "../../../hooks/useThemeColors";
+import { useTheme } from "../../../contexts/ThemeContext";
 import illustrationImage from "../../../assets/images/Saly-1.png";
 import "./Login.css";
 
@@ -14,6 +16,9 @@ const { motion } = MotionLib;
 
 const Login = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
+  const colors = useThemeColors();
+  const { theme } = useTheme();
   const [isVisible, setIsVisible] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [formData, setFormData] = useState({
@@ -37,7 +42,10 @@ const Login = () => {
   };
 
   return (
-    <div className="login-container">
+    <div
+      className="login-container"
+      style={{ backgroundColor: colors.background.light }}
+    >
       <div className="login-content">
         <motion.div
           className="login-illustration"
@@ -45,7 +53,7 @@ const Login = () => {
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.8 }}
         >
-          <img src={illustrationImage} alt="Student illustration" />
+          <Image src={illustrationImage} alt="Student illustration" />
         </motion.div>
 
         <motion.div
@@ -61,47 +69,70 @@ const Login = () => {
               className="text-center mb-8"
               style={{ color: colors.text.secondary }}
             >
-              Welcome back! Please login to your account.
+              {t("auth.login.subtitle")}
             </p>
           </div>
-          <div className="login-card">
+          <div
+            className="login-card"
+            style={{ backgroundColor: colors.background.light }}
+          >
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
                 <label
-                  className="block text-base font-medium mb-2"
+                  className="block text-sm font-medium mb-2"
                   style={{ color: colors.text.primary }}
                 >
-                  Email
+                  {t("auth.login.email")}
                 </label>
                 <Input
                   type="email"
                   name="email"
-                  placeholder="Username or email address..."
+                  placeholder={t("auth.login.emailPlaceholder")}
                   value={formData.email}
                   onChange={handleChange}
                   variant="flat"
                   size="lg"
-                  style={{ backgroundColor: colors.background.input }}
+                  classNames={{
+                    inputWrapper: `!transition-colors !duration-200 ${
+                      theme === "dark"
+                        ? "!bg-gray-800 !border-gray-700 hover:!bg-gray-700 data-[hover=true]:!bg-gray-700 group-data-[focus=true]:!bg-gray-800"
+                        : "hover:bg-gray-50"
+                    }`,
+                    input:
+                      theme === "dark"
+                        ? "!text-gray-200 placeholder:!text-gray-500"
+                        : "",
+                  }}
                   required
                 />
               </div>
 
               <div>
                 <label
-                  className="block text-base font-medium mb-2"
+                  className="block text-sm font-medium mb-2"
                   style={{ color: colors.text.primary }}
                 >
-                  Password
+                  {t("auth.login.password")}
                 </label>
                 <Input
                   type={isVisible ? "text" : "password"}
                   name="password"
-                  placeholder="Password"
+                  placeholder={t("auth.login.passwordPlaceholder")}
                   value={formData.password}
                   onChange={handleChange}
                   variant="flat"
                   size="lg"
-                  style={{ backgroundColor: colors.background.input }}
+                  classNames={{
+                    inputWrapper: `!transition-colors !duration-200 ${
+                      theme === "dark"
+                        ? "!bg-gray-800 !border-gray-700 hover:!bg-gray-700 data-[hover=true]:!bg-gray-700 group-data-[focus=true]:!bg-gray-800"
+                        : "hover:bg-gray-50"
+                    }`,
+                    input:
+                      theme === "dark"
+                        ? "!text-gray-200 placeholder:!text-gray-500"
+                        : "",
+                  }}
                   endContent={
                     <button
                       className="focus:outline-none"
@@ -131,20 +162,16 @@ const Login = () => {
                   onValueChange={setRememberMe}
                   size="sm"
                   classNames={{
-                    label: "text-base",
+                    label: "text-sm",
                   }}
                 >
                   <span style={{ color: colors.text.secondary }}>
-                    Remember me
+                    {t("auth.login.rememberMe")}
                   </span>
                 </Checkbox>
 
-                <Link
-                  href="#"
-                  size="base"
-                  style={{ color: colors.primary.main }}
-                >
-                  Forgot password?
+                <Link href="#" size="sm" style={{ color: colors.primary.main }}>
+                  {t("auth.login.forgotPassword")}
                 </Link>
               </div>
 
@@ -158,25 +185,25 @@ const Login = () => {
                   color: colors.text.white,
                 }}
               >
-                Login
+                {t("auth.login.loginButton")}
               </Button>
 
-              <SocialLogin text="login" />
+              <SocialLogin text={t("auth.login.socialText")} />
             </form>
           </div>
           <div
-            className="text-center"
+            className="text-center text-lg"
             style={{ width: "100%", maxWidth: "480px" }}
           >
             <span style={{ color: colors.text.secondary }}>
-              Don't have an account?{" "}
+              {t("auth.login.noAccount")}{" "}
             </span>
             <Link
               onClick={() => navigate("/register")}
-              className="cursor-pointer"
+              className="cursor-pointer text-lg font-semibold"
               style={{ color: colors.primary.main }}
             >
-              Sign up
+              {t("auth.login.signUp")}
             </Link>
           </div>
         </motion.div>

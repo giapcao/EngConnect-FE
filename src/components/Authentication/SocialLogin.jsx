@@ -1,8 +1,12 @@
 import React from "react";
 import { Button } from "@heroui/react";
-import colors from "../../constants/colors";
+import { useThemeColors } from "../../hooks/useThemeColors";
+import { useTheme } from "../../contexts/ThemeContext";
 
 const SocialLogin = ({ text = "login" }) => {
+  const colors = useThemeColors();
+  const { theme } = useTheme();
+
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-4">
@@ -11,7 +15,7 @@ const SocialLogin = ({ text = "login" }) => {
           style={{ backgroundColor: colors.border.medium }}
         ></div>
         <span className="text-sm" style={{ color: colors.text.secondary }}>
-          Or {text} with
+          {text}
         </span>
         <div
           className="flex-1 h-px"
@@ -23,10 +27,12 @@ const SocialLogin = ({ text = "login" }) => {
         <Button
           variant="flat"
           size="lg"
-          className="flex-1 hover:bg-gray-200"
+          className={`flex-1 ${
+            theme === "dark" ? "hover:bg-slate-700" : "hover:bg-gray-200"
+          }`}
           style={{
             backgroundColor: colors.background.input,
-            color: colors.text.primary,
+            color: colors.text.muted,
           }}
           startContent={
             <svg width="20" height="20" viewBox="0 0 20 20">
@@ -55,10 +61,12 @@ const SocialLogin = ({ text = "login" }) => {
         <Button
           variant="flat"
           size="lg"
-          className="flex-1 hover:bg-gray-200"
+          className={`flex-1 ${
+            theme === "dark" ? "hover:bg-slate-700" : "hover:bg-gray-200"
+          }`}
           style={{
             backgroundColor: colors.background.input,
-            color: colors.text.primary,
+            color: colors.text.muted,
           }}
           startContent={
             <svg width="20" height="20" viewBox="0 0 20 20" fill="#1877F2">
