@@ -165,6 +165,73 @@
       "backToLoginLink": "Quay lại Đăng nhập"
     }
   },
+  "about": {
+    "hero": {
+      "badge": "Về Chúng Tôi",
+      "title": "Trao Quyền Cho Học Viên Tại",
+      "description": "Chúng tôi có sứ mệnh giúp giáo dục tiếng Anh chất lượng tiếp cận được với tất cả mọi người, ở mọi nơi. Nền tảng của chúng tôi kết nối học viên đam mê với các gia sư chuyên gia từ khắp nơi trên thế giới."
+    },
+    "stats": {
+      "students": "Học Viên Hoạt Động",
+      "tutors": "Gia Sư Chuyên Gia",
+      "countries": "Quốc Gia",
+      "lessons": "Buổi Học Hoàn Thành"
+    },
+    "mission": {
+      "title": "Sứ Mệnh",
+      "description": "Dân chủ hóa giáo dục tiếng Anh bằng cách cung cấp trải nghiệm học tập giá cả phải chăng, cá nhân hóa và hiệu quả, giúp mỗi cá nhân đạt được mục tiêu giao tiếp và mở ra cơ hội mới."
+    },
+    "vision": {
+      "title": "Tầm Nhìn",
+      "description": "Một thế giới nơi rào cản ngôn ngữ không còn giới hạn tiềm năng. Chúng tôi hướng tới một cộng đồng toàn cầu gồm những người nói tiếng Anh tự tin, có thể kết nối, hợp tác và thành công trong mọi môi trường."
+    },
+    "story": {
+      "title": "Câu Chuyện",
+      "titleHighlight": "Của Chúng Tôi",
+      "paragraph1": "EngConnect được sinh ra từ một quan sát đơn giản: dù có vô số ứng dụng và tài nguyên học ngôn ngữ, nhiều người vẫn khó nói tiếng Anh tự tin. Chúng tôi nhận ra mảnh ghép còn thiếu chính là kết nối con người thực sự.",
+      "paragraph2": "Được thành lập năm 2025, chúng tôi bắt đầu xây dựng một nền tảng kết hợp công nghệ tốt nhất với giá trị không thể thay thế của tương tác một-một giữa người với người. Công cụ AI của chúng tôi nâng cao việc học, nhưng các gia sư chuyên gia mới là người làm sống động bài học.",
+      "paragraph3": "Ngày nay, chúng tôi tự hào đã giúp hơn 50,000 học viên từ 120+ quốc gia cải thiện kỹ năng tiếng Anh và đạt được ước mơ, dù đó là có được công việc mơ ước, du học, hay đơn giản là kết nối với mọi người từ khắp nơi trên thế giới.",
+      "founded": "Năm Thành Lập",
+      "headquarters": "Trụ Sở",
+      "teamSize": "Quy Mô Team",
+      "partnerships": "Đối Tác"
+    },
+    "values": {
+      "title": "Giá Trị",
+      "titleHighlight": "Cốt Lõi",
+      "description": "Những nguyên tắc này định hướng mọi thứ chúng tôi làm và định hình cách chúng tôi phục vụ cộng đồng",
+      "passion": {
+        "title": "Đam Mê Học Tập",
+        "description": "Chúng tôi tin vào sức mạnh biến đổi của giáo dục và tận tâm làm cho việc học trở nên thú vị."
+      },
+      "innovation": {
+        "title": "Đổi Mới",
+        "description": "Chúng tôi liên tục cải tiến nền tảng với công nghệ tiên tiến để nâng cao trải nghiệm học tập."
+      },
+      "community": {
+        "title": "Cộng Đồng",
+        "description": "Chúng tôi xây dựng cộng đồng toàn cầu hỗ trợ nơi học viên và gia sư cùng phát triển."
+      },
+      "excellence": {
+        "title": "Xuất Sắc",
+        "description": "Chúng tôi duy trì tiêu chuẩn cao nhất trong mọi thứ từ tuyển chọn gia sư đến chất lượng bài học."
+      }
+    },
+    "team": {
+      "title": "Gặp Gỡ",
+      "titleHighlight": "Nhóm Chúng Tôi",
+      "description": "Những người đam mê đứng sau EngConnect tận tâm biến đổi giáo dục tiếng Anh",
+      "ceo": "CEO & Đồng Sáng Lập",
+      "cto": "CTO & Đồng Sáng Lập",
+      "headOfEducation": "Trưởng Bộ Phận Giáo Dục",
+      "headOfOperations": "Trưởng Bộ Phận Vận Hành"
+    },
+    "cta": {
+      "title": "Tham Gia Cộng Đồng Đang Phát Triển",
+      "description": "Bắt đầu hành trình học tiếng Anh ngay hôm nay và trở thành một phần của cộng đồng học viên toàn cầu đang đạt được mục tiêu.",
+      "button": "Bắt Đầu Miễn Phí"
+    }
+  },
   "pricing": {
     "hero": {
       "title": "Bảng Giá Đơn Giản, Minh Bạch",

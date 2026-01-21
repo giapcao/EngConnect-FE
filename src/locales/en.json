@@ -165,6 +165,73 @@
       "backToLoginLink": "Back to Login"
     }
   },
+  "about": {
+    "hero": {
+      "badge": "About Us",
+      "title": "Empowering Learners at",
+      "description": "We're on a mission to make quality English education accessible to everyone, everywhere. Our platform connects passionate learners with expert tutors from around the world."
+    },
+    "stats": {
+      "students": "Active Students",
+      "tutors": "Expert Tutors",
+      "countries": "Countries",
+      "lessons": "Lessons Completed"
+    },
+    "mission": {
+      "title": "Our Mission",
+      "description": "To democratize English language education by providing affordable, personalized, and effective learning experiences that empower individuals to achieve their communication goals and unlock new opportunities."
+    },
+    "vision": {
+      "title": "Our Vision",
+      "description": "A world where language barriers no longer limit potential. We envision a global community of confident English speakers who can connect, collaborate, and succeed in any environment."
+    },
+    "story": {
+      "title": "Our",
+      "titleHighlight": "Story",
+      "paragraph1": "EngConnect was born from a simple observation: despite countless language learning apps and resources, many people still struggle to speak English confidently. We realized that the missing piece was genuine human connection.",
+      "paragraph2": "Founded in 2025, we set out to build a platform that combines the best of technology with the irreplaceable value of one-on-one human interaction. Our AI-powered tools enhance learning, but our expert tutors bring the lessons to life.",
+      "paragraph3": "Today, we're proud to have helped over 50,000 students from 120+ countries improve their English skills and achieve their dreams, whether that's landing a dream job, studying abroad, or simply connecting with people from around the world.",
+      "founded": "Founded",
+      "headquarters": "Headquarters",
+      "teamSize": "Team Size",
+      "partnerships": "Partnerships"
+    },
+    "values": {
+      "title": "Our Core",
+      "titleHighlight": "Values",
+      "description": "These principles guide everything we do and shape how we serve our community",
+      "passion": {
+        "title": "Passion for Learning",
+        "description": "We believe in the transformative power of education and are dedicated to making learning enjoyable."
+      },
+      "innovation": {
+        "title": "Innovation",
+        "description": "We continuously improve our platform with cutting-edge technology to enhance the learning experience."
+      },
+      "community": {
+        "title": "Community",
+        "description": "We foster a supportive global community where learners and tutors grow together."
+      },
+      "excellence": {
+        "title": "Excellence",
+        "description": "We maintain the highest standards in everything from tutor selection to lesson quality."
+      }
+    },
+    "team": {
+      "title": "Meet Our",
+      "titleHighlight": "Team",
+      "description": "The passionate people behind EngConnect who are dedicated to transforming English education",
+      "ceo": "Leader",
+      "cto": "CTO & Co-Founder",
+      "headOfEducation": "Head of Education",
+      "headOfOperations": "Head of Operations"
+    },
+    "cta": {
+      "title": "Join Our Growing Community",
+      "description": "Start your English learning journey today and become part of a global community of learners achieving their goals.",
+      "button": "Get Started Free"
+    }
+  },
   "pricing": {
     "hero": {
       "title": "Simple, Transparent Pricing",

@@ -1,4 +1,3 @@
-import { useState } from "react";
 import {
   Button,
   Card,
@@ -283,7 +282,7 @@ const Pricing = () => {
                   key={index}
                   aria-label={faq.question}
                   title={
-                    <span style={{ color: colors.text.muted }}>
+                    <span style={{ color: colors.text.primary }}>
                       {faq.question}
                     </span>
                   }
