@@ -59,6 +59,14 @@
         "description": "Join your live video lesson, practice with AI tools, and track your progress"
       }
     },
+    "aiSection": {
+      "title": "Learn Smarter with",
+      "titleHighlight": "AI Technology",
+      "description": "Our advanced AI tools enhance your learning experience by providing personalized feedback, pronunciation analysis, and adaptive exercises tailored to your progress.",
+      "feature1": "Real-time pronunciation feedback and correction",
+      "feature2": "AI-powered homework assistance and explanations",
+      "feature3": "Smart progress tracking and personalized recommendations"
+    },
     "tutors": {
       "title": "Meet Our",
       "titleHighlight": "Top Tutors",

@@ -13,6 +13,7 @@ import Header from "../../components/Header/Header";
 import Footer from "../../components/Footer/Footer";
 import { useThemeColors } from "../../hooks/useThemeColors";
 import { useTheme } from "../../contexts/ThemeContext";
+import paymentImage from "../../assets/images/payment.avif";
 
 // eslint-disable-next-line no-unused-vars
 const { motion } = MotionLib;
@@ -91,32 +92,48 @@ const Pricing = () => {
               : "linear-gradient(to bottom, #FFFFFF, #DBEAFE)",
         }}
       >
-        <div className="max-w-4xl mx-auto text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7 }}
-          >
-            <h1
-              className="text-4xl sm:text-5xl font-bold mb-4"
-              style={{ color: colors.text.primary }}
+        <div className="max-w-7xl mx-auto">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.7 }}
+              className="text-center lg:text-left"
             >
-              {t("pricing.hero.title")}
-            </h1>
-            <p
-              className="text-lg max-w-2xl mx-auto"
-              style={{ color: colors.text.secondary }}
+              <h1
+                className="text-4xl sm:text-5xl font-bold mb-4"
+                style={{ color: colors.text.primary }}
+              >
+                {t("pricing.hero.title")}
+              </h1>
+              <p
+                className="text-lg max-w-xl"
+                style={{ color: colors.text.secondary }}
+              >
+                {t("pricing.hero.subtitle")}
+              </p>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.7, delay: 0.2 }}
+              className="hidden lg:flex justify-center"
             >
-              {t("pricing.hero.subtitle")}
-            </p>
-          </motion.div>
+              <img
+                src={paymentImage}
+                alt="Pricing plans"
+                className="w-full max-w-md h-auto"
+              />
+            </motion.div>
+          </div>
         </div>
       </section>
 
       {/* Pricing Plans Section */}
       <section
         className="py-16 px-6 md:px-12"
-        style={{ backgroundColor: colors.background.gray }}
+        style={{ backgroundColor: colors.background.light }}
       >
         <div className="max-w-7xl mx-auto">
           <motion.div
@@ -149,7 +166,7 @@ const Pricing = () => {
                 <Card
                   className="h-full shadow-none relative overflow-visible"
                   style={{
-                    backgroundColor: colors.background.light,
+                    backgroundColor: colors.background.gray,
                   }}
                 >
                   {plan.popular && (
@@ -243,7 +260,7 @@ const Pricing = () => {
       {/* FAQ Section */}
       <section
         className="py-16 px-6 md:px-12"
-        style={{ backgroundColor: colors.background.light }}
+        style={{ backgroundColor: colors.background.gray }}
       >
         <div className="max-w-3xl mx-auto">
           <motion.div
@@ -288,7 +305,7 @@ const Pricing = () => {
                   }
                   className="rounded-2xl"
                   style={{
-                    backgroundColor: colors.background.gray,
+                    backgroundColor: colors.background.card,
                   }}
                 >
                   <p style={{ color: colors.text.secondary }}>{faq.answer}</p>

@@ -44,6 +44,8 @@ import avatarTalon from "../../assets/images/avatar-talon.png";
 import tutorProfile1 from "../../assets/images/tutor-profile-1.png";
 import tutorProfile2 from "../../assets/images/tutor-profile-2.png";
 import tutorProfile3 from "../../assets/images/tutor-profile-3.png";
+import aiImage from "../../assets/images/ai.avif";
+import videoImage from "../../assets/images/video.avif";
 
 const Home = () => {
   const navigate = useNavigate();
@@ -311,7 +313,7 @@ const Home = () => {
       {/* Features Section */}
       <section
         className="py-20 px-6 md:px-12"
-        style={{ backgroundColor: colors.background.gray }}
+        style={{ backgroundColor: colors.background.light }}
       >
         <div className="max-w-7xl mx-auto">
           <motion.div
@@ -348,7 +350,7 @@ const Home = () => {
                 <Card
                   className="h-full hover:border-primary transition-colors shadow-none"
                   style={{
-                    backgroundColor: colors.background.light,
+                    backgroundColor: colors.background.gray,
                   }}
                 >
                   <CardBody className="p-6 text-center flex flex-col items-center">
@@ -377,6 +379,77 @@ const Home = () => {
               </motion.div>
             ))}
           </motion.div>
+        </div>
+      </section>
+
+      {/* AI-Powered Section */}
+      <section
+        className="py-20 px-6 md:px-12"
+        style={{ backgroundColor: colors.background.gray }}
+      >
+        <div className="max-w-7xl mx-auto">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.7 }}
+              className="hidden lg:flex justify-center"
+            >
+              <img
+                src={aiImage}
+                alt="AI-powered learning"
+                className="w-full max-w-md h-auto"
+              />
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.7, delay: 0.2 }}
+            >
+              <h2
+                className="text-3xl sm:text-4xl font-bold mb-6"
+                style={{ color: colors.text.primary }}
+              >
+                {t("home.aiSection.title")}{" "}
+                <span style={{ color: colors.primary.main }}>
+                  {t("home.aiSection.titleHighlight")}
+                </span>
+              </h2>
+              <p
+                className="text-lg mb-6 leading-relaxed"
+                style={{ color: colors.text.secondary }}
+              >
+                {t("home.aiSection.description")}
+              </p>
+              <ul className="space-y-4">
+                {[
+                  t("home.aiSection.feature1"),
+                  t("home.aiSection.feature2"),
+                  t("home.aiSection.feature3"),
+                ].map((feature, index) => (
+                  <li key={index} className="flex items-center gap-3">
+                    <div
+                      className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
+                      style={{
+                        backgroundColor: colors.background.primaryLight,
+                      }}
+                    >
+                      <Sparkles
+                        className="w-4 h-4"
+                        style={{ color: colors.primary.main }}
+                      />
+                    </div>
+                    <span style={{ color: colors.text.secondary }}>
+                      {feature}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </motion.div>
+          </div>
         </div>
       </section>
 

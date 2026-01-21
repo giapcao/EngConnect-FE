@@ -30,6 +30,8 @@ import avatarDylan from "../../assets/images/avatar-dylan.png";
 import avatarKaius from "../../assets/images/avatar-kaius.png";
 import avatarThien from "../../assets/images/avatar-Thien.png";
 import avatarZane from "../../assets/images/avatar-zane.png";
+import hybridWorkImage from "../../assets/images/hybrid-work.avif";
+import projectImage from "../../assets/images/project.avif";
 
 const About = () => {
   const navigate = useNavigate();
@@ -156,33 +158,49 @@ const About = () => {
               : "linear-gradient(to bottom, #FFFFFF, #DBEAFE)",
         }}
       >
-        <div className="max-w-4xl mx-auto text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7 }}
-          >
-            <h1
-              className="text-4xl sm:text-5xl font-bold mb-6"
-              style={{ color: colors.text.primary }}
+        <div className="max-w-7xl mx-auto">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.7 }}
+              className="text-center lg:text-left"
             >
-              {t("about.hero.title")}{" "}
-              <span style={{ color: colors.primary.main }}>EngConnect</span>
-            </h1>
-            <p
-              className="text-lg max-w-2xl mx-auto leading-relaxed"
-              style={{ color: colors.text.secondary }}
+              <h1
+                className="text-4xl sm:text-5xl font-bold mb-6"
+                style={{ color: colors.text.primary }}
+              >
+                {t("about.hero.title")}{" "}
+                <span style={{ color: colors.primary.main }}>EngConnect</span>
+              </h1>
+              <p
+                className="text-lg max-w-xl leading-relaxed"
+                style={{ color: colors.text.secondary }}
+              >
+                {t("about.hero.description")}
+              </p>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.7, delay: 0.2 }}
+              className="hidden lg:flex justify-center"
             >
-              {t("about.hero.description")}
-            </p>
-          </motion.div>
+              <img
+                src={hybridWorkImage}
+                alt="Team collaboration"
+                className="w-full max-w-md h-auto"
+              />
+            </motion.div>
+          </div>
         </div>
       </section>
 
       {/* Stats Section */}
       <section
         className="py-16 px-6 md:px-12"
-        style={{ backgroundColor: colors.background.gray }}
+        style={{ backgroundColor: colors.background.light }}
       >
         <div className="max-w-7xl mx-auto">
           <motion.div
@@ -196,7 +214,7 @@ const About = () => {
               <motion.div key={stat.label} variants={itemVariants}>
                 <Card
                   className="h-full shadow-none"
-                  style={{ backgroundColor: colors.background.light }}
+                  style={{ backgroundColor: colors.background.gray }}
                 >
                   <CardBody className="p-6 text-center">
                     <div
@@ -226,7 +244,7 @@ const About = () => {
       {/* Mission & Vision Section */}
       <section
         className="py-20 px-6 md:px-12"
-        style={{ backgroundColor: colors.background.light }}
+        style={{ backgroundColor: colors.background.gray }}
       >
         <div className="max-w-7xl mx-auto">
           <motion.div
@@ -240,7 +258,7 @@ const About = () => {
             <motion.div variants={itemVariants}>
               <Card
                 className="h-full shadow-none"
-                style={{ backgroundColor: colors.background.gray }}
+                style={{ backgroundColor: colors.background.light }}
               >
                 <CardBody className="p-8">
                   <div
@@ -273,7 +291,7 @@ const About = () => {
             <motion.div variants={itemVariants}>
               <Card
                 className="h-full shadow-none"
-                style={{ backgroundColor: colors.background.gray }}
+                style={{ backgroundColor: colors.background.light }}
               >
                 <CardBody className="p-8">
                   <div
@@ -308,15 +326,31 @@ const About = () => {
       {/* Our Story Section */}
       <section
         className="py-20 px-6 md:px-12"
-        style={{ backgroundColor: colors.background.gray }}
+        style={{ backgroundColor: colors.background.light }}
       >
         <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
+            {/* Left - Image */}
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.7 }}
+              className="hidden lg:flex justify-center"
+            >
+              <img
+                src={projectImage}
+                alt="Remote learning"
+                className="w-full max-w-md h-auto"
+              />
+            </motion.div>
+
+            {/* Right - Content */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.7, delay: 0.2 }}
             >
               <h2
                 className="text-3xl sm:text-4xl font-bold mb-6"
@@ -348,50 +382,52 @@ const About = () => {
                 </p>
               </div>
             </motion.div>
+          </div>
 
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.7, delay: 0.2 }}
-              className="grid grid-cols-2 gap-4"
-            >
-              {[
-                {
-                  icon: (props) => <Rocket weight="duotone" {...props} />,
-                  title: t("about.story.founded"),
-                  value: "2025",
-                  color: "#3B82F6",
-                  bgColor: "rgba(59, 130, 246, 0.1)",
-                },
-                {
-                  icon: (props) => (
-                    <GlobeHemisphereWest weight="duotone" {...props} />
-                  ),
-                  title: t("about.story.headquarters"),
-                  value: "Ho Chi Minh City, Vietnam",
-                  color: "#10B981",
-                  bgColor: "rgba(16, 185, 129, 0.1)",
-                },
-                {
-                  icon: (props) => <Users weight="duotone" {...props} />,
-                  title: t("about.story.teamSize"),
-                  value: "5",
-                  color: "#F59E0B",
-                  bgColor: "rgba(245, 158, 11, 0.1)",
-                },
-                {
-                  icon: (props) => <Handshake weight="duotone" {...props} />,
-                  title: t("about.story.partnerships"),
-                  value: "5+",
-                  color: "#8B5CF6",
-                  bgColor: "rgba(139, 92, 246, 0.1)",
-                },
-              ].map((item) => (
+          {/* Stats Cards */}
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-12"
+          >
+            {[
+              {
+                icon: (props) => <Rocket weight="duotone" {...props} />,
+                title: t("about.story.founded"),
+                value: "2025",
+                color: "#3B82F6",
+                bgColor: "rgba(59, 130, 246, 0.1)",
+              },
+              {
+                icon: (props) => (
+                  <GlobeHemisphereWest weight="duotone" {...props} />
+                ),
+                title: t("about.story.headquarters"),
+                value: "Ho Chi Minh City, Vietnam",
+                color: "#10B981",
+                bgColor: "rgba(16, 185, 129, 0.1)",
+              },
+              {
+                icon: (props) => <Users weight="duotone" {...props} />,
+                title: t("about.story.teamSize"),
+                value: "5",
+                color: "#F59E0B",
+                bgColor: "rgba(245, 158, 11, 0.1)",
+              },
+              {
+                icon: (props) => <Handshake weight="duotone" {...props} />,
+                title: t("about.story.partnerships"),
+                value: "5+",
+                color: "#8B5CF6",
+                bgColor: "rgba(139, 92, 246, 0.1)",
+              },
+            ].map((item) => (
+              <motion.div key={item.title} variants={itemVariants}>
                 <Card
-                  key={item.title}
-                  className="shadow-none"
-                  style={{ backgroundColor: colors.background.light }}
+                  className="shadow-none h-full"
+                  style={{ backgroundColor: colors.background.gray }}
                 >
                   <CardBody className="p-5">
                     <div
@@ -417,16 +453,16 @@ const About = () => {
                     </p>
                   </CardBody>
                 </Card>
-              ))}
-            </motion.div>
-          </div>
+              </motion.div>
+            ))}
+          </motion.div>
         </div>
       </section>
 
       {/* Values Section */}
       <section
         className="py-20 px-6 md:px-12"
-        style={{ backgroundColor: colors.background.light }}
+        style={{ backgroundColor: colors.background.gray }}
       >
         <div className="max-w-7xl mx-auto">
           <motion.div
@@ -464,7 +500,7 @@ const About = () => {
               <motion.div key={value.title} variants={itemVariants}>
                 <Card
                   className="h-full shadow-none"
-                  style={{ backgroundColor: colors.background.gray }}
+                  style={{ backgroundColor: colors.background.light }}
                 >
                   <CardBody className="p-6 text-center">
                     <div
@@ -496,7 +532,7 @@ const About = () => {
       {/* Team Section */}
       <section
         className="py-20 px-6 md:px-12"
-        style={{ backgroundColor: colors.background.gray }}
+        style={{ backgroundColor: colors.background.light }}
       >
         <div className="max-w-7xl mx-auto">
           <motion.div
@@ -534,7 +570,7 @@ const About = () => {
               <motion.div key={member.name} variants={itemVariants}>
                 <Card
                   className="h-full shadow-none"
-                  style={{ backgroundColor: colors.background.light }}
+                  style={{ backgroundColor: colors.background.gray }}
                 >
                   <CardBody className="p-6 text-center">
                     <img

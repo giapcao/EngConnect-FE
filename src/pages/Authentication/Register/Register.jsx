@@ -7,7 +7,7 @@ import BrandLogo from "../../../components/Authentication/BrandLogo";
 import SocialLogin from "../../../components/Authentication/SocialLogin";
 import { useThemeColors } from "../../../hooks/useThemeColors";
 import { useTheme } from "../../../contexts/ThemeContext";
-import illustrationImage from "../../../assets/images/contract.png";
+import illustrationImage from "../../../assets/images/welcome-on-board.avif";
 import "./Register.css";
 
 // eslint-disable-next-line no-unused-vars

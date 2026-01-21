@@ -59,6 +59,14 @@
         "description": "Tham gia buổi học video trực tiếp, luyện tập với công cụ AI và theo dõi tiến độ"
       }
     },
+    "aiSection": {
+      "title": "Học thông minh với",
+      "titleHighlight": "Công nghệ AI",
+      "description": "Các công cụ AI tiên tiến của chúng tôi nâng cao trải nghiệm học tập bằng cách cung cấp phản hồi cá nhân hóa, phân tích phát âm và bài tập thích ứng theo tiến độ của bạn.",
+      "feature1": "Phản hồi và sửa phát âm theo thời gian thực",
+      "feature2": "Hỗ trợ bài tập và giải thích bằng AI",
+      "feature3": "Theo dõi tiến độ thông minh và gợi ý cá nhân hóa"
+    },
     "tutors": {
       "title": "Gặp gỡ",
       "titleHighlight": "Gia sư hàng đầu",
