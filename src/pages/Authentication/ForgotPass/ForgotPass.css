@@ -1,0 +1,72 @@
+.forgot-pass-container {
+  min-height: 100vh;
+  display: flex;
+  font-size: 18px;
+}
+
+.forgot-pass-content {
+  display: flex;
+  width: 100%;
+  height: 100vh;
+}
+
+.forgot-pass-illustration {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #F0F9FF;
+  padding: 3rem;
+}
+
+.forgot-pass-illustration img {
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  max-height: 800px;
+}
+
+.forgot-pass-form-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  overflow-y: auto;
+}
+
+.forgot-pass-header {
+  width: 100%;
+  max-width: 480px;
+}
+
+.forgot-pass-card {
+  background: var(--color-bg-light);
+  border-radius: 20px;
+  padding: 2rem;
+  width: 100%;
+  max-width: 480px;
+  border: 1px solid var(--color-border-light);
+}
+
+@media (max-width: 1024px) {
+  .forgot-pass-content {
+    flex-direction: column;
+  }
+  
+  .forgot-pass-illustration {
+    max-height: 400px;
+  }
+}
+
+@media (max-width: 640px) {
+  .forgot-pass-card {
+    padding: 2rem;
+  }
+  
+  .forgot-pass-illustration {
+    max-height: 300px;
+  }
+}

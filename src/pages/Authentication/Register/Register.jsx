@@ -7,7 +7,7 @@ import BrandLogo from "../../../components/Authentication/BrandLogo";
 import SocialLogin from "../../../components/Authentication/SocialLogin";
 import { useThemeColors } from "../../../hooks/useThemeColors";
 import { useTheme } from "../../../contexts/ThemeContext";
-import illustrationImage from "../../../assets/images/Saly-10.png";
+import illustrationImage from "../../../assets/images/contract.png";
 import "./Register.css";
 
 // eslint-disable-next-line no-unused-vars
@@ -59,6 +59,10 @@ const Register = () => {
           initial={{ opacity: 0, x: -50 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.8 }}
+          style={{
+            backgroundColor:
+              theme === "dark" ? colors.background.gray : "#F0F9FF",
+          }}
         >
           <Image src={illustrationImage} alt="Student illustration" />
         </motion.div>

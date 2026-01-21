@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Button, Card, CardBody, Image } from "@heroui/react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -10,15 +10,25 @@ import {
   Star,
   ArrowRight,
   Globe,
-  Clock,
+  // Clock,
   TrendingUp,
   Sparkles,
+  User,
 } from "lucide-react";
 import * as MotionLib from "framer-motion";
 import Header from "../../components/Header/Header";
 import Footer from "../../components/Footer/Footer";
 import { useThemeColors } from "../../hooks/useThemeColors";
 import { useTheme } from "../../contexts/ThemeContext";
+import {
+  IdentificationBadge,
+  CalendarDots,
+  BookOpenUser,
+  Tag,
+  UserList,
+  Clock,
+  Laptop,
+} from "@phosphor-icons/react";
 
 // eslint-disable-next-line no-unused-vars
 const { motion } = MotionLib;
@@ -101,24 +111,32 @@ const Home = () => {
 
   const features = [
     {
-      icon: Users,
+      icon: (props) => <IdentificationBadge weight="duotone" {...props} />,
       title: t("home.features.expertTutors.title"),
       description: t("home.features.expertTutors.description"),
+      color: "#3B82F6",
+      bgColor: "rgba(59, 130, 246, 0.1)",
     },
     {
-      icon: Calendar,
+      icon: (props) => <CalendarDots weight="duotone" {...props} />,
       title: t("home.features.flexibleSchedule.title"),
       description: t("home.features.flexibleSchedule.description"),
+      color: "#10B981",
+      bgColor: "rgba(16, 185, 129, 0.1)",
     },
     {
-      icon: BookOpen,
+      icon: (props) => <BookOpenUser weight="duotone" {...props} />,
       title: t("home.features.customCurriculum.title"),
       description: t("home.features.customCurriculum.description"),
+      color: "#F59E0B",
+      bgColor: "rgba(245, 158, 11, 0.1)",
     },
     {
-      icon: Award,
+      icon: (props) => <Tag weight="duotone" {...props} />,
       title: t("home.features.affordablePricing.title"),
       description: t("home.features.affordablePricing.description"),
+      color: "#8B5CF6",
+      bgColor: "rgba(139, 92, 246, 0.1)",
     },
   ];
 
@@ -157,7 +175,12 @@ const Home = () => {
       {/* Hero Section */}
       <section
         className="py-16 px-6 md:px-12"
-        style={{ backgroundColor: colors.background.page }}
+        style={{
+          background:
+            theme === "dark"
+              ? colors.background.page
+              : "linear-gradient(to bottom, #FFFFFF, #DBEAFE)",
+        }}
       >
         <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
@@ -209,7 +232,7 @@ const Home = () => {
                 >
                   {t("home.hero.startLearning")}
                 </Button>
-                <Button
+                {/* <Button
                   size="lg"
                   radius="full"
                   className="font-semibold text-lg px-8 h-14"
@@ -219,7 +242,7 @@ const Home = () => {
                   }}
                 >
                   {t("home.hero.watchDemo")}
-                </Button>
+                </Button> */}
               </div>
 
               {/* Trust indicators */}
@@ -328,16 +351,16 @@ const Home = () => {
                     backgroundColor: colors.background.light,
                   }}
                 >
-                  <CardBody className="p-6">
+                  <CardBody className="p-6 text-center flex flex-col items-center">
                     <div
-                      className="w-12 h-12 rounded-xl flex items-center justify-center mb-4"
+                      className="w-14 h-14 rounded-xl flex items-center justify-center mb-4"
                       style={{
-                        backgroundColor: colors.background.primaryLight,
+                        backgroundColor: feature.bgColor,
                       }}
                     >
                       <feature.icon
-                        className="w-6 h-6"
-                        style={{ color: colors.primary.main }}
+                        className="w-7 h-7"
+                        style={{ color: feature.color }}
                       />
                     </div>
                     <h3
@@ -397,21 +420,27 @@ const Home = () => {
             {[
               {
                 step: "01",
-                icon: Globe,
+                icon: (props) => <UserList weight="duotone" {...props} />,
                 title: t("home.howItWorks.step1.title"),
                 description: t("home.howItWorks.step1.description"),
+                color: "#3B82F6",
+                bgColor: "rgba(59, 130, 246, 0.1)",
               },
               {
                 step: "02",
-                icon: Clock,
+                icon: (props) => <Clock weight="duotone" {...props} />,
                 title: t("home.howItWorks.step2.title"),
                 description: t("home.howItWorks.step2.description"),
+                color: "#10B981",
+                bgColor: "rgba(16, 185, 129, 0.1)",
               },
               {
                 step: "03",
-                icon: TrendingUp,
+                icon: (props) => <Laptop weight="duotone" {...props} />,
                 title: t("home.howItWorks.step3.title"),
                 description: t("home.howItWorks.step3.description"),
+                color: "#F59E0B",
+                bgColor: "rgba(245, 158, 11, 0.1)",
               },
             ].map((item) => (
               <motion.div
@@ -422,19 +451,19 @@ const Home = () => {
                 <div className="relative inline-block mb-6">
                   <div
                     className="w-16 h-16 rounded-2xl flex items-center justify-center"
-                    style={{ backgroundColor: colors.primary.main }}
+                    style={{ backgroundColor: item.bgColor }}
                   >
                     <item.icon
                       className="w-8 h-8"
-                      style={{ color: colors.text.white }}
+                      style={{ color: item.color }}
                     />
                   </div>
                   <div
                     className="absolute -top-2 -right-2 w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold"
                     style={{
                       backgroundColor: colors.background.light,
-                      color: colors.primary.main,
-                      border: `2px solid ${colors.primary.main}`,
+                      color: item.color,
+                      border: `2px solid ${item.color}`,
                     }}
                   >
                     {item.step}

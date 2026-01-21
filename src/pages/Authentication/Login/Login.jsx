@@ -8,7 +8,7 @@ import BrandLogo from "../../../components/Authentication/BrandLogo";
 import SocialLogin from "../../../components/Authentication/SocialLogin";
 import { useThemeColors } from "../../../hooks/useThemeColors";
 import { useTheme } from "../../../contexts/ThemeContext";
-import illustrationImage from "../../../assets/images/Saly-1.png";
+import illustrationImage from "../../../assets/images/test.png";
 import "./Login.css";
 
 // eslint-disable-next-line no-unused-vars
@@ -52,6 +52,10 @@ const Login = () => {
           initial={{ opacity: 0, x: -50 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.8 }}
+          style={{
+            backgroundColor:
+              theme === "dark" ? colors.background.gray : "#F0F9FF",
+          }}
         >
           <Image src={illustrationImage} alt="Student illustration" />
         </motion.div>
@@ -170,7 +174,12 @@ const Login = () => {
                   </span>
                 </Checkbox>
 
-                <Link href="#" size="sm" style={{ color: colors.primary.main }}>
+                <Link
+                  onClick={() => navigate("/forgot-password")}
+                  size="sm"
+                  className="cursor-pointer"
+                  style={{ color: colors.primary.main }}
+                >
                   {t("auth.login.forgotPassword")}
                 </Link>
               </div>

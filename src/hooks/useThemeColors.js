@@ -15,7 +15,7 @@ const lightColors = {
   background: {
     dark: '#2D2D2D',
     light: '#FFFFFF',
-    gray: '#F5F5F5',
+    gray: '#F5F7FA',
     input: '#F3F4F6',
     page: '#FBFCFE',
     card: '#FFFFFF',

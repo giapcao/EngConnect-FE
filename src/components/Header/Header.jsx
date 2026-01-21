@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { Button, Link } from "@heroui/react";
+import { Button, Link as HeroLink } from "@heroui/react";
 import { GraduationCap, Menu, X, ChevronRight } from "lucide-react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import * as MotionLib from "framer-motion";
 import { useThemeColors } from "../../hooks/useThemeColors";
@@ -47,7 +47,7 @@ const Header = () => {
   return (
     <>
       <header
-        className={`sticky top-0 z-50 transition-all duration-300 backdrop-blur-xl ${
+        className={`sticky top-0 z-50 transition-all duration-300 backdrop-blur-xs ${
           isScrolled ? "border-b" : "border-b border-transparent"
         }`}
         style={{
@@ -61,7 +61,7 @@ const Header = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-0">
           <div className="flex justify-between items-center h-18 py-3">
             {/* Logo */}
-            <Link href="/" className="flex items-center gap-3 group">
+            <Link to="/" className="flex items-center gap-3 group no-underline">
               <div
                 className="w-11 h-11 rounded-xl flex items-center justify-center transition-all duration-300 group-hover:scale-105"
                 style={{ backgroundColor: colors.primary.main }}
@@ -95,8 +95,8 @@ const Header = () => {
               {navItems.map((item) => (
                 <Link
                   key={item.name}
-                  href={item.href}
-                  className="relative px-5 py-2 rounded-full font-medium text-sm transition-all duration-300"
+                  to={item.href}
+                  className="relative px-5 py-2 rounded-full font-medium text-sm transition-all duration-300 no-underline"
                   style={{
                     color: isActiveRoute(item.href)
                       ? colors.text.white
@@ -196,7 +196,7 @@ const Header = () => {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.3, ease: "easeInOut" }}
-              className="absolute top-full left-0 right-0 lg:hidden border-t shadow-lg z-50 backdrop-blur-xl"
+              className="absolute top-full left-0 right-0 lg:hidden border-t shadow-lg z-50 backdrop-blur-sm"
               style={{
                 backgroundColor:
                   theme === "dark"

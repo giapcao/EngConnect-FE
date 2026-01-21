@@ -152,6 +152,102 @@
       "socialText": "Hoặc đăng ký với",
       "hasAccount": "Đã có tài khoản?",
       "signIn": "Đăng nhập"
+    },
+    "forgotPassword": {
+      "subtitle": "Quên mật khẩu? Đừng lo, chúng tôi sẽ giúp bạn đặt lại.",
+      "email": "Địa chỉ Email",
+      "emailPlaceholder": "Nhập địa chỉ email của bạn",
+      "instruction": "Nhập địa chỉ email liên kết với tài khoản của bạn và chúng tôi sẽ gửi cho bạn liên kết để đặt lại mật khẩu.",
+      "sendButton": "Gửi liên kết đặt lại",
+      "successTitle": "Kiểm tra email của bạn",
+      "successMessage": "Chúng tôi đã gửi liên kết đặt lại mật khẩu đến địa chỉ email của bạn. Vui lòng kiểm tra hộp thư và làm theo hướng dẫn.",
+      "backToLogin": "Quay lại Đăng nhập",
+      "backToLoginLink": "Quay lại Đăng nhập"
+    }
+  },
+  "pricing": {
+    "hero": {
+      "title": "Bảng Giá Đơn Giản, Minh Bạch",
+      "subtitle": "Chọn gói phù hợp với mục tiêu học tập của bạn. Tất cả các gói đều bao gồm quyền truy cập công cụ AI và gia sư đã được xác minh.",
+      "plansTitle": "Gói Đăng Ký Hàng Tháng",
+      "plansSubtitle": "Nhận giá trị tốt nhất với các gói đăng ký của chúng tôi"
+    },
+    "plans": {
+      "mostPopular": "Phổ Biến Nhất",
+      "perMonth": "/tháng",
+      "starter": {
+        "name": "Cơ Bản",
+        "description": "Hoàn hảo cho người mới bắt đầu hành trình học tiếng Anh",
+        "features": [
+          "4 buổi học mỗi tháng (1/tuần)",
+          "Buổi học 45 phút",
+          "Trợ lý bài tập AI",
+          "Theo dõi tiến độ cơ bản",
+          "Truy cập diễn đàn cộng đồng",
+          "Hỗ trợ qua email",
+          "Truy cập tài liệu khóa học"
+        ],
+        "button": "Bắt Đầu"
+      },
+      "professional": {
+        "name": "Chuyên Nghiệp",
+        "description": "Lý tưởng cho học viên nghiêm túc cam kết thành thạo",
+        "features": [
+          "12 buổi học mỗi tháng (3/tuần)",
+          "Buổi học 60 phút",
+          "Trợ lý bài tập AI",
+          "Theo dõi tiến độ nâng cao",
+          "Ưu tiên chọn gia sư",
+          "Hỗ trợ ưu tiên",
+          "Tài nguyên có thể tải xuống",
+          "Ghi lại buổi học",
+          "Chứng chỉ hoàn thành"
+        ],
+        "button": "Bắt Đầu"
+      },
+      "enterprise": {
+        "name": "Doanh Nghiệp",
+        "description": "Giải pháp tùy chỉnh cho doanh nghiệp và tổ chức",
+        "price": "Tùy Chỉnh",
+        "features": [
+          "Không giới hạn buổi học",
+          "Thời lượng buổi học tùy chỉnh",
+          "Quản lý tài khoản riêng",
+          "Bảng phân tích nhóm",
+          "Chương trình học tùy chỉnh",
+          "Truy cập API",
+          "Tùy chọn white-label",
+          "Đảm bảo SLA",
+          "Đào tạo tại chỗ"
+        ],
+        "button": "Liên Hệ"
+      }
+    },
+    "faqs": {
+      "title": "Câu Hỏi Thường Gặp Về Giá",
+      "items": [
+        {
+          "question": "Tôi có thể thay đổi gói bất cứ lúc nào không?",
+          "answer": "Có! Bạn có thể nâng cấp hoặc hạ cấp gói bất cứ lúc nào. Thay đổi sẽ được áp dụng trong chu kỳ thanh toán tiếp theo."
+        },
+        {
+          "question": "Bạn có hoàn tiền không?",
+          "answer": "Chúng tôi cung cấp đảm bảo hoàn tiền trong 14 ngày cho tất cả các gói đăng ký. Nếu bạn không hài lòng, chúng tôi sẽ hoàn lại toàn bộ thanh toán."
+        },
+        {
+          "question": "Có phí ẩn nào không?",
+          "answer": "Không có phí ẩn! Giá bạn thấy là giá bạn trả. Tất cả các tính năng trong gói của bạn đều được bao gồm."
+        },
+        {
+          "question": "Tôi có thể hủy đăng ký không?",
+          "answer": "Có, bạn có thể hủy bất cứ lúc nào. Bạn sẽ giữ quyền truy cập cho đến cuối chu kỳ thanh toán hiện tại."
+        }
+      ]
+    },
+    "cta": {
+      "title": "Bắt Đầu Hành Trình Ngay Hôm Nay",
+      "subtitle": "Tham gia cùng hàng nghìn học viên đang cải thiện tiếng Anh mỗi ngày",
+      "button": "Bắt Đầu Miễn Phí"
     }
   }
 }
