@@ -324,5 +324,171 @@
       "subtitle": "Tham gia cùng hàng nghìn học viên đang cải thiện tiếng Anh mỗi ngày",
       "button": "Bắt Đầu Miễn Phí"
     }
+  },
+  "studentDashboard": {
+    "nav": {
+      "dashboard": "Tổng quan",
+      "browseCourses": "Tìm khóa học",
+      "myCourses": "Khóa học của tôi",
+      "schedule": "Lịch học",
+      "homework": "Bài tập",
+      "community": "Cộng đồng",
+      "profile": "Hồ sơ",
+      "logout": "Đăng xuất"
+    },
+    "search": {
+      "placeholder": "Tìm kiếm khóa học, gia sư..."
+    },
+    "dashboard": {
+      "welcome": "Chào mừng trở lại",
+      "welcomeSubtitle": "Tiếp tục hành trình học tập của bạn",      "continueLearn": "Tiếp tục học",      "stats": {
+        "coursesEnrolled": "Khóa học đã đăng ký",
+        "hoursLearned": "Giờ học",
+        "certificatesEarned": "Chứng chỉ",
+        "streak": "Ngày liên tiếp"
+      },
+      "upcomingLessons": "Buổi học sắp tới",
+      "coursesInProgress": "Khóa học đang học",
+      "weeklyGoal": "Mục tiêu tuần",
+      "recentAchievements": "Thành tích gần đây",
+      "viewAll": "Xem tất cả",
+      "lessonsCompleted": "bài học",
+      "daysCompleted": "ngày",
+      "keepItUp": "Tiếp tục phát huy! Bạn sắp đạt mục tiêu."
+    },
+    "browseCourses": {
+      "title": "Tìm khóa học",
+      "subtitle": "Khám phá các khóa học phù hợp với mục tiêu của bạn",
+      "searchPlaceholder": "Tìm kiếm khóa học...",
+      "category": "Danh mục",
+      "level": "Trình độ",
+      "categories": {
+        "all": "Tất cả",
+        "business": "Kinh doanh",
+        "ielts": "IELTS",
+        "toefl": "TOEFL",
+        "conversation": "Giao tiếp",
+        "grammar": "Ngữ pháp"
+      },
+      "levels": {
+        "all": "Tất cả trình độ",
+        "beginner": "Người mới",
+        "intermediate": "Trung cấp",
+        "advanced": "Nâng cao"
+      },
+      "bestseller": "Bán chạy",
+      "lessons": "bài học",
+      "enroll": "Đăng ký"
+    },
+    "myCourses": {
+      "title": "Khóa học của tôi",
+      "subtitle": "Theo dõi tiến độ và tiếp tục học tập",
+      "inProgress": "Đang học",
+      "completed": "Đã hoàn thành",
+      "wishlist": "Yêu thích",
+      "lessons": "bài học",
+      "continue": "Tiếp tục",
+      "nextLesson": "Tiếp theo",
+      "completedOn": "Hoàn thành",
+      "viewCertificate": "Chứng chỉ",
+      "reviewCourse": "Xem lại",
+      "students": "học viên",
+      "enrollNow": "Đăng ký ngay"
+    },
+    "schedule": {
+      "title": "Lịch học",
+      "subtitle": "Quản lý buổi học và lịch sắp tới",
+      "bookLesson": "Đặt buổi học",
+      "today": "Hôm nay",
+      "todayLessons": "Buổi học hôm nay",
+      "upcomingLessons": "Buổi học sắp tới",
+      "videoCall": "Video Call",
+      "reschedule": "Đổi lịch",
+      "cancel": "Hủy",
+      "joinNow": "Tham gia"
+    },
+    "homework": {
+      "title": "Bài tập",
+      "subtitle": "Hoàn thành bài tập và theo dõi tiến độ",
+      "pending": "Chờ làm",
+      "submitted": "Đã nộp",
+      "completed": "Hoàn thành",
+      "daysLeft": "ngày còn lại",
+      "dueDate": "Hạn",
+      "startNow": "Bắt đầu",
+      "submittedOn": "Đã nộp",
+      "reviewing": "Đang chấm",
+      "reviewed": "Đã chấm",
+      "aiCorrections": "sửa AI",
+      "viewDetails": "Xem chi tiết",
+      "completedOn": "Hoàn thành",
+      "tutorFeedback": "Nhận xét của gia sư"
+    },
+    "community": {
+      "title": "Cộng đồng",
+      "subtitle": "Kết nối với học viên và gia sư khác",
+      "newPost": "Bài mới",
+      "searchPlaceholder": "Tìm kiếm thảo luận...",
+      "categories": {
+        "all": "Tất cả",
+        "grammar": "Ngữ pháp",
+        "vocabulary": "Từ vựng",
+        "speaking": "Nói",
+        "writing": "Viết",
+        "ielts": "IELTS",
+        "tips": "Mẹo học"
+      },
+      "trending": "Xu hướng",
+      "recent": "Mới nhất",
+      "askQuestion": "Đặt câu hỏi hoặc chia sẻ...",
+      "post": "Đăng",
+      "tutor": "Gia sư",
+      "answered": "Đã trả lời",
+      "save": "Lưu",
+      "share": "Chia sẻ",
+      "topContributors": "Người đóng góp hàng đầu",
+      "points": "điểm",
+      "popularTags": "Tags phổ biến"
+    },
+    "profile": {
+      "title": "Hồ sơ",
+      "subtitle": "Quản lý tài khoản và tùy chọn của bạn",
+      "coursesCompleted": "Hoàn thành",
+      "hoursLearned": "Giờ học",
+      "certificates": "Chứng chỉ",
+      "currentStreak": "Streak",
+      "tabs": {
+        "profile": "Hồ sơ",
+        "achievements": "Thành tích",
+        "notifications": "Thông báo",
+        "security": "Bảo mật",
+        "payments": "Thanh toán"
+      },
+      "personalInfo": "Thông tin cá nhân",
+      "edit": "Sửa",
+      "save": "Lưu",
+      "firstName": "Tên",
+      "lastName": "Họ",
+      "email": "Email",
+      "phone": "Số điện thoại",
+      "location": "Địa điểm",
+      "language": "Ngôn ngữ",
+      "emailNotifications": "Thông báo Email",
+      "pushNotifications": "Thông báo đẩy",
+      "lessonReminders": "Nhắc nhở buổi học",
+      "lessonRemindersDesc": "Nhận thông báo trước buổi học",
+      "homeworkDeadlines": "Hạn bài tập",
+      "homeworkDeadlinesDesc": "Nhận nhắc nhở về hạn nộp bài",
+      "communityUpdates": "Cập nhật cộng đồng",
+      "communityUpdatesDesc": "Cập nhật các thảo luận trong cộng đồng",
+      "changePassword": "Đổi mật khẩu",
+      "currentPassword": "Mật khẩu hiện tại",
+      "newPassword": "Mật khẩu mới",
+      "confirmPassword": "Xác nhận mật khẩu",
+      "updatePassword": "Cập nhật mật khẩu",
+      "dangerZone": "Vùng nguy hiểm",
+      "deleteAccount": "Xóa tài khoản",
+      "paymentHistory": "Lịch sử thanh toán"
+    }
   }
 }

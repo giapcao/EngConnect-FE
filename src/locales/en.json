@@ -324,5 +324,173 @@
       "subtitle": "Join thousands of students improving their English every day",
       "button": "Get Started Free"
     }
+  },
+  "studentDashboard": {
+    "nav": {
+      "dashboard": "Dashboard",
+      "browseCourses": "Browse Courses",
+      "myCourses": "My Courses",
+      "schedule": "Schedule",
+      "homework": "Homework",
+      "community": "Community",
+      "profile": "Profile",
+      "logout": "Logout"
+    },
+    "search": {
+      "placeholder": "Search courses, tutors..."
+    },
+    "dashboard": {
+      "welcome": "Welcome back",
+      "welcomeSubtitle": "Continue your learning journey today",
+      "continueLearn": "Continue Learning",
+      "stats": {
+        "coursesEnrolled": "Courses Enrolled",
+        "hoursLearned": "Hours Learned",
+        "certificatesEarned": "Certificates",
+        "streak": "Day Streak"
+      },
+      "upcomingLessons": "Upcoming Lessons",
+      "coursesInProgress": "Courses In Progress",
+      "weeklyGoal": "Weekly Goal",
+      "recentAchievements": "Recent Achievements",
+      "viewAll": "View All",
+      "lessonsCompleted": "lessons",
+      "daysCompleted": "days",
+      "keepItUp": "Keep it up! You're almost there."
+    },
+    "browseCourses": {
+      "title": "Browse Courses",
+      "subtitle": "Discover courses that match your learning goals",
+      "searchPlaceholder": "Search courses...",
+      "category": "Category",
+      "level": "Level",
+      "categories": {
+        "all": "All",
+        "business": "Business",
+        "ielts": "IELTS",
+        "toefl": "TOEFL",
+        "conversation": "Conversation",
+        "grammar": "Grammar"
+      },
+      "levels": {
+        "all": "All Levels",
+        "beginner": "Beginner",
+        "intermediate": "Intermediate",
+        "advanced": "Advanced"
+      },
+      "bestseller": "Bestseller",
+      "lessons": "lessons",
+      "enroll": "Enroll"
+    },
+    "myCourses": {
+      "title": "My Courses",
+      "subtitle": "Track your progress and continue learning",
+      "inProgress": "In Progress",
+      "completed": "Completed",
+      "wishlist": "Wishlist",
+      "lessons": "lessons",
+      "continue": "Continue",
+      "nextLesson": "Next",
+      "completedOn": "Completed",
+      "viewCertificate": "Certificate",
+      "reviewCourse": "Review",
+      "students": "students",
+      "enrollNow": "Enroll Now"
+    },
+    "schedule": {
+      "title": "My Schedule",
+      "subtitle": "Manage your lessons and upcoming classes",
+      "bookLesson": "Book Lesson",
+      "today": "Today",
+      "todayLessons": "Today's Lessons",
+      "upcomingLessons": "Upcoming Lessons",
+      "videoCall": "Video Call",
+      "reschedule": "Reschedule",
+      "cancel": "Cancel",
+      "joinNow": "Join Now"
+    },
+    "homework": {
+      "title": "Homework",
+      "subtitle": "Complete your assignments and track your progress",
+      "pending": "Pending",
+      "submitted": "Submitted",
+      "completed": "Completed",
+      "daysLeft": "days left",
+      "dueDate": "Due",
+      "startNow": "Start Now",
+      "submittedOn": "Submitted",
+      "reviewing": "Reviewing",
+      "reviewed": "Reviewed",
+      "aiCorrections": "AI corrections",
+      "viewDetails": "View Details",
+      "completedOn": "Completed",
+      "tutorFeedback": "Tutor Feedback"
+    },
+    "community": {
+      "title": "Community",
+      "subtitle": "Connect with other learners and tutors",
+      "newPost": "New Post",
+      "searchPlaceholder": "Search discussions...",
+      "categories": {
+        "all": "All",
+        "grammar": "Grammar",
+        "vocabulary": "Vocabulary",
+        "speaking": "Speaking",
+        "writing": "Writing",
+        "ielts": "IELTS",
+        "tips": "Tips"
+      },
+      "trending": "Trending",
+      "recent": "Recent",
+      "askQuestion": "Ask a question or share something...",
+      "post": "Post",
+      "tutor": "Tutor",
+      "answered": "Answered",
+      "save": "Save",
+      "share": "Share",
+      "topContributors": "Top Contributors",
+      "points": "points",
+      "popularTags": "Popular Tags"
+    },
+    "profile": {
+      "title": "Profile",
+      "subtitle": "Manage your account and preferences",
+      "coursesCompleted": "Completed",
+      "hoursLearned": "Hours",
+      "certificates": "Certificates",
+      "currentStreak": "Streak",
+      "tabs": {
+        "profile": "Profile",
+        "achievements": "Achievements",
+        "notifications": "Notifications",
+        "security": "Security",
+        "payments": "Payments"
+      },
+      "personalInfo": "Personal Information",
+      "edit": "Edit",
+      "save": "Save",
+      "firstName": "First Name",
+      "lastName": "Last Name",
+      "email": "Email",
+      "phone": "Phone",
+      "location": "Location",
+      "language": "Language",
+      "emailNotifications": "Email Notifications",
+      "pushNotifications": "Push Notifications",
+      "lessonReminders": "Lesson Reminders",
+      "lessonRemindersDesc": "Get notified before your scheduled lessons",
+      "homeworkDeadlines": "Homework Deadlines",
+      "homeworkDeadlinesDesc": "Receive reminders about upcoming deadlines",
+      "communityUpdates": "Community Updates",
+      "communityUpdatesDesc": "Stay updated on community discussions",
+      "changePassword": "Change Password",
+      "currentPassword": "Current Password",
+      "newPassword": "New Password",
+      "confirmPassword": "Confirm Password",
+      "updatePassword": "Update Password",
+      "dangerZone": "Danger Zone",
+      "deleteAccount": "Delete Account",
+      "paymentHistory": "Payment History"
+    }
   }
 }

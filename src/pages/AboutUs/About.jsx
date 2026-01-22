@@ -30,8 +30,8 @@ import avatarDylan from "../../assets/images/avatar-dylan.png";
 import avatarKaius from "../../assets/images/avatar-kaius.png";
 import avatarThien from "../../assets/images/avatar-Thien.png";
 import avatarZane from "../../assets/images/avatar-zane.png";
-import hybridWorkImage from "../../assets/images/hybrid-work.avif";
-import projectImage from "../../assets/images/project.avif";
+import hybridWorkImage from "../../assets/illustrations/hybrid-work.avif";
+import projectImage from "../../assets/illustrations/project.avif";
 
 const About = () => {
   const navigate = useNavigate();

@@ -1,6 +1,6 @@
 import { useTheme } from "../../contexts/ThemeContext";
 import { Button } from "@heroui/react";
-import { Sun, Moon } from "lucide-react";
+import { Sun, Moon } from "@phosphor-icons/react";
 import { useThemeColors } from "../../hooks/useThemeColors";
 
 const ThemeSwitcher = () => {

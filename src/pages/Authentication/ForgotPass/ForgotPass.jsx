@@ -7,7 +7,7 @@ import { useTranslation } from "react-i18next";
 import BrandLogo from "../../../components/Authentication/BrandLogo";
 import { useThemeColors } from "../../../hooks/useThemeColors";
 import { useTheme } from "../../../contexts/ThemeContext";
-import illustrationImage from "../../../assets/images/forgot-pass.png";
+import illustrationImage from "../../../assets/illustrations/boy-with-key.avif";
 import "./ForgotPass.css";
 
 // eslint-disable-next-line no-unused-vars

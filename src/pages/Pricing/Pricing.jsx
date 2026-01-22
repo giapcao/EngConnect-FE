@@ -13,7 +13,7 @@ import Header from "../../components/Header/Header";
 import Footer from "../../components/Footer/Footer";
 import { useThemeColors } from "../../hooks/useThemeColors";
 import { useTheme } from "../../contexts/ThemeContext";
-import paymentImage from "../../assets/images/payment.avif";
+import paymentImage from "../../assets/illustrations/payment.avif";
 
 // eslint-disable-next-line no-unused-vars
 const { motion } = MotionLib;

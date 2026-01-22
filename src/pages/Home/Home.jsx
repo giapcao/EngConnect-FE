@@ -44,8 +44,8 @@ import avatarTalon from "../../assets/images/avatar-talon.png";
 import tutorProfile1 from "../../assets/images/tutor-profile-1.png";
 import tutorProfile2 from "../../assets/images/tutor-profile-2.png";
 import tutorProfile3 from "../../assets/images/tutor-profile-3.png";
-import aiImage from "../../assets/images/ai.avif";
-import videoImage from "../../assets/images/video.avif";
+import aiImage from "../../assets/illustrations/ai.avif";
+import videoImage from "../../assets/illustrations/video.avif";
 
 const Home = () => {
   const navigate = useNavigate();
