@@ -490,5 +490,90 @@
       "deleteAccount": "Xóa tài khoản",
       "paymentHistory": "Lịch sử thanh toán"
     }
+  },
+  "courses": {
+    "hero": {
+      "badge": "Khám phá khóa học",
+      "title": "Học tiếng Anh với",
+      "titleHighlight": "Khóa học chuyên nghiệp",
+      "description": "Khám phá các khóa học toàn diện được tạo bởi các giáo viên được chứng nhận. Từ cơ bản đến nâng cao, tìm khóa học hoàn hảo để đạt được mục tiêu ngôn ngữ của bạn.",
+      "searchPlaceholder": "Tìm khóa học theo tên hoặc giảng viên..."
+    },
+    "categories": {
+      "title": "Duyệt theo danh mục",
+      "subtitle": "Tìm khóa học phù hợp với mục tiêu học tập của bạn",
+      "all": "Tất cả khóa học",
+      "business": "Kinh doanh",
+      "ielts": "IELTS",
+      "toefl": "TOEFL",
+      "conversation": "Giao tiếp",
+      "grammar": "Ngữ pháp"
+    },
+    "featured": {
+      "title": "Khóa học",
+      "titleHighlight": "Nổi bật",
+      "subtitle": "Các khóa học được chọn lọc bởi đội ngũ giáo viên"
+    },
+    "allCourses": {
+      "title": "Tất cả khóa học",
+      "subtitle": "Khám phá danh mục khóa học đầy đủ",
+      "coursesFound": "khóa học có sẵn"
+    },
+    "benefits": {
+      "title": "Tại sao học",
+      "titleHighlight": "Với chúng tôi",
+      "subtitle": "Trải nghiệm sự khác biệt của giáo dục tiếng Anh chất lượng",
+      "personalized": {
+        "title": "Học cá nhân hóa",
+        "description": "Khóa học được điều chỉnh theo trình độ và tốc độ học của bạn"
+      },
+      "practical": {
+        "title": "Kỹ năng thực tế",
+        "description": "Ứng dụng thực tế và bài tập thực hành"
+      },
+      "progress": {
+        "title": "Theo dõi tiến độ",
+        "description": "Phân tích chi tiết để giám sát sự cải thiện của bạn"
+      },
+      "certificate": {
+        "title": "Nhận chứng chỉ",
+        "description": "Nhận chứng chỉ khi hoàn thành khóa học"
+      }
+    },
+    "cta": {
+      "title": "Sẵn sàng bắt đầu học?",
+      "description": "Tham gia cùng hàng nghìn học viên đang cải thiện kỹ năng tiếng Anh với các khóa học được thiết kế chuyên nghiệp.",
+      "button": "Bắt đầu miễn phí",
+      "viewPricing": "Xem bảng giá"
+    },
+    "bestseller": "Bán chạy",
+    "enroll": "Đăng ký",
+    "viewDetails": "Xem chi tiết",
+    "lessons": "bài học",
+    "modal": {
+      "instructor": "Giảng viên",
+      "verified": "Giáo viên đã xác minh",
+      "reviews": "đánh giá",
+      "students": "Học viên",
+      "duration": "Thời lượng",
+      "aboutCourse": "Về khóa học này",
+      "description": "Khóa học toàn diện này được thiết kế để giúp bạn làm chủ các kỹ năng tiếng Anh cần thiết. Thông qua các bài học được biên soạn kỹ lưỡng, bài tập tương tác và ứng dụng thực tế, bạn sẽ xây dựng sự tự tin và đạt được sự thành thạo. Giảng viên chuyên nghiệp của chúng tôi sẽ hướng dẫn bạn trong từng bước.",
+      "whatYouLearn": "Bạn sẽ học được gì",
+      "learn1": "Làm chủ từ vựng và cấu trúc ngữ pháp cần thiết",
+      "learn2": "Phát triển kỹ năng nói và nghe tự tin",
+      "learn3": "Thực hành với các tình huống và bài tập thực tế",
+      "learn4": "Nhận phản hồi cá nhân và theo dõi tiến độ",
+      "courseIncludes": "Khóa học bao gồm",
+      "onDemandVideo": "video theo yêu cầu",
+      "downloadableResources": "Tài liệu và bài tập tải xuống",
+      "mobileAccess": "Truy cập trên điện thoại và máy tính",
+      "certificateCompletion": "Chứng chỉ hoàn thành",
+      "lifetimeAccess": "Truy cập trọn đời",
+      "communityAccess": "Truy cập cộng đồng học viên",
+      "off": "GIẢM",
+      "moneyBackGuarantee": "Đảm bảo hoàn tiền trong 30 ngày",
+      "close": "Đóng",
+      "enrollNow": "Đăng ký ngay"
+    }
   }
 }

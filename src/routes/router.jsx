@@ -7,6 +7,7 @@ import Register from "../pages/Authentication/Register/Register";
 import ForgotPass from "../pages/Authentication/ForgotPass/ForgotPass";
 import Pricing from "../pages/Pricing/Pricing";
 import About from "../pages/AboutUs/About";
+import Courses from "../pages/Courses/Courses";
 
 // Student Dashboard Pages
 import Dashboard from "../pages/StudentDashboard/Dashboard/Dashboard";
@@ -45,6 +46,10 @@ export const router = createBrowserRouter([
       {
         path: "about",
         element: <About />,
+      },
+      {
+        path: "courses",
+        element: <Courses />,
       },
     ],
   },

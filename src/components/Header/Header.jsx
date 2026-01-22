@@ -215,7 +215,7 @@ const Header = () => {
                     transition={{ duration: 0.3, delay: index * 0.05 }}
                   >
                     <Link
-                      href={item.href}
+                      to={item.href}
                       className="flex items-center justify-between px-5 py-3.5 rounded-xl font-medium transition-all duration-200"
                       style={{
                         color: isActiveRoute(item.href)

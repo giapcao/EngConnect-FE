@@ -492,5 +492,90 @@
       "deleteAccount": "Delete Account",
       "paymentHistory": "Payment History"
     }
+  },
+  "courses": {
+    "hero": {
+      "badge": "Explore Our Courses",
+      "title": "Learn English with",
+      "titleHighlight": "Expert-Designed Courses",
+      "description": "Discover comprehensive courses created by certified educators. From beginner to advanced levels, find the perfect course to achieve your language goals.",
+      "searchPlaceholder": "Search courses by name or instructor..."
+    },
+    "categories": {
+      "title": "Browse by Category",
+      "subtitle": "Find courses that match your learning objectives",
+      "all": "All Courses",
+      "business": "Business",
+      "ielts": "IELTS",
+      "toefl": "TOEFL",
+      "conversation": "Conversation",
+      "grammar": "Grammar"
+    },
+    "featured": {
+      "title": "Featured",
+      "titleHighlight": "Courses",
+      "subtitle": "Hand-picked courses recommended by our educators"
+    },
+    "allCourses": {
+      "title": "All Courses",
+      "subtitle": "Explore our complete course catalog",
+      "coursesFound": "courses available"
+    },
+    "benefits": {
+      "title": "Why Learn",
+      "titleHighlight": "With Us",
+      "subtitle": "Experience the difference of quality English education",
+      "personalized": {
+        "title": "Personalized Learning",
+        "description": "Courses adapted to your skill level and learning pace"
+      },
+      "practical": {
+        "title": "Practical Skills",
+        "description": "Real-world applications and hands-on exercises"
+      },
+      "progress": {
+        "title": "Track Progress",
+        "description": "Detailed analytics to monitor your improvement"
+      },
+      "certificate": {
+        "title": "Get Certified",
+        "description": "Earn certificates upon completing courses"
+      }
+    },
+    "cta": {
+      "title": "Ready to Start Learning?",
+      "description": "Join thousands of students who are already improving their English skills with our expert-designed courses.",
+      "button": "Get Started Free",
+      "viewPricing": "View Pricing"
+    },
+    "bestseller": "Bestseller",
+    "enroll": "Enroll",
+    "viewDetails": "View Details",
+    "lessons": "lessons",
+    "modal": {
+      "instructor": "Instructor",
+      "verified": "Verified Educator",
+      "reviews": "reviews",
+      "students": "Students",
+      "duration": "Duration",
+      "aboutCourse": "About This Course",
+      "description": "This comprehensive course is designed to help you master essential English skills. Through carefully crafted lessons, interactive exercises, and real-world applications, you'll build confidence and achieve fluency. Our expert instructor will guide you every step of the way.",
+      "whatYouLearn": "What You'll Learn",
+      "learn1": "Master essential vocabulary and grammar structures",
+      "learn2": "Develop confident speaking and listening skills",
+      "learn3": "Practice with real-world scenarios and exercises",
+      "learn4": "Receive personalized feedback and progress tracking",
+      "courseIncludes": "This Course Includes",
+      "onDemandVideo": "of on-demand video",
+      "downloadableResources": "Downloadable resources & exercises",
+      "mobileAccess": "Access on mobile and desktop",
+      "certificateCompletion": "Certificate of completion",
+      "lifetimeAccess": "Full lifetime access",
+      "communityAccess": "Access to student community",
+      "off": "OFF",
+      "moneyBackGuarantee": "30-day money-back guarantee",
+      "close": "Close",
+      "enrollNow": "Enroll Now"
+    }
   }
 }
