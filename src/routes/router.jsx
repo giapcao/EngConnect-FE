@@ -17,6 +17,7 @@ import Schedule from "../pages/StudentDashboard/Schedule/Schedule";
 import Homework from "../pages/StudentDashboard/Homework/Homework";
 import Community from "../pages/StudentDashboard/Community/Community";
 import Profile from "../pages/StudentDashboard/Profile/Profile";
+import Notification from "../pages/StudentDashboard/Notification/Notification";
 
 export const router = createBrowserRouter([
   {
@@ -84,6 +85,10 @@ export const router = createBrowserRouter([
       {
         path: "profile",
         element: <Profile />,
+      },
+      {
+        path: "notifications",
+        element: <Notification />,
       },
     ],
   },

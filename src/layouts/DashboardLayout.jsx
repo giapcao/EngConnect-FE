@@ -11,6 +11,7 @@ import {
   DropdownItem,
 } from "@heroui/react";
 import { useTranslation } from "react-i18next";
+import { motion, AnimatePresence } from "framer-motion";
 import { useThemeColors } from "../hooks/useThemeColors";
 import { useTheme } from "../contexts/ThemeContext";
 import ThemeSwitcher from "../components/ThemeSwitcher/ThemeSwitcher";
@@ -143,7 +144,12 @@ const DashboardLayout = () => {
 
             {/* Notifications */}
             <Badge content="3" color="danger" shape="circle" size="sm">
-              <Button isIconOnly variant="light" radius="full">
+              <Button
+                isIconOnly
+                variant="light"
+                radius="full"
+                onPress={() => navigate("/student/notifications")}
+              >
                 <Bell
                   className="w-5 h-5"
                   style={{ color: colors.text.secondary }}
@@ -268,63 +274,115 @@ const DashboardLayout = () => {
             ))}
           </ul>
         </nav>
+      </header>
 
-        {/* Mobile Navigation */}
+      {/* Mobile Navigation Overlay */}
+      <AnimatePresence>
         {mobileMenuOpen && (
-          <nav
-            className="lg:hidden border-t"
-            style={{
-              borderColor: colors.border.light,
-              backgroundColor: colors.background.light,
-            }}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+            className="fixed inset-0 z-40 lg:hidden bg-black/50 backdrop-blur-sm"
+            style={{ top: "64px" }}
+            onClick={() => setMobileMenuOpen(false)}
           >
-            <ul className="p-2">
-              {navItems.map((item) => (
-                <li key={item.path}>
+            {/* Menu Content */}
+            <motion.nav
+              initial={{ y: -20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: -20, opacity: 0 }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
+              className="relative"
+              style={{
+                backgroundColor: colors.background.light,
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <ul className="p-4 max-h-[calc(100vh-64px)] overflow-y-auto">
+                {navItems.map((item, index) => (
+                  <motion.li
+                    key={item.path}
+                    initial={{ x: -20, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ delay: index * 0.05, duration: 0.3 }}
+                  >
+                    <Link
+                      to={item.path}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all no-underline ${
+                        isActive(item.path) ? "font-semibold" : ""
+                      }`}
+                      style={{
+                        backgroundColor: isActive(item.path)
+                          ? colors.primary.main
+                          : "transparent",
+                        color: isActive(item.path)
+                          ? colors.text.white
+                          : colors.text.secondary,
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!isActive(item.path)) {
+                          e.currentTarget.style.backgroundColor =
+                            colors.primary.lightest;
+                          e.currentTarget.style.color = colors.primary.main;
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!isActive(item.path)) {
+                          e.currentTarget.style.backgroundColor = "transparent";
+                          e.currentTarget.style.color = colors.text.secondary;
+                        }
+                      }}
+                    >
+                      <item.icon className="w-5 h-5" />
+                      <span>{item.label}</span>
+                    </Link>
+                  </motion.li>
+                ))}
+                <motion.li
+                  initial={{ x: -20, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  transition={{ delay: navItems.length * 0.05, duration: 0.3 }}
+                >
                   <Link
-                    to={item.path}
+                    to="/student/profile"
                     onClick={() => setMobileMenuOpen(false)}
                     className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all no-underline ${
-                      isActive(item.path) ? "font-semibold" : ""
+                      isActive("/student/profile") ? "font-semibold" : ""
                     }`}
                     style={{
-                      backgroundColor: isActive(item.path)
-                        ? colors.background.primaryLight
-                        : "transparent",
-                      color: isActive(item.path)
+                      backgroundColor: isActive("/student/profile")
                         ? colors.primary.main
+                        : "transparent",
+                      color: isActive("/student/profile")
+                        ? colors.text.white
                         : colors.text.secondary,
                     }}
+                    onMouseEnter={(e) => {
+                      if (!isActive("/student/profile")) {
+                        e.currentTarget.style.backgroundColor =
+                          colors.primary.lightest;
+                        e.currentTarget.style.color = colors.primary.main;
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isActive("/student/profile")) {
+                        e.currentTarget.style.backgroundColor = "transparent";
+                        e.currentTarget.style.color = colors.text.secondary;
+                      }
+                    }}
                   >
-                    <item.icon className="w-5 h-5" />
-                    <span>{item.label}</span>
+                    <UserCircle weight="duotone" className="w-5 h-5" />
+                    <span>{t("studentDashboard.nav.profile")}</span>
                   </Link>
-                </li>
-              ))}
-              <li>
-                <Link
-                  to="/student/profile"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all no-underline ${
-                    isActive("/student/profile") ? "font-semibold" : ""
-                  }`}
-                  style={{
-                    backgroundColor: isActive("/student/profile")
-                      ? colors.background.primaryLight
-                      : "transparent",
-                    color: isActive("/student/profile")
-                      ? colors.primary.main
-                      : colors.text.secondary,
-                  }}
-                >
-                  <UserCircle weight="duotone" className="w-5 h-5" />
-                  <span>{t("studentDashboard.nav.profile")}</span>
-                </Link>
-              </li>
-            </ul>
-          </nav>
+                </motion.li>
+              </ul>
+            </motion.nav>
+          </motion.div>
         )}
-      </header>
+      </AnimatePresence>
 
       {/* Page Content */}
       <main className="p-4 lg:p-8 max-w-7xl mx-auto">

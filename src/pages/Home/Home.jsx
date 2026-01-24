@@ -382,10 +382,96 @@ const Home = () => {
         </div>
       </section>
 
-      {/* AI-Powered Section */}
+      {/* 1-on-1 Video Learning Section */}
       <section
         className="py-20 px-6 md:px-12"
         style={{ backgroundColor: colors.background.gray }}
+      >
+        <div className="max-w-7xl mx-auto">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.7 }}
+            >
+              <h2
+                className="text-3xl sm:text-4xl font-bold mb-6"
+                style={{ color: colors.text.primary }}
+              >
+                {t("home.videoSection.title")}{" "}
+                <span
+                  style={{ color: colors.primary.main }}
+                  className="whitespace-pre-line"
+                >
+                  {t("home.videoSection.titleHighlight")}
+                </span>
+              </h2>
+              <p
+                className="text-lg mb-6 leading-relaxed"
+                style={{ color: colors.text.secondary }}
+              >
+                {t("home.videoSection.description")}
+              </p>
+              <ul className="space-y-4">
+                {[
+                  {
+                    icon: (props) => <Laptop weight="duotone" {...props} />,
+                    text: t("home.videoSection.feature1"),
+                    color: "#3B82F6",
+                  },
+                  {
+                    icon: (props) => <Clock weight="duotone" {...props} />,
+                    text: t("home.videoSection.feature2"),
+                    color: "#10B981",
+                  },
+                  {
+                    icon: (props) => <UserList weight="duotone" {...props} />,
+                    text: t("home.videoSection.feature3"),
+                    color: "#F59E0B",
+                  },
+                ].map((feature, index) => (
+                  <li key={index} className="flex items-center gap-3">
+                    <div
+                      className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                      style={{
+                        backgroundColor: `${feature.color}15`,
+                      }}
+                    >
+                      {feature.icon({
+                        className: "w-5 h-5",
+                        style: { color: feature.color },
+                      })}
+                    </div>
+                    <span style={{ color: colors.text.secondary }}>
+                      {feature.text}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.7, delay: 0.2 }}
+              className="hidden lg:flex justify-center"
+            >
+              <img
+                src={videoImage}
+                alt="1-on-1 video learning"
+                className="w-full max-w-md h-auto"
+              />
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* AI-Powered Section */}
+      <section
+        className="py-20 px-6 md:px-12"
+        style={{ backgroundColor: colors.background.light }}
       >
         <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
@@ -450,110 +536,6 @@ const Home = () => {
               </ul>
             </motion.div>
           </div>
-        </div>
-      </section>
-
-      {/* How It Works Section */}
-      <section
-        className="py-20 px-6 md:px-12"
-        style={{ backgroundColor: colors.background.light }}
-      >
-        <div className="max-w-7xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7 }}
-            className="text-center mb-16"
-          >
-            <h2
-              className="text-3xl sm:text-4xl font-bold mb-4"
-              style={{ color: colors.text.primary }}
-            >
-              {t("home.howItWorks.title")}{" "}
-              <span style={{ color: colors.primary.main }}>
-                {t("home.howItWorks.titleHighlight")}
-              </span>
-            </h2>
-            <p
-              className="text-lg max-w-2xl mx-auto"
-              style={{ color: colors.text.secondary }}
-            >
-              {t("home.howItWorks.description")}
-            </p>
-          </motion.div>
-
-          <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            className="grid md:grid-cols-3 gap-8"
-          >
-            {[
-              {
-                step: "01",
-                icon: (props) => <UserList weight="duotone" {...props} />,
-                title: t("home.howItWorks.step1.title"),
-                description: t("home.howItWorks.step1.description"),
-                color: "#3B82F6",
-                bgColor: "rgba(59, 130, 246, 0.1)",
-              },
-              {
-                step: "02",
-                icon: (props) => <Clock weight="duotone" {...props} />,
-                title: t("home.howItWorks.step2.title"),
-                description: t("home.howItWorks.step2.description"),
-                color: "#10B981",
-                bgColor: "rgba(16, 185, 129, 0.1)",
-              },
-              {
-                step: "03",
-                icon: (props) => <Laptop weight="duotone" {...props} />,
-                title: t("home.howItWorks.step3.title"),
-                description: t("home.howItWorks.step3.description"),
-                color: "#F59E0B",
-                bgColor: "rgba(245, 158, 11, 0.1)",
-              },
-            ].map((item) => (
-              <motion.div
-                key={item.step}
-                variants={itemVariants}
-                className="text-center"
-              >
-                <div className="relative inline-block mb-6">
-                  <div
-                    className="w-16 h-16 rounded-2xl flex items-center justify-center"
-                    style={{ backgroundColor: item.bgColor }}
-                  >
-                    <item.icon
-                      className="w-8 h-8"
-                      style={{ color: item.color }}
-                    />
-                  </div>
-                  <div
-                    className="absolute -top-2 -right-2 w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold"
-                    style={{
-                      backgroundColor: colors.background.light,
-                      color: item.color,
-                      border: `2px solid ${item.color}`,
-                    }}
-                  >
-                    {item.step}
-                  </div>
-                </div>
-                <h3
-                  className="text-xl font-bold mb-3"
-                  style={{ color: colors.text.primary }}
-                >
-                  {item.title}
-                </h3>
-                <p style={{ color: colors.text.secondary }}>
-                  {item.description}
-                </p>
-              </motion.div>
-            ))}
-          </motion.div>
         </div>
       </section>
 
