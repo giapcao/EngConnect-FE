@@ -146,7 +146,8 @@ const MyCourses = () => {
         className="grid grid-cols-3 gap-4"
       >
         <Card
-          shadow="none" className="border-none"
+          shadow="none"
+          className="border-none"
           style={{ backgroundColor: colors.background.light }}
         >
           <CardBody className="p-4 text-center">
@@ -162,7 +163,8 @@ const MyCourses = () => {
           </CardBody>
         </Card>
         <Card
-          shadow="none" className="border-none"
+          shadow="none"
+          className="border-none"
           style={{ backgroundColor: colors.background.light }}
         >
           <CardBody className="p-4 text-center">
@@ -178,7 +180,8 @@ const MyCourses = () => {
           </CardBody>
         </Card>
         <Card
-          shadow="none" className="border-none"
+          shadow="none"
+          className="border-none"
           style={{ backgroundColor: colors.background.light }}
         >
           <CardBody className="p-4 text-center">
@@ -266,7 +269,8 @@ const MyCourses = () => {
               transition={{ duration: 0.3, delay: index * 0.1 }}
             >
               <Card
-                shadow="none" className="border-none"
+                shadow="none"
+                className="border-none"
                 style={{ backgroundColor: colors.background.light }}
               >
                 <CardBody className="p-0">
@@ -375,7 +379,8 @@ const MyCourses = () => {
               transition={{ duration: 0.3, delay: index * 0.1 }}
             >
               <Card
-                shadow="none" className="border-none"
+                shadow="none"
+                className="border-none"
                 style={{ backgroundColor: colors.background.light }}
               >
                 <CardBody className="p-0">
@@ -498,7 +503,8 @@ const MyCourses = () => {
               transition={{ duration: 0.3, delay: index * 0.1 }}
             >
               <Card
-                shadow="none" className="border-none"
+                shadow="none"
+                className="border-none"
                 style={{ backgroundColor: colors.background.light }}
               >
                 <CardBody className="p-0">

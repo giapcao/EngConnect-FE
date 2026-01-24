@@ -288,7 +288,7 @@ const BrowseCourses = () => {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.3 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
         className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
       >
         {courses.map((course, index) => (
@@ -296,9 +296,8 @@ const BrowseCourses = () => {
             key={course.id}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 + index * 0.1 }}
             className="w-full"
-            whileHover={{ y: -8 }}
-            transition={{ type: "spring", stiffness: 400, damping: 25 }}
           >
             <Card
               shadow="none"

@@ -29,12 +29,12 @@ import {
   X,
   Bell,
   CaretDown,
-  MagnifyingGlassIcon,
-  SquaresFour,
-  ListMagnifyingGlass,
+  CurrencyDollar,
+  Student,
+  ChalkboardTeacher,
 } from "@phosphor-icons/react";
 
-const DashboardLayout = () => {
+const TutorDashboardLayout = () => {
   const { t } = useTranslation();
   const colors = useThemeColors();
   const { theme } = useTheme();
@@ -44,33 +44,38 @@ const DashboardLayout = () => {
 
   const navItems = [
     {
-      path: "/student/dashboard",
-      label: t("studentDashboard.nav.dashboard"),
+      path: "/tutor/dashboard",
+      label: t("tutorDashboard.nav.dashboard"),
       icon: House,
     },
     {
-      path: "/student/browse-courses",
-      label: t("studentDashboard.nav.browseCourses"),
-      icon: ListMagnifyingGlass,
-    },
-    {
-      path: "/student/my-courses",
-      label: t("studentDashboard.nav.myCourses"),
+      path: "/tutor/my-courses",
+      label: t("tutorDashboard.nav.myCourses"),
       icon: BookOpen,
     },
     {
-      path: "/student/schedule",
-      label: t("studentDashboard.nav.schedule"),
+      path: "/tutor/schedule",
+      label: t("tutorDashboard.nav.schedule"),
       icon: CalendarDots,
     },
     {
-      path: "/student/homework",
-      label: t("studentDashboard.nav.homework"),
+      path: "/tutor/students",
+      label: t("tutorDashboard.nav.students"),
+      icon: Student,
+    },
+    {
+      path: "/tutor/homework",
+      label: t("tutorDashboard.nav.homework"),
       icon: PencilSimple,
     },
     {
-      path: "/student/community",
-      label: t("studentDashboard.nav.community"),
+      path: "/tutor/earnings",
+      label: t("tutorDashboard.nav.earnings"),
+      icon: CurrencyDollar,
+    },
+    {
+      path: "/tutor/community",
+      label: t("tutorDashboard.nav.community"),
       icon: Users,
     },
   ];
@@ -120,7 +125,7 @@ const DashboardLayout = () => {
           <div className="hidden lg:flex absolute left-1/2 transform -translate-x-1/2 w-full max-w-2xl px-4">
             <Input
               type="text"
-              placeholder={t("studentDashboard.search.placeholder")}
+              placeholder={t("tutorDashboard.search.placeholder")}
               startContent={
                 <MagnifyingGlass
                   className="w-5 h-5"
@@ -153,7 +158,7 @@ const DashboardLayout = () => {
                 isIconOnly
                 variant="light"
                 radius="full"
-                onPress={() => navigate("/student/notifications")}
+                onPress={() => navigate("/tutor/notifications")}
               >
                 <Bell
                   className="w-5 h-5"
@@ -180,7 +185,7 @@ const DashboardLayout = () => {
               <DropdownTrigger>
                 <Button variant="light" className="gap-2 pl-2 pr-3">
                   <Avatar
-                    src="https://i.pravatar.cc/150?u=student"
+                    src="https://i.pravatar.cc/150?u=tutor"
                     size="sm"
                     className="w-8 h-8"
                   />
@@ -188,7 +193,7 @@ const DashboardLayout = () => {
                     className="hidden md:block font-medium"
                     style={{ color: colors.text.primary }}
                   >
-                    John Doe
+                    Sarah Johnson
                   </span>
                   <CaretDown
                     className="w-4 h-4 hidden sm:block"
@@ -202,9 +207,9 @@ const DashboardLayout = () => {
                   startContent={
                     <UserCircle weight="duotone" className="w-5 h-5" />
                   }
-                  onPress={() => navigate("/student/profile")}
+                  onPress={() => navigate("/tutor/profile")}
                 >
-                  {t("studentDashboard.nav.profile")}
+                  {t("tutorDashboard.nav.profile")}
                 </DropdownItem>
                 <DropdownItem
                   key="logout"
@@ -215,7 +220,7 @@ const DashboardLayout = () => {
                   }
                   onPress={() => navigate("/login")}
                 >
-                  {t("studentDashboard.nav.logout")}
+                  {t("tutorDashboard.nav.logout")}
                 </DropdownItem>
               </DropdownMenu>
             </Dropdown>
@@ -352,35 +357,35 @@ const DashboardLayout = () => {
                   transition={{ delay: navItems.length * 0.05, duration: 0.3 }}
                 >
                   <Link
-                    to="/student/profile"
+                    to="/tutor/profile"
                     onClick={() => setMobileMenuOpen(false)}
                     className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all no-underline ${
-                      isActive("/student/profile") ? "font-semibold" : ""
+                      isActive("/tutor/profile") ? "font-semibold" : ""
                     }`}
                     style={{
-                      backgroundColor: isActive("/student/profile")
+                      backgroundColor: isActive("/tutor/profile")
                         ? colors.primary.main
                         : "transparent",
-                      color: isActive("/student/profile")
+                      color: isActive("/tutor/profile")
                         ? colors.text.white
                         : colors.text.secondary,
                     }}
                     onMouseEnter={(e) => {
-                      if (!isActive("/student/profile")) {
+                      if (!isActive("/tutor/profile")) {
                         e.currentTarget.style.backgroundColor =
                           colors.primary.lightest;
                         e.currentTarget.style.color = colors.primary.main;
                       }
                     }}
                     onMouseLeave={(e) => {
-                      if (!isActive("/student/profile")) {
+                      if (!isActive("/tutor/profile")) {
                         e.currentTarget.style.backgroundColor = "transparent";
                         e.currentTarget.style.color = colors.text.secondary;
                       }
                     }}
                   >
                     <UserCircle weight="duotone" className="w-5 h-5" />
-                    <span>{t("studentDashboard.nav.profile")}</span>
+                    <span>{t("tutorDashboard.nav.profile")}</span>
                   </Link>
                 </motion.li>
               </ul>
@@ -397,4 +402,4 @@ const DashboardLayout = () => {
   );
 };
 
-export default DashboardLayout;
+export default TutorDashboardLayout;
