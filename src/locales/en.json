@@ -16,12 +16,77 @@
   },
   "nav": {
     "home": "Home",
-    "findTutors": "Find Tutors",
     "courses": "Courses",
     "pricing": "Pricing",
     "about": "About",
+    "becomeTutor": "Become a Tutor",
     "signIn": "Sign In",
     "getStarted": "Get Started"
+  },
+  "becomeTutor": {
+    "hero": {
+      "badge": "Join Our Teaching Community",
+      "title": "Share Your Knowledge,",
+      "titleHighlight": "Inspire Learners",
+      "description": "Join our community of expert tutors and help students around the world master English. Flexible schedule, competitive earnings, and meaningful impact."
+    },
+    "benefits": {
+      "title": "Why Teach with",
+      "titleHighlight": "EngConnect?",
+      "subtitle": "Enjoy the benefits of being part of our growing community",
+      "flexibility": {
+        "title": "Flexible Schedule",
+        "description": "Set your own hours and teach from anywhere in the world"
+      },
+      "earnings": {
+        "title": "Competitive Earnings",
+        "description": "Earn up to $50/hour with our transparent payment system"
+      },
+      "support": {
+        "title": "Full Support",
+        "description": "Access teaching resources, training, and 24/7 tutor support"
+      },
+      "growth": {
+        "title": "Career Growth",
+        "description": "Build your reputation and grow your student base over time"
+      }
+    },
+    "requirements": {
+      "title": "What We're",
+      "titleHighlight": "Looking For",
+      "subtitle": "Join us if you have the passion and qualifications to teach",
+      "native": "Strong English communication skills",
+      "experience": "Passion for teaching and helping others learn",
+      "certification": "Teaching experience or relevant qualifications",
+      "availability": "Flexible schedule to accommodate students"
+    },
+    "howItWorks": {
+      "title": "How You'll Become",
+      "titleHighlight": "Successful Instructor",
+      "subtitle": "Simple steps to begin your tutoring journey",
+      "step1": {
+        "title": "Apply to become instructor",
+        "description": "Fill out our application form with your details and teaching experience"
+      },
+      "step2": {
+        "title": "Setup & edit your profile",
+        "description": "Create your professional profile and showcase your expertise"
+      },
+      "step3": {
+        "title": "Create your new course",
+        "description": "Design and publish engaging courses for your students"
+      },
+      "step4": {
+        "title": "Start teaching & earning",
+        "description": "Begin teaching students and earn from your knowledge"
+      }
+    },
+    "cta": {
+      "title": "Ready to Start Teaching?",
+      "description": "Join thousands of tutors who are making a difference in students' lives while earning a great income.",
+      "button": "Apply Now",
+      "learnMore": "Learn More"
+    }
   },
   "home": {
     "hero": {
@@ -86,6 +151,13 @@
       "feature1": "Real-time video communication",
       "feature2": "Learn anytime, anywhere",
       "feature3": "Personal attention from native tutors"
+    },
+    "courses": {
+      "title": "Our Featured",
+      "titleHighlight": "Courses",
+      "description": "Explore our most popular courses designed to accelerate your learning",
+      "bestseller": "Bestseller",
+      "viewAll": "Browse All Course"
     },
     "tutors": {
       "title": "Meet Our",

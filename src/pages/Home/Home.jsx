@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Button, Card, CardBody, Image } from "@heroui/react";
+import { Button, Card, CardBody, Image, Chip } from "@heroui/react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
@@ -18,6 +18,7 @@ import {
 import * as MotionLib from "framer-motion";
 import Header from "../../components/Header/Header";
 import Footer from "../../components/Footer/Footer";
+import CourseCard from "../../components/CourseCard/CourseCard";
 import { useThemeColors } from "../../hooks/useThemeColors";
 import { useTheme } from "../../contexts/ThemeContext";
 import {
@@ -539,10 +540,146 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Featured Tutors Section */}
+      {/* Featured Courses Section */}
       <section
         className="py-20 px-6 md:px-12"
         style={{ backgroundColor: colors.background.gray }}
+      >
+        <div className="max-w-7xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.7 }}
+            className="text-center mb-16"
+          >
+            <h2
+              className="text-3xl sm:text-4xl font-bold mb-4"
+              style={{ color: colors.text.primary }}
+            >
+              {t("home.courses.title")}{" "}
+              <span style={{ color: colors.primary.main }}>
+                {t("home.courses.titleHighlight")}
+              </span>
+            </h2>
+            <p
+              className="text-lg max-w-2xl mx-auto"
+              style={{ color: colors.text.secondary }}
+            >
+              {t("home.courses.description")}
+            </p>
+          </motion.div>
+
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6"
+          >
+            {[
+              {
+                id: 1,
+                title: "Business English Masterclass",
+                tutor: "Sarah Johnson",
+                tutorAvatar: "https://i.pravatar.cc/150?u=tutor1",
+                rating: 4.9,
+                reviews: 234,
+                students: 1250,
+                lessons: 20,
+                duration: "10 hours",
+                price: 49.99,
+                originalPrice: 99.99,
+                level: "Intermediate",
+                category: "Business",
+                image:
+                  "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=400",
+                isBestseller: true,
+              },
+              {
+                id: 2,
+                title: "IELTS Band 7+ Preparation",
+                tutor: "Michael Chen",
+                tutorAvatar: "https://i.pravatar.cc/150?u=tutor2",
+                rating: 4.8,
+                reviews: 189,
+                students: 980,
+                lessons: 30,
+                duration: "15 hours",
+                price: 79.99,
+                originalPrice: 149.99,
+                level: "Advanced",
+                category: "IELTS",
+                image:
+                  "https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=400",
+                isBestseller: true,
+              },
+              {
+                id: 3,
+                title: "English for Beginners",
+                tutor: "Emma Wilson",
+                tutorAvatar: "https://i.pravatar.cc/150?u=tutor3",
+                rating: 4.7,
+                reviews: 456,
+                students: 2100,
+                lessons: 25,
+                duration: "12 hours",
+                price: 29.99,
+                originalPrice: 59.99,
+                level: "Beginner",
+                category: "General",
+                image:
+                  "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=400",
+                isBestseller: false,
+              },
+              {
+                id: 4,
+                title: "Conversational English Fluency",
+                tutor: "Lisa Anderson",
+                tutorAvatar: "https://i.pravatar.cc/150?u=tutor5",
+                rating: 4.9,
+                reviews: 312,
+                students: 1500,
+                lessons: 18,
+                duration: "9 hours",
+                price: 44.99,
+                originalPrice: 89.99,
+                level: "Intermediate",
+                category: "Conversation",
+                image:
+                  "https://images.unsplash.com/photo-1573164713714-d95e436ab8d6?w=400",
+                isBestseller: true,
+              },
+            ].map((course) => (
+              <motion.div key={course.id} variants={itemVariants}>
+                <CourseCard course={course} showViewButton={false} />
+              </motion.div>
+            ))}
+          </motion.div>
+
+          <div className="text-center mt-12">
+            <Button
+              size="lg"
+              radius="full"
+              className="font-semibold px-8"
+              style={{
+                borderColor: colors.primary.main,
+                backgroundColor: colors.primary.main,
+                color: colors.text.white,
+              }}
+              endContent={<ArrowRight className="w-5 h-5" />}
+              onPress={() => navigate("/courses")}
+            >
+              {t("home.courses.viewAll")}
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* Featured Tutors Section */}
+      <section
+        className="py-20 px-6 md:px-12"
+        style={{ backgroundColor: colors.background.light }}
       >
         <div className="max-w-7xl mx-auto">
           <motion.div
@@ -574,7 +711,7 @@ const Home = () => {
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true }}
-            className="grid md:grid-cols-3 gap-8"
+            className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6"
           >
             {[
               {
@@ -583,7 +720,6 @@ const Home = () => {
                 rating: 5,
                 lessons: 1200,
                 image: tutorProfile1,
-                flag: "🇺🇸",
               },
               {
                 name: "James Wilson",
@@ -591,7 +727,6 @@ const Home = () => {
                 rating: 4.9,
                 lessons: 980,
                 image: tutorProfile2,
-                flag: "🇬🇧",
               },
               {
                 name: "Emma Taylor",
@@ -599,46 +734,57 @@ const Home = () => {
                 rating: 5,
                 lessons: 1500,
                 image: tutorProfile3,
-                flag: "🇦🇺",
+              },
+              {
+                name: "Michael Brown",
+                specialty: "Academic Writing",
+                rating: 4.9,
+                lessons: 850,
+                image: tutorProfile1,
+              },
+              {
+                name: "Lisa Anderson",
+                specialty: "Pronunciation Coach",
+                rating: 5,
+                lessons: 1100,
+                image: tutorProfile3,
               },
             ].map((tutor) => (
               <motion.div key={tutor.name} variants={itemVariants}>
                 <Card
-                  className="overflow-hidden shadow-none"
+                  className="shadow-none"
                   style={{
-                    backgroundColor: colors.background.light,
+                    backgroundColor: colors.background.gray,
                   }}
                 >
                   <CardBody className="p-0">
-                    <div className="relative">
-                      <img
-                        src={tutor.image}
-                        alt={tutor.name}
-                        className="w-full h-56 object-cover"
-                      />
-                      <span
-                        className="absolute top-3 right-3 px-3 py-1 rounded-full text-sm font-medium"
-                        style={{
-                          backgroundColor: colors.background.light,
-                          color: colors.text.primary,
-                        }}
-                      >
-                        {tutor.flag} {t("home.tutors.native")}
-                      </span>
+                    <div className="relative p-3">
+                      <div className="relative aspect-square overflow-hidden rounded-xl">
+                        <img
+                          src={tutor.image}
+                          alt={tutor.name}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
                     </div>
-                    <div className="p-5">
+                    <div className="p-4 pt-0 text-center">
                       <h3
                         className="text-lg font-bold mb-1"
                         style={{ color: colors.text.primary }}
                       >
                         {tutor.name}
                       </h3>
-                      <p
-                        className="font-medium mb-3"
-                        style={{ color: colors.primary.main }}
+                      <Chip
+                        size="sm"
+                        variant="flat"
+                        className="mb-6 text-xs"
+                        style={{
+                          backgroundColor: colors.background.primaryLight,
+                          color: colors.primary.main,
+                        }}
                       >
                         {tutor.specialty}
-                      </p>
+                      </Chip>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-1">
                           <Star
@@ -647,13 +793,16 @@ const Home = () => {
                             color={colors.state.warning}
                           />
                           <span
-                            className="font-semibold"
+                            className="font-semibold text-sm"
                             style={{ color: colors.text.primary }}
                           >
                             {tutor.rating}
                           </span>
                         </div>
-                        <span style={{ color: colors.text.secondary }}>
+                        <span
+                          style={{ color: colors.text.secondary }}
+                          className="text-sm"
+                        >
                           {tutor.lessons}+ {t("home.tutors.lessons")}
                         </span>
                       </div>
@@ -663,29 +812,13 @@ const Home = () => {
               </motion.div>
             ))}
           </motion.div>
-
-          <div className="text-center mt-12">
-            <Button
-              size="lg"
-              radius="full"
-              className="font-semibold px-8"
-              style={{
-                borderColor: colors.primary.main,
-                backgroundColor: colors.primary.main,
-                color: colors.text.white,
-              }}
-              endContent={<ArrowRight className="w-5 h-5" />}
-            >
-              {t("home.tutors.viewAll")}
-            </Button>
-          </div>
         </div>
       </section>
 
       {/* Testimonials Section */}
       <section
         className="py-20 px-6 md:px-12 overflow-hidden"
-        style={{ backgroundColor: colors.background.light }}
+        style={{ backgroundColor: colors.background.gray }}
       >
         <div className="max-w-7xl mx-auto">
           <motion.div
@@ -727,7 +860,7 @@ const Home = () => {
                   <Card
                     className="h-full shadow-none"
                     style={{
-                      backgroundColor: colors.background.gray,
+                      backgroundColor: colors.background.light,
                       borderColor: colors.border.light,
                     }}
                   >

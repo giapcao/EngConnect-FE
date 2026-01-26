@@ -16,12 +16,77 @@
   },
   "nav": {
     "home": "Trang chủ",
-    "findTutors": "Tìm gia sư",
     "courses": "Khóa học",
     "pricing": "Bảng giá",
     "about": "Giới thiệu",
+    "becomeTutor": "Trở thành Gia sư",
     "signIn": "Đăng nhập",
     "getStarted": "Bắt đầu"
+  },
+  "becomeTutor": {
+    "hero": {
+      "badge": "Tham gia cộng đồng giảng dạy",
+      "title": "Chia sẻ kiến thức,",
+      "titleHighlight": "Truyền cảm hứng",
+      "description": "Tham gia cộng đồng gia sư chuyên nghiệp và giúp học viên trên toàn thế giới thành thạo tiếng Anh. Lịch linh hoạt, thu nhập cạnh tranh và tác động ý nghĩa."
+    },
+    "benefits": {
+      "title": "Tại sao dạy với",
+      "titleHighlight": "EngConnect?",
+      "subtitle": "Tận hưởng lợi ích khi là thành viên cộng đồng",
+      "flexibility": {
+        "title": "Lịch linh hoạt",
+        "description": "Tự đặt giờ làm việc và dạy từ bất cứ đâu trên thế giới"
+      },
+      "earnings": {
+        "title": "Thu nhập cạnh tranh",
+        "description": "Kiếm đến $50/giờ với hệ thống thanh toán minh bạch"
+      },
+      "support": {
+        "title": "Hỗ trợ đầy đủ",
+        "description": "Truy cập tài liệu giảng dạy, đào tạo và hỗ trợ 24/7"
+      },
+      "growth": {
+        "title": "Phát triển sự nghiệp",
+        "description": "Xây dựng danh tiếng và phát triển lượng học viên theo thời gian"
+      }
+    },
+    "requirements": {
+      "title": "Chúng tôi",
+      "titleHighlight": "Tìm kiếm",
+      "subtitle": "Tham gia nếu bạn có đam mê và trình độ giảng dạy",
+      "native": "Kỹ năng giao tiếp tiếng Anh tốt",
+      "experience": "Đam mê giảng dạy và giúp đỡ người khác học tập",
+      "certification": "Kinh nghiệm giảng dạy hoặc bằng cấp liên quan",
+      "availability": "Lịch linh hoạt để phù hợp với học viên"
+    },
+    "howItWorks": {
+      "title": "Cách bạn trở thành",
+      "titleHighlight": "Giảng viên thành công",
+      "subtitle": "Các bước đơn giản để bắt đầu hành trình gia sư",
+      "step1": {
+        "title": "Đăng ký trở thành giảng viên",
+        "description": "Điền đơn đăng ký với thông tin và kinh nghiệm giảng dạy"
+      },
+      "step2": {
+        "title": "Thiết lập và chỉnh sửa hồ sơ",
+        "description": "Tạo hồ sơ chuyên nghiệp và thể hiện chuyên môn của bạn"
+      },
+      "step3": {
+        "title": "Tạo khóa học mới",
+        "description": "Thiết kế và xuất bản khóa học hấp dẫn cho học viên"
+      },
+      "step4": {
+        "title": "Bắt đầu dạy và kiếm tiền",
+        "description": "Bắt đầu giảng dạy và kiếm tiền từ kiến thức của bạn"
+      }
+    },
+    "cta": {
+      "title": "Sẵn sàng bắt đầu giảng dạy?",
+      "description": "Tham gia cùng hàng nghìn gia sư đang tạo ra sự khác biệt trong cuộc sống của học viên đồng thời có thu nhập tốt.",
+      "button": "Đăng ký ngay",
+      "learnMore": "Tìm hiểu thêm"
+    }
   },
   "home": {
     "hero": {
@@ -86,6 +151,13 @@
       "feature1": "Giao tiếp video thời gian thực",
       "feature2": "Học mọi lúc, mọi nơi",
       "feature3": "Chú ý cá nhân từ gia sư bản ngữ"
+    },
+    "courses": {
+      "title": "Khóa học",
+      "titleHighlight": "Nổi bật",
+      "description": "Khám phá các khóa học phổ biến nhất được thiết kế để tăng tốc quá trình học của bạn",
+      "bestseller": "Bán chạy",
+      "viewAll": "Xem tất cả khóa học"
     },
     "tutors": {
       "title": "Gặp gỡ",

@@ -33,10 +33,10 @@ const Header = () => {
 
   const navItems = [
     { name: t("nav.home"), href: "/" },
-    { name: t("nav.findTutors"), href: "/tutors" },
     { name: t("nav.courses"), href: "/courses" },
     { name: t("nav.pricing"), href: "/pricing" },
     { name: t("nav.about"), href: "/about" },
+    { name: t("nav.becomeTutor"), href: "/become-tutor" },
   ];
 
   const isActiveRoute = (href) => {
