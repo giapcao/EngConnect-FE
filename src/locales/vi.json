@@ -8,6 +8,12 @@
     "goBack": "Quay lại",
     "goHome": "Về trang chủ"
   },
+  "logoutModal": {
+    "title": "Sẵn sàng rời đi?",
+    "description": "Bạn có chắc chắn muốn đăng xuất? Bạn sẽ cần đăng nhập lại để truy cập tài khoản của mình.",
+    "cancel": "Hủy",
+    "confirm": "Đăng xuất"
+  },
   "nav": {
     "home": "Trang chủ",
     "findTutors": "Tìm gia sư",

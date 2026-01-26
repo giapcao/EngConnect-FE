@@ -307,16 +307,16 @@ const BrowseCourses = () => {
             >
               <CardBody className="p-0 flex-1 flex flex-col">
                 {/* Course Image */}
-                <div className="relative overflow-hidden rounded-t-xl">
+                <div className="relative p-3">
                   <img
                     src={course.image}
                     alt={course.title}
-                    className="w-full h-40 object-cover"
+                    className="w-full h-40 object-cover rounded-xl"
                   />
                   {course.isBestseller && (
                     <Chip
                       size="sm"
-                      className="absolute top-3 left-3"
+                      className="absolute top-5 left-5"
                       style={{
                         backgroundColor: colors.state.warning,
                         color: "#000",
@@ -329,7 +329,7 @@ const BrowseCourses = () => {
                     isIconOnly
                     variant="flat"
                     radius="full"
-                    className="absolute top-3 right-3"
+                    className="absolute top-5 right-5"
                     style={{ backgroundColor: "rgba(255,255,255,0.9)" }}
                   >
                     <Heart weight="bold" className="w-5 h-5 text-gray-500" />

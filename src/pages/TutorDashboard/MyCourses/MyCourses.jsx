@@ -208,8 +208,8 @@ const MyCourses = () => {
               style={{ backgroundColor: colors.background.light }}
             >
               <CardBody className="p-0">
-                <div className="relative">
-                  <div className="w-full h-40 overflow-hidden rounded-t-xl">
+                <div className="relative p-3">
+                  <div className="w-full h-40 overflow-hidden rounded-xl">
                     <Image
                       src={course.image}
                       alt={course.title}
@@ -220,7 +220,7 @@ const MyCourses = () => {
                       radius="none"
                     />
                   </div>
-                  <div className="absolute top-3 left-3 flex gap-2 z-10">
+                  <div className="absolute top-5 left-5 flex gap-2 z-10">
                     <Chip
                       size="sm"
                       style={{

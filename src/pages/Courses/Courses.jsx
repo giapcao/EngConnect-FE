@@ -498,19 +498,19 @@ const Courses = () => {
                 }}
               >
                 <Card
-                  className="h-full shadow-none overflow-hidden"
+                  className="h-full shadow-none"
                   style={{ backgroundColor: colors.background.card }}
                 >
-                  <div className="relative">
+                  <div className="relative p-3">
                     <img
                       src={course.image}
                       alt={course.title}
-                      className="w-full h-40 object-cover"
+                      className="w-full h-40 object-cover rounded-xl"
                     />
                     {course.isBestseller && (
                       <Chip
                         size="sm"
-                        className="absolute top-3 left-3"
+                        className="absolute top-5 left-5"
                         style={{
                           backgroundColor: colors.primary.main,
                           color: colors.text.white,
@@ -520,7 +520,7 @@ const Courses = () => {
                       </Chip>
                     )}
                   </div>
-                  <CardBody className="p-4">
+                  <CardBody className="p-4 pt-0">
                     <div className="flex items-center gap-2 mb-2">
                       <Chip
                         size="sm"
@@ -645,19 +645,19 @@ const Courses = () => {
                 }}
               >
                 <Card
-                  className="h-full shadow-none overflow-hidden"
+                  className="h-full shadow-none"
                   style={{ backgroundColor: colors.background.gray }}
                 >
-                  <div className="relative">
+                  <div className="relative p-3">
                     <img
                       src={course.image}
                       alt={course.title}
-                      className="w-full h-40 object-cover"
+                      className="w-full h-40 object-cover rounded-xl"
                     />
                     {course.isBestseller && (
                       <Chip
                         size="sm"
-                        className="absolute top-3 left-3"
+                        className="absolute top-5 left-5"
                         style={{
                           backgroundColor: colors.primary.main,
                           color: colors.text.white,
@@ -667,7 +667,7 @@ const Courses = () => {
                       </Chip>
                     )}
                   </div>
-                  <CardBody className="p-4 flex-grow">
+                  <CardBody className="p-4 pt-0 flex-grow">
                     <div className="flex items-center gap-2 mb-2">
                       <Chip
                         size="sm"

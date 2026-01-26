@@ -13,6 +13,7 @@ import {
 } from "@heroui/react";
 import { useTranslation } from "react-i18next";
 import { AnimatePresence, motion } from "framer-motion";
+import LogoutModal from "../components/LogoutModal/LogoutModal";
 import { useThemeColors } from "../hooks/useThemeColors";
 import { useTheme } from "../contexts/ThemeContext";
 import ThemeSwitcher from "../components/ThemeSwitcher/ThemeSwitcher";
@@ -44,6 +45,7 @@ const AdminDashboardLayout = () => {
   const navigate = useNavigate();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [logoutModalOpen, setLogoutModalOpen] = useState(false);
 
   const navItems = [
     {
@@ -213,7 +215,7 @@ const AdminDashboardLayout = () => {
                 />
               }
               style={{ color: colors.state.error }}
-              onPress={() => navigate("/login")}
+              onPress={() => setLogoutModalOpen(true)}
             >
               {!sidebarCollapsed && t("adminDashboard.nav.logout")}
             </Button>
@@ -328,7 +330,7 @@ const AdminDashboardLayout = () => {
                     />
                   }
                   style={{ color: colors.state.error }}
-                  onPress={() => navigate("/login")}
+                  onPress={() => setLogoutModalOpen(true)}
                 >
                   {t("adminDashboard.nav.logout")}
                 </Button>
@@ -452,7 +454,7 @@ const AdminDashboardLayout = () => {
                   key="logout"
                   color="danger"
                   startContent={<SignOut className="w-4 h-4" />}
-                  onPress={() => navigate("/login")}
+                  onPress={() => setLogoutModalOpen(true)}
                 >
                   {t("adminDashboard.nav.logout")}
                 </DropdownItem>
@@ -466,6 +468,11 @@ const AdminDashboardLayout = () => {
           <Outlet />
         </main>
       </div>
+
+      <LogoutModal
+        isOpen={logoutModalOpen}
+        onClose={() => setLogoutModalOpen(false)}
+      />
     </div>
   );
 };

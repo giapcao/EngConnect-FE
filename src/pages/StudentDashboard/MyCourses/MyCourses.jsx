@@ -275,11 +275,13 @@ const MyCourses = () => {
               >
                 <CardBody className="p-0">
                   <div className="flex flex-col md:flex-row">
-                    <img
-                      src={course.image}
-                      alt={course.title}
-                      className="w-full md:w-48 h-32 object-cover rounded-t-xl md:rounded-l-xl md:rounded-tr-none"
-                    />
+                    <div className="p-3 md:py-3 md:pl-3">
+                      <img
+                        src={course.image}
+                        alt={course.title}
+                        className="w-full md:w-48 h-32 object-cover rounded-xl"
+                      />
+                    </div>
                     <div className="flex-1 p-4">
                       <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
                         <div className="flex-1">
@@ -385,14 +387,14 @@ const MyCourses = () => {
               >
                 <CardBody className="p-0">
                   <div className="flex flex-col md:flex-row">
-                    <div className="relative">
+                    <div className="relative p-3 md:py-0 md:pl-3">
                       <img
                         src={course.image}
                         alt={course.title}
-                        className="w-full md:w-48 h-32 object-cover rounded-t-xl md:rounded-l-xl md:rounded-tr-none"
+                        className="w-full md:w-48 h-32 object-cover rounded-xl"
                       />
                       <div
-                        className="absolute inset-0 flex items-center justify-center rounded-t-xl md:rounded-l-xl md:rounded-tr-none"
+                        className="absolute inset-3 md:inset-y-0 md:left-3 md:right-0 flex items-center justify-center rounded-xl"
                         style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
                       >
                         <CheckCircle
@@ -509,11 +511,13 @@ const MyCourses = () => {
               >
                 <CardBody className="p-0">
                   <div className="flex flex-col md:flex-row">
-                    <img
-                      src={course.image}
-                      alt={course.title}
-                      className="w-full md:w-48 h-32 object-cover rounded-t-xl md:rounded-l-xl md:rounded-tr-none"
-                    />
+                    <div className="p-3 md:py-0 md:pl-3">
+                      <img
+                        src={course.image}
+                        alt={course.title}
+                        className="w-full md:w-48 h-32 object-cover rounded-xl"
+                      />
+                    </div>
                     <div className="flex-1 p-4">
                       <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
                         <div className="flex-1">

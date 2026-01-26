@@ -13,6 +13,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "framer-motion";
 import { useThemeColors } from "../hooks/useThemeColors";
+import LogoutModal from "../components/LogoutModal/LogoutModal";
 import { useTheme } from "../contexts/ThemeContext";
 import ThemeSwitcher from "../components/ThemeSwitcher/ThemeSwitcher";
 import LanguageSwitcher from "../components/LanguageSwitcher/LanguageSwitcher";
@@ -41,6 +42,7 @@ const DashboardLayout = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [logoutModalOpen, setLogoutModalOpen] = useState(false);
 
   const navItems = [
     {
@@ -213,7 +215,7 @@ const DashboardLayout = () => {
                   startContent={
                     <SignOut weight="duotone" className="w-5 h-5" />
                   }
-                  onPress={() => navigate("/login")}
+                  onPress={() => setLogoutModalOpen(true)}
                 >
                   {t("studentDashboard.nav.logout")}
                 </DropdownItem>
@@ -393,6 +395,11 @@ const DashboardLayout = () => {
       <main className="p-4 lg:p-8 max-w-7xl mx-auto">
         <Outlet />
       </main>
+
+      <LogoutModal
+        isOpen={logoutModalOpen}
+        onClose={() => setLogoutModalOpen(false)}
+      />
     </div>
   );
 };

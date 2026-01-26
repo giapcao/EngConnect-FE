@@ -8,6 +8,12 @@
     "goBack": "Go Back",
     "goHome": "Back to Home"
   },
+  "logoutModal": {
+    "title": "Ready to Leave?",
+    "description": "Are you sure you want to logout? You'll need to sign in again to access your account.",
+    "cancel": "Cancel",
+    "confirm": "Logout"
+  },
   "nav": {
     "home": "Home",
     "findTutors": "Find Tutors",
