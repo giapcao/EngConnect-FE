@@ -2,6 +2,7 @@ import { createBrowserRouter } from "react-router-dom";
 import MainLayout from "../layouts/MainLayout";
 import DashboardLayout from "../layouts/DashboardLayout";
 import TutorDashboardLayout from "../layouts/TutorDashboardLayout";
+import AdminDashboardLayout from "../layouts/AdminDashboardLayout";
 import Home from "../pages/Home/Home";
 import Login from "../pages/Authentication/Login/Login";
 import Register from "../pages/Authentication/Register/Register";
@@ -30,6 +31,18 @@ import TutorEarnings from "../pages/TutorDashboard/Earnings/Earnings";
 import TutorCommunity from "../pages/TutorDashboard/Community/Community";
 import TutorProfile from "../pages/TutorDashboard/Profile/Profile";
 import TutorNotification from "../pages/TutorDashboard/Notification/Notification";
+
+// Admin Dashboard Pages
+import AdminDashboard from "../pages/AdminDashboard/Dashboard/Dashboard";
+import AdminStudents from "../pages/AdminDashboard/StudentManagement/StudentManagement";
+import AdminTutors from "../pages/AdminDashboard/TutorManagament/TutorManagement";
+import AdminCourses from "../pages/AdminDashboard/CourseManagement/CourseManagement";
+import AdminAnalytics from "../pages/AdminDashboard/AnalyticsReports/AnalyticsReports";
+import AdminFinance from "../pages/AdminDashboard/FinancialManagement/FinancialManagement";
+import AdminSettings from "../pages/AdminDashboard/Settings/Settings";
+
+// Not Found Page
+import NotFound from "../pages/NotFound/NotFound";
 
 export const router = createBrowserRouter([
   {
@@ -145,5 +158,43 @@ export const router = createBrowserRouter([
         element: <TutorNotification />,
       },
     ],
+  },
+  {
+    path: "/admin",
+    element: <AdminDashboardLayout />,
+    children: [
+      {
+        path: "dashboard",
+        element: <AdminDashboard />,
+      },
+      {
+        path: "students",
+        element: <AdminStudents />,
+      },
+      {
+        path: "tutors",
+        element: <AdminTutors />,
+      },
+      {
+        path: "courses",
+        element: <AdminCourses />,
+      },
+      {
+        path: "analytics",
+        element: <AdminAnalytics />,
+      },
+      {
+        path: "finance",
+        element: <AdminFinance />,
+      },
+      {
+        path: "settings",
+        element: <AdminSettings />,
+      },
+    ],
+  },
+  {
+    path: "*",
+    element: <NotFound />,
   },
 ]);

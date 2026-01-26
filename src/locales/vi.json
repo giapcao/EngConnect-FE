@@ -2,6 +2,12 @@
   "brand": {
     "name": "EngConnect"
   },
+  "notFound": {
+    "title": "Không tìm thấy trang",
+    "description": "Rất tiếc! Trang bạn đang tìm kiếm không tồn tại hoặc đã được di chuyển. Hãy để chúng tôi đưa bạn trở lại.",
+    "goBack": "Quay lại",
+    "goHome": "Về trang chủ"
+  },
   "nav": {
     "home": "Trang chủ",
     "findTutors": "Tìm gia sư",
@@ -861,6 +867,247 @@
       "moneyBackGuarantee": "Đảm bảo hoàn tiền trong 30 ngày",
       "close": "Đóng",
       "enrollNow": "Đăng ký ngay"
+    }
+  },
+  "adminDashboard": {
+    "role": "Quản trị viên",
+    "nav": {
+      "dashboard": "Bảng điều khiển",
+      "students": "Học viên",
+      "tutors": "Gia sư",
+      "courses": "Khóa học",
+      "analytics": "Phân tích",
+      "finance": "Tài chính",
+      "settings": "Cài đặt",
+      "logout": "Đăng xuất"
+    },
+    "search": {
+      "placeholder": "Tìm kiếm học viên, gia sư, khóa học..."
+    },
+    "dashboard": {
+      "title": "Bảng điều khiển Admin",
+      "subtitle": "Tổng quan hiệu suất và hoạt động nền tảng",
+      "stats": {
+        "totalStudents": "Tổng học viên",
+        "totalTutors": "Tổng gia sư",
+        "totalCourses": "Tổng khóa học",
+        "revenue": "Tổng doanh thu"
+      },
+      "recentActivities": "Hoạt động gần đây",
+      "pendingApprovals": "Chờ duyệt",
+      "topTutors": "Gia sư hàng đầu",
+      "viewAll": "Xem tất cả",
+      "approve": "Phê duyệt",
+      "reject": "Từ chối"
+    },
+    "students": {
+      "title": "Quản lý học viên",
+      "subtitle": "Quản lý và theo dõi tài khoản học viên",
+      "stats": {
+        "totalStudents": "Tổng học viên",
+        "activeStudents": "Học viên hoạt động",
+        "enrollments": "Tổng đăng ký",
+        "avgHours": "Giờ học TB"
+      },
+      "searchPlaceholder": "Tìm học viên theo tên hoặc email...",
+      "export": "Xuất",
+      "addStudent": "Thêm học viên",
+      "status": "Trạng thái",
+      "all": "Tất cả",
+      "active": "Hoạt động",
+      "inactive": "Không hoạt động",
+      "suspended": "Bị khóa",
+      "table": {
+        "student": "Học viên",
+        "courses": "Khóa học",
+        "hours": "Giờ học",
+        "status": "Trạng thái",
+        "joinDate": "Ngày tham gia",
+        "lastActive": "Hoạt động cuối",
+        "actions": "Thao tác"
+      },
+      "view": "Xem",
+      "edit": "Sửa",
+      "delete": "Xóa",
+      "close": "Đóng",
+      "studentDetails": "Chi tiết học viên"
+    },
+    "tutors": {
+      "title": "Quản lý gia sư",
+      "subtitle": "Quản lý tài khoản và đơn ứng tuyển gia sư",
+      "stats": {
+        "totalTutors": "Tổng gia sư",
+        "verified": "Gia sư xác minh",
+        "totalStudents": "Tổng học viên",
+        "totalEarnings": "Tổng thu nhập"
+      },
+      "searchPlaceholder": "Tìm gia sư theo tên hoặc chuyên môn...",
+      "export": "Xuất",
+      "addTutor": "Thêm gia sư",
+      "status": "Trạng thái",
+      "all": "Tất cả",
+      "verified": "Đã xác minh",
+      "pending": "Chờ duyệt",
+      "suspended": "Bị khóa",
+      "table": {
+        "tutor": "Gia sư",
+        "specialty": "Chuyên môn",
+        "rating": "Đánh giá",
+        "students": "Học viên",
+        "earnings": "Thu nhập",
+        "status": "Trạng thái",
+        "actions": "Thao tác"
+      },
+      "view": "Xem",
+      "edit": "Sửa",
+      "delete": "Xóa",
+      "close": "Đóng",
+      "tutorDetails": "Chi tiết gia sư"
+    },
+    "courses": {
+      "title": "Quản lý khóa học",
+      "subtitle": "Quản lý khóa học và nội dung",
+      "stats": {
+        "totalCourses": "Tổng khóa học",
+        "published": "Đã xuất bản",
+        "enrollments": "Lượt đăng ký",
+        "completionRate": "Tỷ lệ hoàn thành"
+      },
+      "searchPlaceholder": "Tìm khóa học theo tên...",
+      "export": "Xuất",
+      "addCourse": "Thêm khóa học",
+      "status": "Trạng thái",
+      "all": "Tất cả",
+      "published": "Đã xuất bản",
+      "pending": "Chờ duyệt",
+      "draft": "Bản nháp",
+      "table": {
+        "course": "Khóa học",
+        "tutor": "Gia sư",
+        "category": "Danh mục",
+        "price": "Giá",
+        "students": "Học viên",
+        "status": "Trạng thái",
+        "actions": "Thao tác"
+      },
+      "view": "Xem",
+      "edit": "Sửa",
+      "delete": "Xóa",
+      "close": "Đóng",
+      "courseDetails": "Chi tiết khóa học"
+    },
+    "analytics": {
+      "title": "Phân tích & Báo cáo",
+      "subtitle": "Thống kê và hiệu suất nền tảng",
+      "stats": {
+        "newStudents": "Học viên mới",
+        "courseEnrollments": "Đăng ký khóa học",
+        "revenue": "Doanh thu",
+        "completionRate": "Tỷ lệ hoàn thành"
+      },
+      "thisWeek": "Tuần này",
+      "thisMonth": "Tháng này",
+      "thisYear": "Năm nay",
+      "export": "Xuất",
+      "tabs": {
+        "overview": "Tổng quan",
+        "courses": "Khóa học",
+        "tutors": "Gia sư",
+        "revenue": "Doanh thu"
+      },
+      "revenueOverview": "Tổng quan doanh thu",
+      "topCourses": "Khóa học hiệu suất cao",
+      "coursePerformance": "Hiệu suất khóa học",
+      "tutorPerformance": "Hiệu suất gia sư",
+      "revenueBreakdown": "Phân tích doanh thu",
+      "totalRevenue": "Tổng doanh thu",
+      "courseRevenue": "Doanh thu khóa học",
+      "subscriptionRevenue": "Doanh thu đăng ký"
+    },
+    "finance": {
+      "title": "Quản lý tài chính",
+      "subtitle": "Theo dõi doanh thu, giao dịch và thanh toán",
+      "stats": {
+        "totalRevenue": "Tổng doanh thu",
+        "pendingPayouts": "Thanh toán chờ",
+        "totalTransactions": "Tổng giao dịch",
+        "platformFees": "Phí nền tảng"
+      },
+      "thisWeek": "Tuần này",
+      "thisMonth": "Tháng này",
+      "thisYear": "Năm nay",
+      "export": "Xuất",
+      "tabs": {
+        "overview": "Tổng quan",
+        "transactions": "Giao dịch",
+        "payouts": "Thanh toán"
+      },
+      "table": {
+        "id": "Mã",
+        "type": "Loại",
+        "description": "Mô tả",
+        "user": "Người dùng",
+        "amount": "Số tiền",
+        "fee": "Phí",
+        "status": "Trạng thái",
+        "date": "Ngày"
+      },
+      "types": {
+        "coursePurchase": "Mua khóa học",
+        "tutorPayout": "Thanh toán gia sư",
+        "refund": "Hoàn tiền",
+        "subscription": "Đăng ký"
+      },
+      "recentTransactions": "Giao dịch gần đây",
+      "pendingPayouts": "Thanh toán chờ",
+      "processAll": "Xử lý tất cả",
+      "process": "Xử lý"
+    },
+    "settings": {
+      "title": "Cài đặt",
+      "subtitle": "Quản lý tài khoản và cài đặt nền tảng",
+      "tabs": {
+        "profile": "Hồ sơ",
+        "notifications": "Thông báo",
+        "security": "Bảo mật",
+        "platform": "Nền tảng"
+      },
+      "profileInfo": "Thông tin hồ sơ",
+      "firstName": "Họ",
+      "lastName": "Tên",
+      "email": "Email",
+      "phone": "Điện thoại",
+      "saveChanges": "Lưu thay đổi",
+      "notificationPreferences": "Tùy chọn thông báo",
+      "emailNotifications": "Thông báo email",
+      "emailNotificationsDesc": "Nhận cập nhật quan trọng qua email",
+      "pushNotifications": "Thông báo đẩy",
+      "pushNotificationsDesc": "Nhận thông báo đẩy trên trình duyệt",
+      "newUserAlerts": "Cảnh báo người dùng mới",
+      "newUserAlertsDesc": "Nhận thông báo khi có người dùng mới đăng ký",
+      "financialAlerts": "Cảnh báo tài chính",
+      "financialAlertsDesc": "Nhận thông báo về giao dịch và thanh toán",
+      "systemAlerts": "Cảnh báo hệ thống",
+      "systemAlertsDesc": "Nhận thông báo về vấn đề và cập nhật hệ thống",
+      "changePassword": "Đổi mật khẩu",
+      "currentPassword": "Mật khẩu hiện tại",
+      "newPassword": "Mật khẩu mới",
+      "confirmPassword": "Xác nhận mật khẩu",
+      "updatePassword": "Cập nhật mật khẩu",
+      "twoFactorAuth": "Xác thực hai yếu tố",
+      "enable2FA": "Bật 2FA",
+      "enable2FADesc": "Thêm lớp bảo mật cho tài khoản của bạn",
+      "financialSettings": "Cài đặt tài chính",
+      "platformFee": "Phí nền tảng",
+      "tutorCommission": "Hoa hồng gia sư",
+      "minWithdrawal": "Rút tối thiểu",
+      "generalSettings": "Cài đặt chung",
+      "maintenanceMode": "Chế độ bảo trì",
+      "maintenanceModeDesc": "Tạm thời tắt nền tảng để bảo trì",
+      "newRegistrations": "Đăng ký mới",
+      "newRegistrationsDesc": "Cho phép người dùng mới đăng ký trên nền tảng",
+      "emailVerification": "Xác minh email",
+      "emailVerificationDesc": "Yêu cầu xác minh email cho tài khoản mới"
     }
   }
 }

@@ -2,6 +2,12 @@
   "brand": {
     "name": "EngConnect"
   },
+  "notFound": {
+    "title": "Page Not Found",
+    "description": "Oops! The page you're looking for doesn't exist or has been moved. Let's get you back on track.",
+    "goBack": "Go Back",
+    "goHome": "Back to Home"
+  },
   "nav": {
     "home": "Home",
     "findTutors": "Find Tutors",
@@ -863,6 +869,247 @@
       "moneyBackGuarantee": "30-day money-back guarantee",
       "close": "Close",
       "enrollNow": "Enroll Now"
+    }
+  },
+  "adminDashboard": {
+    "role": "Administrator",
+    "nav": {
+      "dashboard": "Dashboard",
+      "students": "Students",
+      "tutors": "Tutors",
+      "courses": "Courses",
+      "analytics": "Analytics",
+      "finance": "Finance",
+      "settings": "Settings",
+      "logout": "Logout"
+    },
+    "search": {
+      "placeholder": "Search students, tutors, courses..."
+    },
+    "dashboard": {
+      "title": "Admin Dashboard",
+      "subtitle": "Overview of platform performance and activities",
+      "stats": {
+        "totalStudents": "Total Students",
+        "totalTutors": "Total Tutors",
+        "totalCourses": "Total Courses",
+        "revenue": "Total Revenue"
+      },
+      "recentActivities": "Recent Activities",
+      "pendingApprovals": "Pending Approvals",
+      "topTutors": "Top Tutors",
+      "viewAll": "View All",
+      "approve": "Approve",
+      "reject": "Reject"
+    },
+    "students": {
+      "title": "Student Management",
+      "subtitle": "Manage and monitor student accounts",
+      "stats": {
+        "totalStudents": "Total Students",
+        "activeStudents": "Active Students",
+        "enrollments": "Total Enrollments",
+        "avgHours": "Avg. Learning Hours"
+      },
+      "searchPlaceholder": "Search students by name or email...",
+      "export": "Export",
+      "addStudent": "Add Student",
+      "status": "Status",
+      "all": "All",
+      "active": "Active",
+      "inactive": "Inactive",
+      "suspended": "Suspended",
+      "table": {
+        "student": "Student",
+        "courses": "Courses",
+        "hours": "Hours",
+        "status": "Status",
+        "joinDate": "Join Date",
+        "lastActive": "Last Active",
+        "actions": "Actions"
+      },
+      "view": "View",
+      "edit": "Edit",
+      "delete": "Delete",
+      "close": "Close",
+      "studentDetails": "Student Details"
+    },
+    "tutors": {
+      "title": "Tutor Management",
+      "subtitle": "Manage tutor accounts and applications",
+      "stats": {
+        "totalTutors": "Total Tutors",
+        "verified": "Verified Tutors",
+        "totalStudents": "Total Students",
+        "totalEarnings": "Total Earnings"
+      },
+      "searchPlaceholder": "Search tutors by name or specialty...",
+      "export": "Export",
+      "addTutor": "Add Tutor",
+      "status": "Status",
+      "all": "All",
+      "verified": "Verified",
+      "pending": "Pending",
+      "suspended": "Suspended",
+      "table": {
+        "tutor": "Tutor",
+        "specialty": "Specialty",
+        "rating": "Rating",
+        "students": "Students",
+        "earnings": "Earnings",
+        "status": "Status",
+        "actions": "Actions"
+      },
+      "view": "View",
+      "edit": "Edit",
+      "delete": "Delete",
+      "close": "Close",
+      "tutorDetails": "Tutor Details"
+    },
+    "courses": {
+      "title": "Course Management",
+      "subtitle": "Manage courses and content",
+      "stats": {
+        "totalCourses": "Total Courses",
+        "published": "Published",
+        "enrollments": "Enrollments",
+        "completionRate": "Completion Rate"
+      },
+      "searchPlaceholder": "Search courses by title...",
+      "export": "Export",
+      "addCourse": "Add Course",
+      "status": "Status",
+      "all": "All",
+      "published": "Published",
+      "pending": "Pending",
+      "draft": "Draft",
+      "table": {
+        "course": "Course",
+        "tutor": "Tutor",
+        "category": "Category",
+        "price": "Price",
+        "students": "Students",
+        "status": "Status",
+        "actions": "Actions"
+      },
+      "view": "View",
+      "edit": "Edit",
+      "delete": "Delete",
+      "close": "Close",
+      "courseDetails": "Course Details"
+    },
+    "analytics": {
+      "title": "Analytics & Reports",
+      "subtitle": "Platform performance insights and statistics",
+      "stats": {
+        "newStudents": "New Students",
+        "courseEnrollments": "Course Enrollments",
+        "revenue": "Revenue",
+        "completionRate": "Completion Rate"
+      },
+      "thisWeek": "This Week",
+      "thisMonth": "This Month",
+      "thisYear": "This Year",
+      "export": "Export",
+      "tabs": {
+        "overview": "Overview",
+        "courses": "Courses",
+        "tutors": "Tutors",
+        "revenue": "Revenue"
+      },
+      "revenueOverview": "Revenue Overview",
+      "topCourses": "Top Performing Courses",
+      "coursePerformance": "Course Performance",
+      "tutorPerformance": "Tutor Performance",
+      "revenueBreakdown": "Revenue Breakdown",
+      "totalRevenue": "Total Revenue",
+      "courseRevenue": "Course Revenue",
+      "subscriptionRevenue": "Subscription Revenue"
+    },
+    "finance": {
+      "title": "Financial Management",
+      "subtitle": "Track revenue, transactions and payouts",
+      "stats": {
+        "totalRevenue": "Total Revenue",
+        "pendingPayouts": "Pending Payouts",
+        "totalTransactions": "Total Transactions",
+        "platformFees": "Platform Fees"
+      },
+      "thisWeek": "This Week",
+      "thisMonth": "This Month",
+      "thisYear": "This Year",
+      "export": "Export",
+      "tabs": {
+        "overview": "Overview",
+        "transactions": "Transactions",
+        "payouts": "Payouts"
+      },
+      "table": {
+        "id": "ID",
+        "type": "Type",
+        "description": "Description",
+        "user": "User",
+        "amount": "Amount",
+        "fee": "Fee",
+        "status": "Status",
+        "date": "Date"
+      },
+      "types": {
+        "coursePurchase": "Course Purchase",
+        "tutorPayout": "Tutor Payout",
+        "refund": "Refund",
+        "subscription": "Subscription"
+      },
+      "recentTransactions": "Recent Transactions",
+      "pendingPayouts": "Pending Payouts",
+      "processAll": "Process All",
+      "process": "Process"
+    },
+    "settings": {
+      "title": "Settings",
+      "subtitle": "Manage your account and platform settings",
+      "tabs": {
+        "profile": "Profile",
+        "notifications": "Notifications",
+        "security": "Security",
+        "platform": "Platform"
+      },
+      "profileInfo": "Profile Information",
+      "firstName": "First Name",
+      "lastName": "Last Name",
+      "email": "Email",
+      "phone": "Phone",
+      "saveChanges": "Save Changes",
+      "notificationPreferences": "Notification Preferences",
+      "emailNotifications": "Email Notifications",
+      "emailNotificationsDesc": "Receive important updates via email",
+      "pushNotifications": "Push Notifications",
+      "pushNotificationsDesc": "Receive browser push notifications",
+      "newUserAlerts": "New User Alerts",
+      "newUserAlertsDesc": "Get notified when new users register",
+      "financialAlerts": "Financial Alerts",
+      "financialAlertsDesc": "Get notified about transactions and payouts",
+      "systemAlerts": "System Alerts",
+      "systemAlertsDesc": "Get notified about system issues and updates",
+      "changePassword": "Change Password",
+      "currentPassword": "Current Password",
+      "newPassword": "New Password",
+      "confirmPassword": "Confirm Password",
+      "updatePassword": "Update Password",
+      "twoFactorAuth": "Two-Factor Authentication",
+      "enable2FA": "Enable 2FA",
+      "enable2FADesc": "Add an extra layer of security to your account",
+      "financialSettings": "Financial Settings",
+      "platformFee": "Platform Fee",
+      "tutorCommission": "Tutor Commission",
+      "minWithdrawal": "Minimum Withdrawal",
+      "generalSettings": "General Settings",
+      "maintenanceMode": "Maintenance Mode",
+      "maintenanceModeDesc": "Temporarily disable the platform for maintenance",
+      "newRegistrations": "New Registrations",
+      "newRegistrationsDesc": "Allow new users to register on the platform",
+      "emailVerification": "Email Verification",
+      "emailVerificationDesc": "Require email verification for new accounts"
     }
   }
 }
