@@ -27,7 +27,7 @@
     "hero": {
       "badge": "Join Our Teaching Community",
       "title": "Share Your Knowledge,",
-      "titleHighlight": "Inspire Learners",
+      "titleHighlight": "\nInspire Learners",
       "description": "Join our community of expert tutors and help students around the world master English. Flexible schedule, competitive earnings, and meaningful impact."
     },
     "benefits": {
@@ -58,7 +58,7 @@
       "native": "Strong English communication skills",
       "experience": "Passion for teaching and helping others learn",
       "certification": "Teaching experience or relevant qualifications",
-      "availability": "Flexible schedule to accommodate students"
+      "availability": "Flexible schedule to accommodate students" 
     },
     "howItWorks": {
       "title": "How You'll Become",
@@ -320,11 +320,10 @@
     "team": {
       "title": "Meet Our",
       "titleHighlight": "Team",
-      "description": "The passionate people behind EngConnect who are dedicated to transforming English education",
-      "ceo": "Leader",
+      "description": "The passionate people behind EngConnect",
+      "ceo": "Team  Leader",
       "cto": "CTO & Co-Founder",
-      "headOfEducation": "Head of Education",
-      "headOfOperations": "Head of Operations"
+      "member": "Member"
     },
     "cta": {
       "title": "Join Our Growing Community",

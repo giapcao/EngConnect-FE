@@ -27,7 +27,7 @@
     "hero": {
       "badge": "Tham gia cộng đồng giảng dạy",
       "title": "Chia sẻ kiến thức,",
-      "titleHighlight": "Truyền cảm hứng",
+      "titleHighlight": "\nTruyền cảm hứng",
       "description": "Tham gia cộng đồng gia sư chuyên nghiệp và giúp học viên trên toàn thế giới thành thạo tiếng Anh. Lịch linh hoạt, thu nhập cạnh tranh và tác động ý nghĩa."
     },
     "benefits": {
@@ -320,11 +320,10 @@
     "team": {
       "title": "Gặp Gỡ",
       "titleHighlight": "Nhóm Chúng Tôi",
-      "description": "Những người đam mê đứng sau EngConnect tận tâm biến đổi giáo dục tiếng Anh",
-      "ceo": "CEO & Đồng Sáng Lập",
+      "description": "Những người đam mê đứng sau EngConnect",
+      "ceo": "Trưởng Nhóm",
       "cto": "CTO & Đồng Sáng Lập",
-      "headOfEducation": "Trưởng Bộ Phận Giáo Dục",
-      "headOfOperations": "Trưởng Bộ Phận Vận Hành"
+      "member": "Thành Viên"
     },
     "cta": {
       "title": "Tham Gia Cộng Đồng Đang Phát Triển",

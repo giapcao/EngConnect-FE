@@ -109,17 +109,17 @@ const About = () => {
     },
     {
       name: "Phung Minh Thien",
-      role: t("about.team.cto"),
+      role: t("about.team.member"),
       avatar: avatarThien,
     },
     {
       name: "Tran Huynh Phuc Thinh",
-      role: t("about.team.headOfEducation"),
+      role: t("about.team.member"),
       avatar: avatarKaius,
     },
     {
       name: "Nguyen Chi Cuong",
-      role: t("about.team.headOfOperations"),
+      role: t("about.team.member"),
       avatar: avatarZane,
     },
   ];
