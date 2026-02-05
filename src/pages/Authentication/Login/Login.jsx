@@ -1,9 +1,11 @@
-import React, { useState } from "react";
-import { Input, Button, Link, Checkbox, Image } from "@heroui/react";
+import React, { useState, useEffect } from "react";
+import { Input, Button, Link, Checkbox, Image, Alert } from "@heroui/react";
 import { Eye, EyeOff } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import * as MotionLib from "framer-motion";
 import { useTranslation } from "react-i18next";
+import { useDispatch, useSelector } from "react-redux";
+import { login, selectAuth, clearError } from "../../../store";
 import BrandLogo from "../../../components/Authentication/BrandLogo";
 import SocialLogin from "../../../components/Authentication/SocialLogin";
 import { useThemeColors } from "../../../hooks/useThemeColors";
@@ -16,29 +18,95 @@ const { motion } = MotionLib;
 
 const Login = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const { t } = useTranslation();
   const colors = useThemeColors();
   const { theme } = useTheme();
+  const { isAuthenticated, loading, error } = useSelector(selectAuth);
   const [isVisible, setIsVisible] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
+  const [validationErrors, setValidationErrors] = useState({
+    email: "",
+    password: "",
+  });
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate("/");
+    }
+  }, [isAuthenticated, navigate]);
+
+  useEffect(() => {
+    return () => {
+      dispatch(clearError());
+    };
+  }, [dispatch]);
 
   const toggleVisibility = () => setIsVisible(!isVisible);
 
-  const handleSubmit = (e) => {
+  const validateForm = () => {
+    const errors = {
+      email: "",
+      password: "",
+    };
+
+    // Email validation
+    if (!formData.email) {
+      errors.email = t("auth.login.emailRequired") || "Please enter your email";
+    } else if (
+      !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(formData.email)
+    ) {
+      errors.email =
+        t("auth.login.emailInvalid") || "Please enter a valid email address";
+    }
+
+    // Password validation
+    if (!formData.password) {
+      errors.password =
+        t("auth.login.passwordRequired") || "Please enter your password";
+    } else if (formData.password.length < 6) {
+      errors.password =
+        t("auth.login.passwordMinLength") ||
+        "Password must be at least 6 characters";
+    }
+
+    setValidationErrors(errors);
+    return !errors.email && !errors.password;
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle login logic here
-    console.log("Login data:", formData);
+
+    // Validate form before submitting
+    if (!validateForm()) {
+      return;
+    }
+
+    try {
+      const result = await dispatch(login(formData)).unwrap();
+      console.log("Login successful:", result);
+      navigate("/");
+    } catch (err) {
+      console.error("Login failed:", err);
+    }
   };
 
   const handleChange = (e) => {
+    const { name, value } = e.target;
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value,
+      [name]: value,
     });
+    if (validationErrors[name]) {
+      setValidationErrors({
+        ...validationErrors,
+        [name]: "",
+      });
+    }
   };
 
   return (
@@ -80,7 +148,15 @@ const Login = () => {
             className="login-card"
             style={{ backgroundColor: colors.background.light }}
           >
-            <form onSubmit={handleSubmit} className="space-y-6">
+            {error && (
+              <Alert
+                color="danger"
+                variant="flat"
+                className="mb-4"
+                title={error}
+              />
+            )}
+            <form onSubmit={handleSubmit} noValidate className="space-y-6">
               <div>
                 <label
                   className="block text-sm font-medium mb-2"
@@ -96,6 +172,8 @@ const Login = () => {
                   onChange={handleChange}
                   variant="flat"
                   size="lg"
+                  isInvalid={!!validationErrors.email}
+                  errorMessage={validationErrors.email}
                   classNames={{
                     inputWrapper: `!transition-colors !duration-200 ${
                       theme === "dark"
@@ -107,7 +185,6 @@ const Login = () => {
                         ? "!text-gray-200 placeholder:!text-gray-500"
                         : "",
                   }}
-                  required
                 />
               </div>
 
@@ -126,6 +203,8 @@ const Login = () => {
                   onChange={handleChange}
                   variant="flat"
                   size="lg"
+                  isInvalid={!!validationErrors.password}
+                  errorMessage={validationErrors.password}
                   classNames={{
                     inputWrapper: `!transition-colors !duration-200 ${
                       theme === "dark"
@@ -189,12 +268,16 @@ const Login = () => {
                 color="primary"
                 size="lg"
                 className="w-full font-medium"
+                isLoading={loading}
+                isDisabled={loading}
                 style={{
                   backgroundColor: colors.primary.main,
                   color: colors.text.white,
                 }}
               >
-                {t("auth.login.loginButton")}
+                {loading
+                  ? t("auth.login.loggingIn") || "Đang đăng nhập..."
+                  : t("auth.login.loginButton")}
               </Button>
 
               <SocialLogin text={t("auth.login.socialText")} />
