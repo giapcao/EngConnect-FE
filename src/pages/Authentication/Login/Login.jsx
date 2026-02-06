@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { Input, Button, Link, Checkbox, Image, Alert } from "@heroui/react";
+import {
+  Input,
+  Button,
+  Link,
+  Checkbox,
+  Image,
+  Alert,
+  addToast,
+} from "@heroui/react";
 import { Eye, EyeOff } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import * as MotionLib from "framer-motion";
@@ -34,12 +42,14 @@ const Login = () => {
     password: "",
   });
 
+  // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
       navigate("/");
     }
   }, [isAuthenticated, navigate]);
 
+  // Clear error when component unmounts
   useEffect(() => {
     return () => {
       dispatch(clearError());
@@ -88,9 +98,17 @@ const Login = () => {
 
     try {
       const result = await dispatch(login(formData)).unwrap();
+      // Login successful
       console.log("Login successful:", result);
+      addToast({
+        title: t("auth.login.loginSuccess"),
+        description: t("auth.login.loginSuccessDescription"),
+        color: "success",
+        timeout: 3000,
+      });
       navigate("/");
     } catch (err) {
+      // Error is handled by Redux and displayed in UI
       console.error("Login failed:", err);
     }
   };
@@ -101,6 +119,7 @@ const Login = () => {
       ...formData,
       [name]: value,
     });
+    // Clear validation error for this field
     if (validationErrors[name]) {
       setValidationErrors({
         ...validationErrors,

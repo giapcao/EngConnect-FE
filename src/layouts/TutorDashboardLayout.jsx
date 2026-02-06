@@ -23,7 +23,6 @@ import {
   BookOpen,
   CalendarDots,
   PencilSimple,
-  Users,
   UserCircle,
   SignOut,
   List,
@@ -74,11 +73,6 @@ const TutorDashboardLayout = () => {
       path: "/tutor/earnings",
       label: t("tutorDashboard.nav.earnings"),
       icon: CurrencyDollar,
-    },
-    {
-      path: "/tutor/community",
-      label: t("tutorDashboard.nav.community"),
-      icon: Users,
     },
   ];
 

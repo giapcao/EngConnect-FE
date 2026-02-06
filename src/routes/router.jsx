@@ -18,7 +18,6 @@ import BrowseCourses from "../pages/StudentDashboard/BrowseCourses/BrowseCourses
 import MyCourses from "../pages/StudentDashboard/MyCourses/MyCourses";
 import Schedule from "../pages/StudentDashboard/Schedule/Schedule";
 import Homework from "../pages/StudentDashboard/Homework/Homework";
-import Community from "../pages/StudentDashboard/Community/Community";
 import Profile from "../pages/StudentDashboard/Profile/Profile";
 import Notification from "../pages/StudentDashboard/Notification/Notification";
 
@@ -29,9 +28,9 @@ import TutorSchedule from "../pages/TutorDashboard/Schedule/Schedule";
 import TutorStudents from "../pages/TutorDashboard/Students/Students";
 import TutorHomework from "../pages/TutorDashboard/Homework/Homework";
 import TutorEarnings from "../pages/TutorDashboard/Earnings/Earnings";
-import TutorCommunity from "../pages/TutorDashboard/Community/Community";
 import TutorProfile from "../pages/TutorDashboard/Profile/Profile";
 import TutorNotification from "../pages/TutorDashboard/Notification/Notification";
+import TutorCreateCourse from "../pages/TutorDashboard/CreateCourse/CreateCourse";
 
 // Admin Dashboard Pages
 import AdminDashboard from "../pages/AdminDashboard/Dashboard/Dashboard";
@@ -44,6 +43,7 @@ import AdminSettings from "../pages/AdminDashboard/Settings/Settings";
 
 // Not Found Page
 import NotFound from "../pages/NotFound/NotFound";
+import Test from "../pages/Test/test";
 
 export const router = createBrowserRouter([
   {
@@ -53,6 +53,10 @@ export const router = createBrowserRouter([
       {
         index: true,
         element: <Home />,
+      },
+      {
+        path: "test",
+        element: <Test />,
       },
       {
         path: "login",
@@ -109,10 +113,6 @@ export const router = createBrowserRouter([
         element: <Homework />,
       },
       {
-        path: "community",
-        element: <Community />,
-      },
-      {
         path: "profile",
         element: <Profile />,
       },
@@ -135,6 +135,10 @@ export const router = createBrowserRouter([
         element: <TutorMyCourses />,
       },
       {
+        path: "create-course",
+        element: <TutorCreateCourse />,
+      },
+      {
         path: "schedule",
         element: <TutorSchedule />,
       },
@@ -149,10 +153,6 @@ export const router = createBrowserRouter([
       {
         path: "earnings",
         element: <TutorEarnings />,
-      },
-      {
-        path: "community",
-        element: <TutorCommunity />,
       },
       {
         path: "profile",

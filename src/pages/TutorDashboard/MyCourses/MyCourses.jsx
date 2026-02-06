@@ -6,12 +6,6 @@ import {
   Image,
   Chip,
   Input,
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
-  useDisclosure,
   Tabs,
   Tab,
   Dropdown,
@@ -20,6 +14,7 @@ import {
   DropdownItem,
 } from "@heroui/react";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 import { useThemeColors } from "../../../hooks/useThemeColors";
 import { motion } from "framer-motion";
 import {
@@ -39,7 +34,7 @@ import {
 const MyCourses = () => {
   const { t } = useTranslation();
   const colors = useThemeColors();
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  const navigate = useNavigate();
   const [selectedTab, setSelectedTab] = useState("all");
 
   const courses = [
@@ -140,7 +135,7 @@ const MyCourses = () => {
             backgroundColor: colors.primary.main,
             color: colors.text.white,
           }}
-          onPress={onOpen}
+          onPress={() => navigate("/tutor/create-course")}
         >
           {t("tutorDashboard.myCourses.createCourse")}
         </Button>
@@ -358,64 +353,6 @@ const MyCourses = () => {
           </motion.div>
         ))}
       </motion.div>
-
-      {/* Create Course Modal */}
-      <Modal isOpen={isOpen} onClose={onClose} size="2xl">
-        <ModalContent style={{ backgroundColor: colors.background.light }}>
-          <ModalHeader style={{ color: colors.text.primary }}>
-            {t("tutorDashboard.myCourses.createNewCourse")}
-          </ModalHeader>
-          <ModalBody>
-            <div className="space-y-4">
-              <Input
-                label={t("tutorDashboard.myCourses.courseTitle")}
-                placeholder={t(
-                  "tutorDashboard.myCourses.courseTitlePlaceholder",
-                )}
-                labelPlacement="outside"
-              />
-              <Input
-                label={t("tutorDashboard.myCourses.courseDescription")}
-                placeholder={t(
-                  "tutorDashboard.myCourses.courseDescriptionPlaceholder",
-                )}
-                labelPlacement="outside"
-              />
-              <div className="grid grid-cols-2 gap-4">
-                <Input
-                  label={t("tutorDashboard.myCourses.price")}
-                  placeholder="0"
-                  type="number"
-                  labelPlacement="outside"
-                  startContent={
-                    <span style={{ color: colors.text.tertiary }}>$</span>
-                  }
-                />
-                <Input
-                  label={t("tutorDashboard.myCourses.totalLessons")}
-                  placeholder="0"
-                  type="number"
-                  labelPlacement="outside"
-                />
-              </div>
-            </div>
-          </ModalBody>
-          <ModalFooter>
-            <Button variant="light" onPress={onClose}>
-              {t("tutorDashboard.myCourses.cancel")}
-            </Button>
-            <Button
-              style={{
-                backgroundColor: colors.primary.main,
-                color: colors.text.white,
-              }}
-              onPress={onClose}
-            >
-              {t("tutorDashboard.myCourses.create")}
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
     </div>
   );
 };

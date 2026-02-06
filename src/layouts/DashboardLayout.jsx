@@ -23,7 +23,6 @@ import {
   BookOpen,
   CalendarDots,
   PencilSimple,
-  Users,
   UserCircle,
   SignOut,
   List,
@@ -69,11 +68,6 @@ const DashboardLayout = () => {
       path: "/student/homework",
       label: t("studentDashboard.nav.homework"),
       icon: PencilSimple,
-    },
-    {
-      path: "/student/community",
-      label: t("studentDashboard.nav.community"),
-      icon: Users,
     },
   ];
 
