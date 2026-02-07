@@ -18,6 +18,7 @@ import { useThemeColors } from "../hooks/useThemeColors";
 import { useTheme } from "../contexts/ThemeContext";
 import ThemeSwitcher from "../components/ThemeSwitcher/ThemeSwitcher";
 import LanguageSwitcher from "../components/LanguageSwitcher/LanguageSwitcher";
+import logoImage from "../assets/images/logo.png";
 import {
   House,
   MagnifyingGlass,
@@ -111,23 +112,11 @@ const AdminDashboardLayout = () => {
             to="/"
             className="flex items-center gap-2 no-underline flex-shrink-0"
           >
-            <div
-              className="w-9 h-9 rounded-xl flex items-center justify-center font-bold text-lg"
-              style={{
-                backgroundColor: colors.primary.main,
-                color: colors.text.white,
-              }}
-            >
-              E
-            </div>
-            {!sidebarCollapsed && (
-              <span
-                className="text-xl font-bold"
-                style={{ color: colors.text.primary }}
-              >
-                EngConnect
-              </span>
-            )}
+            <img
+              src={logoImage}
+              alt="EngConnect"
+              className={`${sidebarCollapsed ? "h-8" : "h-9"} w-auto transition-all duration-300`}
+            />
           </Link>
           <Button
             isIconOnly
@@ -250,21 +239,11 @@ const AdminDashboardLayout = () => {
                 style={{ borderBottom: `1px solid ${colors.border.light}` }}
               >
                 <Link to="/" className="flex items-center gap-2 no-underline">
-                  <div
-                    className="w-9 h-9 rounded-xl flex items-center justify-center font-bold text-lg"
-                    style={{
-                      backgroundColor: colors.primary.main,
-                      color: colors.text.white,
-                    }}
-                  >
-                    E
-                  </div>
-                  <span
-                    className="text-xl font-bold"
-                    style={{ color: colors.text.primary }}
-                  >
-                    EngConnect
-                  </span>
+                  <img
+                    src={logoImage}
+                    alt="EngConnect"
+                    className="h-9 w-auto"
+                  />
                 </Link>
                 <Button
                   isIconOnly

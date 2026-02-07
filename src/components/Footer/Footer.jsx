@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link, Button, Input } from "@heroui/react";
+import logoImage from "../../assets/images/logo.png";
 import {
-  GraduationCap,
   Facebook,
   Twitter,
   Instagram,
@@ -103,21 +103,7 @@ const Footer = () => {
             <div className="lg:col-span-4 space-y-6">
               {/* Logo */}
               <Link href="/" className="inline-flex items-center gap-2.5">
-                <div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center"
-                  style={{ backgroundColor: colors.primary.main }}
-                >
-                  <GraduationCap
-                    className="w-5 h-5"
-                    style={{ color: colors.text.white }}
-                  />
-                </div>
-                <span
-                  className="font-bold text-xl"
-                  style={{ color: colors.text.primary }}
-                >
-                  EngConnect
-                </span>
+                <img src={logoImage} alt="EngConnect" className="h-12 w-auto" />
               </Link>
 
               <p

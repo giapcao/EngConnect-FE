@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Button, Link as HeroLink } from "@heroui/react";
-import { GraduationCap, Menu, X, ChevronRight } from "lucide-react";
+import { Menu, X, ChevronRight } from "lucide-react";
+import logoImage from "../../assets/images/logo.png";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import * as MotionLib from "framer-motion";
@@ -62,29 +63,11 @@ const Header = () => {
           <div className="flex justify-between items-center h-18 py-3">
             {/* Logo */}
             <Link to="/" className="flex items-center gap-3 group no-underline">
-              <div
-                className="w-11 h-11 rounded-xl flex items-center justify-center transition-all duration-300 group-hover:scale-105"
-                style={{ backgroundColor: colors.primary.main }}
-              >
-                <GraduationCap
-                  className="w-6 h-6"
-                  style={{ color: colors.text.white }}
-                />
-              </div>
-              <div className="flex flex-col">
-                <span
-                  className="font-bold text-xl leading-tight tracking-tight"
-                  style={{ color: colors.text.primary }}
-                >
-                  EngConnect
-                </span>
-                <span
-                  className="text-[10px] font-semibold uppercase tracking-widest leading-tight"
-                  style={{ color: colors.primary.main }}
-                >
-                  Learn English
-                </span>
-              </div>
+              <img
+                src={logoImage}
+                alt="EngConnect"
+                className="h-10 w-auto transition-all duration-300 group-hover:scale-105"
+              />
             </Link>
 
             {/* Desktop Navigation */}

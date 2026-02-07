@@ -17,6 +17,7 @@ import LogoutModal from "../components/LogoutModal/LogoutModal";
 import { useTheme } from "../contexts/ThemeContext";
 import ThemeSwitcher from "../components/ThemeSwitcher/ThemeSwitcher";
 import LanguageSwitcher from "../components/LanguageSwitcher/LanguageSwitcher";
+import logoImage from "../assets/images/logo.png";
 import {
   House,
   MagnifyingGlass,
@@ -100,21 +101,7 @@ const TutorDashboardLayout = () => {
             to="/"
             className="flex items-center gap-2 no-underline flex-shrink-0"
           >
-            <div
-              className="w-9 h-9 rounded-xl flex items-center justify-center font-bold text-lg"
-              style={{
-                backgroundColor: colors.primary.main,
-                color: colors.text.white,
-              }}
-            >
-              E
-            </div>
-            <span
-              className="text-xl font-bold hidden sm:block"
-              style={{ color: colors.text.primary }}
-            >
-              EngConnect
-            </span>
+            <img src={logoImage} alt="EngConnect" className="h-11 w-auto" />
           </Link>
 
           {/* Search Bar - Desktop */}
