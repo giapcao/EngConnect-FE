@@ -266,10 +266,36 @@
       "emailPlaceholder": "Enter your email address",
       "instruction": "Enter the email address associated with your account and we'll send you a link to reset your password.",
       "sendButton": "Send Reset Link",
+      "resendButton": "Resend Reset Link",
+      "sending": "Sending...",
+      "sentMessage": "A reset link has been sent to your email. Didn't receive it? Click resend below.",
       "successTitle": "Check your email",
       "successMessage": "We've sent a password reset link to your email address. Please check your inbox and follow the instructions.",
       "backToLogin": "Back to Login",
-      "backToLoginLink": "Back to Login"
+      "backToLoginLink": "Back to Login",
+      "errorTitle": "Error",
+      "errorMessage": "Failed to send reset link. Please try again."
+    },
+    "resetPassword": {
+      "subtitle": "Enter your new password to reset your account.",
+      "newPassword": "New Password",
+      "newPasswordPlaceholder": "Enter new password",
+      "confirmPassword": "Confirm Password",
+      "confirmPasswordPlaceholder": "Confirm new password",
+      "resetButton": "Reset Password",
+      "resetting": "Resetting...",
+      "passwordRequired": "Please enter a new password",
+      "passwordMinLength": "Password must be at least 6 characters",
+      "confirmPasswordRequired": "Please confirm your password",
+      "passwordMismatch": "Passwords do not match",
+      "successTitle": "Password Reset Successful",
+      "successMessage": "Your password has been reset successfully.",
+      "successDescription": "Your password has been reset successfully. You can now log in with your new password.",
+      "backToLogin": "Go to Login",
+      "backToLoginLink": "Back to Login",
+      "errorTitle": "Error",
+      "errorMessage": "Failed to reset password. Please try again.",
+      "invalidToken": "Invalid or expired reset link. Please request a new one."
     }
   },
   "about": {

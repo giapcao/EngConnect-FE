@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Input, Button, Link, Image } from "@heroui/react";
+import { Input, Button, Link, Image, addToast } from "@heroui/react";
 import { Mail, ArrowLeft, CheckCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import * as MotionLib from "framer-motion";
@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 import BrandLogo from "../../../components/Authentication/BrandLogo";
 import { useThemeColors } from "../../../hooks/useThemeColors";
 import { useTheme } from "../../../contexts/ThemeContext";
+import { authApi } from "../../../api";
 import illustrationImage from "../../../assets/illustrations/boy-with-key.avif";
 import "./ForgotPass.css";
 
@@ -20,12 +21,42 @@ const ForgotPass = () => {
   const { theme } = useTheme();
   const [email, setEmail] = useState("");
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle forgot password logic here
-    console.log("Reset password for:", email);
-    setIsSubmitted(true);
+    setLoading(true);
+
+    try {
+      await authApi.forgotPassword(email);
+      setIsSubmitted(true);
+      addToast({
+        title: t("auth.forgotPassword.successTitle"),
+        description: t("auth.forgotPassword.successMessage"),
+        color: "success",
+        timeout: 3000,
+      });
+    } catch (err) {
+      addToast({
+        title: t("auth.forgotPassword.errorTitle"),
+        description:
+          err.response?.data?.error?.message ||
+          err.response?.data?.message ||
+          t("auth.forgotPassword.errorMessage"),
+        color: "danger",
+        timeout: 3000,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEmailChange = (e) => {
+    const value = e.target.value;
+    setEmail(value);
+    if (!value.trim()) {
+      setIsSubmitted(false);
+    }
   };
 
   return (
@@ -82,7 +113,7 @@ const ForgotPass = () => {
                     name="email"
                     placeholder={t("auth.forgotPassword.emailPlaceholder")}
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={handleEmailChange}
                     variant="flat"
                     size="lg"
                     classNames={{
@@ -115,52 +146,94 @@ const ForgotPass = () => {
                   color="primary"
                   size="lg"
                   className="w-full font-medium"
+                  isLoading={loading}
+                  isDisabled={loading}
                   style={{
                     backgroundColor: colors.primary.main,
                     color: colors.text.white,
                   }}
                 >
-                  {t("auth.forgotPassword.sendButton")}
+                  {loading
+                    ? t("auth.forgotPassword.sending")
+                    : t("auth.forgotPassword.sendButton")}
                 </Button>
               </form>
             ) : (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.5 }}
-                className="text-center py-6"
-              >
-                <div
-                  className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
-                  style={{ backgroundColor: colors.background.primaryLight }}
-                >
-                  <CheckCircle
-                    className="w-8 h-8"
-                    style={{ color: colors.state.success }}
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div>
+                  <label
+                    className="block text-sm font-medium mb-2"
+                    style={{ color: colors.text.primary }}
+                  >
+                    {t("auth.forgotPassword.email")}
+                  </label>
+                  <Input
+                    type="email"
+                    name="email"
+                    placeholder={t("auth.forgotPassword.emailPlaceholder")}
+                    value={email}
+                    onChange={handleEmailChange}
+                    variant="flat"
+                    size="lg"
+                    classNames={{
+                      inputWrapper: `!transition-colors !duration-200 ${
+                        theme === "dark"
+                          ? "!bg-gray-800 !border-gray-700 hover:!bg-gray-700 data-[hover=true]:!bg-gray-700 group-data-[focus=true]:!bg-gray-800"
+                          : "hover:bg-gray-50"
+                      }`,
+                      input:
+                        theme === "dark"
+                          ? "!text-gray-200 placeholder:!text-gray-500"
+                          : "",
+                    }}
+                    startContent={
+                      <Mail
+                        className="w-5 h-5"
+                        style={{ color: colors.text.tertiary }}
+                      />
+                    }
+                    required
                   />
                 </div>
-                <h3
-                  className="text-xl font-semibold mb-2"
-                  style={{ color: colors.text.primary }}
+
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="flex items-center gap-2 p-3 rounded-lg"
+                  style={{
+                    backgroundColor: colors.background.primaryLight,
+                  }}
                 >
-                  {t("auth.forgotPassword.successTitle")}
-                </h3>
-                <p className="mb-6" style={{ color: colors.text.secondary }}>
-                  {t("auth.forgotPassword.successMessage")}
-                </p>
+                  <CheckCircle
+                    className="w-5 h-5 flex-shrink-0"
+                    style={{ color: colors.state.success }}
+                  />
+                  <p
+                    className="text-sm"
+                    style={{ color: colors.text.secondary }}
+                  >
+                    {t("auth.forgotPassword.sentMessage")}
+                  </p>
+                </motion.div>
+
                 <Button
+                  type="submit"
                   color="primary"
                   size="lg"
                   className="w-full font-medium"
+                  isLoading={loading}
+                  isDisabled={loading}
                   style={{
                     backgroundColor: colors.primary.main,
                     color: colors.text.white,
                   }}
-                  onPress={() => navigate("/login")}
                 >
-                  {t("auth.forgotPassword.backToLogin")}
+                  {loading
+                    ? t("auth.forgotPassword.sending")
+                    : t("auth.forgotPassword.resendButton")}
                 </Button>
-              </motion.div>
+              </form>
             )}
           </div>
 

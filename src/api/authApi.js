@@ -34,4 +34,21 @@ export const authApi = {
     });
     return response.data;
   },
+
+  // Forgot Password - Gửi email đặt lại mật khẩu
+  forgotPassword: async (email) => {
+    const response = await axiosInstance.post("/users/forgot-password", {
+      email,
+    });
+    return response.data;
+  },
+
+  // Reset Password - Đặt lại mật khẩu mới
+  resetPassword: async (token, newPassword) => {
+    const response = await axiosInstance.post("/users/reset-password", {
+      token,
+      newPassword,
+    });
+    return response.data;
+  },
 };
