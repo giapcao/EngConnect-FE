@@ -1,19 +1,5 @@
 import { useState } from "react";
-import {
-  Button,
-  Card,
-  CardBody,
-  Chip,
-  Input,
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
-  useDisclosure,
-  Avatar,
-  Divider,
-} from "@heroui/react";
+import { Button, Card, CardBody, Input } from "@heroui/react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import * as MotionLib from "framer-motion";
@@ -24,11 +10,7 @@ import { useThemeColors } from "../../hooks/useThemeColors";
 import { useTheme } from "../../contexts/ThemeContext";
 import {
   MagnifyingGlass,
-  Star,
-  Clock,
-  Users,
   BookOpen,
-  GraduationCap,
   Briefcase,
   ChatsCircle,
   PencilSimpleLine,
@@ -36,14 +18,9 @@ import {
   TrendUp,
   Target,
   Lightning,
-  Check,
-  VideoCamera,
-  FileText,
-  DeviceMobile,
-  Infinity,
+  GraduationCap,
 } from "@phosphor-icons/react";
 import readingImage from "../../assets/illustrations/boy-and-laptop.avif";
-import { col } from "framer-motion/client";
 
 // eslint-disable-next-line no-unused-vars
 const { motion } = MotionLib;
@@ -55,13 +32,6 @@ const Courses = () => {
   const { theme } = useTheme();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
-  const [selectedCourse, setSelectedCourse] = useState(null);
-  const { isOpen, onOpen, onClose } = useDisclosure();
-
-  const handleViewDetails = (course) => {
-    setSelectedCourse(course);
-    onOpen();
-  };
 
   const categories = [
     {
@@ -497,7 +467,7 @@ const Courses = () => {
                   transition: { type: "spring", stiffness: 400, damping: 25 },
                 }}
               >
-                <CourseCard course={course} onViewDetails={handleViewDetails} />
+                <CourseCard course={course} />
               </motion.div>
             ))}
           </motion.div>
@@ -549,7 +519,6 @@ const Courses = () => {
               >
                 <CourseCard
                   course={course}
-                  onViewDetails={handleViewDetails}
                   variant="compact"
                   showCategory={true}
                 />
@@ -683,407 +652,6 @@ const Courses = () => {
           </motion.div>
         </div>
       </section>
-
-      {/* Course Details Modal */}
-      <Modal
-        isOpen={isOpen}
-        onClose={onClose}
-        size="3xl"
-        backdrop="blur"
-        scrollBehavior="inside"
-        classNames={{
-          backdrop: "bg-black/50 backdrop-blur-sm",
-          base: "max-h-[90vh]",
-        }}
-      >
-        <ModalContent style={{ backgroundColor: colors.background.card }}>
-          {(onClose) => (
-            <>
-              <ModalHeader className="p-0 flex-col">
-                {/* Course Image */}
-                <div className="relative w-full h-56 sm:h-64 overflow-hidden rounded-t-xl">
-                  <img
-                    src={selectedCourse?.image}
-                    alt={selectedCourse?.title}
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                  {selectedCourse?.isBestseller && (
-                    <Chip
-                      size="sm"
-                      className="absolute top-4 left-4"
-                      style={{
-                        backgroundColor: colors.primary.main,
-                        color: colors.text.white,
-                      }}
-                    >
-                      {t("courses.bestseller")}
-                    </Chip>
-                  )}
-                  <div className="absolute bottom-4 left-4 right-4">
-                    <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">
-                      {selectedCourse?.title}
-                    </h2>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <Chip
-                        size="sm"
-                        style={{
-                          backgroundColor: "rgba(255,255,255,0.2)",
-                          color: "#fff",
-                        }}
-                      >
-                        {selectedCourse?.level}
-                      </Chip>
-                      <Chip
-                        size="sm"
-                        style={{
-                          backgroundColor: "rgba(255,255,255,0.2)",
-                          color: "#fff",
-                        }}
-                      >
-                        {selectedCourse?.category}
-                      </Chip>
-                    </div>
-                  </div>
-                </div>
-              </ModalHeader>
-
-              <ModalBody className="px-6 py-5">
-                {/* Instructor Info */}
-                <div
-                  className="flex items-center gap-4 p-4 rounded-xl mb-5"
-                  style={{ backgroundColor: colors.background.gray }}
-                >
-                  <Avatar
-                    src={selectedCourse?.tutorAvatar}
-                    size="lg"
-                    isBordered
-                    color="primary"
-                  />
-                  <div className="flex-1">
-                    <p
-                      className="font-semibold text-lg"
-                      style={{ color: colors.text.primary }}
-                    >
-                      {selectedCourse?.tutor}
-                    </p>
-                    <p
-                      className="text-sm"
-                      style={{ color: colors.text.secondary }}
-                    >
-                      {t("courses.modal.instructor")} •{" "}
-                      {t("courses.modal.verified")}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Star
-                      size={18}
-                      weight="fill"
-                      style={{ color: "#F59E0B" }}
-                    />
-                    <span
-                      className="font-semibold"
-                      style={{ color: colors.text.primary }}
-                    >
-                      {selectedCourse?.rating}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Course Stats Grid */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
-                  <div
-                    className="text-center p-4 rounded-xl"
-                    style={{ backgroundColor: colors.background.gray }}
-                  >
-                    <Star
-                      size={28}
-                      weight="fill"
-                      style={{ color: "#F59E0B" }}
-                      className="mx-auto mb-2"
-                    />
-                    <p
-                      className="font-bold text-xl"
-                      style={{ color: colors.text.primary }}
-                    >
-                      {selectedCourse?.rating}
-                    </p>
-                    <p
-                      className="text-xs"
-                      style={{ color: colors.text.secondary }}
-                    >
-                      {selectedCourse?.reviews} {t("courses.modal.reviews")}
-                    </p>
-                  </div>
-                  <div
-                    className="text-center p-4 rounded-xl"
-                    style={{ backgroundColor: colors.background.gray }}
-                  >
-                    <Users
-                      size={28}
-                      weight="duotone"
-                      style={{ color: colors.primary.main }}
-                      className="mx-auto mb-2"
-                    />
-                    <p
-                      className="font-bold text-xl"
-                      style={{ color: colors.text.primary }}
-                    >
-                      {selectedCourse?.students?.toLocaleString()}
-                    </p>
-                    <p
-                      className="text-xs"
-                      style={{ color: colors.text.secondary }}
-                    >
-                      {t("courses.modal.students")}
-                    </p>
-                  </div>
-                  <div
-                    className="text-center p-4 rounded-xl"
-                    style={{ backgroundColor: colors.background.gray }}
-                  >
-                    <BookOpen
-                      size={28}
-                      weight="duotone"
-                      style={{ color: "#10B981" }}
-                      className="mx-auto mb-2"
-                    />
-                    <p
-                      className="font-bold text-xl"
-                      style={{ color: colors.text.primary }}
-                    >
-                      {selectedCourse?.lessons}
-                    </p>
-                    <p
-                      className="text-xs"
-                      style={{ color: colors.text.secondary }}
-                    >
-                      {t("courses.lessons")}
-                    </p>
-                  </div>
-                  <div
-                    className="text-center p-4 rounded-xl"
-                    style={{ backgroundColor: colors.background.gray }}
-                  >
-                    <Clock
-                      size={28}
-                      weight="duotone"
-                      style={{ color: "#8B5CF6" }}
-                      className="mx-auto mb-2"
-                    />
-                    <p
-                      className="font-bold text-xl"
-                      style={{ color: colors.text.primary }}
-                    >
-                      {selectedCourse?.duration}
-                    </p>
-                    <p
-                      className="text-xs"
-                      style={{ color: colors.text.secondary }}
-                    >
-                      {t("courses.modal.duration")}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Course Description */}
-                <div className="mb-5">
-                  <h3
-                    className="font-semibold text-lg mb-3"
-                    style={{ color: colors.text.primary }}
-                  >
-                    {t("courses.modal.aboutCourse")}
-                  </h3>
-                  <p
-                    className="leading-relaxed"
-                    style={{ color: colors.text.secondary }}
-                  >
-                    {t("courses.modal.description")}
-                  </p>
-                </div>
-
-                <Divider className="my-4" />
-
-                {/* What You'll Learn */}
-                <div className="mb-5">
-                  <h3
-                    className="font-semibold text-lg mb-3"
-                    style={{ color: colors.text.primary }}
-                  >
-                    {t("courses.modal.whatYouLearn")}
-                  </h3>
-                  <div className="grid sm:grid-cols-2 gap-3">
-                    {[
-                      t("courses.modal.learn1"),
-                      t("courses.modal.learn2"),
-                      t("courses.modal.learn3"),
-                      t("courses.modal.learn4"),
-                    ].map((item, index) => (
-                      <div key={index} className="flex items-start gap-2">
-                        <div
-                          className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
-                          style={{
-                            backgroundColor: colors.background.primaryLight,
-                          }}
-                        >
-                          <Check
-                            size={12}
-                            weight="bold"
-                            style={{ color: colors.primary.main }}
-                          />
-                        </div>
-                        <span style={{ color: colors.text.secondary }}>
-                          {item}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <Divider className="my-4" />
-
-                {/* Course Includes */}
-                <div className="mb-5">
-                  <h3
-                    className="font-semibold text-lg mb-3"
-                    style={{ color: colors.text.primary }}
-                  >
-                    {t("courses.modal.courseIncludes")}
-                  </h3>
-                  <div className="grid sm:grid-cols-2 gap-3">
-                    <div className="flex items-center gap-3">
-                      <VideoCamera
-                        size={20}
-                        style={{ color: colors.primary.main }}
-                      />
-                      <span style={{ color: colors.text.secondary }}>
-                        {selectedCourse?.duration}{" "}
-                        {t("courses.modal.onDemandVideo")}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <FileText
-                        size={20}
-                        style={{ color: colors.primary.main }}
-                      />
-                      <span style={{ color: colors.text.secondary }}>
-                        {t("courses.modal.downloadableResources")}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <DeviceMobile
-                        size={20}
-                        style={{ color: colors.primary.main }}
-                      />
-                      <span style={{ color: colors.text.secondary }}>
-                        {t("courses.modal.mobileAccess")}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <Certificate
-                        size={20}
-                        style={{ color: colors.primary.main }}
-                      />
-                      <span style={{ color: colors.text.secondary }}>
-                        {t("courses.modal.certificateCompletion")}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <Infinity
-                        size={20}
-                        style={{ color: colors.primary.main }}
-                      />
-                      <span style={{ color: colors.text.secondary }}>
-                        {t("courses.modal.lifetimeAccess")}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <ChatsCircle
-                        size={20}
-                        style={{ color: colors.primary.main }}
-                      />
-                      <span style={{ color: colors.text.secondary }}>
-                        {t("courses.modal.communityAccess")}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <Divider className="my-4" />
-
-                {/* Price Section */}
-                <div
-                  className="p-5 rounded-xl"
-                  style={{ backgroundColor: colors.background.gray }}
-                >
-                  <div className="flex items-center justify-between flex-wrap gap-4">
-                    <div>
-                      <div className="flex items-center gap-3 mb-1">
-                        <span
-                          className="text-4xl font-bold"
-                          style={{ color: colors.primary.main }}
-                        >
-                          ${selectedCourse?.price}
-                        </span>
-                        <span
-                          className="text-xl line-through"
-                          style={{ color: colors.text.secondary }}
-                        >
-                          ${selectedCourse?.originalPrice}
-                        </span>
-                        <Chip
-                          size="sm"
-                          style={{
-                            backgroundColor: "rgba(16, 185, 129, 0.1)",
-                            color: "#10B981",
-                          }}
-                        >
-                          {Math.round(
-                            ((selectedCourse?.originalPrice -
-                              selectedCourse?.price) /
-                              selectedCourse?.originalPrice) *
-                              100,
-                          )}
-                          % {t("courses.modal.off")}
-                        </Chip>
-                      </div>
-                      <p
-                        className="text-sm"
-                        style={{ color: colors.text.secondary }}
-                      >
-                        {t("courses.modal.moneyBackGuarantee")}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </ModalBody>
-
-              <ModalFooter className="px-6 py-4 gap-3">
-                <Button
-                  variant="flat"
-                  size="lg"
-                  onPress={onClose}
-                  className="flex-1 font-semibold"
-                  style={{ color: colors.text.secondary }}
-                >
-                  {t("courses.modal.close")}
-                </Button>
-                <Button
-                  color="primary"
-                  size="lg"
-                  className="flex-1 font-semibold"
-                  onPress={() => {
-                    onClose();
-                    navigate("/register");
-                  }}
-                >
-                  {t("courses.modal.enrollNow")}
-                </Button>
-              </ModalFooter>
-            </>
-          )}
-        </ModalContent>
-      </Modal>
 
       <Footer />
     </div>

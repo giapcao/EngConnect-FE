@@ -1012,12 +1012,16 @@
     "enroll": "Đăng ký",
     "viewDetails": "Xem chi tiết",
     "lessons": "bài học",
-    "modal": {
+    "detail": {
       "instructor": "Giảng viên",
       "verified": "Giáo viên đã xác minh",
+      "createdBy": "Tạo bởi:",
+      "ratings": "Đánh giá",
       "reviews": "đánh giá",
       "students": "Học viên",
+      "studentsEnrolled": "Học viên đã đăng ký",
       "duration": "Thời lượng",
+      "level": "Cấp độ",
       "aboutCourse": "Về khóa học này",
       "description": "Khóa học toàn diện này được thiết kế để giúp bạn làm chủ các kỹ năng tiếng Anh cần thiết. Thông qua các bài học được biên soạn kỹ lưỡng, bài tập tương tác và ứng dụng thực tế, bạn sẽ xây dựng sự tự tin và đạt được sự thành thạo. Giảng viên chuyên nghiệp của chúng tôi sẽ hướng dẫn bạn trong từng bước.",
       "whatYouLearn": "Bạn sẽ học được gì",
@@ -1034,8 +1038,9 @@
       "communityAccess": "Truy cập cộng đồng học viên",
       "off": "GIẢM",
       "moneyBackGuarantee": "Đảm bảo hoàn tiền trong 30 ngày",
-      "close": "Đóng",
-      "enrollNow": "Đăng ký ngay"
+      "enrollNow": "Đăng ký ngay",
+      "backToCourses": "Quay lại khóa học",
+      "notFound": "Không tìm thấy khóa học"
     }
   },
   "adminDashboard": {

@@ -1014,12 +1014,16 @@
     "enroll": "Enroll",
     "viewDetails": "View Details",
     "lessons": "lessons",
-    "modal": {
+    "detail": {
       "instructor": "Instructor",
       "verified": "Verified Educator",
+      "createdBy": "Created by:",
+      "ratings": "Ratings",
       "reviews": "reviews",
       "students": "Students",
+      "studentsEnrolled": "Students Enrolled",
       "duration": "Duration",
+      "level": "Level",
       "aboutCourse": "About This Course",
       "description": "This comprehensive course is designed to help you master essential English skills. Through carefully crafted lessons, interactive exercises, and real-world applications, you'll build confidence and achieve fluency. Our expert instructor will guide you every step of the way.",
       "whatYouLearn": "What You'll Learn",
@@ -1036,8 +1040,9 @@
       "communityAccess": "Access to student community",
       "off": "OFF",
       "moneyBackGuarantee": "30-day money-back guarantee",
-      "close": "Close",
-      "enrollNow": "Enroll Now"
+      "enrollNow": "Enroll Now",
+      "backToCourses": "Back to Courses",
+      "notFound": "Course not found"
     }
   },
   "adminDashboard": {

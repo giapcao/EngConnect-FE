@@ -11,6 +11,7 @@ import ResetPassword from "../pages/Authentication/ResetPassword/ResetPassword";
 import Pricing from "../pages/Pricing/Pricing";
 import About from "../pages/AboutUs/About";
 import Courses from "../pages/Courses/Courses";
+import CourseDetail from "../pages/Courses/CourseDetail";
 import BecomeTutor from "../pages/BecomeTutor/BecomeTutor";
 
 // Student Dashboard Pages
@@ -86,6 +87,10 @@ export const router = createBrowserRouter([
       {
         path: "courses",
         element: <Courses />,
+      },
+      {
+        path: "courses/:id",
+        element: <CourseDetail />,
       },
       {
         path: "become-tutor",

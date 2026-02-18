@@ -6,17 +6,18 @@ import {
   Button,
   Avatar,
 } from "@heroui/react";
+import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useThemeColors } from "../../hooks/useThemeColors";
 import { Star, Users, Clock, BookOpen } from "@phosphor-icons/react";
 
 const CourseCard = ({
   course,
-  onViewDetails,
   showViewButton = true,
   showCategory = false,
   variant = "default", // "default" | "compact"
 }) => {
+  const navigate = useNavigate();
   const { t } = useTranslation();
   const colors = useThemeColors();
 
@@ -130,7 +131,7 @@ const CourseCard = ({
             ${course.originalPrice}
           </span>
         </div>
-        {showViewButton && onViewDetails && (
+        {showViewButton && (
           <Button
             size="md"
             style={{
@@ -138,7 +139,7 @@ const CourseCard = ({
               backgroundColor: colors.button.primaryLight.background,
               color: colors.button.primaryLight.text,
             }}
-            onPress={() => onViewDetails(course)}
+            onPress={() => navigate(`/courses/${course.id}`)}
           >
             {t("courses.viewDetails")}
           </Button>
