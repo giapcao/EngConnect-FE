@@ -240,11 +240,12 @@
     },
     "register": {
       "subtitle": "Join thousands of learners and tutors worldwide",
-      "joinAs": "I want to join as:",
-      "student": "Student",
-      "tutor": "Tutor",
-      "fullName": "Full Name",
-      "fullNamePlaceholder": "Full name",
+      "firstName": "First Name",
+      "firstNamePlaceholder": "First name",
+      "lastName": "Last Name",
+      "lastNamePlaceholder": "Last name",
+      "userName": "Username",
+      "userNamePlaceholder": "Choose a username",
       "email": "Email",
       "emailPlaceholder": "Email address",
       "password": "Password",
@@ -256,9 +257,33 @@
       "and": "and",
       "privacyPolicy": "Privacy Policy",
       "createAccount": "Create Account",
+      "registering": "Creating account...",
       "socialText": "Or sign up with",
       "hasAccount": "Already have an account?",
-      "signIn": "Sign in"
+      "signIn": "Sign in",
+      "validation": {
+        "firstNameRequired": "First name is required",
+        "lastNameRequired": "Last name is required",
+        "userNameRequired": "Username is required",
+        "userNameMinLength": "Username must be at least 3 characters",
+        "emailRequired": "Email is required",
+        "emailInvalid": "Please enter a valid email address",
+        "passwordRequired": "Password is required",
+        "passwordMinLength": "Password must be at least 6 characters",
+        "confirmPasswordRequired": "Please confirm your password",
+        "passwordMismatch": "Passwords do not match",
+        "termsRequired": "You must agree to the terms and conditions",
+        "validationError": "Validation Error",
+        "validationErrorDescription": "Please check the form for errors"
+      },
+      "error": {
+        "title": "Registration Failed"
+      },
+      "success": {
+        "title": "Account Created Successfully!",
+        "description": "Your account has been created. Redirecting to login...",
+        "checkEmail": "A verification email has been sent to your email address. Please check your inbox and click the verification link to activate your account."
+      }
     },
     "forgotPassword": {
       "subtitle": "Forgot your password? No worries, we'll help you reset it.",
@@ -296,6 +321,26 @@
       "errorTitle": "Error",
       "errorMessage": "Failed to reset password. Please try again.",
       "invalidToken": "Invalid or expired reset link. Please request a new one."
+    },
+    "verifyEmail": {
+      "subtitle": "We're verifying your email address",
+      "verifying": {
+        "title": "Verifying Your Email...",
+        "description": "Please wait while we verify your email address. This should only take a moment."
+      },
+      "success": {
+        "title": "Email Verified Successfully!",
+        "description": "Your email has been verified. You can now log in to your account."
+      },
+      "error": {
+        "title": "Verification Failed",
+        "description": "We couldn't verify your email. The link may have expired or is invalid.",
+        "invalidTitle": "Invalid Verification Link",
+        "noCode": "No verification code found. Please check your email for the correct link."
+      },
+      "goToLogin": "Go to Login",
+      "backToLogin": "Back to Login",
+      "retry": "Try Again"
     }
   },
   "about": {

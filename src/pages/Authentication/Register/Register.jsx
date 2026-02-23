@@ -1,12 +1,22 @@
 import React, { useState } from "react";
-import { Input, Button, Link, Checkbox, Image } from "@heroui/react";
+import {
+  Input,
+  Button,
+  Link,
+  Checkbox,
+  Image,
+  Alert,
+  addToast,
+} from "@heroui/react";
 import { useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
 import * as MotionLib from "framer-motion";
 import { useTranslation } from "react-i18next";
 import BrandLogo from "../../../components/Authentication/BrandLogo";
 import SocialLogin from "../../../components/Authentication/SocialLogin";
 import { useThemeColors } from "../../../hooks/useThemeColors";
 import { useTheme } from "../../../contexts/ThemeContext";
+import { register } from "../../../store/slices/authSlice";
 import illustrationImage from "../../../assets/illustrations/welcome-on-board.avif";
 import "./Register.css";
 
@@ -15,30 +25,106 @@ const { motion } = MotionLib;
 
 const Register = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const { t } = useTranslation();
   const colors = useThemeColors();
   const { theme } = useTheme();
-  const [userType, setUserType] = useState("Student");
+  const { loading, error } = useSelector((state) => state.auth);
   const [agreeToTerms, setAgreeToTerms] = useState(false);
+  const [validationErrors, setValidationErrors] = useState({});
   const [formData, setFormData] = useState({
-    fullName: "",
+    firstName: "",
+    lastName: "",
+    userName: "",
     email: "",
     password: "",
     confirmPassword: "",
   });
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (formData.password !== formData.confirmPassword) {
-      alert("Passwords do not match!");
-      return;
+  const validateForm = () => {
+    const errors = {};
+
+    if (!formData.firstName.trim()) {
+      errors.firstName = t("auth.register.validation.firstNameRequired");
     }
+
+    if (!formData.lastName.trim()) {
+      errors.lastName = t("auth.register.validation.lastNameRequired");
+    }
+
+    if (!formData.userName.trim()) {
+      errors.userName = t("auth.register.validation.userNameRequired");
+    } else if (formData.userName.length < 3) {
+      errors.userName = t("auth.register.validation.userNameMinLength");
+    }
+
+    if (!formData.email.trim()) {
+      errors.email = t("auth.register.validation.emailRequired");
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      errors.email = t("auth.register.validation.emailInvalid");
+    }
+
+    if (!formData.password) {
+      errors.password = t("auth.register.validation.passwordRequired");
+    } else if (formData.password.length < 6) {
+      errors.password = t("auth.register.validation.passwordMinLength");
+    }
+
+    if (!formData.confirmPassword) {
+      errors.confirmPassword = t(
+        "auth.register.validation.confirmPasswordRequired",
+      );
+    } else if (formData.password !== formData.confirmPassword) {
+      errors.confirmPassword = t("auth.register.validation.passwordMismatch");
+    }
+
     if (!agreeToTerms) {
-      alert("Please agree to the Terms and Conditions");
+      errors.terms = t("auth.register.validation.termsRequired");
+    }
+
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!validateForm()) {
+      addToast({
+        title: t("auth.register.validation.validationError"),
+        description: t("auth.register.validation.validationErrorDescription"),
+        color: "warning",
+        timeout: 3000,
+      });
       return;
     }
-    // Handle registration logic here
-    console.log("Registration data:", { ...formData, userType });
+
+    const registerData = {
+      firstName: formData.firstName.trim(),
+      lastName: formData.lastName.trim(),
+      userName: formData.userName.trim(),
+      email: formData.email.trim(),
+      password: formData.password,
+    };
+
+    try {
+      await dispatch(register(registerData)).unwrap();
+
+      addToast({
+        title: t("auth.register.success.title"),
+        description: t("auth.register.success.checkEmail"),
+        color: "success",
+        timeout: 5000,
+      });
+
+      // Navigate to login after short delay
+      setTimeout(() => {
+        navigate("/login");
+      }, 2000);
+    } catch (err) {
+      // Error is handled by the error state
+      console.error("Registration error:", err);
+    }
   };
 
   const handleChange = (e) => {
@@ -87,70 +173,34 @@ const Register = () => {
             className="register-card"
             style={{ backgroundColor: colors.background.light }}
           >
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div>
-                <label
-                  className="block text-sm font-medium mb-3"
-                  style={{ color: colors.text.primary }}
-                >
-                  {t("auth.register.joinAs")}
-                </label>
-                <div className="flex gap-4">
-                  <Button
-                    type="button"
-                    size="lg"
-                    className="flex-1 font-medium"
-                    style={{
-                      backgroundColor:
-                        userType === "Student"
-                          ? colors.primary.main
-                          : colors.background.input,
-                      color:
-                        userType === "Student"
-                          ? colors.text.white
-                          : colors.text.secondary,
-                    }}
-                    onClick={() => setUserType("Student")}
-                  >
-                    {t("auth.register.student")}
-                  </Button>
-                  <Button
-                    type="button"
-                    size="lg"
-                    className="flex-1 font-medium"
-                    style={{
-                      backgroundColor:
-                        userType === "Tutor"
-                          ? colors.primary.main
-                          : colors.background.input,
-                      color:
-                        userType === "Tutor"
-                          ? colors.text.white
-                          : colors.text.secondary,
-                    }}
-                    onClick={() => setUserType("Tutor")}
-                  >
-                    {t("auth.register.tutor")}
-                  </Button>
-                </div>
-              </div>
+            {error && (
+              <Alert
+                color="danger"
+                title={t("auth.register.error.title")}
+                description={error}
+                className="mb-4"
+              />
+            )}
 
+            <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label
                     className="block text-sm font-medium mb-2"
                     style={{ color: colors.text.primary }}
                   >
-                    {t("auth.register.fullName")}
+                    {t("auth.register.firstName")}
                   </label>
                   <Input
                     type="text"
-                    name="fullName"
-                    placeholder={t("auth.register.fullNamePlaceholder")}
-                    value={formData.fullName}
+                    name="firstName"
+                    placeholder={t("auth.register.firstNamePlaceholder")}
+                    value={formData.firstName}
                     onChange={handleChange}
                     variant="flat"
                     size="lg"
+                    isInvalid={!!validationErrors.firstName}
+                    errorMessage={validationErrors.firstName}
                     classNames={{
                       inputWrapper: `!transition-colors !duration-200 ${
                         theme === "dark"
@@ -162,7 +212,70 @@ const Register = () => {
                           ? "!text-gray-200 placeholder:!text-gray-500"
                           : "",
                     }}
-                    required
+                  />
+                </div>
+
+                <div>
+                  <label
+                    className="block text-sm font-medium mb-2"
+                    style={{ color: colors.text.primary }}
+                  >
+                    {t("auth.register.lastName")}
+                  </label>
+                  <Input
+                    type="text"
+                    name="lastName"
+                    placeholder={t("auth.register.lastNamePlaceholder")}
+                    value={formData.lastName}
+                    onChange={handleChange}
+                    variant="flat"
+                    size="lg"
+                    isInvalid={!!validationErrors.lastName}
+                    errorMessage={validationErrors.lastName}
+                    classNames={{
+                      inputWrapper: `!transition-colors !duration-200 ${
+                        theme === "dark"
+                          ? "!bg-gray-800 !border-gray-700 hover:!bg-gray-700 data-[hover=true]:!bg-gray-700 group-data-[focus=true]:!bg-gray-800"
+                          : "hover:bg-gray-50"
+                      }`,
+                      input:
+                        theme === "dark"
+                          ? "!text-gray-200 placeholder:!text-gray-500"
+                          : "",
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label
+                    className="block text-sm font-medium mb-2"
+                    style={{ color: colors.text.primary }}
+                  >
+                    {t("auth.register.userName")}
+                  </label>
+                  <Input
+                    type="text"
+                    name="userName"
+                    placeholder={t("auth.register.userNamePlaceholder")}
+                    value={formData.userName}
+                    onChange={handleChange}
+                    variant="flat"
+                    size="lg"
+                    isInvalid={!!validationErrors.userName}
+                    errorMessage={validationErrors.userName}
+                    classNames={{
+                      inputWrapper: `!transition-colors !duration-200 ${
+                        theme === "dark"
+                          ? "!bg-gray-800 !border-gray-700 hover:!bg-gray-700 data-[hover=true]:!bg-gray-700 group-data-[focus=true]:!bg-gray-800"
+                          : "hover:bg-gray-50"
+                      }`,
+                      input:
+                        theme === "dark"
+                          ? "!text-gray-200 placeholder:!text-gray-500"
+                          : "",
+                    }}
                   />
                 </div>
 
@@ -181,6 +294,8 @@ const Register = () => {
                     onChange={handleChange}
                     variant="flat"
                     size="lg"
+                    isInvalid={!!validationErrors.email}
+                    errorMessage={validationErrors.email}
                     classNames={{
                       inputWrapper: `!transition-colors !duration-200 ${
                         theme === "dark"
@@ -192,7 +307,6 @@ const Register = () => {
                           ? "!text-gray-200 placeholder:!text-gray-500"
                           : "",
                     }}
-                    required
                   />
                 </div>
               </div>
@@ -213,6 +327,8 @@ const Register = () => {
                     onChange={handleChange}
                     variant="flat"
                     size="lg"
+                    isInvalid={!!validationErrors.password}
+                    errorMessage={validationErrors.password}
                     classNames={{
                       inputWrapper: `!transition-colors !duration-200 ${
                         theme === "dark"
@@ -224,8 +340,6 @@ const Register = () => {
                           ? "!text-gray-200 placeholder:!text-gray-500"
                           : "",
                     }}
-                    minLength={8}
-                    required
                   />
                 </div>
 
@@ -244,6 +358,8 @@ const Register = () => {
                     onChange={handleChange}
                     variant="flat"
                     size="lg"
+                    isInvalid={!!validationErrors.confirmPassword}
+                    errorMessage={validationErrors.confirmPassword}
                     classNames={{
                       inputWrapper: `!transition-colors !duration-200 ${
                         theme === "dark"
@@ -255,8 +371,6 @@ const Register = () => {
                           ? "!text-gray-200 placeholder:!text-gray-500"
                           : "",
                     }}
-                    minLength={8}
-                    required
                   />
                 </div>
               </div>
@@ -291,17 +405,24 @@ const Register = () => {
                 </Checkbox>
               </div>
 
+              {validationErrors.terms && (
+                <p className="text-sm text-danger">{validationErrors.terms}</p>
+              )}
+
               <Button
                 type="submit"
                 color="primary"
                 size="lg"
                 className="w-full font-medium"
+                isLoading={loading}
                 style={{
                   backgroundColor: colors.primary.main,
                   color: colors.text.white,
                 }}
               >
-                {t("auth.register.createAccount")}
+                {loading
+                  ? t("auth.register.registering")
+                  : t("auth.register.createAccount")}
               </Button>
 
               <SocialLogin text={t("auth.register.socialText")} />

@@ -732,7 +732,6 @@ const CourseDetail = () => {
                       color="primary"
                       size="lg"
                       className="w-full font-semibold text-base"
-                      startContent={<ShoppingCart size={20} weight="bold" />}
                       onPress={() => navigate("/register")}
                     >
                       {t("courses.detail.enrollNow")}

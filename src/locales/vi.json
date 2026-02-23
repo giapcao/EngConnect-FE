@@ -240,11 +240,12 @@
     },
     "register": {
       "subtitle": "Tham gia cùng hàng nghìn người học và gia sư trên toàn thế giới",
-      "joinAs": "Tôi muốn tham gia với vai trò:",
-      "student": "Học viên",
-      "tutor": "Gia sư",
-      "fullName": "Họ và tên",
-      "fullNamePlaceholder": "Họ và tên",
+      "firstName": "Tên",
+      "firstNamePlaceholder": "Tên",
+      "lastName": "Họ",
+      "lastNamePlaceholder": "Họ",
+      "userName": "Tên người dùng",
+      "userNamePlaceholder": "Chọn tên người dùng",
       "email": "Email",
       "emailPlaceholder": "Địa chỉ email",
       "password": "Mật khẩu",
@@ -256,9 +257,33 @@
       "and": "và",
       "privacyPolicy": "Chính sách Bảo mật",
       "createAccount": "Tạo tài khoản",
+      "registering": "Đang tạo tài khoản...",
       "socialText": "Hoặc đăng ký với",
       "hasAccount": "Đã có tài khoản?",
-      "signIn": "Đăng nhập"
+      "signIn": "Đăng nhập",
+      "validation": {
+        "firstNameRequired": "Vui lòng nhập tên",
+        "lastNameRequired": "Vui lòng nhập họ",
+        "userNameRequired": "Vui lòng nhập tên người dùng",
+        "userNameMinLength": "Tên người dùng phải có ít nhất 3 ký tự",
+        "emailRequired": "Vui lòng nhập email",
+        "emailInvalid": "Vui lòng nhập địa chỉ email hợp lệ",
+        "passwordRequired": "Vui lòng nhập mật khẩu",
+        "passwordMinLength": "Mật khẩu phải có ít nhất 6 ký tự",
+        "confirmPasswordRequired": "Vui lòng xác nhận mật khẩu",
+        "passwordMismatch": "Mật khẩu không khớp",
+        "termsRequired": "Bạn phải đồng ý với điều khoản và điều kiện",
+        "validationError": "Lỗi xác thực",
+        "validationErrorDescription": "Vui lòng kiểm tra lại biểu mẫu"
+      },
+      "error": {
+        "title": "Đăng ký thất bại"
+      },
+      "success": {
+        "title": "Tạo tài khoản thành công!",
+        "description": "Tài khoản của bạn đã được tạo. Đang chuyển hướng đến trang đăng nhập...",
+        "checkEmail": "Email xác minh đã được gửi đến địa chỉ email của bạn. Vui lòng kiểm tra hộp thư và nhấp vào liên kết xác minh để kích hoạt tài khoản."
+      }
     },
     "forgotPassword": {
       "subtitle": "Quên mật khẩu? Đừng lo, chúng tôi sẽ giúp bạn đặt lại.",
@@ -296,6 +321,26 @@
       "errorTitle": "Lỗi",
       "errorMessage": "Đặt lại mật khẩu thất bại. Vui lòng thử lại.",
       "invalidToken": "Liên kết đặt lại không hợp lệ hoặc đã hết hạn. Vui lòng yêu cầu liên kết mới."
+    },
+    "verifyEmail": {
+      "subtitle": "Chúng tôi đang xác minh địa chỉ email của bạn",
+      "verifying": {
+        "title": "Đang Xác Minh Email...",
+        "description": "Vui lòng đợi trong khi chúng tôi xác minh địa chỉ email của bạn. Quá trình này chỉ mất vài giây."
+      },
+      "success": {
+        "title": "Xác Minh Email Thành Công!",
+        "description": "Email của bạn đã được xác minh. Bạn có thể đăng nhập vào tài khoản ngay bây giờ."
+      },
+      "error": {
+        "title": "Xác Minh Thất Bại",
+        "description": "Chúng tôi không thể xác minh email của bạn. Liên kết có thể đã hết hạn hoặc không hợp lệ.",
+        "invalidTitle": "Liên Kết Xác Minh Không Hợp Lệ",
+        "noCode": "Không tìm thấy mã xác minh. Vui lòng kiểm tra email để lấy liên kết chính xác."
+      },
+      "goToLogin": "Đi đến Đăng nhập",
+      "backToLogin": "Quay lại Đăng nhập",
+      "retry": "Thử lại"
     }
   },
   "about": {

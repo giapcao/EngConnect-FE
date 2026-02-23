@@ -8,6 +8,7 @@ import Login from "../pages/Authentication/Login/Login";
 import Register from "../pages/Authentication/Register/Register";
 import ForgotPass from "../pages/Authentication/ForgotPass/ForgotPass";
 import ResetPassword from "../pages/Authentication/ResetPassword/ResetPassword";
+import VerifyEmail from "../pages/Authentication/VerifyEmail/VerifyEmail";
 import Pricing from "../pages/Pricing/Pricing";
 import About from "../pages/AboutUs/About";
 import Courses from "../pages/Courses/Courses";
@@ -75,6 +76,10 @@ export const router = createBrowserRouter([
       {
         path: "reset-password",
         element: <ResetPassword />,
+      },
+      {
+        path: "verify",
+        element: <VerifyEmail />,
       },
       {
         path: "pricing",
