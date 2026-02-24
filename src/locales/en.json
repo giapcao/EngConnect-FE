@@ -88,6 +88,55 @@
       "learnMore": "Learn More"
     }
   },
+  "tutorRegistration": {
+    "badge": "Tutor Application",
+    "subtitle": "Complete the form below to apply as a tutor on EngConnect",
+    "headline": "Professional Headline",
+    "headlinePlaceholder": "e.g. Experienced English Tutor with 5+ years",
+    "bio": "About You",
+    "bioPlaceholder": "Tell us about your teaching experience, qualifications, and what makes you a great tutor...",
+    "characters": "characters",
+    "yearsExperience": "Years of Experience",
+    "yearsExperiencePlaceholder": "e.g. 5",
+    "slotsCount": "Available Slots",
+    "slotsCountPlaceholder": "e.g. 10",
+    "introVideoUrl": "Intro Video URL",
+    "introVideoUrlPlaceholder": "https://youtube.com/your-intro-video",
+    "cvUrl": "CV / Resume URL",
+    "cvUrlPlaceholder": "https://drive.google.com/your-cv",
+    "optional": "optional",
+    "submitButton": "Submit Application",
+    "submitting": "Submitting...",
+    "learnMore": "Want to know more about teaching?",
+    "learnMoreLink": "Learn about benefits",
+    "loginRequired": {
+      "title": "Account Required",
+      "description": "You need to have an account and be logged in to apply as a tutor.",
+      "login": "Log In",
+      "createAccount": "Create Account"
+    },
+    "validation": {
+      "headlineRequired": "Professional headline is required",
+      "headlineMinLength": "Headline must be at least 10 characters",
+      "bioRequired": "Bio is required",
+      "bioMinLength": "Bio must be at least 50 characters",
+      "introVideoUrlInvalid": "Please enter a valid URL",
+      "yearsExperienceRequired": "Years of experience is required",
+      "yearsExperienceInvalid": "Please enter a valid number",
+      "cvUrlInvalid": "Please enter a valid URL",
+      "slotsCountRequired": "Number of available slots is required",
+      "slotsCountInvalid": "Please enter a valid number (at least 1)",
+      "validationError": "Validation Error",
+      "validationErrorDescription": "Please check the form for errors"
+    },
+    "error": {
+      "title": "Application Failed"
+    },
+    "success": {
+      "title": "Application Submitted!",
+      "description": "Your tutor application has been submitted successfully. We will review it and get back to you soon."
+    }
+  },
   "home": {
     "hero": {
       "badge": "AI-Powered Learning Platform",

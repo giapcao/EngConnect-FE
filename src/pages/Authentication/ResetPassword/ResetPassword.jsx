@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 import BrandLogo from "../../../components/Authentication/BrandLogo";
 import { useThemeColors } from "../../../hooks/useThemeColors";
 import { useTheme } from "../../../contexts/ThemeContext";
+import useInputStyles from "../../../hooks/useInputStyles";
 import { authApi } from "../../../api";
 import illustrationImage from "../../../assets/illustrations/boy-refresh.avif";
 import "./ResetPassword.css";
@@ -19,6 +20,7 @@ const ResetPassword = () => {
   const { t } = useTranslation();
   const colors = useThemeColors();
   const { theme } = useTheme();
+  const { inputClassNames } = useInputStyles();
   const [searchParams] = useSearchParams();
   const token = searchParams.get("code") || "";
 
@@ -163,17 +165,7 @@ const ResetPassword = () => {
                     size="lg"
                     isInvalid={!!validationErrors.newPassword}
                     errorMessage={validationErrors.newPassword}
-                    classNames={{
-                      inputWrapper: `!transition-colors !duration-200 ${
-                        theme === "dark"
-                          ? "!bg-gray-800 !border-gray-700 hover:!bg-gray-700 data-[hover=true]:!bg-gray-700 group-data-[focus=true]:!bg-gray-800"
-                          : "hover:bg-gray-50"
-                      }`,
-                      input:
-                        theme === "dark"
-                          ? "!text-gray-200 placeholder:!text-gray-500"
-                          : "",
-                    }}
+                    classNames={inputClassNames}
                     startContent={
                       <Lock
                         className="w-5 h-5"
@@ -229,17 +221,7 @@ const ResetPassword = () => {
                     size="lg"
                     isInvalid={!!validationErrors.confirmPassword}
                     errorMessage={validationErrors.confirmPassword}
-                    classNames={{
-                      inputWrapper: `!transition-colors !duration-200 ${
-                        theme === "dark"
-                          ? "!bg-gray-800 !border-gray-700 hover:!bg-gray-700 data-[hover=true]:!bg-gray-700 group-data-[focus=true]:!bg-gray-800"
-                          : "hover:bg-gray-50"
-                      }`,
-                      input:
-                        theme === "dark"
-                          ? "!text-gray-200 placeholder:!text-gray-500"
-                          : "",
-                    }}
+                    classNames={inputClassNames}
                     startContent={
                       <Lock
                         className="w-5 h-5"

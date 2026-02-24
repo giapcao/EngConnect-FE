@@ -12,7 +12,7 @@ import {
 } from "@heroui/react";
 import { useTranslation } from "react-i18next";
 import { useThemeColors } from "../../../hooks/useThemeColors";
-import { useTheme } from "../../../contexts/ThemeContext";
+import useInputStyles from "../../../hooks/useInputStyles";
 import { motion } from "framer-motion";
 import {
   User,
@@ -38,7 +38,7 @@ import {
 const Profile = () => {
   const { t } = useTranslation();
   const colors = useThemeColors();
-  const { theme } = useTheme();
+  const { inputClassNames } = useInputStyles();
   const [selectedTab, setSelectedTab] = useState("profile");
   const [isEditing, setIsEditing] = useState(false);
 
@@ -395,17 +395,7 @@ const Profile = () => {
                       style={{ color: colors.text.secondary }}
                     />
                   }
-                  classNames={{
-                    inputWrapper: `!transition-colors !duration-200 ${
-                      theme === "dark"
-                        ? "!bg-gray-800 !border-gray-700 hover:!bg-gray-700 data-[hover=true]:!bg-gray-700 group-data-[focus=true]:!bg-gray-800"
-                        : "hover:bg-gray-50"
-                    }`,
-                    input:
-                      theme === "dark"
-                        ? "!text-gray-200 placeholder:!text-gray-500"
-                        : "",
-                  }}
+                  classNames={inputClassNames}
                   onValueChange={(value) =>
                     setProfileData({ ...profileData, firstName: value })
                   }
@@ -420,17 +410,7 @@ const Profile = () => {
                       style={{ color: colors.text.secondary }}
                     />
                   }
-                  classNames={{
-                    inputWrapper: `!transition-colors !duration-200 ${
-                      theme === "dark"
-                        ? "!bg-gray-800 !border-gray-700 hover:!bg-gray-700 data-[hover=true]:!bg-gray-700 group-data-[focus=true]:!bg-gray-800"
-                        : "hover:bg-gray-50"
-                    }`,
-                    input:
-                      theme === "dark"
-                        ? "!text-gray-200 placeholder:!text-gray-500"
-                        : "",
-                  }}
+                  classNames={inputClassNames}
                   onValueChange={(value) =>
                     setProfileData({ ...profileData, lastName: value })
                   }
@@ -445,17 +425,7 @@ const Profile = () => {
                       style={{ color: colors.text.secondary }}
                     />
                   }
-                  classNames={{
-                    inputWrapper: `!transition-colors !duration-200 ${
-                      theme === "dark"
-                        ? "!bg-gray-800 !border-gray-700 hover:!bg-gray-700 data-[hover=true]:!bg-gray-700 group-data-[focus=true]:!bg-gray-800"
-                        : "hover:bg-gray-50"
-                    }`,
-                    input:
-                      theme === "dark"
-                        ? "!text-gray-200 placeholder:!text-gray-500"
-                        : "",
-                  }}
+                  classNames={inputClassNames}
                   onValueChange={(value) =>
                     setProfileData({ ...profileData, email: value })
                   }
@@ -470,17 +440,7 @@ const Profile = () => {
                       style={{ color: colors.text.secondary }}
                     />
                   }
-                  classNames={{
-                    inputWrapper: `!transition-colors !duration-200 ${
-                      theme === "dark"
-                        ? "!bg-gray-800 !border-gray-700 hover:!bg-gray-700 data-[hover=true]:!bg-gray-700 group-data-[focus=true]:!bg-gray-800"
-                        : "hover:bg-gray-50"
-                    }`,
-                    input:
-                      theme === "dark"
-                        ? "!text-gray-200 placeholder:!text-gray-500"
-                        : "",
-                  }}
+                  classNames={inputClassNames}
                   onValueChange={(value) =>
                     setProfileData({ ...profileData, phone: value })
                   }
@@ -495,17 +455,7 @@ const Profile = () => {
                       style={{ color: colors.text.secondary }}
                     />
                   }
-                  classNames={{
-                    inputWrapper: `!transition-colors !duration-200 ${
-                      theme === "dark"
-                        ? "!bg-gray-800 !border-gray-700 hover:!bg-gray-700 data-[hover=true]:!bg-gray-700 group-data-[focus=true]:!bg-gray-800"
-                        : "hover:bg-gray-50"
-                    }`,
-                    input:
-                      theme === "dark"
-                        ? "!text-gray-200 placeholder:!text-gray-500"
-                        : "",
-                  }}
+                  classNames={inputClassNames}
                   onValueChange={(value) =>
                     setProfileData({ ...profileData, location: value })
                   }
@@ -520,17 +470,7 @@ const Profile = () => {
                       style={{ color: colors.text.secondary }}
                     />
                   }
-                  classNames={{
-                    inputWrapper: `!transition-colors !duration-200 ${
-                      theme === "dark"
-                        ? "!bg-gray-800 !border-gray-700 hover:!bg-gray-700 data-[hover=true]:!bg-gray-700 group-data-[focus=true]:!bg-gray-800"
-                        : "hover:bg-gray-50"
-                    }`,
-                    input:
-                      theme === "dark"
-                        ? "!text-gray-200 placeholder:!text-gray-500"
-                        : "",
-                  }}
+                  classNames={inputClassNames}
                   onValueChange={(value) =>
                     setProfileData({ ...profileData, language: value })
                   }
@@ -763,17 +703,7 @@ const Profile = () => {
                         style={{ color: colors.text.secondary }}
                       />
                     }
-                    classNames={{
-                      inputWrapper: `!transition-colors !duration-200 ${
-                        theme === "dark"
-                          ? "!bg-gray-800 !border-gray-700 hover:!bg-gray-700 data-[hover=true]:!bg-gray-700 group-data-[focus=true]:!bg-gray-800"
-                          : "hover:bg-gray-50"
-                      }`,
-                      input:
-                        theme === "dark"
-                          ? "!text-gray-200 placeholder:!text-gray-500"
-                          : "",
-                    }}
+                    classNames={inputClassNames}
                   />
                   <Input
                     type="password"
@@ -785,17 +715,7 @@ const Profile = () => {
                         style={{ color: colors.text.secondary }}
                       />
                     }
-                    classNames={{
-                      inputWrapper: `!transition-colors !duration-200 ${
-                        theme === "dark"
-                          ? "!bg-gray-800 !border-gray-700 hover:!bg-gray-700 data-[hover=true]:!bg-gray-700 group-data-[focus=true]:!bg-gray-800"
-                          : "hover:bg-gray-50"
-                      }`,
-                      input:
-                        theme === "dark"
-                          ? "!text-gray-200 placeholder:!text-gray-500"
-                          : "",
-                    }}
+                    classNames={inputClassNames}
                   />
                   <Input
                     type="password"
@@ -807,17 +727,7 @@ const Profile = () => {
                         style={{ color: colors.text.secondary }}
                       />
                     }
-                    classNames={{
-                      inputWrapper: `!transition-colors !duration-200 ${
-                        theme === "dark"
-                          ? "!bg-gray-800 !border-gray-700 hover:!bg-gray-700 data-[hover=true]:!bg-gray-700 group-data-[focus=true]:!bg-gray-800"
-                          : "hover:bg-gray-50"
-                      }`,
-                      input:
-                        theme === "dark"
-                          ? "!text-gray-200 placeholder:!text-gray-500"
-                          : "",
-                    }}
+                    classNames={inputClassNames}
                   />
                   <Button
                     style={{

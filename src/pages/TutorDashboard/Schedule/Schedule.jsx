@@ -17,6 +17,7 @@ import {
 } from "@heroui/react";
 import { useTranslation } from "react-i18next";
 import { useThemeColors } from "../../../hooks/useThemeColors";
+import useInputStyles from "../../../hooks/useInputStyles";
 import { motion } from "framer-motion";
 import {
   CalendarDots,
@@ -32,6 +33,7 @@ import {
 const Schedule = () => {
   const { t } = useTranslation();
   const colors = useThemeColors();
+  const { selectClassNames } = useInputStyles();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [currentWeek, setCurrentWeek] = useState(0);
   const [selectedDay, setSelectedDay] = useState(null);
@@ -474,6 +476,7 @@ const Schedule = () => {
                     selectionMode="multiple"
                     size="sm"
                     className="max-w-[200px]"
+                    classNames={selectClassNames}
                     isDisabled={!availability[index]?.length}
                   >
                     {timeSlots.map((time) => (

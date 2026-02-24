@@ -88,6 +88,55 @@
       "learnMore": "Tìm hiểu thêm"
     }
   },
+  "tutorRegistration": {
+    "badge": "Đơn Đăng Ký Gia Sư",
+    "subtitle": "Hoàn thành biểu mẫu dưới đây để đăng ký làm gia sư trên EngConnect",
+    "headline": "Tiêu đề chuyên nghiệp",
+    "headlinePlaceholder": "VD: Gia sư tiếng Anh giàu kinh nghiệm 5+ năm",
+    "bio": "Giới thiệu bản thân",
+    "bioPlaceholder": "Hãy chia sẻ về kinh nghiệm giảng dạy, bằng cấp và điều gì khiến bạn trở thành một gia sư tuyệt vời...",
+    "characters": "ký tự",
+    "yearsExperience": "Số năm kinh nghiệm",
+    "yearsExperiencePlaceholder": "VD: 5",
+    "slotsCount": "Số slot có sẵn",
+    "slotsCountPlaceholder": "VD: 10",
+    "introVideoUrl": "Video giới thiệu",
+    "introVideoUrlPlaceholder": "https://youtube.com/video-gioi-thieu",
+    "cvUrl": "CV / Hồ sơ",
+    "cvUrlPlaceholder": "https://drive.google.com/cv-cua-ban",
+    "optional": "không bắt buộc",
+    "submitButton": "Gửi đơn đăng ký",
+    "submitting": "Đang gửi...",
+    "learnMore": "Muốn biết thêm về việc giảng dạy?",
+    "learnMoreLink": "Tìm hiểu quyền lợi",
+    "loginRequired": {
+      "title": "Yêu cầu tài khoản",
+      "description": "Bạn cần có tài khoản và đăng nhập để đăng ký làm gia sư.",
+      "login": "Đăng nhập",
+      "createAccount": "Tạo tài khoản"
+    },
+    "validation": {
+      "headlineRequired": "Vui lòng nhập tiêu đề chuyên nghiệp",
+      "headlineMinLength": "Tiêu đề phải có ít nhất 10 ký tự",
+      "bioRequired": "Vui lòng nhập giới thiệu bản thân",
+      "bioMinLength": "Giới thiệu phải có ít nhất 50 ký tự",
+      "introVideoUrlInvalid": "Vui lòng nhập URL hợp lệ",
+      "yearsExperienceRequired": "Vui lòng nhập số năm kinh nghiệm",
+      "yearsExperienceInvalid": "Vui lòng nhập số hợp lệ",
+      "cvUrlInvalid": "Vui lòng nhập URL hợp lệ",
+      "slotsCountRequired": "Vui lòng nhập số slot có sẵn",
+      "slotsCountInvalid": "Vui lòng nhập số hợp lệ (ít nhất 1)",
+      "validationError": "Lỗi xác thực",
+      "validationErrorDescription": "Vui lòng kiểm tra lại biểu mẫu"
+    },
+    "error": {
+      "title": "Đăng ký thất bại"
+    },
+    "success": {
+      "title": "Đã gửi đơn đăng ký!",
+      "description": "Đơn đăng ký gia sư của bạn đã được gửi thành công. Chúng tôi sẽ xem xét và phản hồi sớm."
+    }
+  },
   "home": {
     "hero": {
       "badge": "Nền tảng học tập hỗ trợ AI",

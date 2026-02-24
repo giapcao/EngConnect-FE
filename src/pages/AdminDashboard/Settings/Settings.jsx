@@ -12,6 +12,7 @@ import {
 } from "@heroui/react";
 import { useTranslation } from "react-i18next";
 import { useThemeColors } from "../../../hooks/useThemeColors";
+import useInputStyles from "../../../hooks/useInputStyles";
 import { motion } from "framer-motion";
 import {
   Gear,
@@ -28,6 +29,7 @@ import {
 const Settings = () => {
   const { t } = useTranslation();
   const colors = useThemeColors();
+  const { inputClassNames } = useInputStyles();
   const [activeTab, setActiveTab] = useState("profile");
 
   const [settings, setSettings] = useState({
@@ -184,17 +186,20 @@ const Settings = () => {
                   label={t("adminDashboard.settings.firstName")}
                   defaultValue="Admin"
                   variant="bordered"
+                  classNames={inputClassNames}
                 />
                 <Input
                   label={t("adminDashboard.settings.lastName")}
                   defaultValue="User"
                   variant="bordered"
+                  classNames={inputClassNames}
                 />
                 <Input
                   label={t("adminDashboard.settings.email")}
                   defaultValue="admin@engconnect.com"
                   type="email"
                   variant="bordered"
+                  classNames={inputClassNames}
                   startContent={
                     <EnvelopeSimple className="w-4 h-4 text-gray-400" />
                   }
@@ -204,6 +209,7 @@ const Settings = () => {
                   defaultValue="+1 234 567 890"
                   type="tel"
                   variant="bordered"
+                  classNames={inputClassNames}
                 />
               </div>
 
@@ -413,16 +419,19 @@ const Settings = () => {
                   label={t("adminDashboard.settings.currentPassword")}
                   type="password"
                   variant="bordered"
+                  classNames={inputClassNames}
                 />
                 <Input
                   label={t("adminDashboard.settings.newPassword")}
                   type="password"
                   variant="bordered"
+                  classNames={inputClassNames}
                 />
                 <Input
                   label={t("adminDashboard.settings.confirmPassword")}
                   type="password"
                   variant="bordered"
+                  classNames={inputClassNames}
                 />
                 <Button
                   style={{
@@ -507,6 +516,7 @@ const Settings = () => {
                     handleSettingChange("platformFee", e.target.value)
                   }
                   variant="bordered"
+                  classNames={inputClassNames}
                   endContent={<span className="text-gray-400">%</span>}
                 />
                 <Input
@@ -517,6 +527,7 @@ const Settings = () => {
                     handleSettingChange("tutorCommission", e.target.value)
                   }
                   variant="bordered"
+                  classNames={inputClassNames}
                   endContent={<span className="text-gray-400">%</span>}
                 />
                 <Input
@@ -527,6 +538,7 @@ const Settings = () => {
                     handleSettingChange("minWithdrawal", e.target.value)
                   }
                   variant="bordered"
+                  classNames={inputClassNames}
                   startContent={<span className="text-gray-400">$</span>}
                 />
               </div>

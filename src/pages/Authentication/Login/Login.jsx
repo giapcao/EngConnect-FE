@@ -18,6 +18,7 @@ import BrandLogo from "../../../components/Authentication/BrandLogo";
 import SocialLogin from "../../../components/Authentication/SocialLogin";
 import { useThemeColors } from "../../../hooks/useThemeColors";
 import { useTheme } from "../../../contexts/ThemeContext";
+import useInputStyles from "../../../hooks/useInputStyles";
 import illustrationImage from "../../../assets/illustrations/archive.avif";
 import "./Login.css";
 
@@ -30,6 +31,7 @@ const Login = () => {
   const { t } = useTranslation();
   const colors = useThemeColors();
   const { theme } = useTheme();
+  const { inputClassNames } = useInputStyles();
   const { isAuthenticated, loading, error } = useSelector(selectAuth);
   const [isVisible, setIsVisible] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
@@ -193,17 +195,7 @@ const Login = () => {
                   size="lg"
                   isInvalid={!!validationErrors.email}
                   errorMessage={validationErrors.email}
-                  classNames={{
-                    inputWrapper: `!transition-colors !duration-200 ${
-                      theme === "dark"
-                        ? "!bg-gray-800 !border-gray-700 hover:!bg-gray-700 data-[hover=true]:!bg-gray-700 group-data-[focus=true]:!bg-gray-800"
-                        : "hover:bg-gray-50"
-                    }`,
-                    input:
-                      theme === "dark"
-                        ? "!text-gray-200 placeholder:!text-gray-500"
-                        : "",
-                  }}
+                  classNames={inputClassNames}
                 />
               </div>
 
@@ -224,17 +216,7 @@ const Login = () => {
                   size="lg"
                   isInvalid={!!validationErrors.password}
                   errorMessage={validationErrors.password}
-                  classNames={{
-                    inputWrapper: `!transition-colors !duration-200 ${
-                      theme === "dark"
-                        ? "!bg-gray-800 !border-gray-700 hover:!bg-gray-700 data-[hover=true]:!bg-gray-700 group-data-[focus=true]:!bg-gray-800"
-                        : "hover:bg-gray-50"
-                    }`,
-                    input:
-                      theme === "dark"
-                        ? "!text-gray-200 placeholder:!text-gray-500"
-                        : "",
-                  }}
+                  classNames={inputClassNames}
                   endContent={
                     <button
                       className="focus:outline-none"

@@ -26,6 +26,7 @@ import {
 } from "@heroui/react";
 import { useTranslation } from "react-i18next";
 import { useThemeColors } from "../../../hooks/useThemeColors";
+import useInputStyles from "../../../hooks/useInputStyles";
 import { motion } from "framer-motion";
 import {
   MagnifyingGlass,
@@ -45,6 +46,7 @@ import {
 const StudentManagement = () => {
   const { t } = useTranslation();
   const colors = useThemeColors();
+  const { inputClassNames } = useInputStyles();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [page, setPage] = useState(1);
@@ -273,6 +275,7 @@ const StudentManagement = () => {
                     style={{ color: colors.text.secondary }}
                   />
                 }
+                classNames={inputClassNames}
                 className="flex-1"
               />
               <div className="flex gap-2">

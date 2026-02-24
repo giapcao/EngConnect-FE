@@ -15,6 +15,7 @@ import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { useThemeColors } from "../../../hooks/useThemeColors";
 import { useTheme } from "../../../contexts/ThemeContext";
+import useInputStyles from "../../../hooks/useInputStyles";
 import { motion } from "framer-motion";
 import {
   ArrowLeft,
@@ -70,28 +71,7 @@ const CreateCourse = () => {
   const [step, setStep] = useState(1); // 1: Course info, 2: Modules
   const [validationErrors, setValidationErrors] = useState({});
 
-  const inputClassNames = {
-    label: theme === "dark" ? "!text-gray-300" : "",
-    inputWrapper: `!transition-colors !duration-200 ${
-      theme === "dark"
-        ? "!bg-gray-800 !border-gray-700 hover:!bg-gray-700 data-[hover=true]:!bg-gray-700 group-data-[focus=true]:!bg-gray-800"
-        : "!bg-gray-50 hover:!bg-gray-100"
-    }`,
-    input: theme === "dark" ? "!text-gray-200 placeholder:!text-gray-500" : "",
-  };
-
-  const selectClassNames = {
-    label: theme === "dark" ? "!text-gray-300" : "",
-    trigger: `!transition-colors !duration-200 ${
-      theme === "dark"
-        ? "!bg-gray-800 !border-gray-700 hover:!bg-gray-700 data-[hover=true]:!bg-gray-700"
-        : "!bg-gray-50 hover:!bg-gray-100"
-    }`,
-    value: theme === "dark" ? "!text-gray-200" : "",
-    selectorIcon: theme === "dark" ? "!text-gray-400" : "",
-    popoverContent: theme === "dark" ? "!bg-gray-800 !text-gray-200" : "",
-    listbox: theme === "dark" ? "!text-gray-200" : "",
-  };
+  const { inputClassNames, selectClassNames } = useInputStyles();
 
   const handleCourseChange = (field, value) => {
     setCourseData((prev) => ({ ...prev, [field]: value }));

@@ -12,7 +12,7 @@ const axiosInstance = axios.create({
 axiosInstance.interceptors.request.use(
   (config) => {
     // Get token from localStorage
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("accessToken");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -34,8 +34,8 @@ axiosInstance.interceptors.response.use(
       switch (error.response.status) {
         case 401:
           // Unauthorized - clear token and redirect to login
-          localStorage.removeItem("token");
-          localStorage.removeItem("user");
+          localStorage.removeItem("accessToken");
+          localStorage.removeItem("refreshToken");
           window.location.href = "/login";
           break;
         case 403:

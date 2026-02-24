@@ -16,6 +16,7 @@ import BrandLogo from "../../../components/Authentication/BrandLogo";
 import SocialLogin from "../../../components/Authentication/SocialLogin";
 import { useThemeColors } from "../../../hooks/useThemeColors";
 import { useTheme } from "../../../contexts/ThemeContext";
+import useInputStyles from "../../../hooks/useInputStyles";
 import { register } from "../../../store/slices/authSlice";
 import illustrationImage from "../../../assets/illustrations/welcome-on-board.avif";
 import "./Register.css";
@@ -29,6 +30,7 @@ const Register = () => {
   const { t } = useTranslation();
   const colors = useThemeColors();
   const { theme } = useTheme();
+  const { inputClassNames } = useInputStyles();
   const { loading, error } = useSelector((state) => state.auth);
   const [agreeToTerms, setAgreeToTerms] = useState(false);
   const [validationErrors, setValidationErrors] = useState({});
@@ -201,17 +203,7 @@ const Register = () => {
                     size="lg"
                     isInvalid={!!validationErrors.firstName}
                     errorMessage={validationErrors.firstName}
-                    classNames={{
-                      inputWrapper: `!transition-colors !duration-200 ${
-                        theme === "dark"
-                          ? "!bg-gray-800 !border-gray-700 hover:!bg-gray-700 data-[hover=true]:!bg-gray-700 group-data-[focus=true]:!bg-gray-800"
-                          : "hover:bg-gray-50"
-                      }`,
-                      input:
-                        theme === "dark"
-                          ? "!text-gray-200 placeholder:!text-gray-500"
-                          : "",
-                    }}
+                    classNames={inputClassNames}
                   />
                 </div>
 
@@ -232,17 +224,7 @@ const Register = () => {
                     size="lg"
                     isInvalid={!!validationErrors.lastName}
                     errorMessage={validationErrors.lastName}
-                    classNames={{
-                      inputWrapper: `!transition-colors !duration-200 ${
-                        theme === "dark"
-                          ? "!bg-gray-800 !border-gray-700 hover:!bg-gray-700 data-[hover=true]:!bg-gray-700 group-data-[focus=true]:!bg-gray-800"
-                          : "hover:bg-gray-50"
-                      }`,
-                      input:
-                        theme === "dark"
-                          ? "!text-gray-200 placeholder:!text-gray-500"
-                          : "",
-                    }}
+                    classNames={inputClassNames}
                   />
                 </div>
               </div>
@@ -265,17 +247,7 @@ const Register = () => {
                     size="lg"
                     isInvalid={!!validationErrors.userName}
                     errorMessage={validationErrors.userName}
-                    classNames={{
-                      inputWrapper: `!transition-colors !duration-200 ${
-                        theme === "dark"
-                          ? "!bg-gray-800 !border-gray-700 hover:!bg-gray-700 data-[hover=true]:!bg-gray-700 group-data-[focus=true]:!bg-gray-800"
-                          : "hover:bg-gray-50"
-                      }`,
-                      input:
-                        theme === "dark"
-                          ? "!text-gray-200 placeholder:!text-gray-500"
-                          : "",
-                    }}
+                    classNames={inputClassNames}
                   />
                 </div>
 
@@ -296,17 +268,7 @@ const Register = () => {
                     size="lg"
                     isInvalid={!!validationErrors.email}
                     errorMessage={validationErrors.email}
-                    classNames={{
-                      inputWrapper: `!transition-colors !duration-200 ${
-                        theme === "dark"
-                          ? "!bg-gray-800 !border-gray-700 hover:!bg-gray-700 data-[hover=true]:!bg-gray-700 group-data-[focus=true]:!bg-gray-800"
-                          : "hover:bg-gray-50"
-                      }`,
-                      input:
-                        theme === "dark"
-                          ? "!text-gray-200 placeholder:!text-gray-500"
-                          : "",
-                    }}
+                    classNames={inputClassNames}
                   />
                 </div>
               </div>
@@ -329,17 +291,7 @@ const Register = () => {
                     size="lg"
                     isInvalid={!!validationErrors.password}
                     errorMessage={validationErrors.password}
-                    classNames={{
-                      inputWrapper: `!transition-colors !duration-200 ${
-                        theme === "dark"
-                          ? "!bg-gray-800 !border-gray-700 hover:!bg-gray-700 data-[hover=true]:!bg-gray-700 group-data-[focus=true]:!bg-gray-800"
-                          : "hover:bg-gray-50"
-                      }`,
-                      input:
-                        theme === "dark"
-                          ? "!text-gray-200 placeholder:!text-gray-500"
-                          : "",
-                    }}
+                    classNames={inputClassNames}
                   />
                 </div>
 
@@ -360,17 +312,7 @@ const Register = () => {
                     size="lg"
                     isInvalid={!!validationErrors.confirmPassword}
                     errorMessage={validationErrors.confirmPassword}
-                    classNames={{
-                      inputWrapper: `!transition-colors !duration-200 ${
-                        theme === "dark"
-                          ? "!bg-gray-800 !border-gray-700 hover:!bg-gray-700 data-[hover=true]:!bg-gray-700 group-data-[focus=true]:!bg-gray-800"
-                          : "hover:bg-gray-50"
-                      }`,
-                      input:
-                        theme === "dark"
-                          ? "!text-gray-200 placeholder:!text-gray-500"
-                          : "",
-                    }}
+                    classNames={inputClassNames}
                   />
                 </div>
               </div>

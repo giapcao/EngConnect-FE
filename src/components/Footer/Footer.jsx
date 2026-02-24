@@ -19,13 +19,13 @@ import {
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useThemeColors } from "../../hooks/useThemeColors";
-import { useTheme } from "../../contexts/ThemeContext";
+import useInputStyles from "../../hooks/useInputStyles";
 
 const Footer = () => {
   const [email, setEmail] = useState("");
   const { t } = useTranslation();
   const colors = useThemeColors();
-  const { theme } = useTheme();
+  const { inputClassNames } = useInputStyles();
 
   const footerLinks = {
     learn: [
@@ -131,15 +131,8 @@ const Footer = () => {
                     radius="lg"
                     className="flex-1"
                     classNames={{
-                      inputWrapper: `h-10 !transition-colors !duration-200 ${
-                        theme === "dark"
-                          ? "!bg-gray-800 !border-gray-700 hover:!bg-gray-700 data-[hover=true]:!bg-gray-700 group-data-[focus=true]:!bg-gray-800"
-                          : "hover:bg-gray-50"
-                      }`,
-                      input:
-                        theme === "dark"
-                          ? "!text-gray-200 placeholder:!text-gray-500"
-                          : "",
+                      ...inputClassNames,
+                      inputWrapper: `h-10 ${inputClassNames.inputWrapper}`,
                     }}
                     startContent={
                       <Mail

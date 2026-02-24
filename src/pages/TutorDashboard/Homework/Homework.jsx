@@ -22,6 +22,7 @@ import {
 } from "@heroui/react";
 import { useTranslation } from "react-i18next";
 import { useThemeColors } from "../../../hooks/useThemeColors";
+import useInputStyles from "../../../hooks/useInputStyles";
 import { motion } from "framer-motion";
 import {
   MagnifyingGlass,
@@ -41,6 +42,7 @@ import {
 const Homework = () => {
   const { t } = useTranslation();
   const colors = useThemeColors();
+  const { inputClassNames, textareaClassNames } = useInputStyles();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const {
     isOpen: isGradeOpen,
@@ -470,6 +472,7 @@ const Homework = () => {
                 label={t("tutorDashboard.homework.assignmentTitle")}
                 placeholder={t("tutorDashboard.homework.titlePlaceholder")}
                 labelPlacement="outside"
+                classNames={inputClassNames}
               />
               <Textarea
                 label={t("tutorDashboard.homework.description")}
@@ -478,17 +481,20 @@ const Homework = () => {
                 )}
                 labelPlacement="outside"
                 minRows={3}
+                classNames={textareaClassNames}
               />
               <div className="grid grid-cols-2 gap-4">
                 <Input
                   label={t("tutorDashboard.homework.dueDate")}
                   type="date"
                   labelPlacement="outside"
+                  classNames={inputClassNames}
                 />
                 <Input
                   label={t("tutorDashboard.homework.course")}
                   placeholder={t("tutorDashboard.homework.selectCourse")}
                   labelPlacement="outside"
+                  classNames={inputClassNames}
                 />
               </div>
             </div>
@@ -541,6 +547,7 @@ const Homework = () => {
                   placeholder="0-100"
                   type="number"
                   labelPlacement="outside"
+                  classNames={inputClassNames}
                   endContent={
                     <span style={{ color: colors.text.tertiary }}>/100</span>
                   }
@@ -550,6 +557,7 @@ const Homework = () => {
                   placeholder={t("tutorDashboard.homework.feedbackPlaceholder")}
                   labelPlacement="outside"
                   minRows={4}
+                  classNames={textareaClassNames}
                 />
               </div>
             )}

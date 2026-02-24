@@ -17,6 +17,7 @@ import {
 } from "@heroui/react";
 import { useTranslation } from "react-i18next";
 import { useThemeColors } from "../../../hooks/useThemeColors";
+import useInputStyles from "../../../hooks/useInputStyles";
 import { motion } from "framer-motion";
 import {
   CurrencyDollar,
@@ -34,6 +35,7 @@ import {
 const Earnings = () => {
   const { t } = useTranslation();
   const colors = useThemeColors();
+  const { inputClassNames, selectClassNames } = useInputStyles();
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   const stats = [
@@ -532,6 +534,7 @@ const Earnings = () => {
                 placeholder="0.00"
                 type="number"
                 labelPlacement="outside"
+                classNames={inputClassNames}
                 startContent={
                   <span style={{ color: colors.text.tertiary }}>$</span>
                 }
@@ -541,6 +544,7 @@ const Earnings = () => {
                 label={t("tutorDashboard.earnings.withdrawTo")}
                 labelPlacement="outside"
                 placeholder={t("tutorDashboard.earnings.selectMethod")}
+                classNames={selectClassNames}
               >
                 <SelectItem key="bank" value="bank">
                   Bank Account - **** 1234

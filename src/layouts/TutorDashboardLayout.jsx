@@ -15,6 +15,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useThemeColors } from "../hooks/useThemeColors";
 import LogoutModal from "../components/LogoutModal/LogoutModal";
 import { useTheme } from "../contexts/ThemeContext";
+import useInputStyles from "../hooks/useInputStyles";
 import ThemeSwitcher from "../components/ThemeSwitcher/ThemeSwitcher";
 import LanguageSwitcher from "../components/LanguageSwitcher/LanguageSwitcher";
 import logoImage from "../assets/images/logo.png";
@@ -39,6 +40,7 @@ const TutorDashboardLayout = () => {
   const { t } = useTranslation();
   const colors = useThemeColors();
   const { theme } = useTheme();
+  const { inputClassNames } = useInputStyles();
   const location = useLocation();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -115,17 +117,7 @@ const TutorDashboardLayout = () => {
                   style={{ color: colors.text.secondary }}
                 />
               }
-              classNames={{
-                inputWrapper: `!transition-colors !duration-200 ${
-                  theme === "dark"
-                    ? "!bg-gray-800 !border-gray-700 hover:!bg-gray-700 data-[hover=true]:!bg-gray-700 group-data-[focus=true]:!bg-gray-800"
-                    : "hover:bg-gray-50"
-                }`,
-                input:
-                  theme === "dark"
-                    ? "!text-gray-200 placeholder:!text-gray-500"
-                    : "",
-              }}
+              classNames={inputClassNames}
               radius="lg"
             />
           </div>

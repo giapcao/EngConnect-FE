@@ -51,4 +51,10 @@ export const authApi = {
     });
     return response.data;
   },
+
+  // Register Tutor - Đăng ký làm gia sư
+  registerTutor: async (tutorData) => {
+    const response = await axiosInstance.post("/auth/v1/register-tutor", tutorData);
+    return response.data;
+  },
 };

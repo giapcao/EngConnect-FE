@@ -7,15 +7,37 @@ export const login = createAsyncThunk(
   async (credentials, { rejectWithValue }) => {
     try {
       const data = await authApi.login(credentials);
-      // Save tokens to localStorage
-      if (data.accessToken) {
-        localStorage.setItem("token", data.accessToken);
-        localStorage.setItem("refreshToken", data.refreshToken);
+
+      if (data.isSuccess) {
+        const { accessToken, refreshToken, firstName, lastName } = data.data;
+        // Save tokens to localStorage
+        localStorage.setItem("accessToken", accessToken);
+        localStorage.setItem("refreshToken", refreshToken);
+
+        // Decode JWT to get userId
+        let userId = null;
+        try {
+          const payload = JSON.parse(atob(accessToken.split(".")[1]));
+          userId = payload.sub;
+        } catch (e) {
+          console.error("Failed to decode JWT:", e);
+        }
+
+        return {
+          user: { firstName, lastName, userId },
+          accessToken,
+          refreshToken,
+        };
+      } else {
+        return rejectWithValue(
+          data.error?.message || "Login failed"
+        );
       }
-      return data;
     } catch (error) {
       return rejectWithValue(
-        error.response?.data?.message || "Login failed"
+        error.response?.data?.error?.message ||
+        error.response?.data?.message ||
+        "Login failed"
       );
     }
   }
@@ -62,6 +84,29 @@ export const verifyEmail = createAsyncThunk(
         error.response?.data?.error?.message || 
         error.response?.data?.message || 
         "Email verification failed"
+      );
+    }
+  }
+);
+
+export const registerTutor = createAsyncThunk(
+  "auth/registerTutor",
+  async (tutorData, { rejectWithValue }) => {
+    try {
+      const data = await authApi.registerTutor(tutorData);
+
+      if (data.isSuccess) {
+        return data;
+      } else {
+        return rejectWithValue(
+          data.error?.message || "Tutor registration failed"
+        );
+      }
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.error?.message ||
+        error.response?.data?.message ||
+        "Tutor registration failed"
       );
     }
   }
@@ -202,6 +247,19 @@ const authSlice = createSlice({
         state.error = null;
       })
       .addCase(verifyEmail.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      // Register Tutor
+      .addCase(registerTutor.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(registerTutor.fulfilled, (state) => {
+        state.loading = false;
+        state.error = null;
+      })
+      .addCase(registerTutor.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })

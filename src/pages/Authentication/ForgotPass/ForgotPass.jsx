@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 import BrandLogo from "../../../components/Authentication/BrandLogo";
 import { useThemeColors } from "../../../hooks/useThemeColors";
 import { useTheme } from "../../../contexts/ThemeContext";
+import useInputStyles from "../../../hooks/useInputStyles";
 import { authApi } from "../../../api";
 import illustrationImage from "../../../assets/illustrations/boy-with-key.avif";
 import "./ForgotPass.css";
@@ -19,6 +20,7 @@ const ForgotPass = () => {
   const { t } = useTranslation();
   const colors = useThemeColors();
   const { theme } = useTheme();
+  const { inputClassNames } = useInputStyles();
   const [email, setEmail] = useState("");
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -116,17 +118,7 @@ const ForgotPass = () => {
                     onChange={handleEmailChange}
                     variant="flat"
                     size="lg"
-                    classNames={{
-                      inputWrapper: `!transition-colors !duration-200 ${
-                        theme === "dark"
-                          ? "!bg-gray-800 !border-gray-700 hover:!bg-gray-700 data-[hover=true]:!bg-gray-700 group-data-[focus=true]:!bg-gray-800"
-                          : "hover:bg-gray-50"
-                      }`,
-                      input:
-                        theme === "dark"
-                          ? "!text-gray-200 placeholder:!text-gray-500"
-                          : "",
-                    }}
+                    classNames={inputClassNames}
                     startContent={
                       <Mail
                         className="w-5 h-5"
@@ -175,17 +167,7 @@ const ForgotPass = () => {
                     onChange={handleEmailChange}
                     variant="flat"
                     size="lg"
-                    classNames={{
-                      inputWrapper: `!transition-colors !duration-200 ${
-                        theme === "dark"
-                          ? "!bg-gray-800 !border-gray-700 hover:!bg-gray-700 data-[hover=true]:!bg-gray-700 group-data-[focus=true]:!bg-gray-800"
-                          : "hover:bg-gray-50"
-                      }`,
-                      input:
-                        theme === "dark"
-                          ? "!text-gray-200 placeholder:!text-gray-500"
-                          : "",
-                    }}
+                    classNames={inputClassNames}
                     startContent={
                       <Mail
                         className="w-5 h-5"

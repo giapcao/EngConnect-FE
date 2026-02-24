@@ -1,11 +1,13 @@
 import { Button, Card, CardBody } from "@heroui/react";
 import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
 import { useTranslation } from "react-i18next";
 import * as MotionLib from "framer-motion";
 import Header from "../../components/Header/Header";
 import Footer from "../../components/Footer/Footer";
 import { useThemeColors } from "../../hooks/useThemeColors";
 import { useTheme } from "../../contexts/ThemeContext";
+import { selectIsAuthenticated } from "../../store/slices/authSlice";
 import {
   Clock,
   CurrencyDollar,
@@ -30,6 +32,11 @@ const BecomeTutor = () => {
   const { t } = useTranslation();
   const colors = useThemeColors();
   const { theme } = useTheme();
+  const isAuthenticated = useSelector(selectIsAuthenticated);
+
+  const handleApply = () => {
+    navigate(isAuthenticated ? "/register-tutor" : "/register");
+  };
 
   const benefits = [
     {
@@ -168,7 +175,7 @@ const BecomeTutor = () => {
                   color: colors.text.white,
                 }}
                 endContent={<ArrowRight className="w-5 h-5" />}
-                onPress={() => navigate("/register")}
+                onPress={handleApply}
               >
                 {t("becomeTutor.cta.button")}
               </Button>
@@ -448,7 +455,7 @@ const BecomeTutor = () => {
                 color: colors.primary.main,
               }}
               endContent={<ArrowRight className="w-5 h-5" />}
-              onPress={() => navigate("/register")}
+              onPress={handleApply}
             >
               {t("becomeTutor.cta.button")}
             </Button>
