@@ -1,9 +1,5 @@
 import { useTheme } from "../contexts/ThemeContext";
 
-/**
- * Provides reusable HeroUI classNames objects for Input, Textarea, and Select
- * components with proper dark/light theme support.
- */
 const useInputStyles = () => {
   const { theme } = useTheme();
   const isDark = theme === "dark";

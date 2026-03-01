@@ -145,7 +145,7 @@ const Dashboard = () => {
           style={{ backgroundColor: colors.background.light }}
         >
           <CardBody className="p-0">
-            <div className="flex flex-col md:flex-row items-center justify-between">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between">
               <div className="p-6 md:p-8 flex-1">
                 <h1
                   className="text-2xl lg:text-3xl font-bold mb-2"

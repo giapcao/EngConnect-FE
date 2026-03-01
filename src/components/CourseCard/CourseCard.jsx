@@ -9,7 +9,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useThemeColors } from "../../hooks/useThemeColors";
-import { Star, Users, Clock, BookOpen } from "@phosphor-icons/react";
+import { Star, Users, Clock } from "@phosphor-icons/react";
 
 const CourseCard = ({
   course,

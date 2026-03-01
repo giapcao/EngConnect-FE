@@ -103,7 +103,7 @@ const TutorDashboardLayout = () => {
             to="/"
             className="flex items-center gap-2 no-underline flex-shrink-0"
           >
-            <img src={logoImage} alt="EngConnect" className="h-11 w-auto" />
+            <img src={logoImage} alt="EngConnect" className="h-10 w-auto" />
           </Link>
 
           {/* Search Bar - Desktop */}
@@ -124,8 +124,10 @@ const TutorDashboardLayout = () => {
 
           {/* Right Side Actions */}
           <div className="flex items-center gap-1 sm:gap-2">
-            <ThemeSwitcher />
-            <LanguageSwitcher />
+            <div className="hidden lg:flex items-center gap-1">
+              <ThemeSwitcher />
+              <LanguageSwitcher />
+            </div>
 
             {/* Notifications */}
             <Badge content="3" color="danger" shape="circle" size="sm">
@@ -165,7 +167,7 @@ const TutorDashboardLayout = () => {
                     className="w-8 h-8"
                   />
                   <span
-                    className="hidden md:block font-medium"
+                    className="font-medium text-sm sm:text-base"
                     style={{ color: colors.text.primary }}
                   >
                     Sarah Johnson
@@ -363,6 +365,28 @@ const TutorDashboardLayout = () => {
                     <span>{t("tutorDashboard.nav.profile")}</span>
                   </Link>
                 </motion.li>
+
+                {/* Theme & Language Switchers - Mobile */}
+                <motion.li
+                  initial={{ x: -20, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  transition={{
+                    delay: (navItems.length + 1) * 0.05,
+                    duration: 0.3,
+                  }}
+                >
+                  <div
+                    className="flex items-center gap-3 px-4 py-3 rounded-xl"
+                    style={{
+                      borderTop: `1px solid ${colors.border.light}`,
+                      marginTop: "0.5rem",
+                      paddingTop: "1rem",
+                    }}
+                  >
+                    <ThemeSwitcher />
+                    <LanguageSwitcher />
+                  </div>
+                </motion.li>
               </ul>
             </motion.nav>
           </motion.div>
@@ -370,7 +394,7 @@ const TutorDashboardLayout = () => {
       </AnimatePresence>
 
       {/* Page Content */}
-      <main className="p-4 lg:p-8 max-w-7xl mx-auto">
+      <main className="p-4 lg:px-6 lg:py-8 max-w-[1400px] mx-auto">
         <Outlet />
       </main>
 

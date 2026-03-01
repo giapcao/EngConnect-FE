@@ -20,6 +20,7 @@ import useInputStyles from "../hooks/useInputStyles";
 import ThemeSwitcher from "../components/ThemeSwitcher/ThemeSwitcher";
 import LanguageSwitcher from "../components/LanguageSwitcher/LanguageSwitcher";
 import logoImage from "../assets/images/logo.png";
+import logoNoTextImage from "../assets/images/logo-no-text.png";
 import {
   House,
   MagnifyingGlass,
@@ -115,7 +116,7 @@ const AdminDashboardLayout = () => {
             className="flex items-center gap-2 no-underline flex-shrink-0"
           >
             <img
-              src={logoImage}
+              src={sidebarCollapsed ? logoNoTextImage : logoImage}
               alt="EngConnect"
               className={`${sidebarCollapsed ? "h-8" : "h-9"} w-auto transition-all duration-300`}
             />
