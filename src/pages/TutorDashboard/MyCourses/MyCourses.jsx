@@ -1,10 +1,6 @@
 import { useState } from "react";
 import {
-  Card,
-  CardBody,
   Button,
-  Image,
-  Chip,
   Input,
   Tabs,
   Tab,
@@ -24,12 +20,8 @@ import {
   PencilSimple,
   Trash,
   Eye,
-  Users,
-  Star,
-  Clock,
-  BookOpen,
-  VideoCamera,
 } from "@phosphor-icons/react";
+import CourseCard from "../../../components/CourseCard/CourseCard";
 
 const MyCourses = () => {
   const { t } = useTranslation();
@@ -46,8 +38,12 @@ const MyCourses = () => {
         "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=400",
       students: 45,
       rating: 4.9,
-      totalLessons: 20,
+      reviews: 234,
+      lessons: 20,
+      duration: "10 hours",
       price: 199,
+      originalPrice: 299,
+      level: "Intermediate",
       status: "published",
       category: "Business",
     },
@@ -59,8 +55,12 @@ const MyCourses = () => {
         "https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=400",
       students: 32,
       rating: 4.8,
-      totalLessons: 24,
+      reviews: 189,
+      lessons: 24,
+      duration: "12 hours",
       price: 249,
+      originalPrice: 349,
+      level: "Advanced",
       status: "published",
       category: "Exam Prep",
     },
@@ -72,8 +72,12 @@ const MyCourses = () => {
         "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=400",
       students: 28,
       rating: 5.0,
-      totalLessons: 15,
+      reviews: 156,
+      lessons: 15,
+      duration: "8 hours",
       price: 149,
+      originalPrice: 249,
+      level: "Beginner",
       status: "published",
       category: "Speaking",
     },
@@ -85,8 +89,11 @@ const MyCourses = () => {
         "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=400",
       students: 0,
       rating: 0,
-      totalLessons: 12,
+      lessons: 12,
+      duration: "6 hours",
       price: 179,
+      originalPrice: 279,
+      level: "Advanced",
       status: "draft",
       category: "Writing",
     },
@@ -196,160 +203,60 @@ const MyCourses = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 + index * 0.1 }}
+            whileHover={{
+              y: -8,
+              transition: { type: "spring", stiffness: 400, damping: 25 },
+            }}
           >
-            <Card
-              shadow="none"
-              className="border-none h-full"
-              style={{ backgroundColor: colors.background.light }}
-            >
-              <CardBody className="p-0">
-                <div className="relative p-3">
-                  <div className="w-full h-40 overflow-hidden rounded-xl">
-                    <Image
-                      src={course.image}
-                      alt={course.title}
-                      classNames={{
-                        wrapper: "w-full h-full !max-w-full",
-                        img: "w-full h-full object-cover",
-                      }}
-                      radius="none"
-                    />
-                  </div>
-                  <div className="absolute top-5 left-5 flex gap-2 z-10">
-                    <Chip
-                      size="sm"
-                      style={{
-                        backgroundColor: getStatusColor(course.status),
-                        color: colors.text.white,
-                      }}
-                    >
-                      {course.status === "published"
-                        ? t("tutorDashboard.myCourses.published")
-                        : t("tutorDashboard.myCourses.draft")}
-                    </Chip>
-                  </div>
-                  <Dropdown>
-                    <DropdownTrigger>
-                      <Button
-                        isIconOnly
-                        size="sm"
-                        variant="flat"
-                        className="absolute top-3 right-3 z-10"
-                        style={{
-                          backgroundColor: "rgba(255,255,255,0.9)",
-                        }}
-                      >
-                        <DotsThree weight="bold" className="w-5 h-5" />
-                      </Button>
-                    </DropdownTrigger>
-                    <DropdownMenu>
-                      <DropdownItem
-                        key="view"
-                        startContent={<Eye className="w-4 h-4" />}
-                      >
-                        {t("tutorDashboard.myCourses.viewCourse")}
-                      </DropdownItem>
-                      <DropdownItem
-                        key="edit"
-                        startContent={<PencilSimple className="w-4 h-4" />}
-                      >
-                        {t("tutorDashboard.myCourses.editCourse")}
-                      </DropdownItem>
-                      <DropdownItem
-                        key="delete"
-                        className="text-danger"
-                        startContent={<Trash className="w-4 h-4" />}
-                      >
-                        {t("tutorDashboard.myCourses.deleteCourse")}
-                      </DropdownItem>
-                    </DropdownMenu>
-                  </Dropdown>
-                </div>
-
-                <div className="p-4">
-                  <Chip
-                    size="sm"
-                    variant="flat"
-                    className="mb-2"
-                    style={{
-                      backgroundColor: colors.background.primaryLight,
-                      color: colors.primary.main,
-                    }}
-                  >
-                    {course.category}
-                  </Chip>
-
-                  <h3
-                    className="font-semibold text-lg mb-2 line-clamp-1"
-                    style={{ color: colors.text.primary }}
-                  >
-                    {course.title}
-                  </h3>
-
-                  <p
-                    className="text-sm mb-4 line-clamp-2"
-                    style={{ color: colors.text.secondary }}
-                  >
-                    {course.description}
-                  </p>
-
-                  <div className="flex items-center gap-4 text-sm mb-4">
-                    <div className="flex items-center gap-1">
-                      <Users
-                        weight="duotone"
-                        className="w-4 h-4"
-                        style={{ color: colors.text.tertiary }}
-                      />
-                      <span style={{ color: colors.text.secondary }}>
-                        {course.students}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <BookOpen
-                        weight="duotone"
-                        className="w-4 h-4"
-                        style={{ color: colors.text.tertiary }}
-                      />
-                      <span style={{ color: colors.text.secondary }}>
-                        {course.totalLessons}{" "}
-                        {t("tutorDashboard.myCourses.lessons")}
-                      </span>
-                    </div>
-                    {course.rating > 0 && (
-                      <div className="flex items-center gap-1">
-                        <Star
-                          weight="fill"
-                          className="w-4 h-4"
-                          style={{ color: colors.state.warning }}
-                        />
-                        <span style={{ color: colors.text.secondary }}>
-                          {course.rating}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <p
-                      className="text-xl font-bold"
-                      style={{ color: colors.primary.main }}
-                    >
-                      ${course.price}
-                    </p>
+            <CourseCard
+              course={course}
+              showCategory={true}
+              showTutorInfo={false}
+              variant="compact"
+              basePath="/tutor/courses"
+              statusBadge={{
+                label:
+                  course.status === "published"
+                    ? t("tutorDashboard.myCourses.published")
+                    : t("tutorDashboard.myCourses.draft"),
+                color: getStatusColor(course.status),
+              }}
+              topRightAction={
+                <Dropdown>
+                  <DropdownTrigger>
                     <Button
+                      isIconOnly
                       size="sm"
                       variant="flat"
-                      style={{
-                        backgroundColor: colors.background.primaryLight,
-                        color: colors.primary.main,
-                      }}
+                      style={{ backgroundColor: "rgba(255,255,255,0.9)" }}
                     >
-                      {t("tutorDashboard.myCourses.manage")}
+                      <DotsThree weight="bold" className="w-5 h-5" />
                     </Button>
-                  </div>
-                </div>
-              </CardBody>
-            </Card>
+                  </DropdownTrigger>
+                  <DropdownMenu>
+                    <DropdownItem
+                      key="view"
+                      startContent={<Eye className="w-4 h-4" />}
+                    >
+                      {t("tutorDashboard.myCourses.viewCourse")}
+                    </DropdownItem>
+                    <DropdownItem
+                      key="edit"
+                      startContent={<PencilSimple className="w-4 h-4" />}
+                    >
+                      {t("tutorDashboard.myCourses.editCourse")}
+                    </DropdownItem>
+                    <DropdownItem
+                      key="delete"
+                      className="text-danger"
+                      startContent={<Trash className="w-4 h-4" />}
+                    >
+                      {t("tutorDashboard.myCourses.deleteCourse")}
+                    </DropdownItem>
+                  </DropdownMenu>
+                </Dropdown>
+              }
+            />
           </motion.div>
         ))}
       </motion.div>

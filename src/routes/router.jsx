@@ -19,6 +19,7 @@ import TutorRegistration from "../pages/BecomeTutor/TutorRegistration";
 // Student Dashboard Pages
 import Dashboard from "../pages/StudentDashboard/Dashboard/Dashboard";
 import BrowseCourses from "../pages/StudentDashboard/BrowseCourses/BrowseCourses";
+import StudentCourseDetail from "../pages/StudentDashboard/BrowseCourses/CourseDetail";
 import MyCourses from "../pages/StudentDashboard/MyCourses/MyCourses";
 import Schedule from "../pages/StudentDashboard/Schedule/Schedule";
 import Homework from "../pages/StudentDashboard/Homework/Homework";
@@ -28,6 +29,7 @@ import Notification from "../pages/StudentDashboard/Notification/Notification";
 // Tutor Dashboard Pages
 import TutorDashboard from "../pages/TutorDashboard/Dashboard/Dashboard";
 import TutorMyCourses from "../pages/TutorDashboard/MyCourses/MyCourses";
+import TutorCourseDetail from "../pages/TutorDashboard/MyCourses/CourseDetail";
 import TutorSchedule from "../pages/TutorDashboard/Schedule/Schedule";
 import TutorStudents from "../pages/TutorDashboard/Students/Students";
 import TutorHomework from "../pages/TutorDashboard/Homework/Homework";
@@ -121,6 +123,10 @@ export const router = createBrowserRouter([
         element: <BrowseCourses />,
       },
       {
+        path: "courses/:id",
+        element: <StudentCourseDetail />,
+      },
+      {
         path: "my-courses",
         element: <MyCourses />,
       },
@@ -153,6 +159,10 @@ export const router = createBrowserRouter([
       {
         path: "my-courses",
         element: <TutorMyCourses />,
+      },
+      {
+        path: "courses/:id",
+        element: <TutorCourseDetail />,
       },
       {
         path: "create-course",

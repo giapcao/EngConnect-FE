@@ -15,6 +15,10 @@ const CourseCard = ({
   course,
   showViewButton = true,
   showCategory = false,
+  showTutorInfo = true,
+  statusBadge = null,
+  topRightAction = null,
+  basePath = "/courses",
   variant = "default", // "default" | "compact"
 }) => {
   const navigate = useNavigate();
@@ -23,12 +27,9 @@ const CourseCard = ({
 
   return (
     <Card
-      className="h-full shadow-none"
+      className="h-full shadow-sm"
       style={{
-        backgroundColor:
-          variant === "compact"
-            ? colors.background.gray
-            : colors.background.card,
+        backgroundColor: colors.background.light,
       }}
     >
       <div className="relative p-3">
@@ -37,33 +38,51 @@ const CourseCard = ({
           alt={course.title}
           className="w-full h-40 object-cover rounded-xl"
         />
-        {course.isBestseller && (
+        {statusBadge ? (
           <Chip
             size="sm"
             className="absolute top-5 left-5"
             style={{
-              backgroundColor: colors.primary.main,
-              color: colors.text.white,
+              backgroundColor: statusBadge.color,
+              color: "#fff",
             }}
           >
-            {t("courses.bestseller")}
+            {statusBadge.label}
           </Chip>
+        ) : (
+          course.isBestseller && (
+            <Chip
+              size="sm"
+              className="absolute top-5 left-5"
+              style={{
+                backgroundColor: colors.primary.main,
+                color: colors.text.white,
+              }}
+            >
+              {t("courses.bestseller")}
+            </Chip>
+          )
+        )}
+        {topRightAction && (
+          <div className="absolute top-5 right-5 z-10">{topRightAction}</div>
         )}
       </div>
       <CardBody
         className={`p-4 pt-0${variant === "compact" ? " flex-grow" : ""}`}
       >
         <div className="flex items-center gap-2 mb-2">
-          <Chip
-            size="sm"
-            variant="flat"
-            style={{
-              backgroundColor: colors.background.primaryLight,
-              color: colors.primary.main,
-            }}
-          >
-            {course.level}
-          </Chip>
+          {course.level && (
+            <Chip
+              size="sm"
+              variant="flat"
+              style={{
+                backgroundColor: colors.background.primaryLight,
+                color: colors.primary.main,
+              }}
+            >
+              {course.level}
+            </Chip>
+          )}
           {showCategory && course.category && (
             <Chip
               size="sm"
@@ -83,14 +102,16 @@ const CourseCard = ({
         >
           {course.title}
         </h3>
-        <div className="flex items-center gap-2 mb-3">
-          {course.tutorAvatar && (
-            <Avatar src={course.tutorAvatar} size="sm" className="w-6 h-6" />
-          )}
-          <p className="text-sm" style={{ color: colors.text.secondary }}>
-            {course.tutor}
-          </p>
-        </div>
+        {showTutorInfo && course.tutor && (
+          <div className="flex items-center gap-2 mb-3">
+            {course.tutorAvatar && (
+              <Avatar src={course.tutorAvatar} size="sm" className="w-6 h-6" />
+            )}
+            <p className="text-sm" style={{ color: colors.text.secondary }}>
+              {course.tutor}
+            </p>
+          </div>
+        )}
         <div
           className="flex items-center gap-3 text-sm mb-3"
           style={{ color: colors.text.secondary }}
@@ -124,12 +145,14 @@ const CourseCard = ({
           >
             ${course.price}
           </span>
-          <span
-            className="text-sm line-through ml-2"
-            style={{ color: colors.text.secondary }}
-          >
-            ${course.originalPrice}
-          </span>
+          {course.originalPrice && (
+            <span
+              className="text-sm line-through ml-2"
+              style={{ color: colors.text.secondary }}
+            >
+              ${course.originalPrice}
+            </span>
+          )}
         </div>
         {showViewButton && (
           <Button
@@ -139,7 +162,7 @@ const CourseCard = ({
               backgroundColor: colors.button.primaryLight.background,
               color: colors.button.primaryLight.text,
             }}
-            onPress={() => navigate(`/courses/${course.id}`)}
+            onPress={() => navigate(`${basePath}/${course.id}`)}
           >
             {t("courses.viewDetails")}
           </Button>

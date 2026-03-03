@@ -1,28 +1,10 @@
 import { useState } from "react";
-import {
-  Card,
-  CardBody,
-  CardFooter,
-  Button,
-  Input,
-  Avatar,
-  Chip,
-  Select,
-  SelectItem,
-} from "@heroui/react";
+import { Input, Chip, Select, SelectItem } from "@heroui/react";
 import { useTranslation } from "react-i18next";
 import { useThemeColors } from "../../../hooks/useThemeColors";
 import { motion } from "framer-motion";
-import {
-  MagnifyingGlass,
-  Funnel,
-  Star,
-  Clock,
-  Users,
-  BookOpen,
-  Heart,
-  CaretDown,
-} from "@phosphor-icons/react";
+import { MagnifyingGlass } from "@phosphor-icons/react";
+import CourseCard from "../../../components/CourseCard/CourseCard";
 
 const BrowseCourses = () => {
   const { t } = useTranslation();
@@ -297,180 +279,17 @@ const BrowseCourses = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 + index * 0.1 }}
-            className="w-full"
+            whileHover={{
+              y: -8,
+              transition: { type: "spring", stiffness: 400, damping: 25 },
+            }}
           >
-            <Card
-              shadow="none"
-              className="border-none h-full w-full flex flex-col transition-shadow duration-200 hover:shadow-lg"
-              style={{ backgroundColor: colors.background.light }}
-              isPressable
-            >
-              <CardBody className="p-0 flex-1 flex flex-col">
-                {/* Course Image */}
-                <div className="relative p-3">
-                  <img
-                    src={course.image}
-                    alt={course.title}
-                    className="w-full h-40 object-cover rounded-xl"
-                  />
-                  {course.isBestseller && (
-                    <Chip
-                      size="sm"
-                      className="absolute top-5 left-5"
-                      style={{
-                        backgroundColor: colors.state.warning,
-                        color: "#000",
-                      }}
-                    >
-                      {t("studentDashboard.browseCourses.bestseller")}
-                    </Chip>
-                  )}
-                  <Button
-                    isIconOnly
-                    variant="flat"
-                    radius="full"
-                    className="absolute top-5 right-5"
-                    style={{ backgroundColor: "rgba(255,255,255,0.9)" }}
-                  >
-                    <Heart weight="bold" className="w-5 h-5 text-gray-500" />
-                  </Button>
-                </div>
-
-                {/* Course Info */}
-                <div className="p-4 flex-1 flex flex-col">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Chip
-                      size="sm"
-                      variant="flat"
-                      style={{
-                        backgroundColor: colors.background.primaryLight,
-                        color: colors.primary.main,
-                      }}
-                    >
-                      {course.level}
-                    </Chip>
-                    <Chip
-                      size="sm"
-                      variant="flat"
-                      style={{
-                        backgroundColor: colors.background.gray,
-                        color: colors.text.secondary,
-                      }}
-                    >
-                      {course.category}
-                    </Chip>
-                  </div>
-
-                  <h3
-                    className="font-semibold mb-2 line-clamp-2 min-h-[48px]"
-                    style={{ color: colors.text.primary }}
-                  >
-                    {course.title}
-                  </h3>
-
-                  {/* Tutor */}
-                  <div className="flex items-center gap-2 mb-3">
-                    <Avatar src={course.tutorAvatar} size="sm" />
-                    <span
-                      className="text-sm"
-                      style={{ color: colors.text.secondary }}
-                    >
-                      {course.tutor}
-                    </span>
-                  </div>
-
-                  {/* Stats */}
-                  <div className="flex items-center gap-4 mb-3">
-                    <div className="flex items-center gap-1">
-                      <Star
-                        weight="fill"
-                        className="w-4 h-4"
-                        style={{ color: colors.state.warning }}
-                      />
-                      <span
-                        className="text-sm font-medium"
-                        style={{ color: colors.text.primary }}
-                      >
-                        {course.rating}
-                      </span>
-                      <span
-                        className="text-sm"
-                        style={{ color: colors.text.secondary }}
-                      >
-                        ({course.reviews})
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Users
-                        weight="duotone"
-                        className="w-4 h-4"
-                        style={{ color: colors.text.secondary }}
-                      />
-                      <span
-                        className="text-sm"
-                        style={{ color: colors.text.secondary }}
-                      >
-                        {course.students.toLocaleString()}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Duration & Lessons */}
-                  <div className="flex items-center gap-4 text-sm mt-auto">
-                    <div className="flex items-center gap-1">
-                      <BookOpen
-                        weight="duotone"
-                        className="w-4 h-4"
-                        style={{ color: colors.text.secondary }}
-                      />
-                      <span style={{ color: colors.text.secondary }}>
-                        {course.lessons}{" "}
-                        {t("studentDashboard.browseCourses.lessons")}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Clock
-                        weight="duotone"
-                        className="w-4 h-4"
-                        style={{ color: colors.text.secondary }}
-                      />
-                      <span style={{ color: colors.text.secondary }}>
-                        {course.duration}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </CardBody>
-
-              <CardFooter
-                className="pt-0 px-4 pb-4 flex justify-between items-center"
-                style={{ borderTop: `1px solid ${colors.border.light}` }}
-              >
-                <div>
-                  <span
-                    className="text-xl font-bold"
-                    style={{ color: colors.primary.main }}
-                  >
-                    ${course.price}
-                  </span>
-                  <span
-                    className="text-sm line-through ml-2"
-                    style={{ color: colors.text.secondary }}
-                  >
-                    ${course.originalPrice}
-                  </span>
-                </div>
-                <Button
-                  size="sm"
-                  style={{
-                    backgroundColor: colors.primary.main,
-                    color: colors.text.white,
-                  }}
-                >
-                  {t("studentDashboard.browseCourses.enroll")}
-                </Button>
-              </CardFooter>
-            </Card>
+            <CourseCard
+              course={course}
+              showCategory={true}
+              variant="compact"
+              basePath="/student/courses"
+            />
           </motion.div>
         ))}
       </motion.div>
