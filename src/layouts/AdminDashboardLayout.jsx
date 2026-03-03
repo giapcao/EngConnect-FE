@@ -334,7 +334,7 @@ const AdminDashboardLayout = () => {
           style={{
             backgroundColor:
               theme === "dark"
-                ? "rgba(30, 41, 59, 0.8)"
+                ? "rgba(30, 41, 59, 0.9)"
                 : "rgba(255, 255, 255, 0.8)",
             borderBottom: `1px solid ${colors.border.light}`,
           }}

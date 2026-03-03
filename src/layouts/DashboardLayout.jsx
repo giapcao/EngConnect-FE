@@ -87,7 +87,7 @@ const DashboardLayout = () => {
         style={{
           backgroundColor:
             theme === "dark"
-              ? "rgba(30, 41, 59, 0.8)"
+              ? "rgba(30, 41, 59, 0.9)"
               : "rgba(255, 255, 255, 0.8)",
         }}
       >
@@ -98,7 +98,7 @@ const DashboardLayout = () => {
             to="/"
             className="flex items-center gap-2 no-underline flex-shrink-0"
           >
-            <img src={logoImage} alt="EngConnect" className="h-11 w-auto" />
+            <img src={logoImage} alt="EngConnect" className="h-10 w-auto" />
           </Link>
 
           {/* Search Bar - Desktop */}

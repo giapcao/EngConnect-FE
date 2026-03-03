@@ -8,7 +8,7 @@ const useInputStyles = () => {
     label: isDark ? "!text-gray-300" : "",
     inputWrapper: `!transition-colors !duration-200 ${
       isDark
-        ? "!bg-gray-800 !border-gray-700 hover:!bg-gray-700 data-[hover=true]:!bg-gray-700 group-data-[focus=true]:!bg-gray-800"
+        ? "!bg-slate-900 !border-slate-700 hover:!bg-slate-800 data-[hover=true]:!bg-slate-800 group-data-[focus=true]:!bg-slate-900"
         : "hover:bg-gray-50"
     }`,
     input: isDark ? "!text-gray-200 placeholder:!text-gray-500" : "",
@@ -18,7 +18,7 @@ const useInputStyles = () => {
     label: isDark ? "!text-gray-300" : "",
     inputWrapper: `!transition-colors !duration-200 ${
       isDark
-        ? "!bg-gray-800 !border-gray-700 hover:!bg-gray-700 data-[hover=true]:!bg-gray-700 group-data-[focus=true]:!bg-gray-800"
+        ? "!bg-slate-900 !border-slate-700 hover:!bg-slate-800 data-[hover=true]:!bg-slate-800 group-data-[focus=true]:!bg-slate-900"
         : "hover:bg-gray-50"
     }`,
     input: isDark ? "!text-gray-200 placeholder:!text-gray-500" : "",
@@ -28,12 +28,12 @@ const useInputStyles = () => {
     label: isDark ? "!text-gray-300" : "",
     trigger: `!transition-colors !duration-200 ${
       isDark
-        ? "!bg-gray-800 !border-gray-700 hover:!bg-gray-700 data-[hover=true]:!bg-gray-700"
+        ? "!bg-slate-900 !border-slate-700 hover:!bg-slate-800 data-[hover=true]:!bg-slate-800"
         : "!bg-gray-50 hover:!bg-gray-100"
     }`,
     value: isDark ? "!text-gray-200" : "",
     selectorIcon: isDark ? "!text-gray-400" : "",
-    popoverContent: isDark ? "!bg-gray-800 !text-gray-200" : "",
+    popoverContent: isDark ? "!bg-slate-900 !text-gray-200" : "",
     listbox: isDark ? "!text-gray-200" : "",
   };
 

@@ -201,7 +201,7 @@ const BrowseCourses = () => {
             />
           }
           classNames={{
-            inputWrapper: `bg-white dark:bg-gray-800`,
+            inputWrapper: `bg-white dark:bg-slate-900`,
           }}
           className="flex-1"
         />
@@ -213,7 +213,7 @@ const BrowseCourses = () => {
             onSelectionChange={(keys) => setSelectedCategory([...keys][0])}
             className="w-40"
             classNames={{
-              trigger: "bg-white dark:bg-gray-800",
+              trigger: "bg-white dark:bg-slate-900",
             }}
           >
             {categories.map((cat) => (
@@ -227,7 +227,7 @@ const BrowseCourses = () => {
             onSelectionChange={(keys) => setSelectedLevel([...keys][0])}
             className="w-40"
             classNames={{
-              trigger: "bg-white dark:bg-gray-800",
+              trigger: "bg-white dark:bg-slate-800",
             }}
           >
             {levels.map((level) => (
