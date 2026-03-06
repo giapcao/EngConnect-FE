@@ -134,9 +134,9 @@ const Schedule = () => {
     <div className="space-y-6">
       {/* Header */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.15 }}
         className="flex flex-col md:flex-row md:items-center justify-between gap-4"
       >
         <div>
@@ -163,9 +163,9 @@ const Schedule = () => {
 
       {/* Calendar Navigation */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.1 }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.15 }}
       >
         <Card
           shadow="none" className="border-none"
@@ -267,9 +267,9 @@ const Schedule = () => {
       {/* Today's Lessons */}
       {todayLessons.length > 0 && (
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.15 }}
         >
           <h2
             className="text-lg font-semibold mb-4"
@@ -288,9 +288,9 @@ const Schedule = () => {
             {todayLessons.map((lesson, index) => (
               <motion.div
                 key={lesson.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.3, delay: index * 0.1 }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.15 }}
               >
                 <Card
                   shadow="none" className="border-none"
@@ -401,9 +401,9 @@ const Schedule = () => {
 
       {/* Upcoming Lessons */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.3 }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.15 }}
       >
         <h2
           className="text-lg font-semibold mb-4"
@@ -421,9 +421,9 @@ const Schedule = () => {
           {upcomingLessons.map((lesson, index) => (
             <motion.div
               key={lesson.id}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.3, delay: index * 0.1 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.15 }}
             >
               <Card
                 shadow="none" className="border-none"

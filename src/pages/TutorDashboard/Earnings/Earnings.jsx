@@ -154,9 +154,9 @@ const Earnings = () => {
     <div className="space-y-6">
       {/* Header */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.15 }}
         className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
       >
         <div>
@@ -185,9 +185,9 @@ const Earnings = () => {
 
       {/* Stats Grid */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.1 }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.15 }}
         className="grid grid-cols-2 lg:grid-cols-4 gap-4"
       >
         {stats.map((stat, index) => (
@@ -254,9 +254,9 @@ const Earnings = () => {
       <div className="grid lg:grid-cols-3 gap-6">
         {/* Chart */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.15 }}
           className="lg:col-span-2"
         >
           <Card
@@ -317,9 +317,9 @@ const Earnings = () => {
 
         {/* Quick Actions */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.3 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.15 }}
         >
           <Card
             shadow="none"
@@ -400,9 +400,9 @@ const Earnings = () => {
 
       {/* Transactions */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.4 }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.15 }}
       >
         <Card
           shadow="none"

@@ -123,9 +123,9 @@ const MyCourses = () => {
     <div className="space-y-6">
       {/* Header */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.15 }}
       >
         <h1
           className="text-2xl lg:text-3xl font-bold mb-2"
@@ -140,9 +140,9 @@ const MyCourses = () => {
 
       {/* Stats */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.1 }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.15 }}
         className="grid grid-cols-3 gap-4"
       >
         <Card
@@ -200,9 +200,9 @@ const MyCourses = () => {
 
       {/* Tabs */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.2 }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.15 }}
       >
         <Tabs
           selectedKey={selectedTab}
@@ -255,18 +255,18 @@ const MyCourses = () => {
 
       {/* Course List */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.3 }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.15 }}
         className="space-y-4"
       >
         {selectedTab === "in-progress" &&
           courses["in-progress"].map((course, index) => (
             <motion.div
               key={course.id}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.3, delay: index * 0.1 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.15 }}
             >
               <Card
                 shadow="none"
@@ -376,9 +376,9 @@ const MyCourses = () => {
           courses.completed.map((course, index) => (
             <motion.div
               key={course.id}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.3, delay: index * 0.1 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.15 }}
             >
               <Card
                 shadow="none"
@@ -500,9 +500,9 @@ const MyCourses = () => {
           courses.wishlist.map((course, index) => (
             <motion.div
               key={course.id}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.3, delay: index * 0.1 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.15 }}
             >
               <Card
                 shadow="none"

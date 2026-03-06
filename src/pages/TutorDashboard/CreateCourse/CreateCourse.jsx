@@ -236,9 +236,9 @@ const CreateCourse = () => {
     <div className="space-y-6 max-w-4xl mx-auto">
       {/* Header */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.15 }}
       >
         <Button
           variant="light"
@@ -263,9 +263,9 @@ const CreateCourse = () => {
 
       {/* Step indicator */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.1 }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.15 }}
         className="flex items-center gap-4"
       >
         <div
@@ -330,9 +330,9 @@ const CreateCourse = () => {
       {/* Step 1: Course Information */}
       {step === 1 && (
         <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.4 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.15 }}
           className="space-y-6"
         >
           {/* Basic Info */}
@@ -637,9 +637,9 @@ const CreateCourse = () => {
       {/* Step 2: Course Modules */}
       {step === 2 && (
         <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.4 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.15 }}
           className="space-y-6"
         >
           {modules.map((mod, index) => (

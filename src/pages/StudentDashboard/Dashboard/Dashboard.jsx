@@ -139,9 +139,9 @@ const Dashboard = () => {
     <div className="space-y-6">
       {/* Welcome Section */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.15 }}
       >
         <Card
           shadow="none"
@@ -185,9 +185,9 @@ const Dashboard = () => {
 
       {/* Stats Grid */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.1 }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.15 }}
         className="grid grid-cols-2 lg:grid-cols-4 gap-4"
       >
         {stats.map((stat, index) => (
@@ -235,9 +235,9 @@ const Dashboard = () => {
         <div className="lg:col-span-2 space-y-6">
           {/* Upcoming Lessons */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.15 }}
           >
             <Card
               shadow="none"
@@ -314,9 +314,9 @@ const Dashboard = () => {
 
           {/* Courses In Progress */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.15 }}
           >
             <Card
               shadow="none"
@@ -397,9 +397,9 @@ const Dashboard = () => {
         <div className="space-y-6">
           {/* Weekly Goal */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.4 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.15 }}
           >
             <Card
               shadow="none"
@@ -470,9 +470,9 @@ const Dashboard = () => {
 
           {/* Recent Achievements */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.5 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.15 }}
           >
             <Card
               shadow="none"

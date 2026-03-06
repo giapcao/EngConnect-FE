@@ -52,9 +52,9 @@ const Settings = () => {
     <div className="space-y-6">
       {/* Page Header */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.15 }}
       >
         <h1
           className="text-2xl lg:text-3xl font-bold mb-1"
@@ -69,9 +69,9 @@ const Settings = () => {
 
       {/* Tabs */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, delay: 0.1 }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.15 }}
       >
         <Tabs
           selectedKey={activeTab}
@@ -125,9 +125,9 @@ const Settings = () => {
       {/* Profile Settings */}
       {activeTab === "profile" && (
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.2 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.15 }}
         >
           <Card
             shadow="none"
@@ -231,9 +231,9 @@ const Settings = () => {
       {/* Notification Settings */}
       {activeTab === "notifications" && (
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.2 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.15 }}
         >
           <Card
             shadow="none"
@@ -396,9 +396,9 @@ const Settings = () => {
       {/* Security Settings */}
       {activeTab === "security" && (
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.2 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.15 }}
           className="space-y-6"
         >
           <Card
@@ -489,9 +489,9 @@ const Settings = () => {
       {/* Platform Settings */}
       {activeTab === "platform" && (
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.2 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.15 }}
           className="space-y-6"
         >
           <Card

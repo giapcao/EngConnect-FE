@@ -20,6 +20,7 @@ const CourseCard = ({
   topRightAction = null,
   basePath = "/courses",
   variant = "default", // "default" | "compact"
+  style: customStyle = {},
 }) => {
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -27,9 +28,10 @@ const CourseCard = ({
 
   return (
     <Card
-      className="h-full shadow-sm"
+      className="h-full shadow-none"
       style={{
         backgroundColor: colors.background.light,
+        ...customStyle,
       }}
     >
       <div className="relative p-3">

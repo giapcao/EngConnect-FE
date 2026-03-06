@@ -142,9 +142,9 @@ const TutorCourseDetail = () => {
     <div className="space-y-6">
       {/* Back Button */}
       <motion.div
-        initial={{ opacity: 0, x: -10 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.3 }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.15 }}
         className="flex items-center justify-between"
       >
         <Button
@@ -169,9 +169,9 @@ const TutorCourseDetail = () => {
 
       {/* Hero Banner */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.15 }}
       >
         <Card
           shadow="none"
@@ -293,9 +293,9 @@ const TutorCourseDetail = () => {
         <div className="lg:col-span-2 space-y-6">
           {/* Stats Grid */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.15 }}
             className="grid grid-cols-2 sm:grid-cols-4 gap-4"
           >
             <Card
@@ -390,9 +390,9 @@ const TutorCourseDetail = () => {
 
           {/* About This Course */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.15 }}
           >
             <Card
               className="shadow-none"
@@ -417,9 +417,9 @@ const TutorCourseDetail = () => {
 
           {/* What You'll Learn */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.15 }}
           >
             <Card
               className="shadow-none"
@@ -464,9 +464,9 @@ const TutorCourseDetail = () => {
 
           {/* Course Includes */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.4 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.15 }}
           >
             <Card
               className="shadow-none"
@@ -543,9 +543,9 @@ const TutorCourseDetail = () => {
         {/* Right Column - Sticky Price Card (overlaps banner) */}
         <div className="lg:col-span-1 lg:-mt-64">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.15 }}
             className="lg:sticky lg:top-40"
           >
             <Card

@@ -521,6 +521,7 @@ const Courses = () => {
                   course={course}
                   variant="compact"
                   showCategory={true}
+                  style={{ backgroundColor: colors.background.gray }}
                 />
               </motion.div>
             ))}
