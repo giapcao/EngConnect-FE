@@ -27,7 +27,6 @@ import {
   CaretRight,
   Plus,
   X,
-  Check,
 } from "@phosphor-icons/react";
 
 const Schedule = () => {
@@ -119,17 +118,105 @@ const Schedule = () => {
   ];
 
   const [availability, setAvailability] = useState({
-    0: ["09:00", "10:00", "11:00", "14:00", "15:00", "16:00"],
-    1: ["08:00", "09:00", "10:00", "11:00"],
-    2: ["14:00", "15:00", "16:00", "17:00", "18:00"],
-    3: ["10:00", "11:00", "14:00", "15:00"],
-    4: ["09:00", "10:00", "11:00", "14:00", "15:00"],
+    0: [
+      { start: "09:00", end: "12:00" },
+      { start: "14:00", end: "17:00" },
+    ],
+    1: [{ start: "08:00", end: "12:00" }],
+    2: [{ start: "14:00", end: "19:00" }],
+    3: [
+      { start: "10:00", end: "12:00" },
+      { start: "14:00", end: "16:00" },
+    ],
+    4: [
+      { start: "09:00", end: "12:00" },
+      { start: "14:00", end: "16:00" },
+    ],
     5: [],
     6: [],
   });
 
-  const getLessonsForDay = (dayIndex) => {
-    return scheduledLessons.filter((lesson) => lesson.day === dayIndex);
+  const [tempAvailability, setTempAvailability] = useState(null);
+
+  const allTimeOptions = [];
+  for (let h = 6; h <= 22; h++) {
+    for (let m = 0; m < 60; m += 30) {
+      allTimeOptions.push(
+        `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`,
+      );
+    }
+  }
+
+  const handleOpenModal = () => {
+    setTempAvailability(structuredClone(availability));
+    onOpen();
+  };
+
+  const handleToggleDay = (dayIndex) => {
+    setTempAvailability((prev) => ({
+      ...prev,
+      [dayIndex]:
+        prev[dayIndex].length > 0 ? [] : [{ start: "09:00", end: "17:00" }],
+    }));
+  };
+
+  const handleAddSlot = (dayIndex) => {
+    setTempAvailability((prev) => ({
+      ...prev,
+      [dayIndex]: [...prev[dayIndex], { start: "09:00", end: "17:00" }],
+    }));
+  };
+
+  const handleRemoveSlot = (dayIndex, slotIndex) => {
+    setTempAvailability((prev) => ({
+      ...prev,
+      [dayIndex]: prev[dayIndex].filter((_, i) => i !== slotIndex),
+    }));
+  };
+
+  const handleSlotChange = (dayIndex, slotIndex, field, value) => {
+    setTempAvailability((prev) => ({
+      ...prev,
+      [dayIndex]: prev[dayIndex].map((slot, i) =>
+        i === slotIndex ? { ...slot, [field]: value } : slot,
+      ),
+    }));
+  };
+
+  const handleSaveAvailability = () => {
+    setAvailability(tempAvailability);
+    onClose();
+  };
+
+  const getSlotPosition = (time, dayIndex) => {
+    const slots = availability[dayIndex] || [];
+    for (const slot of slots) {
+      if (time >= slot.start && time < slot.end) {
+        const timeIdx = timeSlots.indexOf(time);
+        const prevTime = timeSlots[timeIdx - 1];
+        const nextTime = timeSlots[timeIdx + 1];
+        const isFirst = !prevTime || prevTime < slot.start;
+        const isLast = !nextTime || nextTime >= slot.end;
+        if (isFirst && isLast) return "single";
+        if (isFirst) return "start";
+        if (isLast) return "end";
+        return "middle";
+      }
+    }
+    return "none";
+  };
+
+  const getSlotRadius = (position) => {
+    switch (position) {
+      case "start":
+        return "8px 8px 0 0";
+      case "end":
+        return "0 0 8px 8px";
+      case "single":
+        return "8px";
+      default:
+        return "0";
+    }
   };
 
   const getStatusColor = (status) => {
@@ -172,7 +259,7 @@ const Schedule = () => {
             backgroundColor: colors.primary.main,
             color: colors.text.white,
           }}
-          onPress={onOpen}
+          onPress={handleOpenModal}
         >
           {t("tutorDashboard.schedule.setAvailability")}
         </Button>
@@ -244,14 +331,14 @@ const Schedule = () => {
               </div>
 
               {/* Schedule Grid */}
-              <div className="space-y-2 max-h-[400px] overflow-y-auto">
+              <div className="max-h-[400px] overflow-y-auto">
                 {timeSlots.map((time) => (
                   <div
                     key={time}
-                    className="grid grid-cols-8 gap-2 items-center"
+                    className="grid grid-cols-8 gap-x-2 items-center"
                   >
                     <span
-                      className="text-sm font-medium"
+                      className="text-sm font-medium h-10 flex items-center"
                       style={{ color: colors.text.tertiary }}
                     >
                       {time}
@@ -260,17 +347,20 @@ const Schedule = () => {
                       const lesson = scheduledLessons.find(
                         (l) => l.day === dayIndex && l.time === time,
                       );
-                      const isAvailable =
-                        availability[dayIndex]?.includes(time);
+                      const position = getSlotPosition(time, dayIndex);
+                      const isAvailable = position !== "none";
 
                       if (lesson) {
                         return (
                           <div
                             key={`${dayIndex}-${time}`}
-                            className="p-2 rounded-lg text-xs"
+                            className="p-2 text-xs h-10 flex items-center"
                             style={{
                               backgroundColor: `${getStatusColor(lesson.status)}20`,
                               borderLeft: `3px solid ${getStatusColor(lesson.status)}`,
+                              borderRadius: getSlotRadius(
+                                isAvailable ? position : "single",
+                              ),
                             }}
                           >
                             <p
@@ -286,11 +376,15 @@ const Schedule = () => {
                       return (
                         <div
                           key={`${dayIndex}-${time}`}
-                          className="h-10 rounded-lg"
+                          className="h-10"
                           style={{
                             backgroundColor: isAvailable
-                              ? `${colors.state.success}10`
+                              ? `${colors.state.success}15`
                               : colors.background.gray,
+                            borderRadius: getSlotRadius(position),
+                            borderLeft: isAvailable
+                              ? `3px solid ${colors.state.success}40`
+                              : "none",
                           }}
                         />
                       );
@@ -446,48 +540,142 @@ const Schedule = () => {
       </div>
 
       {/* Set Availability Modal */}
-      <Modal isOpen={isOpen} onClose={onClose} size="lg">
+      <Modal
+        isOpen={isOpen}
+        onClose={onClose}
+        size="2xl"
+        scrollBehavior="inside"
+      >
         <ModalContent style={{ backgroundColor: colors.background.light }}>
           <ModalHeader style={{ color: colors.text.primary }}>
             {t("tutorDashboard.schedule.setWeeklyAvailability")}
           </ModalHeader>
           <ModalBody>
-            <div className="space-y-4">
-              {days.map((day, index) => (
-                <div
-                  key={day.name}
-                  className="flex items-center justify-between p-3 rounded-xl"
-                  style={{ backgroundColor: colors.background.gray }}
-                >
-                  <div className="flex items-center gap-3">
-                    <Switch
-                      isSelected={availability[index]?.length > 0}
-                      size="sm"
-                    />
-                    <span
-                      className="font-medium"
-                      style={{ color: colors.text.primary }}
+            {tempAvailability && (
+              <div className="space-y-4">
+                {days.map((day, index) => {
+                  const daySlots = tempAvailability[index] || [];
+                  const isEnabled = daySlots.length > 0;
+
+                  return (
+                    <div
+                      key={day.name}
+                      className="p-4 rounded-xl"
+                      style={{ backgroundColor: colors.background.gray }}
                     >
-                      {day.fullName}
-                    </span>
-                  </div>
-                  <Select
-                    placeholder="Select time slots"
-                    selectionMode="multiple"
-                    size="sm"
-                    className="max-w-[200px]"
-                    classNames={selectClassNames}
-                    isDisabled={!availability[index]?.length}
-                  >
-                    {timeSlots.map((time) => (
-                      <SelectItem key={time} value={time}>
-                        {time}
-                      </SelectItem>
-                    ))}
-                  </Select>
-                </div>
-              ))}
-            </div>
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-3">
+                          <Switch
+                            isSelected={isEnabled}
+                            size="sm"
+                            onValueChange={() => handleToggleDay(index)}
+                          />
+                          <span
+                            className="font-medium"
+                            style={{
+                              color: isEnabled
+                                ? colors.text.primary
+                                : colors.text.tertiary,
+                            }}
+                          >
+                            {day.fullName}
+                          </span>
+                        </div>
+                        {isEnabled && (
+                          <Button
+                            size="sm"
+                            variant="flat"
+                            startContent={
+                              <Plus weight="bold" className="w-3 h-3" />
+                            }
+                            onPress={() => handleAddSlot(index)}
+                            style={{ color: colors.primary.main }}
+                          >
+                            {t("tutorDashboard.schedule.addSlot")}
+                          </Button>
+                        )}
+                      </div>
+
+                      {isEnabled && (
+                        <div className="space-y-2 ml-10">
+                          {daySlots.map((slot, slotIndex) => (
+                            <div
+                              key={slotIndex}
+                              className="flex items-center gap-2"
+                            >
+                              <Select
+                                size="sm"
+                                selectedKeys={[slot.start]}
+                                className="w-28"
+                                classNames={selectClassNames}
+                                aria-label="Start time"
+                                onSelectionChange={(keys) => {
+                                  const val = Array.from(keys)[0];
+                                  if (val)
+                                    handleSlotChange(
+                                      index,
+                                      slotIndex,
+                                      "start",
+                                      val,
+                                    );
+                                }}
+                              >
+                                {allTimeOptions.map((t) => (
+                                  <SelectItem key={t}>{t}</SelectItem>
+                                ))}
+                              </Select>
+                              <span
+                                className="text-sm"
+                                style={{ color: colors.text.secondary }}
+                              >
+                                —
+                              </span>
+                              <Select
+                                size="sm"
+                                selectedKeys={[slot.end]}
+                                className="w-28"
+                                classNames={selectClassNames}
+                                aria-label="End time"
+                                onSelectionChange={(keys) => {
+                                  const val = Array.from(keys)[0];
+                                  if (val)
+                                    handleSlotChange(
+                                      index,
+                                      slotIndex,
+                                      "end",
+                                      val,
+                                    );
+                                }}
+                              >
+                                {allTimeOptions
+                                  .filter((t) => t > slot.start)
+                                  .map((t) => (
+                                    <SelectItem key={t}>{t}</SelectItem>
+                                  ))}
+                              </Select>
+                              <Button
+                                size="sm"
+                                isIconOnly
+                                variant="light"
+                                onPress={() =>
+                                  handleRemoveSlot(index, slotIndex)
+                                }
+                              >
+                                <X
+                                  weight="bold"
+                                  className="w-4 h-4"
+                                  style={{ color: colors.state.error }}
+                                />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </ModalBody>
           <ModalFooter>
             <Button variant="light" onPress={onClose}>
@@ -498,7 +686,7 @@ const Schedule = () => {
                 backgroundColor: colors.primary.main,
                 color: colors.text.white,
               }}
-              onPress={onClose}
+              onPress={handleSaveAvailability}
             >
               {t("tutorDashboard.schedule.save")}
             </Button>

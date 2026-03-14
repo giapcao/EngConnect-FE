@@ -875,7 +875,8 @@
       "noLessonsToday": "No lessons scheduled for today",
       "setWeeklyAvailability": "Set Weekly Availability",
       "cancel": "Cancel",
-      "save": "Save Changes"
+      "save": "Save Changes",
+      "addSlot": "Add slot"
     },
     "students": {
       "title": "My Students",

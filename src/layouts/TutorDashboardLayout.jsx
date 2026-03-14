@@ -24,7 +24,6 @@ import {
   MagnifyingGlass,
   BookOpen,
   CalendarDots,
-  PencilSimple,
   UserCircle,
   SignOut,
   List,
@@ -66,11 +65,6 @@ const TutorDashboardLayout = () => {
       path: "/tutor/students",
       label: t("tutorDashboard.nav.students"),
       icon: Student,
-    },
-    {
-      path: "/tutor/homework",
-      label: t("tutorDashboard.nav.homework"),
-      icon: PencilSimple,
     },
     {
       path: "/tutor/earnings",

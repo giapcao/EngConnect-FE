@@ -873,7 +873,8 @@
       "noLessonsToday": "Hôm nay không có buổi học",
       "setWeeklyAvailability": "Cài đặt lịch rảnh hàng tuần",
       "cancel": "Hủy",
-      "save": "Lưu thay đổi"
+      "save": "Lưu thay đổi",
+      "addSlot": "Thêm khung giờ"
     },
     "students": {
       "title": "Học viên của tôi",
