@@ -3,6 +3,7 @@ import { Button } from "@heroui/react";
 import { useThemeColors } from "../../hooks/useThemeColors";
 import { useTheme } from "../../contexts/ThemeContext";
 
+// eslint-disable-next-line react/prop-types
 const SocialLogin = ({ text = "login" }) => {
   const colors = useThemeColors();
   const { theme } = useTheme();
@@ -23,11 +24,11 @@ const SocialLogin = ({ text = "login" }) => {
         ></div>
       </div>
 
-      <div className="flex gap-4">
+      <div className="flex">
         <Button
           variant="flat"
           size="lg"
-          className={`flex-1 ${
+          className={`w-full ${
             theme === "dark" ? "hover:bg-slate-700" : "hover:bg-gray-200"
           }`}
           style={{
@@ -56,25 +57,6 @@ const SocialLogin = ({ text = "login" }) => {
           }
         >
           Google
-        </Button>
-
-        <Button
-          variant="flat"
-          size="lg"
-          className={`flex-1 ${
-            theme === "dark" ? "hover:bg-slate-700" : "hover:bg-gray-200"
-          }`}
-          style={{
-            backgroundColor: colors.background.input,
-            color: colors.text.muted,
-          }}
-          startContent={
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="#1877F2">
-              <path d="M20 10c0-5.523-4.477-10-10-10S0 4.477 0 10c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V10h2.54V7.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V10h2.773l-.443 2.89h-2.33v6.988C16.343 19.128 20 14.991 20 10z" />
-            </svg>
-          }
-        >
-          Facebook
         </Button>
       </div>
     </div>

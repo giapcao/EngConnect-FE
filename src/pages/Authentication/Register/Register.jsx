@@ -185,7 +185,7 @@ const Register = () => {
             )}
 
             <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label
                     className="block text-sm font-medium mb-2"
@@ -229,7 +229,7 @@ const Register = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label
                     className="block text-sm font-medium mb-2"
@@ -273,7 +273,7 @@ const Register = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label
                     className="block text-sm font-medium mb-2"
@@ -326,7 +326,10 @@ const Register = () => {
                     label: "text-sm",
                   }}
                 >
-                  <span style={{ color: colors.text.secondary }}>
+                  <span
+                    className="leading-relaxed"
+                    style={{ color: colors.text.secondary }}
+                  >
                     {t("auth.register.agreeToTerms")}{" "}
                     <Link
                       href="#"

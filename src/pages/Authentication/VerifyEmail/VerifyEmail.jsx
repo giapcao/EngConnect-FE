@@ -181,7 +181,7 @@ const VerifyEmail = () => {
           <p style={{ color: colors.text.secondary }}>
             {error || t("auth.verifyEmail.error.description")}
           </p>
-          <div className="flex gap-3 w-full mt-4">
+          <div className="flex flex-col sm:flex-row gap-3 w-full mt-4">
             <Button
               color="primary"
               size="lg"
