@@ -8,6 +8,7 @@ import {
   Alert,
   addToast,
 } from "@heroui/react";
+import { Eye, EyeOff } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import * as MotionLib from "framer-motion";
@@ -33,6 +34,9 @@ const Register = () => {
   const { inputClassNames } = useInputStyles();
   const { loading, error } = useSelector((state) => state.auth);
   const [agreeToTerms, setAgreeToTerms] = useState(false);
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+  const [isConfirmPasswordVisible, setIsConfirmPasswordVisible] =
+    useState(false);
   const [validationErrors, setValidationErrors] = useState({});
   const [formData, setFormData] = useState({
     firstName: "",
@@ -282,7 +286,7 @@ const Register = () => {
                     {t("auth.register.password")}
                   </label>
                   <Input
-                    type="password"
+                    type={isPasswordVisible ? "text" : "password"}
                     name="password"
                     placeholder={t("auth.register.passwordPlaceholder")}
                     value={formData.password}
@@ -292,6 +296,25 @@ const Register = () => {
                     isInvalid={!!validationErrors.password}
                     errorMessage={validationErrors.password}
                     classNames={inputClassNames}
+                    endContent={
+                      <button
+                        className="focus:outline-none"
+                        type="button"
+                        onClick={() => setIsPasswordVisible(!isPasswordVisible)}
+                      >
+                        {isPasswordVisible ? (
+                          <EyeOff
+                            className="w-5 h-5"
+                            style={{ color: colors.text.tertiary }}
+                          />
+                        ) : (
+                          <Eye
+                            className="w-5 h-5"
+                            style={{ color: colors.text.tertiary }}
+                          />
+                        )}
+                      </button>
+                    }
                   />
                 </div>
 
@@ -303,7 +326,7 @@ const Register = () => {
                     {t("auth.register.confirmPassword")}
                   </label>
                   <Input
-                    type="password"
+                    type={isConfirmPasswordVisible ? "text" : "password"}
                     name="confirmPassword"
                     placeholder={t("auth.register.confirmPasswordPlaceholder")}
                     value={formData.confirmPassword}
@@ -313,6 +336,27 @@ const Register = () => {
                     isInvalid={!!validationErrors.confirmPassword}
                     errorMessage={validationErrors.confirmPassword}
                     classNames={inputClassNames}
+                    endContent={
+                      <button
+                        className="focus:outline-none"
+                        type="button"
+                        onClick={() =>
+                          setIsConfirmPasswordVisible(!isConfirmPasswordVisible)
+                        }
+                      >
+                        {isConfirmPasswordVisible ? (
+                          <EyeOff
+                            className="w-5 h-5"
+                            style={{ color: colors.text.tertiary }}
+                          />
+                        ) : (
+                          <Eye
+                            className="w-5 h-5"
+                            style={{ color: colors.text.tertiary }}
+                          />
+                        )}
+                      </button>
+                    }
                   />
                 </div>
               </div>
