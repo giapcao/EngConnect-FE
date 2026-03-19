@@ -411,10 +411,8 @@
       "goHome": "Về Trang Chủ"
     },
     "loginFailed": {
-      "title": "Đăng Nhập Google Thất Bại",
-      "description": "Đã xảy ra lỗi khi đăng nhập bằng tài khoản Google của bạn. Nguyên nhân có thể do đăng nhập bị hủy, phiên đã hết hạn hoặc lỗi máy chủ. Vui lòng thử lại.",
-      "tryAgain": "Thử Lại",
-      "goHome": "Về Trang Chủ"
+      "title": "Xác Thực Google Thất Bại",
+      "redirecting": "Đang chuyển hướng về trang đăng nhập..."
     }
   },
   "about": {

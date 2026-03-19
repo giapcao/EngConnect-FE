@@ -411,10 +411,8 @@
       "goHome": "Go to Homepage"
     },
     "loginFailed": {
-      "title": "Google Login Failed",
-      "description": "Something went wrong while signing in with your Google account. This could be due to a cancelled login, an expired session, or a server issue. Please try again.",
-      "tryAgain": "Try Again",
-      "goHome": "Go to Homepage"
+      "title": "Google Authentication Failed",
+      "redirecting": "Redirecting you to the login page..."
     }
   },
   "about": {
