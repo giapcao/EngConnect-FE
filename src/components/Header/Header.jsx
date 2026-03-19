@@ -1,14 +1,32 @@
 import React, { useState, useEffect } from "react";
-import { Button, Link as HeroLink } from "@heroui/react";
-import { Menu, X, ChevronRight } from "lucide-react";
+import {
+  Button,
+  Dropdown,
+  DropdownTrigger,
+  DropdownMenu,
+  DropdownItem,
+  Avatar,
+} from "@heroui/react";
+import {
+  Menu,
+  X,
+  ChevronRight,
+  LogOut,
+  GraduationCap,
+  BookOpen,
+} from "lucide-react";
 import logoImage from "../../assets/images/logo.png";
+import defaultAvatar from "../../assets/images/null-avatar.jpg";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { useSelector } from "react-redux";
 import * as MotionLib from "framer-motion";
 import { useThemeColors } from "../../hooks/useThemeColors";
 import { useTheme } from "../../contexts/ThemeContext";
+import { selectIsAuthenticated, selectUser } from "../../store";
 import LanguageSwitcher from "../LanguageSwitcher/LanguageSwitcher";
 import ThemeSwitcher from "../ThemeSwitcher/ThemeSwitcher";
+import LogoutModal from "../LogoutModal/LogoutModal";
 
 // eslint-disable-next-line no-unused-vars
 const { motion, AnimatePresence } = MotionLib;
@@ -19,8 +37,13 @@ const Header = () => {
   const { t } = useTranslation();
   const colors = useThemeColors();
   const { theme } = useTheme();
+  const isAuthenticated = useSelector(selectIsAuthenticated);
+  const user = useSelector(selectUser);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+
+  const hasRole = (role) => user?.roles?.includes(role);
 
   // Handle scroll effect
   useEffect(() => {
@@ -114,34 +137,109 @@ const Header = () => {
                 <LanguageSwitcher />
               </div>
 
-              {/* Auth Buttons - Desktop */}
+              {/* Auth Section - Desktop */}
               <div className="hidden md:flex items-center gap-3 ml-3">
-                <Button
-                  variant="flat"
-                  size="sm"
-                  radius="full"
-                  className="font-semibold px-5 transition-all duration-300 text-sm"
-                  style={{
-                    backgroundColor: colors.button.primaryLight.background,
-                    color: colors.button.primaryLight.text,
-                  }}
-                  onPress={() => navigate("/login")}
-                >
-                  {t("nav.signIn")}
-                </Button>
-                <Button
-                  size="sm"
-                  radius="full"
-                  className="font-semibold px-6 transition-all duration-300 hover:opacity-90 hover:scale-105 text-sm"
-                  style={{
-                    backgroundColor: colors.primary.main,
-                    color: colors.text.white,
-                  }}
-                  onPress={() => navigate("/register")}
-                  endContent={<ChevronRight className="w-4 h-4" />}
-                >
-                  {t("nav.getStarted")}
-                </Button>
+                {isAuthenticated && user ? (
+                  <>
+                    {hasRole("Student") && (
+                      <Button
+                        variant="flat"
+                        size="sm"
+                        radius="full"
+                        className="font-semibold px-4 transition-all duration-300 text-sm"
+                        startContent={<BookOpen className="w-4 h-4" />}
+                        style={{
+                          backgroundColor:
+                            colors.button.primaryLight.background,
+                          color: colors.button.primaryLight.text,
+                        }}
+                        onPress={() => navigate("/student/dashboard")}
+                      >
+                        {t("nav.learningDashboard")}
+                      </Button>
+                    )}
+                    {hasRole("Tutor") && (
+                      <Button
+                        variant="flat"
+                        size="sm"
+                        radius="full"
+                        className="font-semibold px-4 transition-all duration-300 text-sm"
+                        startContent={<GraduationCap className="w-4 h-4" />}
+                        style={{
+                          backgroundColor:
+                            colors.button.primaryLight.background,
+                          color: colors.button.primaryLight.text,
+                        }}
+                        onPress={() => navigate("/tutor/dashboard")}
+                      >
+                        {t("nav.tutorDashboard")}
+                      </Button>
+                    )}
+                    <Dropdown placement="bottom-end">
+                      <DropdownTrigger>
+                        <button className="flex items-center gap-2 cursor-pointer focus:outline-none rounded-full px-2 py-1.5 transition-all duration-200 hover:opacity-80">
+                          <Avatar
+                            src={user.avatarUrl || defaultAvatar}
+                            name={user.username}
+                            size="sm"
+                            className="flex-shrink-0"
+                            imgProps={{ referrerPolicy: "no-referrer" }}
+                          />
+                          <span
+                            className="font-medium text-sm max-w-[120px] truncate"
+                            style={{ color: colors.text.primary }}
+                          >
+                            {user.username}
+                          </span>
+                        </button>
+                      </DropdownTrigger>
+                      <DropdownMenu
+                        aria-label="User menu"
+                        onAction={(key) => {
+                          if (key === "logout") setIsLogoutModalOpen(true);
+                        }}
+                      >
+                        <DropdownItem
+                          key="logout"
+                          className="text-danger"
+                          color="danger"
+                          startContent={<LogOut className="w-4 h-4" />}
+                        >
+                          {t("nav.logout")}
+                        </DropdownItem>
+                      </DropdownMenu>
+                    </Dropdown>
+                  </>
+                ) : (
+                  <>
+                    <Button
+                      variant="flat"
+                      size="sm"
+                      radius="full"
+                      className="font-semibold px-5 transition-all duration-300 text-sm"
+                      style={{
+                        backgroundColor: colors.button.primaryLight.background,
+                        color: colors.button.primaryLight.text,
+                      }}
+                      onPress={() => navigate("/login")}
+                    >
+                      {t("nav.signIn")}
+                    </Button>
+                    <Button
+                      size="sm"
+                      radius="full"
+                      className="font-semibold px-6 transition-all duration-300 hover:opacity-90 hover:scale-105 text-sm"
+                      style={{
+                        backgroundColor: colors.primary.main,
+                        color: colors.text.white,
+                      }}
+                      onPress={() => navigate("/register")}
+                      endContent={<ChevronRight className="w-4 h-4" />}
+                    >
+                      {t("nav.getStarted")}
+                    </Button>
+                  </>
+                )}
               </div>
 
               {/* Mobile Menu Button */}
@@ -242,7 +340,7 @@ const Header = () => {
                   </div>
                 </motion.div>
 
-                {/* Auth Buttons */}
+                {/* Auth Section - Mobile */}
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -250,37 +348,107 @@ const Header = () => {
                   className="flex flex-col gap-3 pt-4 mt-2 border-t"
                   style={{ borderColor: colors.border.light }}
                 >
-                  <Button
-                    variant="bordered"
-                    radius="full"
-                    size="lg"
-                    className="font-semibold w-full transition-all duration-200"
-                    style={{
-                      borderColor: colors.border.medium,
-                      color: colors.text.primary,
-                    }}
-                    onPress={() => {
-                      navigate("/login");
-                      setIsMobileMenuOpen(false);
-                    }}
-                  >
-                    {t("nav.signIn")}
-                  </Button>
-                  <Button
-                    radius="full"
-                    size="lg"
-                    className="font-semibold w-full transition-all duration-200"
-                    style={{
-                      backgroundColor: colors.primary.main,
-                      color: colors.text.white,
-                    }}
-                    onPress={() => {
-                      navigate("/register");
-                      setIsMobileMenuOpen(false);
-                    }}
-                  >
-                    {t("nav.getStarted")}
-                  </Button>
+                  {isAuthenticated && user ? (
+                    <>
+                      <div
+                        className="flex items-center gap-3 px-4 py-3 rounded-xl"
+                        style={{ backgroundColor: colors.background.gray }}
+                      >
+                        <Avatar
+                          src={user.avatarUrl || defaultAvatar}
+                          name={user.username}
+                          size="sm"
+                          imgProps={{ referrerPolicy: "no-referrer" }}
+                        />
+                        <span
+                          className="font-medium"
+                          style={{ color: colors.text.primary }}
+                        >
+                          {user.username}
+                        </span>
+                      </div>
+                      {hasRole("Student") && (
+                        <Button
+                          radius="full"
+                          size="lg"
+                          variant="flat"
+                          className="font-semibold w-full"
+                          startContent={<BookOpen className="w-5 h-5" />}
+                          style={{ color: colors.primary.main }}
+                          onPress={() => {
+                            navigate("/student/dashboard");
+                            setIsMobileMenuOpen(false);
+                          }}
+                        >
+                          {t("nav.learningDashboard")}
+                        </Button>
+                      )}
+                      {hasRole("Tutor") && (
+                        <Button
+                          radius="full"
+                          size="lg"
+                          variant="flat"
+                          className="font-semibold w-full"
+                          startContent={<GraduationCap className="w-5 h-5" />}
+                          style={{ color: colors.primary.main }}
+                          onPress={() => {
+                            navigate("/tutor/dashboard");
+                            setIsMobileMenuOpen(false);
+                          }}
+                        >
+                          {t("nav.tutorDashboard")}
+                        </Button>
+                      )}
+                      <Button
+                        radius="full"
+                        size="lg"
+                        color="danger"
+                        variant="flat"
+                        className="font-semibold w-full"
+                        startContent={<LogOut className="w-5 h-5" />}
+                        onPress={() => {
+                          setIsMobileMenuOpen(false);
+                          setIsLogoutModalOpen(true);
+                        }}
+                      >
+                        {t("nav.logout")}
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Button
+                        variant="bordered"
+                        radius="full"
+                        size="lg"
+                        className="font-semibold w-full transition-all duration-200"
+                        style={{
+                          borderColor: colors.border.medium,
+                          color: colors.text.primary,
+                        }}
+                        onPress={() => {
+                          navigate("/login");
+                          setIsMobileMenuOpen(false);
+                        }}
+                      >
+                        {t("nav.signIn")}
+                      </Button>
+                      <Button
+                        radius="full"
+                        size="lg"
+                        className="font-semibold w-full transition-all duration-200"
+                        style={{
+                          backgroundColor: colors.primary.main,
+                          color: colors.text.white,
+                        }}
+                        onPress={() => {
+                          navigate("/register");
+                          setIsMobileMenuOpen(false);
+                        }}
+                      >
+                        {t("nav.getStarted")}
+                      </Button>
+                    </>
+                  )}
                 </motion.div>
               </div>
             </motion.div>
@@ -302,6 +470,12 @@ const Header = () => {
           />
         )}
       </AnimatePresence>
+
+      {/* Logout Modal */}
+      <LogoutModal
+        isOpen={isLogoutModalOpen}
+        onClose={() => setIsLogoutModalOpen(false)}
+      />
     </>
   );
 };

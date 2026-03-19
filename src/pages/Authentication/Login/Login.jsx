@@ -174,7 +174,7 @@ const Login = () => {
                 color="danger"
                 variant="flat"
                 className="mb-4"
-                title={error}
+                title={error?.i18nKey ? t(error.i18nKey) : error}
               />
             )}
             <form onSubmit={handleSubmit} noValidate className="space-y-6">

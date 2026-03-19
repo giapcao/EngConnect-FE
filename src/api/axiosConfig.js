@@ -33,10 +33,10 @@ axiosInstance.interceptors.response.use(
       // Handle specific error codes
       switch (error.response.status) {
         case 401:
-          // Unauthorized - clear token and redirect to login
+          // Unauthorized - clear token (redirect handled by auth state)
           localStorage.removeItem("accessToken");
           localStorage.removeItem("refreshToken");
-          window.location.href = "/login";
+          localStorage.removeItem("user");
           break;
         case 403:
           // Forbidden

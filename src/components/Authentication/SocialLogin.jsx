@@ -2,6 +2,7 @@ import React from "react";
 import { Button } from "@heroui/react";
 import { useThemeColors } from "../../hooks/useThemeColors";
 import { useTheme } from "../../contexts/ThemeContext";
+import { authApi } from "../../api";
 
 // eslint-disable-next-line react/prop-types
 const SocialLogin = ({ text = "login" }) => {
@@ -34,6 +35,9 @@ const SocialLogin = ({ text = "login" }) => {
           style={{
             backgroundColor: colors.background.input,
             color: colors.text.muted,
+          }}
+          onPress={() => {
+            window.location.href = authApi.getGoogleLoginUrl();
           }}
           startContent={
             <svg width="20" height="20" viewBox="0 0 20 20">

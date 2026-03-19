@@ -17,11 +17,13 @@
   "nav": {
     "home": "Home",
     "courses": "Courses",
-    "pricing": "Pricing",
     "about": "About",
     "becomeTutor": "Become a Tutor",
     "signIn": "Sign In",
-    "getStarted": "Get Started"
+    "getStarted": "Get Started",
+    "learningDashboard": "My Learning",
+    "tutorDashboard": "Tutor Dashboard",
+    "logout": "Logout"
   },
   "becomeTutor": {
     "hero": {
@@ -285,7 +287,13 @@
       "loginSuccessDescription": "Welcome back! You have successfully logged in.",
       "socialText": "Or login with",
       "noAccount": "Don't have an account?",
-      "signUp": "Sign up"
+      "signUp": "Sign up",
+      "errors": {
+        "userNotFound": "User not found.",
+        "invalidPassword": "Invalid password.",
+        "emailNotVerified": "Email has not been verified.",
+        "accountLocked": "Account has been locked."
+      }
     },
     "register": {
       "subtitle": "Join thousands of learners and tutors worldwide",
@@ -390,6 +398,23 @@
       "goToLogin": "Go to Login",
       "backToLogin": "Back to Login",
       "retry": "Try Again"
+    },
+    "googleVerify": {
+      "verifying": "Signing you in...",
+      "pleaseWait": "Please wait while we verify your Google account.",
+      "success": "Login Successful!",
+      "redirecting": "Redirecting you to the homepage...",
+      "errorTitle": "Login Failed",
+      "noToken": "No verification token found. Please try logging in again.",
+      "failed": "Google login verification failed. Please try again.",
+      "backToLogin": "Back to Login",
+      "goHome": "Go to Homepage"
+    },
+    "loginFailed": {
+      "title": "Google Login Failed",
+      "description": "Something went wrong while signing in with your Google account. This could be due to a cancelled login, an expired session, or a server issue. Please try again.",
+      "tryAgain": "Try Again",
+      "goHome": "Go to Homepage"
     }
   },
   "about": {

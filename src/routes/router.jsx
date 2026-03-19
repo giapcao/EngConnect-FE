@@ -9,6 +9,8 @@ import Register from "../pages/Authentication/Register/Register";
 import ForgotPass from "../pages/Authentication/ForgotPass/ForgotPass";
 import ResetPassword from "../pages/Authentication/ResetPassword/ResetPassword";
 import VerifyEmail from "../pages/Authentication/VerifyEmail/VerifyEmail";
+import GoogleAuthVerify from "../pages/Authentication/GoogleAuthVerify/GoogleAuthVerify";
+import LoginFailed from "../pages/Authentication/LoginFailed/LoginFailed";
 import About from "../pages/AboutUs/About";
 import Courses from "../pages/Courses/Courses";
 import CourseDetail from "../pages/Courses/CourseDetail";
@@ -80,6 +82,14 @@ export const router = createBrowserRouter([
       {
         path: "verify",
         element: <VerifyEmail />,
+      },
+      {
+        path: "auth/verify",
+        element: <GoogleAuthVerify />,
+      },
+      {
+        path: "auth/login-failed",
+        element: <LoginFailed />,
       },
       {
         path: "about",

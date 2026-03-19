@@ -2,6 +2,14 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { authApi } from "../../api";
 
 // Async thunks
+// Map API error codes to i18n keys
+const loginErrorCodeMap = {
+  "User.NotFound": "auth.login.errors.userNotFound",
+  "User.InvalidPassword": "auth.login.errors.invalidPassword",
+  "User.EmailNotVerified": "auth.login.errors.emailNotVerified",
+  "User.Locked": "auth.login.errors.accountLocked",
+};
+
 export const login = createAsyncThunk(
   "auth/login",
   async (credentials, { rejectWithValue }) => {
@@ -9,7 +17,7 @@ export const login = createAsyncThunk(
       const data = await authApi.login(credentials);
 
       if (data.isSuccess) {
-        const { accessToken, refreshToken, firstName, lastName } = data.data;
+        const { accessToken, refreshToken, firstName, lastName, username, roles, avatarUrl } = data.data;
         // Save tokens to localStorage
         localStorage.setItem("accessToken", accessToken);
         localStorage.setItem("refreshToken", refreshToken);
@@ -23,21 +31,28 @@ export const login = createAsyncThunk(
           console.error("Failed to decode JWT:", e);
         }
 
+        const user = { firstName, lastName, username, roles, avatarUrl, userId };
+        // Persist user info for page reload
+        localStorage.setItem("user", JSON.stringify(user));
+
         return {
-          user: { firstName, lastName, userId },
+          user,
           accessToken,
           refreshToken,
         };
       } else {
+        const errorCode = data.error?.code;
+        const i18nKey = loginErrorCodeMap[errorCode];
         return rejectWithValue(
-          data.error?.message || "Login failed"
+          i18nKey ? { code: errorCode, i18nKey } : (data.error?.message || "Login failed")
         );
       }
     } catch (error) {
+      const errData = error.response?.data;
+      const errorCode = errData?.error?.code;
+      const i18nKey = loginErrorCodeMap[errorCode];
       return rejectWithValue(
-        error.response?.data?.error?.message ||
-        error.response?.data?.message ||
-        "Login failed"
+        i18nKey ? { code: errorCode, i18nKey } : (errData?.error?.message || errData?.message || "Login failed")
       );
     }
   }
@@ -120,15 +135,53 @@ export const logout = createAsyncThunk(
       // Clear localStorage
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
+      localStorage.removeItem("user");
       return null;
     } catch (error) {
       // Even if API call fails, clear local storage
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
+      localStorage.removeItem("user");
       return rejectWithValue(
         error.response?.data?.error?.message || 
         error.response?.data?.message || 
         "Logout failed"
+      );
+    }
+  }
+);
+
+export const googleLoginVerify = createAsyncThunk(
+  "auth/googleLoginVerify",
+  async (token, { rejectWithValue }) => {
+    try {
+      const data = await authApi.googleLoginVerify(token);
+
+      if (data.isSuccess) {
+        const { accessToken, refreshToken, firstName, lastName, username, roles, avatarUrl } = data.data;
+        localStorage.setItem("accessToken", accessToken);
+        localStorage.setItem("refreshToken", refreshToken);
+
+        let userId = null;
+        try {
+          const payload = JSON.parse(atob(accessToken.split(".")[1]));
+          userId = payload.sub;
+        } catch (e) {
+          console.error("Failed to decode JWT:", e);
+        }
+
+        const user = { firstName, lastName, username, roles, avatarUrl, userId };
+        localStorage.setItem("user", JSON.stringify(user));
+
+        return { user, accessToken, refreshToken };
+      } else {
+        return rejectWithValue(data.error?.message || "Google login verification failed");
+      }
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.error?.message ||
+        error.response?.data?.message ||
+        "Google login verification failed"
       );
     }
   }
@@ -172,9 +225,19 @@ export const refreshToken = createAsyncThunk(
   }
 );
 
+// Restore user from localStorage
+const storedUser = (() => {
+  try {
+    const raw = localStorage.getItem("user");
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+})();
+
 // Initial state
 const initialState = {
-  user: null,
+  user: storedUser,
   accessToken: localStorage.getItem("accessToken") || null,
   refreshToken: localStorage.getItem("refreshToken") || null,
   isAuthenticated: !!localStorage.getItem("accessToken"),
@@ -200,6 +263,9 @@ const authSlice = createSlice({
       state.refreshToken = null;
       state.isAuthenticated = false;
       state.error = null;
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+      localStorage.removeItem("user");
     },
     clearError: (state) => {
       state.error = null;
@@ -296,6 +362,23 @@ const authSlice = createSlice({
         state.accessToken = null;
         state.refreshToken = null;
         state.isAuthenticated = false;
+      })
+      // Google Login Verify
+      .addCase(googleLoginVerify.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(googleLoginVerify.fulfilled, (state, action) => {
+        state.loading = false;
+        state.isAuthenticated = true;
+        state.user = action.payload.user;
+        state.accessToken = action.payload.accessToken;
+        state.refreshToken = action.payload.refreshToken;
+        state.error = null;
+      })
+      .addCase(googleLoginVerify.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
       });
   },
 });

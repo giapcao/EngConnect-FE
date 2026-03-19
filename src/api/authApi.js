@@ -57,4 +57,17 @@ export const authApi = {
     const response = await axiosInstance.post("/auth/v1/register-tutor", tutorData);
     return response.data;
   },
+
+  // Google Login - URL đăng nhập bằng Google
+  getGoogleLoginUrl: () => {
+    return `${axiosInstance.defaults.baseURL}auth/v1/google-login`;
+  },
+
+  // Google Login Verify - Xác thực token sau khi đăng nhập Google
+  googleLoginVerify: async (token) => {
+    const response = await axiosInstance.post("/auth/v1/google-login/verify", {
+      token,
+    });
+    return response.data;
+  },
 };

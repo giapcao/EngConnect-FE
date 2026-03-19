@@ -8,20 +8,23 @@ import {
   Image,
 } from "@heroui/react";
 import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
 import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import { useThemeColors } from "../../hooks/useThemeColors";
 import { SignOut, X } from "@phosphor-icons/react";
+import { logout } from "../../store";
 import ExitImage from "../../assets/illustrations/exit.avif";
 
 const LogoutModal = ({ isOpen, onClose }) => {
   const { t } = useTranslation();
   const colors = useThemeColors();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const handleLogout = () => {
-    // TODO: Add logout logic here (clear tokens, etc.)
     onClose();
+    dispatch(logout());
     navigate("/login");
   };
 
