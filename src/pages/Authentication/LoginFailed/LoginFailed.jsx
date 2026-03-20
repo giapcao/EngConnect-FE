@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import * as MotionLib from "framer-motion";
 import { useTranslation } from "react-i18next";

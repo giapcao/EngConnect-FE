@@ -16,6 +16,7 @@ import { useThemeColors } from "../hooks/useThemeColors";
 import LogoutModal from "../components/LogoutModal/LogoutModal";
 import { useTheme } from "../contexts/ThemeContext";
 import useInputStyles from "../hooks/useInputStyles";
+import useDropdownStyles from "../hooks/useDropdownStyles";
 import ThemeSwitcher from "../components/ThemeSwitcher/ThemeSwitcher";
 import LanguageSwitcher from "../components/LanguageSwitcher/LanguageSwitcher";
 import logoImage from "../assets/images/logo.png";
@@ -39,6 +40,7 @@ const TutorDashboardLayout = () => {
   const { t } = useTranslation();
   const colors = useThemeColors();
   const { theme } = useTheme();
+  const { dropdownClassNames } = useDropdownStyles();
   const { inputClassNames } = useInputStyles();
   const location = useLocation();
   const navigate = useNavigate();
@@ -142,16 +144,7 @@ const TutorDashboardLayout = () => {
             <Dropdown
               placement="bottom-end"
               showArrow
-              classNames={{
-                base:
-                  theme === "dark"
-                    ? "before:bg-gray-700"
-                    : "before:bg-default-200",
-                content:
-                  theme === "dark"
-                    ? "bg-gray-800 text-gray-200"
-                    : "bg-white text-gray-900",
-              }}
+              classNames={dropdownClassNames}
             >
               <DropdownTrigger>
                 <Button variant="light" className="gap-2 pl-2 pr-3">

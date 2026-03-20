@@ -8,12 +8,12 @@ import {
 } from "@heroui/react";
 import { Globe, CaretDown } from "@phosphor-icons/react";
 import { useThemeColors } from "../../hooks/useThemeColors";
-import { useTheme } from "../../contexts/ThemeContext";
+import useDropdownStyles from "../../hooks/useDropdownStyles";
 
 const LanguageSwitcher = () => {
   const { i18n } = useTranslation();
   const colors = useThemeColors();
-  const { theme } = useTheme();
+  const { dropdownClassNames } = useDropdownStyles();
 
   const changeLanguage = (lng) => {
     i18n.changeLanguage(lng);
@@ -31,16 +31,7 @@ const LanguageSwitcher = () => {
     languages.find((lang) => lang.key === currentLanguage) || languages[0];
 
   return (
-    <Dropdown
-      showArrow
-      classNames={{
-        base: theme === "dark" ? "before:bg-gray-700" : "before:bg-default-200",
-        content:
-          theme === "dark"
-            ? "bg-gray-800 text-gray-200"
-            : "bg-white text-gray-900",
-      }}
-    >
+    <Dropdown showArrow classNames={dropdownClassNames}>
       <DropdownTrigger>
         <Button
           variant="flat"

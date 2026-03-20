@@ -27,6 +27,7 @@ import { selectIsAuthenticated, selectUser } from "../../store";
 import LanguageSwitcher from "../LanguageSwitcher/LanguageSwitcher";
 import ThemeSwitcher from "../ThemeSwitcher/ThemeSwitcher";
 import LogoutModal from "../LogoutModal/LogoutModal";
+import useDropdownStyles from "../../hooks/useDropdownStyles";
 
 // eslint-disable-next-line no-unused-vars
 const { motion, AnimatePresence } = MotionLib;
@@ -37,6 +38,7 @@ const Header = () => {
   const { t } = useTranslation();
   const colors = useThemeColors();
   const { theme } = useTheme();
+  const { dropdownClassNames } = useDropdownStyles();
   const isAuthenticated = useSelector(selectIsAuthenticated);
   const user = useSelector(selectUser);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -175,7 +177,11 @@ const Header = () => {
                         {t("nav.tutorDashboard")}
                       </Button>
                     )}
-                    <Dropdown placement="bottom-end">
+                    <Dropdown
+                      placement="bottom-end"
+                      showArrow
+                      classNames={dropdownClassNames}
+                    >
                       <DropdownTrigger>
                         <button className="flex items-center gap-2 cursor-pointer focus:outline-none rounded-full px-2 py-1.5 transition-all duration-200 hover:opacity-80">
                           <Avatar
