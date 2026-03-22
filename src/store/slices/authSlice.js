@@ -111,7 +111,25 @@ export const registerTutor = createAsyncThunk(
       const data = await authApi.registerTutor(tutorData);
 
       if (data.isSuccess) {
-        return data;
+        const { accessToken, refreshToken } = data.data;
+        localStorage.setItem("accessToken", accessToken);
+        localStorage.setItem("refreshToken", refreshToken);
+
+        // Decode JWT to get updated user info (roles now include "Tutor")
+        let userId = null;
+        try {
+          const payload = JSON.parse(atob(accessToken.split(".")[1]));
+          userId = payload.sub;
+        } catch (e) {
+          console.error("Failed to decode JWT:", e);
+        }
+
+        // Update stored user with new roles
+        const existingUser = JSON.parse(localStorage.getItem("user") || "{}");
+        const user = { ...existingUser, userId, roles: [...(existingUser.roles || []), "Tutor"] };
+        localStorage.setItem("user", JSON.stringify(user));
+
+        return { user, accessToken, refreshToken };
       } else {
         return rejectWithValue(
           data.error?.message || "Tutor registration failed"
@@ -321,8 +339,12 @@ const authSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(registerTutor.fulfilled, (state) => {
+      .addCase(registerTutor.fulfilled, (state, action) => {
         state.loading = false;
+        state.isAuthenticated = true;
+        state.user = action.payload.user;
+        state.accessToken = action.payload.accessToken;
+        state.refreshToken = action.payload.refreshToken;
         state.error = null;
       })
       .addCase(registerTutor.rejected, (state, action) => {

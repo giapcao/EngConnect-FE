@@ -13,15 +13,6 @@ export const tutorApi = {
     return response.data;
   },
 
-  // Apply to become tutor
-  applyToBeTutor: async (applicationData) => {
-    const response = await axiosInstance.post(
-      "/tutors/apply",
-      applicationData
-    );
-    return response.data;
-  },
-
   // Get tutor profile (current user)
   getTutorProfile: async () => {
     const response = await axiosInstance.get("/tutors/profile");
@@ -95,6 +86,45 @@ export const tutorApi = {
     const response = await axiosInstance.get(`/tutors/${tutorId}/reviews`, {
       params,
     });
+    return response.data;
+  },
+
+  // Upload CV
+  uploadCv: async (file, fileName) => {
+    const formData = new FormData();
+    formData.append("File", file);
+    formData.append("FileName", fileName);
+    const response = await axiosInstance.put("/tutors/cv", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return response.data;
+  },
+
+  // Upload avatar
+  uploadAvatar: async (file, fileName) => {
+    const formData = new FormData();
+    formData.append("File", file);
+    formData.append("FileName", fileName);
+    const response = await axiosInstance.put("/tutors/avatar", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return response.data;
+  },
+
+  // Upload intro video
+  uploadIntroVideo: async (file, fileName) => {
+    const formData = new FormData();
+    formData.append("File", file);
+    formData.append("FileName", fileName);
+    const response = await axiosInstance.put("/tutors/intro-video", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return response.data;
+  },
+
+  // Submit verification request
+  submitVerificationRequest: async () => {
+    const response = await axiosInstance.post("/tutor-verification-requests");
     return response.data;
   },
 };

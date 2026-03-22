@@ -136,7 +136,7 @@
     },
     "success": {
       "title": "Đã gửi đơn đăng ký!",
-      "description": "Đơn đăng ký gia sư của bạn đã được gửi thành công. Chúng tôi sẽ xem xét và phản hồi sớm."
+      "description": "Đơn đăng ký gia sư của bạn đã được gửi. Vui lòng tải lên CV và video giới thiệu trong hồ sơ để hoàn tất xác minh."
     }
   },
   "home": {
@@ -956,7 +956,8 @@
         "certifications": "Chứng chỉ",
         "notifications": "Thông báo",
         "security": "Bảo mật",
-        "earnings": "Thu nhập"
+        "earnings": "Thu nhập",
+        "verification": "Xác minh"
       },
       "personalInfo": "Thông tin cá nhân",
       "edit": "Sửa",
@@ -977,13 +978,56 @@
       "earningsUpdates": "Cập nhật thu nhập",
       "earningsUpdatesDesc": "Nhận thông báo về thanh toán và rút tiền",
       "changePassword": "Đổi mật khẩu",
+      "avatarUploadSuccess": "Cập nhật avatar thành công",
+      "avatarUploadFailed": "Cập nhật avatar thất bại",
       "currentPassword": "Mật khẩu hiện tại",
       "newPassword": "Mật khẩu mới",
       "confirmPassword": "Xác nhận mật khẩu",
       "updatePassword": "Cập nhật mật khẩu",
       "dangerZone": "Vùng nguy hiểm",
       "deleteAccount": "Xóa tài khoản",
-      "recentEarnings": "Thu nhập gần đây"
+      "recentEarnings": "Thu nhập gần đây",
+      "verification": {
+        "status": "Trạng thái xác minh",
+        "statuses": {
+          "Unverified": "Chưa xác minh",
+          "Pending": "Đang chờ xét duyệt",
+          "Verified": "Đã xác minh",
+          "Rejected": "Bị từ chối"
+        },
+        "cvTitle": "CV / Hồ sơ",
+        "cvUploaded": "Đã tải lên CV",
+        "cvUploadPrompt": "Nhấn để tải lên CV của bạn",
+        "cvFormats": "PDF, DOC, DOCX",
+        "cvUploadSuccess": "Tải CV lên thành công",
+        "cvUploadFailed": "Tải CV lên thất bại",
+        "videoTitle": "Video giới thiệu",
+        "videoUploaded": "Đã tải lên video giới thiệu",
+        "videoUploadPrompt": "Nhấn để tải lên video giới thiệu",
+        "videoFormats": "MP4, WebM, MOV",
+        "videoUploadSuccess": "Tải video giới thiệu lên thành công",
+        "videoUploadFailed": "Tải video giới thiệu lên thất bại",
+        "view": "Xem",
+        "replace": "Thay thế",
+        "submitTitle": "Gửi yêu cầu xác minh",
+        "readyToSubmit": "CV và video giới thiệu đã được tải lên. Bạn có thể gửi hồ sơ để xác minh.",
+        "uploadBothFirst": "Vui lòng tải lên cả CV và video giới thiệu trước khi gửi yêu cầu xác minh.",
+        "submitButton": "Gửi yêu cầu xác minh",
+        "pendingButton": "Đang chờ xác minh",
+        "verifiedButton": "Đã xác minh",
+        "submitSuccess": "Yêu cầu xác minh đã được gửi thành công! Chúng tôi sẽ xem xét hồ sơ của bạn sớm.",
+        "submitFailed": "Gửi yêu cầu xác minh thất bại"
+      }
+    },
+    "verificationBanner": {
+      "unverifiedTitle": "Hoàn tất xác minh",
+      "unverifiedDesc": "Tải lên CV và video giới thiệu để được xác minh và mở khóa tất cả tính năng gia sư.",
+      "pendingTitle": "Đang xác minh",
+      "pendingDesc": "Yêu cầu xác minh của bạn đang được xem xét. Bạn sẽ được thông báo khi hoàn tất.",
+      "completeVerification": "Hoàn tất xác minh",
+      "lockedTitle": "Yêu cầu xác minh",
+      "lockedDesc": "Bạn cần hoàn tất xác minh hồ sơ trước khi truy cập các tính năng gia sư.",
+      "goToProfile": "Đi đến hồ sơ"
     }
   },
   "courses": {

@@ -4,14 +4,13 @@ import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import * as MotionLib from "framer-motion";
 import { useTranslation } from "react-i18next";
-import { Briefcase, Video, FileText, Clock, Sparkles } from "lucide-react";
+import { Briefcase, Sparkles } from "lucide-react";
 import BrandLogo from "../../components/Authentication/BrandLogo";
 import { useThemeColors } from "../../hooks/useThemeColors";
 import { useTheme } from "../../contexts/ThemeContext";
 import useInputStyles from "../../hooks/useInputStyles";
 import {
   registerTutor,
-  selectUser,
   selectIsAuthenticated,
 } from "../../store/slices/authSlice";
 import illustrationImage from "../../assets/illustrations/contract.avif";
@@ -27,17 +26,13 @@ const TutorRegistration = () => {
   const colors = useThemeColors();
   const { theme } = useTheme();
   const { inputClassNames, textareaClassNames } = useInputStyles();
-  const user = useSelector(selectUser);
   const isAuthenticated = useSelector(selectIsAuthenticated);
   const { loading, error } = useSelector((state) => state.auth);
   const [validationErrors, setValidationErrors] = useState({});
   const [formData, setFormData] = useState({
     headline: "",
     bio: "",
-    introVideoUrl: "",
     yearsExperience: "",
-    cvUrl: "",
-    slotsCount: "",
   });
 
   // Redirect to register if not authenticated
@@ -61,15 +56,6 @@ const TutorRegistration = () => {
       errors.bio = t("tutorRegistration.validation.bioMinLength");
     }
 
-    if (
-      formData.introVideoUrl.trim() &&
-      !/^https?:\/\/.+/i.test(formData.introVideoUrl)
-    ) {
-      errors.introVideoUrl = t(
-        "tutorRegistration.validation.introVideoUrlInvalid",
-      );
-    }
-
     if (!formData.yearsExperience) {
       errors.yearsExperience = t(
         "tutorRegistration.validation.yearsExperienceRequired",
@@ -81,19 +67,6 @@ const TutorRegistration = () => {
       errors.yearsExperience = t(
         "tutorRegistration.validation.yearsExperienceInvalid",
       );
-    }
-
-    if (formData.cvUrl.trim() && !/^https?:\/\/.+/i.test(formData.cvUrl)) {
-      errors.cvUrl = t("tutorRegistration.validation.cvUrlInvalid");
-    }
-
-    if (!formData.slotsCount) {
-      errors.slotsCount = t("tutorRegistration.validation.slotsCountRequired");
-    } else if (
-      Number.isNaN(Number(formData.slotsCount)) ||
-      Number(formData.slotsCount) < 1
-    ) {
-      errors.slotsCount = t("tutorRegistration.validation.slotsCountInvalid");
     }
 
     setValidationErrors(errors);
@@ -116,13 +89,9 @@ const TutorRegistration = () => {
     }
 
     const tutorData = {
-      userId: user?.userId,
       headline: formData.headline.trim(),
       bio: formData.bio.trim(),
-      introVideoUrl: formData.introVideoUrl.trim() || "",
       yearsExperience: Number(formData.yearsExperience),
-      cvUrl: formData.cvUrl.trim() || "",
-      slotsCount: Number(formData.slotsCount),
     };
 
     try {
@@ -136,7 +105,7 @@ const TutorRegistration = () => {
       });
 
       setTimeout(() => {
-        navigate("/");
+        navigate("/tutor/profile");
       }, 2000);
     } catch (err) {
       console.error("Tutor registration error:", err);
@@ -272,128 +241,30 @@ const TutorRegistration = () => {
                 </p>
               </div>
 
-              {/* Experience & Slots */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label
-                    className="block text-sm font-medium mb-2"
-                    style={{ color: colors.text.primary }}
-                  >
-                    {t("tutorRegistration.yearsExperience")}
-                  </label>
-                  <Input
-                    type="number"
-                    name="yearsExperience"
-                    placeholder={t(
-                      "tutorRegistration.yearsExperiencePlaceholder",
-                    )}
-                    value={formData.yearsExperience}
-                    onChange={handleChange}
-                    variant="flat"
-                    size="lg"
-                    min={0}
-                    isInvalid={!!validationErrors.yearsExperience}
-                    errorMessage={validationErrors.yearsExperience}
-                    classNames={inputClassNames}
-                    startContent={
-                      <Briefcase
-                        className="w-4 h-4 flex-shrink-0"
-                        style={{ color: colors.text.tertiary }}
-                      />
-                    }
-                  />
-                </div>
-
-                <div>
-                  <label
-                    className="block text-sm font-medium mb-2"
-                    style={{ color: colors.text.primary }}
-                  >
-                    {t("tutorRegistration.slotsCount")}
-                  </label>
-                  <Input
-                    type="number"
-                    name="slotsCount"
-                    placeholder={t("tutorRegistration.slotsCountPlaceholder")}
-                    value={formData.slotsCount}
-                    onChange={handleChange}
-                    variant="flat"
-                    size="lg"
-                    min={1}
-                    isInvalid={!!validationErrors.slotsCount}
-                    errorMessage={validationErrors.slotsCount}
-                    classNames={inputClassNames}
-                    startContent={
-                      <Clock
-                        className="w-4 h-4 flex-shrink-0"
-                        style={{ color: colors.text.tertiary }}
-                      />
-                    }
-                  />
-                </div>
-              </div>
-
-              {/* Intro Video URL */}
+              {/* Experience */}
               <div>
                 <label
                   className="block text-sm font-medium mb-2"
                   style={{ color: colors.text.primary }}
                 >
-                  {t("tutorRegistration.introVideoUrl")}
-                  <span
-                    className="ml-1 text-xs font-normal"
-                    style={{ color: colors.text.tertiary }}
-                  >
-                    ({t("tutorRegistration.optional")})
-                  </span>
+                  {t("tutorRegistration.yearsExperience")}
                 </label>
                 <Input
-                  type="url"
-                  name="introVideoUrl"
-                  placeholder={t("tutorRegistration.introVideoUrlPlaceholder")}
-                  value={formData.introVideoUrl}
+                  type="number"
+                  name="yearsExperience"
+                  placeholder={t(
+                    "tutorRegistration.yearsExperiencePlaceholder",
+                  )}
+                  value={formData.yearsExperience}
                   onChange={handleChange}
                   variant="flat"
                   size="lg"
-                  isInvalid={!!validationErrors.introVideoUrl}
-                  errorMessage={validationErrors.introVideoUrl}
+                  min={0}
+                  isInvalid={!!validationErrors.yearsExperience}
+                  errorMessage={validationErrors.yearsExperience}
                   classNames={inputClassNames}
                   startContent={
-                    <Video
-                      className="w-4 h-4 flex-shrink-0"
-                      style={{ color: colors.text.tertiary }}
-                    />
-                  }
-                />
-              </div>
-
-              {/* CV URL */}
-              <div>
-                <label
-                  className="block text-sm font-medium mb-2"
-                  style={{ color: colors.text.primary }}
-                >
-                  {t("tutorRegistration.cvUrl")}
-                  <span
-                    className="ml-1 text-xs font-normal"
-                    style={{ color: colors.text.tertiary }}
-                  >
-                    ({t("tutorRegistration.optional")})
-                  </span>
-                </label>
-                <Input
-                  type="url"
-                  name="cvUrl"
-                  placeholder={t("tutorRegistration.cvUrlPlaceholder")}
-                  value={formData.cvUrl}
-                  onChange={handleChange}
-                  variant="flat"
-                  size="lg"
-                  isInvalid={!!validationErrors.cvUrl}
-                  errorMessage={validationErrors.cvUrl}
-                  classNames={inputClassNames}
-                  startContent={
-                    <FileText
+                    <Briefcase
                       className="w-4 h-4 flex-shrink-0"
                       style={{ color: colors.text.tertiary }}
                     />

@@ -136,7 +136,7 @@
     },
     "success": {
       "title": "Application Submitted!",
-      "description": "Your tutor application has been submitted successfully. We will review it and get back to you soon."
+      "description": "Your tutor application has been submitted. Please upload your CV and intro video on your profile to complete verification."
     }
   },
   "home": {
@@ -958,7 +958,8 @@
         "certifications": "Certifications",
         "notifications": "Notifications",
         "security": "Security",
-        "earnings": "Earnings"
+        "earnings": "Earnings",
+        "verification": "Verification"
       },
       "personalInfo": "Personal Information",
       "edit": "Edit",
@@ -979,13 +980,56 @@
       "earningsUpdates": "Earnings Updates",
       "earningsUpdatesDesc": "Get notified about payments and withdrawals",
       "changePassword": "Change Password",
+      "avatarUploadSuccess": "Avatar updated successfully",
+      "avatarUploadFailed": "Failed to update avatar",
       "currentPassword": "Current Password",
       "newPassword": "New Password",
       "confirmPassword": "Confirm Password",
       "updatePassword": "Update Password",
       "dangerZone": "Danger Zone",
       "deleteAccount": "Delete Account",
-      "recentEarnings": "Recent Earnings"
+      "recentEarnings": "Recent Earnings",
+      "verification": {
+        "status": "Verification Status",
+        "statuses": {
+          "Unverified": "Not Verified",
+          "Pending": "Pending Review",
+          "Verified": "Verified",
+          "Rejected": "Rejected"
+        },
+        "cvTitle": "CV / Resume",
+        "cvUploaded": "CV uploaded",
+        "cvUploadPrompt": "Click to upload your CV",
+        "cvFormats": "PDF, DOC, DOCX",
+        "cvUploadSuccess": "CV uploaded successfully",
+        "cvUploadFailed": "Failed to upload CV",
+        "videoTitle": "Introduction Video",
+        "videoUploaded": "Intro video uploaded",
+        "videoUploadPrompt": "Click to upload your intro video",
+        "videoFormats": "MP4, WebM, MOV",
+        "videoUploadSuccess": "Intro video uploaded successfully",
+        "videoUploadFailed": "Failed to upload intro video",
+        "view": "View",
+        "replace": "Replace",
+        "submitTitle": "Submit for Verification",
+        "readyToSubmit": "Your CV and intro video are uploaded. You can now submit your profile for verification.",
+        "uploadBothFirst": "Please upload both your CV and intro video before submitting for verification.",
+        "submitButton": "Submit Verification Request",
+        "pendingButton": "Verification Pending",
+        "verifiedButton": "Already Verified",
+        "submitSuccess": "Verification request submitted successfully! We will review your profile shortly.",
+        "submitFailed": "Failed to submit verification request"
+      }
+    },
+    "verificationBanner": {
+      "unverifiedTitle": "Complete Your Verification",
+      "unverifiedDesc": "Upload your CV and intro video to get verified and unlock all tutor features.",
+      "pendingTitle": "Verification In Progress",
+      "pendingDesc": "Your verification request is being reviewed. You'll be notified once it's complete.",
+      "completeVerification": "Complete Verification",
+      "lockedTitle": "Verification Required",
+      "lockedDesc": "You need to complete your profile verification before accessing tutor features.",
+      "goToProfile": "Go to Profile"
     }
   },
   "courses": {

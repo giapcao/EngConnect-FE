@@ -4,6 +4,7 @@ export {
   verifyEmail,
   logout,
   refreshToken,
+  registerTutor,
   googleLoginVerify,
   setCredentials,
   clearCredentials,

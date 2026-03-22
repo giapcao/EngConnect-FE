@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate, Outlet } from "react-router-dom";
 import {
   Button,
@@ -20,6 +20,7 @@ import useDropdownStyles from "../hooks/useDropdownStyles";
 import ThemeSwitcher from "../components/ThemeSwitcher/ThemeSwitcher";
 import LanguageSwitcher from "../components/LanguageSwitcher/LanguageSwitcher";
 import logoImage from "../assets/images/logo.png";
+import { tutorApi } from "../api/tutorApi";
 import {
   House,
   MagnifyingGlass,
@@ -34,6 +35,8 @@ import {
   CurrencyDollar,
   Student,
   ChalkboardTeacher,
+  Warning,
+  SealCheck,
 } from "@phosphor-icons/react";
 
 const TutorDashboardLayout = () => {
@@ -46,6 +49,28 @@ const TutorDashboardLayout = () => {
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [logoutModalOpen, setLogoutModalOpen] = useState(false);
+  const [tutorProfile, setTutorProfile] = useState(null);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const data = await tutorApi.getTutorProfile();
+        if (data.isSuccess) {
+          setTutorProfile(data.data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch tutor profile:", err);
+      }
+    };
+    fetchProfile();
+  }, []);
+
+  const isVerified = tutorProfile?.verifiedStatus === "Verified";
+  const isPending = tutorProfile?.verifiedStatus === "Pending";
+  const isUnverified = tutorProfile?.verifiedStatus === "Unverified";
+  const displayName = tutorProfile
+    ? `${tutorProfile.user?.firstName || ""} ${tutorProfile.user?.lastName || ""}`.trim()
+    : "";
 
   const navItems = [
     {
@@ -149,7 +174,7 @@ const TutorDashboardLayout = () => {
               <DropdownTrigger>
                 <Button variant="light" className="gap-2 pl-2 pr-3">
                   <Avatar
-                    src="https://i.pravatar.cc/150?u=tutor"
+                    src={tutorProfile?.avatar}
                     size="sm"
                     className="w-8 h-8"
                   />
@@ -157,7 +182,7 @@ const TutorDashboardLayout = () => {
                     className="font-medium text-sm sm:text-base"
                     style={{ color: colors.text.primary }}
                   >
-                    Sarah Johnson
+                    {displayName}
                   </span>
                   <CaretDown
                     className="w-4 h-4 hidden sm:block"
@@ -382,7 +407,97 @@ const TutorDashboardLayout = () => {
 
       {/* Page Content */}
       <main className="p-4 lg:px-6 lg:py-8 max-w-[1400px] mx-auto">
-        <Outlet />
+        {/* Verification Banner */}
+        {tutorProfile && !isVerified && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+            className="mb-6 p-4 rounded-xl flex flex-col sm:flex-row items-start sm:items-center gap-3"
+            style={{
+              backgroundColor: isUnverified
+                ? `${colors.state.warning}15`
+                : `${colors.state.info}15`,
+              border: `1px solid ${isUnverified ? colors.state.warning : colors.state.info}40`,
+            }}
+          >
+            {isUnverified ? (
+              <Warning
+                weight="duotone"
+                className="w-6 h-6 flex-shrink-0"
+                style={{ color: colors.state.warning }}
+              />
+            ) : (
+              <SealCheck
+                weight="duotone"
+                className="w-6 h-6 flex-shrink-0"
+                style={{ color: colors.state.info }}
+              />
+            )}
+            <div className="flex-1">
+              <p
+                className="font-semibold"
+                style={{ color: colors.text.primary }}
+              >
+                {isUnverified
+                  ? t("tutorDashboard.verificationBanner.unverifiedTitle")
+                  : t("tutorDashboard.verificationBanner.pendingTitle")}
+              </p>
+              <p className="text-sm" style={{ color: colors.text.secondary }}>
+                {isUnverified
+                  ? t("tutorDashboard.verificationBanner.unverifiedDesc")
+                  : t("tutorDashboard.verificationBanner.pendingDesc")}
+              </p>
+            </div>
+            {isUnverified && (
+              <Button
+                size="sm"
+                onPress={() => navigate("/tutor/profile")}
+                style={{
+                  backgroundColor: colors.state.warning,
+                  color: "#fff",
+                }}
+              >
+                {t("tutorDashboard.verificationBanner.completeVerification")}
+              </Button>
+            )}
+          </motion.div>
+        )}
+
+        {/* Lock overlay for non-profile pages when unverified */}
+        {tutorProfile &&
+        !isVerified &&
+        !isPending &&
+        location.pathname !== "/tutor/profile" ? (
+          <div className="text-center py-16">
+            <Warning
+              weight="duotone"
+              className="w-16 h-16 mx-auto mb-4"
+              style={{ color: colors.state.warning }}
+            />
+            <h2
+              className="text-xl font-bold mb-2"
+              style={{ color: colors.text.primary }}
+            >
+              {t("tutorDashboard.verificationBanner.lockedTitle")}
+            </h2>
+            <p className="mb-6" style={{ color: colors.text.secondary }}>
+              {t("tutorDashboard.verificationBanner.lockedDesc")}
+            </p>
+            <Button
+              size="lg"
+              onPress={() => navigate("/tutor/profile")}
+              style={{
+                backgroundColor: colors.primary.main,
+                color: colors.text.white,
+              }}
+            >
+              {t("tutorDashboard.verificationBanner.goToProfile")}
+            </Button>
+          </div>
+        ) : (
+          <Outlet />
+        )}
       </main>
 
       <LogoutModal

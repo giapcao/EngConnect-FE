@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Card,
   CardBody,
@@ -10,6 +10,8 @@ import {
   Switch,
   Divider,
   Textarea,
+  Spinner,
+  addToast,
 } from "@heroui/react";
 import { useTranslation } from "react-i18next";
 import { useThemeColors } from "../../../hooks/useThemeColors";
@@ -19,7 +21,6 @@ import {
   User,
   Envelope,
   Phone,
-  MapPin,
   Camera,
   PencilSimple,
   Bell,
@@ -32,26 +33,18 @@ import {
   Clock,
   Student,
   Certificate,
+  FileText,
+  VideoCamera,
+  Upload,
+  SealCheck,
 } from "@phosphor-icons/react";
+import { tutorApi } from "../../../api/tutorApi";
 
 const Profile = () => {
   const { t } = useTranslation();
   const colors = useThemeColors();
   const { inputClassNames, textareaClassNames } = useInputStyles();
-  const [selectedTab, setSelectedTab] = useState("profile");
   const [isEditing, setIsEditing] = useState(false);
-
-  const [profileData, setProfileData] = useState({
-    firstName: "Sarah",
-    lastName: "Johnson",
-    email: "sarah.johnson@email.com",
-    phone: "+1 234 567 8900",
-    location: "New York, USA",
-    language: "English",
-    bio: "Certified IELTS instructor with 8+ years of experience. Specialized in business English and exam preparation. Passionate about helping students achieve their language goals.",
-    specializations: ["IELTS", "Business English", "Conversation"],
-    hourlyRate: 45,
-  });
 
   const [notifications, setNotifications] = useState({
     emailBookings: true,
@@ -62,29 +55,175 @@ const Profile = () => {
     pushEarnings: false,
   });
 
+  // Tutor profile from API
+  const [tutorProfile, setTutorProfile] = useState(null);
+  const [profileLoading, setProfileLoading] = useState(true);
+  const [cvUploading, setCvUploading] = useState(false);
+  const [videoUploading, setVideoUploading] = useState(false);
+  const [verificationSubmitting, setVerificationSubmitting] = useState(false);
+  const cvInputRef = useRef(null);
+  const videoInputRef = useRef(null);
+  const avatarInputRef = useRef(null);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+
+  // Auto-select verification tab when unverified
+  const isUnverified = tutorProfile?.verifiedStatus === "Unverified";
+  const [selectedTab, setSelectedTab] = useState("profile");
+
+  const handleAvatarUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setAvatarUploading(true);
+    try {
+      const data = await tutorApi.uploadAvatar(file, file.name);
+      if (data.isSuccess) {
+        setTutorProfile((prev) => ({
+          ...prev,
+          avatar: data.data?.avatarUrl ?? prev.avatar,
+        }));
+        await fetchTutorProfile();
+        addToast({
+          title: t("tutorDashboard.profile.avatarUploadSuccess"),
+          color: "success",
+        });
+      }
+    } catch (err) {
+      console.error("Failed to upload avatar:", err);
+      addToast({
+        title: t("tutorDashboard.profile.avatarUploadFailed"),
+        color: "danger",
+      });
+    } finally {
+      setAvatarUploading(false);
+      if (avatarInputRef.current) avatarInputRef.current.value = "";
+    }
+  };
+
+  const fetchTutorProfile = async () => {
+    setProfileLoading(true);
+    try {
+      const data = await tutorApi.getTutorProfile();
+      if (data.isSuccess) {
+        setTutorProfile(data.data);
+      }
+    } catch (err) {
+      console.error("Failed to fetch tutor profile:", err);
+    } finally {
+      setProfileLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchTutorProfile();
+  }, []);
+
+  useEffect(() => {
+    if (tutorProfile && tutorProfile.verifiedStatus === "Unverified") {
+      setSelectedTab("verification");
+    }
+  }, [tutorProfile]);
+
+  const handleCvUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setCvUploading(true);
+    try {
+      const data = await tutorApi.uploadCv(file, file.name);
+      if (data.isSuccess) {
+        addToast({
+          title: t("tutorDashboard.profile.verification.cvUploadSuccess"),
+          color: "success",
+          timeout: 3000,
+        });
+        fetchTutorProfile();
+      }
+    } catch (err) {
+      addToast({
+        title: t("tutorDashboard.profile.verification.cvUploadFailed"),
+        color: "danger",
+        timeout: 3000,
+      });
+    } finally {
+      setCvUploading(false);
+      if (cvInputRef.current) cvInputRef.current.value = "";
+    }
+  };
+
+  const handleVideoUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setVideoUploading(true);
+    try {
+      const data = await tutorApi.uploadIntroVideo(file, file.name);
+      if (data.isSuccess) {
+        addToast({
+          title: t("tutorDashboard.profile.verification.videoUploadSuccess"),
+          color: "success",
+          timeout: 3000,
+        });
+        fetchTutorProfile();
+      }
+    } catch (err) {
+      addToast({
+        title: t("tutorDashboard.profile.verification.videoUploadFailed"),
+        color: "danger",
+        timeout: 3000,
+      });
+    } finally {
+      setVideoUploading(false);
+      if (videoInputRef.current) videoInputRef.current.value = "";
+    }
+  };
+
+  const handleSubmitVerification = async () => {
+    setVerificationSubmitting(true);
+    try {
+      const data = await tutorApi.submitVerificationRequest();
+      if (data.isSuccess) {
+        addToast({
+          title: t("tutorDashboard.profile.verification.submitSuccess"),
+          color: "success",
+          timeout: 5000,
+        });
+        fetchTutorProfile();
+      }
+    } catch (err) {
+      addToast({
+        title: t("tutorDashboard.profile.verification.submitFailed"),
+        color: "danger",
+        timeout: 3000,
+      });
+    } finally {
+      setVerificationSubmitting(false);
+    }
+  };
+
+  const canSubmitVerification =
+    tutorProfile?.cvUrl && tutorProfile?.introVideoUrl;
+
   const stats = [
     {
       icon: Student,
       label: t("tutorDashboard.profile.totalStudents"),
-      value: "156",
+      value: "0",
       color: colors.primary.main,
     },
     {
       icon: Clock,
       label: t("tutorDashboard.profile.hoursTeached"),
-      value: "1,240",
+      value: `${tutorProfile?.yearsExperience || 0}y`,
       color: colors.state.warning,
     },
     {
       icon: Certificate,
       label: t("tutorDashboard.profile.coursesCreated"),
-      value: "8",
+      value: `${tutorProfile?.slotsCount || 0}`,
       color: colors.state.success,
     },
     {
       icon: Star,
       label: t("tutorDashboard.profile.rating"),
-      value: "4.9",
+      value: tutorProfile?.ratingAverage?.toFixed(1) || "0.0",
       color: "#F59E0B",
     },
   ];
@@ -182,89 +321,112 @@ const Profile = () => {
           style={{ backgroundColor: colors.background.light }}
         >
           <CardBody className="p-6">
-            <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
-              {/* Avatar */}
-              <div className="relative">
-                <Avatar
-                  src="https://i.pravatar.cc/150?u=tutor"
-                  className="w-24 h-24"
-                />
-                <Button
-                  isIconOnly
-                  size="sm"
-                  radius="full"
-                  className="absolute bottom-0 right-0"
-                  style={{
-                    backgroundColor: colors.primary.main,
-                    color: colors.text.white,
-                  }}
-                >
-                  <Camera weight="fill" className="w-4 h-4" />
-                </Button>
+            {profileLoading ? (
+              <div className="flex justify-center py-8">
+                <Spinner size="lg" />
               </div>
+            ) : (
+              <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
+                {/* Avatar */}
+                <div className="relative">
+                  <Avatar src={tutorProfile?.avatar} className="w-24 h-24" />
+                  <Button
+                    isIconOnly
+                    size="sm"
+                    radius="full"
+                    className="absolute bottom-0 right-0"
+                    isLoading={avatarUploading}
+                    onPress={() => avatarInputRef.current?.click()}
+                    style={{
+                      backgroundColor: colors.primary.main,
+                      color: colors.text.white,
+                    }}
+                  >
+                    <Camera weight="fill" className="w-4 h-4" />
+                  </Button>
+                  <input
+                    ref={avatarInputRef}
+                    type="file"
+                    accept="image/png,image/jpeg,image/jpg,image/webp"
+                    className="hidden"
+                    onChange={handleAvatarUpload}
+                  />
+                </div>
 
-              {/* Info */}
-              <div className="flex-1 text-center md:text-left">
-                <h2
-                  className="text-2xl font-bold mb-1"
-                  style={{ color: colors.text.primary }}
-                >
-                  {profileData.firstName} {profileData.lastName}
-                </h2>
-                <p className="mb-2" style={{ color: colors.text.secondary }}>
-                  {profileData.email}
-                </p>
-                <div className="flex flex-wrap gap-2 justify-center md:justify-start mb-3">
-                  {profileData.specializations.map((spec, index) => (
-                    <span
-                      key={index}
-                      className="px-3 py-1 rounded-full text-sm"
-                      style={{
-                        backgroundColor: colors.background.primaryLight,
-                        color: colors.primary.main,
-                      }}
+                {/* Info */}
+                <div className="flex-1 text-center md:text-left">
+                  <h2
+                    className="text-2xl font-bold mb-1"
+                    style={{ color: colors.text.primary }}
+                  >
+                    {tutorProfile?.user?.firstName}{" "}
+                    {tutorProfile?.user?.lastName}
+                  </h2>
+                  <p className="mb-2" style={{ color: colors.text.secondary }}>
+                    {tutorProfile?.user?.email}
+                  </p>
+                  {tutorProfile?.headline && (
+                    <p
+                      className="text-sm font-medium mb-2"
+                      style={{ color: colors.primary.main }}
                     >
-                      {spec}
-                    </span>
+                      {tutorProfile.headline}
+                    </p>
+                  )}
+                  {tutorProfile?.tags && tutorProfile.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-2 justify-center md:justify-start mb-3">
+                      {tutorProfile.tags.map((tag, index) => (
+                        <span
+                          key={index}
+                          className="px-3 py-1 rounded-full text-sm"
+                          style={{
+                            backgroundColor: colors.background.primaryLight,
+                            color: colors.primary.main,
+                          }}
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  <p
+                    className="text-sm max-w-lg"
+                    style={{ color: colors.text.secondary }}
+                  >
+                    {tutorProfile?.bio}
+                  </p>
+                </div>
+
+                {/* Stats */}
+                <div className="grid grid-cols-2 gap-4">
+                  {stats.map((stat, index) => (
+                    <div
+                      key={index}
+                      className="text-center p-3 rounded-xl"
+                      style={{ backgroundColor: colors.background.gray }}
+                    >
+                      <stat.icon
+                        weight="duotone"
+                        className="w-6 h-6 mx-auto mb-1"
+                        style={{ color: stat.color }}
+                      />
+                      <p
+                        className="text-xl font-bold"
+                        style={{ color: colors.text.primary }}
+                      >
+                        {stat.value}
+                      </p>
+                      <p
+                        className="text-xs"
+                        style={{ color: colors.text.secondary }}
+                      >
+                        {stat.label}
+                      </p>
+                    </div>
                   ))}
                 </div>
-                <p
-                  className="text-sm max-w-lg"
-                  style={{ color: colors.text.secondary }}
-                >
-                  {profileData.bio}
-                </p>
               </div>
-
-              {/* Stats */}
-              <div className="grid grid-cols-2 gap-4">
-                {stats.map((stat, index) => (
-                  <div
-                    key={index}
-                    className="text-center p-3 rounded-xl"
-                    style={{ backgroundColor: colors.background.gray }}
-                  >
-                    <stat.icon
-                      weight="duotone"
-                      className="w-6 h-6 mx-auto mb-1"
-                      style={{ color: stat.color }}
-                    />
-                    <p
-                      className="text-xl font-bold"
-                      style={{ color: colors.text.primary }}
-                    >
-                      {stat.value}
-                    </p>
-                    <p
-                      className="text-xs"
-                      style={{ color: colors.text.secondary }}
-                    >
-                      {stat.label}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
+            )}
           </CardBody>
         </Card>
       </motion.div>
@@ -350,6 +512,17 @@ const Profile = () => {
                   </div>
                 }
               />
+              <Tab
+                key="verification"
+                title={
+                  <div className="flex items-center gap-2">
+                    <SealCheck className="w-5 h-5" />
+                    <span className="font-medium">
+                      {t("tutorDashboard.profile.tabs.verification")}
+                    </span>
+                  </div>
+                }
+              />
             </Tabs>
           </CardBody>
         </Card>
@@ -408,7 +581,7 @@ const Profile = () => {
               <div className="grid md:grid-cols-2 gap-6">
                 <Input
                   label={t("tutorDashboard.profile.firstName")}
-                  value={profileData.firstName}
+                  value={tutorProfile?.user?.firstName || ""}
                   isReadOnly={!isEditing}
                   startContent={
                     <User
@@ -417,13 +590,10 @@ const Profile = () => {
                     />
                   }
                   classNames={inputClassNames}
-                  onValueChange={(value) =>
-                    setProfileData({ ...profileData, firstName: value })
-                  }
                 />
                 <Input
                   label={t("tutorDashboard.profile.lastName")}
-                  value={profileData.lastName}
+                  value={tutorProfile?.user?.lastName || ""}
                   isReadOnly={!isEditing}
                   startContent={
                     <User
@@ -432,14 +602,11 @@ const Profile = () => {
                     />
                   }
                   classNames={inputClassNames}
-                  onValueChange={(value) =>
-                    setProfileData({ ...profileData, lastName: value })
-                  }
                 />
                 <Input
                   label={t("tutorDashboard.profile.email")}
-                  value={profileData.email}
-                  isReadOnly={!isEditing}
+                  value={tutorProfile?.user?.email || ""}
+                  isReadOnly
                   startContent={
                     <Envelope
                       className="w-5 h-5"
@@ -447,46 +614,13 @@ const Profile = () => {
                     />
                   }
                   classNames={inputClassNames}
-                  onValueChange={(value) =>
-                    setProfileData({ ...profileData, email: value })
-                  }
                 />
                 <Input
                   label={t("tutorDashboard.profile.phone")}
-                  value={profileData.phone}
+                  value={tutorProfile?.user?.phone || ""}
                   isReadOnly={!isEditing}
                   startContent={
                     <Phone
-                      className="w-5 h-5"
-                      style={{ color: colors.text.secondary }}
-                    />
-                  }
-                  classNames={inputClassNames}
-                  onValueChange={(value) =>
-                    setProfileData({ ...profileData, phone: value })
-                  }
-                />
-                <Input
-                  label={t("tutorDashboard.profile.location")}
-                  value={profileData.location}
-                  isReadOnly={!isEditing}
-                  startContent={
-                    <MapPin
-                      className="w-5 h-5"
-                      style={{ color: colors.text.secondary }}
-                    />
-                  }
-                  classNames={inputClassNames}
-                  onValueChange={(value) =>
-                    setProfileData({ ...profileData, location: value })
-                  }
-                />
-                <Input
-                  label={t("tutorDashboard.profile.hourlyRate")}
-                  value={`$${profileData.hourlyRate}`}
-                  isReadOnly={!isEditing}
-                  startContent={
-                    <CreditCard
                       className="w-5 h-5"
                       style={{ color: colors.text.secondary }}
                     />
@@ -498,12 +632,9 @@ const Profile = () => {
               <div className="mt-6">
                 <Textarea
                   label={t("tutorDashboard.profile.bio")}
-                  value={profileData.bio}
+                  value={tutorProfile?.bio || ""}
                   isReadOnly={!isEditing}
                   classNames={textareaClassNames}
-                  onValueChange={(value) =>
-                    setProfileData({ ...profileData, bio: value })
-                  }
                 />
               </div>
             </CardBody>
@@ -847,6 +978,318 @@ const Profile = () => {
                   </div>
                 ))}
               </div>
+            </CardBody>
+          </Card>
+        )}
+
+        {selectedTab === "verification" && (
+          <Card
+            shadow="none"
+            className="border-none"
+            style={{ backgroundColor: colors.background.light }}
+          >
+            <CardBody className="p-6 space-y-6">
+              {profileLoading ? (
+                <div className="flex justify-center py-12">
+                  <Spinner size="lg" />
+                </div>
+              ) : (
+                <>
+                  {/* Verification Status */}
+                  {tutorProfile?.verifiedStatus && (
+                    <div
+                      className="flex items-center gap-3 p-4 rounded-xl"
+                      style={{
+                        backgroundColor:
+                          tutorProfile.verifiedStatus === "Verified"
+                            ? `${colors.state.success}15`
+                            : tutorProfile.verifiedStatus === "Pending"
+                              ? `${colors.state.warning}15`
+                              : colors.background.gray,
+                      }}
+                    >
+                      <SealCheck
+                        weight="duotone"
+                        className="w-6 h-6"
+                        style={{
+                          color:
+                            tutorProfile.verifiedStatus === "Verified"
+                              ? colors.state.success
+                              : tutorProfile.verifiedStatus === "Pending"
+                                ? colors.state.warning
+                                : colors.text.secondary,
+                        }}
+                      />
+                      <div>
+                        <p
+                          className="font-semibold"
+                          style={{ color: colors.text.primary }}
+                        >
+                          {t("tutorDashboard.profile.verification.status")}:{" "}
+                          {t(
+                            `tutorDashboard.profile.verification.statuses.${tutorProfile.verifiedStatus}`,
+                          )}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* CV Upload */}
+                  <div>
+                    <h3
+                      className="text-lg font-semibold mb-3"
+                      style={{ color: colors.text.primary }}
+                    >
+                      <FileText
+                        weight="duotone"
+                        className="w-5 h-5 inline-block mr-2"
+                      />
+                      {t("tutorDashboard.profile.verification.cvTitle")}
+                    </h3>
+                    {tutorProfile?.cvUrl ? (
+                      <div
+                        className="flex items-center justify-between p-4 rounded-xl"
+                        style={{ backgroundColor: colors.background.gray }}
+                      >
+                        <div className="flex items-center gap-3">
+                          <CheckCircle
+                            weight="fill"
+                            className="w-5 h-5"
+                            style={{ color: colors.state.success }}
+                          />
+                          <p style={{ color: colors.text.primary }}>
+                            {t(
+                              "tutorDashboard.profile.verification.cvUploaded",
+                            )}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            size="sm"
+                            variant="flat"
+                            onPress={() =>
+                              window.open(tutorProfile.cvUrl, "_blank")
+                            }
+                            style={{
+                              backgroundColor:
+                                colors.button.primaryLight.background,
+                              color: colors.button.primaryLight.text,
+                            }}
+                          >
+                            {t("tutorDashboard.profile.verification.view")}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="flat"
+                            isLoading={cvUploading}
+                            onPress={() => cvInputRef.current?.click()}
+                            style={{
+                              backgroundColor: colors.background.gray,
+                              color: colors.text.primary,
+                            }}
+                          >
+                            {t("tutorDashboard.profile.verification.replace")}
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div
+                        className="flex flex-col items-center justify-center p-8 rounded-xl border-2 border-dashed cursor-pointer"
+                        style={{
+                          borderColor: colors.border.light,
+                          backgroundColor: colors.background.gray,
+                        }}
+                        onClick={() => cvInputRef.current?.click()}
+                      >
+                        <Upload
+                          weight="duotone"
+                          className="w-10 h-10 mb-3"
+                          style={{ color: colors.text.tertiary }}
+                        />
+                        <p
+                          className="font-medium mb-1"
+                          style={{ color: colors.text.primary }}
+                        >
+                          {t(
+                            "tutorDashboard.profile.verification.cvUploadPrompt",
+                          )}
+                        </p>
+                        <p
+                          className="text-sm"
+                          style={{ color: colors.text.tertiary }}
+                        >
+                          {t("tutorDashboard.profile.verification.cvFormats")}
+                        </p>
+                        {cvUploading && <Spinner size="sm" className="mt-3" />}
+                      </div>
+                    )}
+                    <input
+                      ref={cvInputRef}
+                      type="file"
+                      accept=".pdf,.doc,.docx"
+                      className="hidden"
+                      onChange={handleCvUpload}
+                    />
+                  </div>
+
+                  <Divider />
+
+                  {/* Intro Video Upload */}
+                  <div>
+                    <h3
+                      className="text-lg font-semibold mb-3"
+                      style={{ color: colors.text.primary }}
+                    >
+                      <VideoCamera
+                        weight="duotone"
+                        className="w-5 h-5 inline-block mr-2"
+                      />
+                      {t("tutorDashboard.profile.verification.videoTitle")}
+                    </h3>
+                    {tutorProfile?.introVideoUrl ? (
+                      <div
+                        className="flex items-center justify-between p-4 rounded-xl"
+                        style={{ backgroundColor: colors.background.gray }}
+                      >
+                        <div className="flex items-center gap-3">
+                          <CheckCircle
+                            weight="fill"
+                            className="w-5 h-5"
+                            style={{ color: colors.state.success }}
+                          />
+                          <p style={{ color: colors.text.primary }}>
+                            {t(
+                              "tutorDashboard.profile.verification.videoUploaded",
+                            )}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            size="sm"
+                            variant="flat"
+                            onPress={() =>
+                              window.open(tutorProfile.introVideoUrl, "_blank")
+                            }
+                            style={{
+                              backgroundColor:
+                                colors.button.primaryLight.background,
+                              color: colors.button.primaryLight.text,
+                            }}
+                          >
+                            {t("tutorDashboard.profile.verification.view")}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="flat"
+                            isLoading={videoUploading}
+                            onPress={() => videoInputRef.current?.click()}
+                            style={{
+                              backgroundColor: colors.background.gray,
+                              color: colors.text.primary,
+                            }}
+                          >
+                            {t("tutorDashboard.profile.verification.replace")}
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div
+                        className="flex flex-col items-center justify-center p-8 rounded-xl border-2 border-dashed cursor-pointer"
+                        style={{
+                          borderColor: colors.border.light,
+                          backgroundColor: colors.background.gray,
+                        }}
+                        onClick={() => videoInputRef.current?.click()}
+                      >
+                        <Upload
+                          weight="duotone"
+                          className="w-10 h-10 mb-3"
+                          style={{ color: colors.text.tertiary }}
+                        />
+                        <p
+                          className="font-medium mb-1"
+                          style={{ color: colors.text.primary }}
+                        >
+                          {t(
+                            "tutorDashboard.profile.verification.videoUploadPrompt",
+                          )}
+                        </p>
+                        <p
+                          className="text-sm"
+                          style={{ color: colors.text.tertiary }}
+                        >
+                          {t(
+                            "tutorDashboard.profile.verification.videoFormats",
+                          )}
+                        </p>
+                        {videoUploading && (
+                          <Spinner size="sm" className="mt-3" />
+                        )}
+                      </div>
+                    )}
+                    <input
+                      ref={videoInputRef}
+                      type="file"
+                      accept="video/mp4,video/webm,video/mov"
+                      className="hidden"
+                      onChange={handleVideoUpload}
+                    />
+                  </div>
+
+                  <Divider />
+
+                  {/* Submit Verification */}
+                  <div>
+                    <h3
+                      className="text-lg font-semibold mb-3"
+                      style={{ color: colors.text.primary }}
+                    >
+                      {t("tutorDashboard.profile.verification.submitTitle")}
+                    </h3>
+                    <p
+                      className="text-sm mb-4"
+                      style={{ color: colors.text.secondary }}
+                    >
+                      {canSubmitVerification
+                        ? t("tutorDashboard.profile.verification.readyToSubmit")
+                        : t(
+                            "tutorDashboard.profile.verification.uploadBothFirst",
+                          )}
+                    </p>
+                    <Button
+                      size="lg"
+                      isDisabled={
+                        !canSubmitVerification ||
+                        tutorProfile?.verifiedStatus === "Pending" ||
+                        tutorProfile?.verifiedStatus === "Verified"
+                      }
+                      isLoading={verificationSubmitting}
+                      onPress={handleSubmitVerification}
+                      startContent={
+                        <SealCheck weight="bold" className="w-5 h-5" />
+                      }
+                      style={{
+                        backgroundColor: canSubmitVerification
+                          ? colors.primary.main
+                          : undefined,
+                        color: canSubmitVerification
+                          ? colors.text.white
+                          : undefined,
+                      }}
+                    >
+                      {tutorProfile?.verifiedStatus === "Pending"
+                        ? t("tutorDashboard.profile.verification.pendingButton")
+                        : tutorProfile?.verifiedStatus === "Verified"
+                          ? t(
+                              "tutorDashboard.profile.verification.verifiedButton",
+                            )
+                          : t(
+                              "tutorDashboard.profile.verification.submitButton",
+                            )}
+                    </Button>
+                  </div>
+                </>
+              )}
             </CardBody>
           </Card>
         )}
