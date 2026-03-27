@@ -107,6 +107,12 @@
     "cvUrl": "CV / Resume URL",
     "cvUrlPlaceholder": "https://drive.google.com/your-cv",
     "optional": "optional",
+    "cvFile": "CV / Resume",
+    "cvUploadPrompt": "Click to upload your CV",
+    "cvFormats": "Supported formats: PDF, DOC, DOCX",
+    "introVideo": "Introduction Video",
+    "videoUploadPrompt": "Click to upload your intro video",
+    "videoFormats": "Supported formats: MP4, WebM, MOV",
     "submitButton": "Submit Application",
     "submitting": "Submitting...",
     "learnMore": "Want to know more about teaching?",
@@ -138,6 +144,39 @@
       "title": "Application Submitted!",
       "description": "Your tutor application has been submitted. Please upload your CV and intro video on your profile to complete verification."
     }
+  },
+  "tutorOnboarding": {
+    "title": "You're Almost a Tutor!",
+    "subtitle": "Complete your profile below to get approved and start teaching.",
+    "progress": "Profile Completion",
+    "steps": {
+      "headline": "Headline",
+      "bio": "Bio",
+      "yearsExperience": "Experience",
+      "cv": "CV",
+      "video": "Intro Video"
+    },
+    "profileSection": "Profile Information",
+    "saveProfile": "Save Profile",
+    "profileSaved": "Profile saved successfully",
+    "saveFailed": "Failed to save profile",
+    "cvSection": "CV / Resume",
+    "cvUploadPrompt": "Click to upload your CV",
+    "cvUploaded": "CV uploaded",
+    "cvUploadFailed": "Failed to upload CV",
+    "replace": "Replace",
+    "view": "View",
+    "videoSection": "Introduction Video",
+    "videoUploadPrompt": "Click to upload your intro video",
+    "videoUploaded": "Intro video uploaded",
+    "videoUploadFailed": "Failed to upload intro video",
+    "submitVerification": "Submit for Verification",
+    "submitHint": "{{count}} step(s) remaining to complete your profile",
+    "submitSuccess": "Verification request submitted! We\u2019ll review your profile shortly.",
+    "submitFailed": "Failed to submit verification request",
+    "avatarUploaded": "Avatar updated successfully",
+    "avatarUploadFailed": "Failed to update avatar",
+    "avatarHint": "Click to change your photo"
   },
   "home": {
     "hero": {

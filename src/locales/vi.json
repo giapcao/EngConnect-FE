@@ -107,6 +107,12 @@
     "cvUrl": "CV / Hồ sơ",
     "cvUrlPlaceholder": "https://drive.google.com/cv-cua-ban",
     "optional": "không bắt buộc",
+    "cvFile": "CV / Hồ sơ",
+    "cvUploadPrompt": "Nhấp để tải lên CV của bạn",
+    "cvFormats": "Định dạng hỗ trợ: PDF, DOC, DOCX",
+    "introVideo": "Video giới thiệu",
+    "videoUploadPrompt": "Nhấp để tải lên video giới thiệu",
+    "videoFormats": "Định dạng hỗ trợ: MP4, WebM, MOV",
     "submitButton": "Gửi đơn đăng ký",
     "submitting": "Đang gửi...",
     "learnMore": "Muốn biết thêm về việc giảng dạy?",
@@ -138,6 +144,39 @@
       "title": "Đã gửi đơn đăng ký!",
       "description": "Đơn đăng ký gia sư của bạn đã được gửi. Vui lòng tải lên CV và video giới thiệu trong hồ sơ để hoàn tất xác minh."
     }
+  },
+  "tutorOnboarding": {
+    "title": "Bạn sắp trở thành gia sư!",
+    "subtitle": "Hoàn thiện hồ sơ bên dưới để được phê duyệt và bắt đầu giảng dạy.",
+    "progress": "Hoàn thành hồ sơ",
+    "steps": {
+      "headline": "Tiêu đề",
+      "bio": "Giới thiệu",
+      "yearsExperience": "Kinh nghiệm",
+      "cv": "CV",
+      "video": "Video giới thiệu"
+    },
+    "profileSection": "Thông tin hồ sơ",
+    "saveProfile": "Lưu hồ sơ",
+    "profileSaved": "Lưu hồ sơ thành công",
+    "saveFailed": "Lưu hồ sơ thất bại",
+    "cvSection": "CV / Hồ sơ",
+    "cvUploadPrompt": "Nhấp để tải lên CV",
+    "cvUploaded": "Đã tải lên CV",
+    "cvUploadFailed": "Tải lên CV thất bại",
+    "replace": "Thay thế",
+    "view": "Xem",
+    "videoSection": "Video giới thiệu",
+    "videoUploadPrompt": "Nhấp để tải lên video giới thiệu",
+    "videoUploaded": "Đã tải lên video",
+    "videoUploadFailed": "Tải lên video thất bại",
+    "submitVerification": "Gửi yêu cầu xác minh",
+    "submitHint": "Còn {{count}} bước để hoàn thành hồ sơ",
+    "submitSuccess": "Đã gửi yêu cầu xác minh! Chúng tôi sẽ xem xét hồ sơ của bạn sớm.",
+    "submitFailed": "Gửi yêu cầu xác minh thất bại",
+    "avatarUploaded": "Cập nhật avatar thành công",
+    "avatarUploadFailed": "Cập nhật avatar thất bại",
+    "avatarHint": "Nhấn để thay đổi ảnh đại diện"
   },
   "home": {
     "hero": {

@@ -35,7 +35,6 @@ import {
   CurrencyDollar,
   Student,
   ChalkboardTeacher,
-  Warning,
   SealCheck,
 } from "@phosphor-icons/react";
 
@@ -71,6 +70,13 @@ const TutorDashboardLayout = () => {
   const displayName = tutorProfile
     ? `${tutorProfile.user?.firstName || ""} ${tutorProfile.user?.lastName || ""}`.trim()
     : "";
+
+  // Redirect unverified tutors to the onboarding page
+  useEffect(() => {
+    if (tutorProfile && isUnverified) {
+      navigate("/tutor/onboarding", { replace: true });
+    }
+  }, [tutorProfile, isUnverified, navigate]);
 
   const navItems = [
     {
@@ -407,97 +413,38 @@ const TutorDashboardLayout = () => {
 
       {/* Page Content */}
       <main className="p-4 lg:px-6 lg:py-8 max-w-[1400px] mx-auto">
-        {/* Verification Banner */}
-        {tutorProfile && !isVerified && (
+        {/* Pending verification banner */}
+        {tutorProfile && isPending && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
             className="mb-6 p-4 rounded-xl flex flex-col sm:flex-row items-start sm:items-center gap-3"
             style={{
-              backgroundColor: isUnverified
-                ? `${colors.state.warning}15`
-                : `${colors.state.info}15`,
-              border: `1px solid ${isUnverified ? colors.state.warning : colors.state.info}40`,
+              backgroundColor: `${colors.state.info}15`,
+              border: `1px solid ${colors.state.info}40`,
             }}
           >
-            {isUnverified ? (
-              <Warning
-                weight="duotone"
-                className="w-6 h-6 flex-shrink-0"
-                style={{ color: colors.state.warning }}
-              />
-            ) : (
-              <SealCheck
-                weight="duotone"
-                className="w-6 h-6 flex-shrink-0"
-                style={{ color: colors.state.info }}
-              />
-            )}
+            <SealCheck
+              weight="duotone"
+              className="w-6 h-6 flex-shrink-0"
+              style={{ color: colors.state.info }}
+            />
             <div className="flex-1">
               <p
                 className="font-semibold"
                 style={{ color: colors.text.primary }}
               >
-                {isUnverified
-                  ? t("tutorDashboard.verificationBanner.unverifiedTitle")
-                  : t("tutorDashboard.verificationBanner.pendingTitle")}
+                {t("tutorDashboard.verificationBanner.pendingTitle")}
               </p>
               <p className="text-sm" style={{ color: colors.text.secondary }}>
-                {isUnverified
-                  ? t("tutorDashboard.verificationBanner.unverifiedDesc")
-                  : t("tutorDashboard.verificationBanner.pendingDesc")}
+                {t("tutorDashboard.verificationBanner.pendingDesc")}
               </p>
             </div>
-            {isUnverified && (
-              <Button
-                size="sm"
-                onPress={() => navigate("/tutor/profile")}
-                style={{
-                  backgroundColor: colors.state.warning,
-                  color: "#fff",
-                }}
-              >
-                {t("tutorDashboard.verificationBanner.completeVerification")}
-              </Button>
-            )}
           </motion.div>
         )}
 
-        {/* Lock overlay for non-profile pages when unverified */}
-        {tutorProfile &&
-        !isVerified &&
-        !isPending &&
-        location.pathname !== "/tutor/profile" ? (
-          <div className="text-center py-16">
-            <Warning
-              weight="duotone"
-              className="w-16 h-16 mx-auto mb-4"
-              style={{ color: colors.state.warning }}
-            />
-            <h2
-              className="text-xl font-bold mb-2"
-              style={{ color: colors.text.primary }}
-            >
-              {t("tutorDashboard.verificationBanner.lockedTitle")}
-            </h2>
-            <p className="mb-6" style={{ color: colors.text.secondary }}>
-              {t("tutorDashboard.verificationBanner.lockedDesc")}
-            </p>
-            <Button
-              size="lg"
-              onPress={() => navigate("/tutor/profile")}
-              style={{
-                backgroundColor: colors.primary.main,
-                color: colors.text.white,
-              }}
-            >
-              {t("tutorDashboard.verificationBanner.goToProfile")}
-            </Button>
-          </div>
-        ) : (
-          <Outlet />
-        )}
+        <Outlet />
       </main>
 
       <LogoutModal

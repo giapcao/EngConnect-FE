@@ -16,6 +16,7 @@ import Courses from "../pages/Courses/Courses";
 import CourseDetail from "../pages/Courses/CourseDetail";
 import BecomeTutor from "../pages/BecomeTutor/BecomeTutor";
 import TutorRegistration from "../pages/BecomeTutor/TutorRegistration";
+import TutorOnboarding from "../pages/TutorDashboard/Onboarding/TutorOnboarding";
 
 // Student Dashboard Pages
 import Dashboard from "../pages/StudentDashboard/Dashboard/Dashboard";
@@ -110,6 +111,10 @@ export const router = createBrowserRouter([
       {
         path: "register-tutor",
         element: <TutorRegistration />,
+      },
+      {
+        path: "tutor/onboarding",
+        element: <TutorOnboarding />,
       },
     ],
   },

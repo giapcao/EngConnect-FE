@@ -54,7 +54,21 @@ export const authApi = {
 
   // Register Tutor - Đăng ký làm gia sư
   registerTutor: async (tutorData) => {
-    const response = await axiosInstance.post("/auth/v1/register-tutor", tutorData);
+    const formData = new FormData();
+    formData.append("Headline", tutorData.headline);
+    formData.append("Bio", tutorData.bio);
+    formData.append("YearsExperience", tutorData.yearsExperience);
+    if (tutorData.cvFile) {
+      formData.append("CvFile", tutorData.cvFile);
+      formData.append("CvFileName", tutorData.cvFile.name);
+    }
+    if (tutorData.introVideoFile) {
+      formData.append("IntroVideoFile", tutorData.introVideoFile);
+      formData.append("IntroVideoFileName", tutorData.introVideoFile.name);
+    }
+    const response = await axiosInstance.post("/auth/v1/register-tutor", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
     return response.data;
   },
 

@@ -1,10 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { Input, Button, Textarea, Image, Alert, addToast } from "@heroui/react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import * as MotionLib from "framer-motion";
 import { useTranslation } from "react-i18next";
-import { Briefcase, Sparkles } from "lucide-react";
+import { Briefcase, Sparkles, FileText, Video, X } from "lucide-react";
 import BrandLogo from "../../components/Authentication/BrandLogo";
 import { useThemeColors } from "../../hooks/useThemeColors";
 import { useTheme } from "../../contexts/ThemeContext";
@@ -34,6 +34,10 @@ const TutorRegistration = () => {
     bio: "",
     yearsExperience: "",
   });
+  const [cvFile, setCvFile] = useState(null);
+  const [introVideoFile, setIntroVideoFile] = useState(null);
+  const cvInputRef = useRef(null);
+  const videoInputRef = useRef(null);
 
   // Redirect to register if not authenticated
   if (!isAuthenticated) {
@@ -92,6 +96,8 @@ const TutorRegistration = () => {
       headline: formData.headline.trim(),
       bio: formData.bio.trim(),
       yearsExperience: Number(formData.yearsExperience),
+      cvFile: cvFile || null,
+      introVideoFile: introVideoFile || null,
     };
 
     try {
@@ -105,7 +111,7 @@ const TutorRegistration = () => {
       });
 
       setTimeout(() => {
-        navigate("/tutor/profile");
+        navigate("/tutor/onboarding");
       }, 2000);
     } catch (err) {
       console.error("Tutor registration error:", err);
@@ -269,6 +275,147 @@ const TutorRegistration = () => {
                       style={{ color: colors.text.tertiary }}
                     />
                   }
+                />
+              </div>
+
+              {/* CV Upload (optional) */}
+              <div>
+                <label
+                  className="block text-sm font-medium mb-2"
+                  style={{ color: colors.text.primary }}
+                >
+                  {t("tutorRegistration.cvFile")}{" "}
+                  <span
+                    className="text-xs font-normal"
+                    style={{ color: colors.text.tertiary }}
+                  >
+                    ({t("tutorRegistration.optional")})
+                  </span>
+                </label>
+                <div
+                  className="flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-colors"
+                  style={{
+                    borderColor: colors.border.main,
+                    backgroundColor: colors.background.gray,
+                  }}
+                  onClick={() => cvInputRef.current?.click()}
+                >
+                  <FileText
+                    className="w-5 h-5 flex-shrink-0"
+                    style={{ color: colors.primary.main }}
+                  />
+                  <span
+                    className="text-sm flex-1 truncate"
+                    style={{
+                      color: cvFile
+                        ? colors.text.primary
+                        : colors.text.tertiary,
+                    }}
+                  >
+                    {cvFile
+                      ? cvFile.name
+                      : t("tutorRegistration.cvUploadPrompt")}
+                  </span>
+                  {cvFile && (
+                    <button
+                      type="button"
+                      className="ml-auto p-1 rounded-full"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setCvFile(null);
+                        if (cvInputRef.current) cvInputRef.current.value = "";
+                      }}
+                    >
+                      <X
+                        className="w-4 h-4"
+                        style={{ color: colors.text.tertiary }}
+                      />
+                    </button>
+                  )}
+                </div>
+                <p
+                  className="text-xs mt-1"
+                  style={{ color: colors.text.tertiary }}
+                >
+                  {t("tutorRegistration.cvFormats")}
+                </p>
+                <input
+                  ref={cvInputRef}
+                  type="file"
+                  accept=".pdf,.doc,.docx"
+                  className="hidden"
+                  onChange={(e) => setCvFile(e.target.files[0] || null)}
+                />
+              </div>
+
+              {/* Intro Video Upload (optional) */}
+              <div>
+                <label
+                  className="block text-sm font-medium mb-2"
+                  style={{ color: colors.text.primary }}
+                >
+                  {t("tutorRegistration.introVideo")}{" "}
+                  <span
+                    className="text-xs font-normal"
+                    style={{ color: colors.text.tertiary }}
+                  >
+                    ({t("tutorRegistration.optional")})
+                  </span>
+                </label>
+                <div
+                  className="flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-colors"
+                  style={{
+                    borderColor: colors.border.main,
+                    backgroundColor: colors.background.gray,
+                  }}
+                  onClick={() => videoInputRef.current?.click()}
+                >
+                  <Video
+                    className="w-5 h-5 flex-shrink-0"
+                    style={{ color: colors.primary.main }}
+                  />
+                  <span
+                    className="text-sm flex-1 truncate"
+                    style={{
+                      color: introVideoFile
+                        ? colors.text.primary
+                        : colors.text.tertiary,
+                    }}
+                  >
+                    {introVideoFile
+                      ? introVideoFile.name
+                      : t("tutorRegistration.videoUploadPrompt")}
+                  </span>
+                  {introVideoFile && (
+                    <button
+                      type="button"
+                      className="ml-auto p-1 rounded-full"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setIntroVideoFile(null);
+                        if (videoInputRef.current)
+                          videoInputRef.current.value = "";
+                      }}
+                    >
+                      <X
+                        className="w-4 h-4"
+                        style={{ color: colors.text.tertiary }}
+                      />
+                    </button>
+                  )}
+                </div>
+                <p
+                  className="text-xs mt-1"
+                  style={{ color: colors.text.tertiary }}
+                >
+                  {t("tutorRegistration.videoFormats")}
+                </p>
+                <input
+                  ref={videoInputRef}
+                  type="file"
+                  accept="video/mp4,video/webm,video/mov"
+                  className="hidden"
+                  onChange={(e) => setIntroVideoFile(e.target.files[0] || null)}
                 />
               </div>
 

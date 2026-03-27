@@ -25,6 +25,12 @@ export const tutorApi = {
     return response.data;
   },
 
+  // Update tutor by ID (headline, bio, yearsExperience)
+  updateTutorById: async (tutorId, profileData) => {
+    const response = await axiosInstance.put(`/tutors/${tutorId}`, profileData);
+    return response.data;
+  },
+
   // Get tutor courses
   getTutorCourses: async (tutorId) => {
     const response = await axiosInstance.get(`/tutors/${tutorId}/courses`);
