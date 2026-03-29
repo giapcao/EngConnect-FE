@@ -1,5 +1,8 @@
 import { createBrowserRouter } from "react-router-dom";
 import MainLayout from "../layouts/MainLayout";
+import GuestRoute from "./GuestRoute";
+import AdminRoute from "./AdminRoute";
+import NonAdminRoute from "./NonAdminRoute";
 import DashboardLayout from "../layouts/DashboardLayout";
 import TutorDashboardLayout from "../layouts/TutorDashboardLayout";
 import AdminDashboardLayout from "../layouts/AdminDashboardLayout";
@@ -54,7 +57,11 @@ import Test from "../pages/Test/test";
 export const router = createBrowserRouter([
   {
     path: "/",
-    element: <MainLayout />,
+    element: (
+      <NonAdminRoute>
+        <MainLayout />
+      </NonAdminRoute>
+    ),
     children: [
       {
         index: true,
@@ -66,23 +73,43 @@ export const router = createBrowserRouter([
       },
       {
         path: "login",
-        element: <Login />,
+        element: (
+          <GuestRoute>
+            <Login />
+          </GuestRoute>
+        ),
       },
       {
         path: "register",
-        element: <Register />,
+        element: (
+          <GuestRoute>
+            <Register />
+          </GuestRoute>
+        ),
       },
       {
         path: "forgot-password",
-        element: <ForgotPass />,
+        element: (
+          <GuestRoute>
+            <ForgotPass />
+          </GuestRoute>
+        ),
       },
       {
         path: "reset-password",
-        element: <ResetPassword />,
+        element: (
+          <GuestRoute>
+            <ResetPassword />
+          </GuestRoute>
+        ),
       },
       {
         path: "verify",
-        element: <VerifyEmail />,
+        element: (
+          <GuestRoute>
+            <VerifyEmail />
+          </GuestRoute>
+        ),
       },
       {
         path: "auth/verify",
@@ -120,7 +147,11 @@ export const router = createBrowserRouter([
   },
   {
     path: "/student",
-    element: <DashboardLayout />,
+    element: (
+      <NonAdminRoute>
+        <DashboardLayout />
+      </NonAdminRoute>
+    ),
     children: [
       {
         path: "dashboard",
@@ -154,7 +185,11 @@ export const router = createBrowserRouter([
   },
   {
     path: "/tutor",
-    element: <TutorDashboardLayout />,
+    element: (
+      <NonAdminRoute>
+        <TutorDashboardLayout />
+      </NonAdminRoute>
+    ),
     children: [
       {
         path: "dashboard",
@@ -196,7 +231,11 @@ export const router = createBrowserRouter([
   },
   {
     path: "/admin",
-    element: <AdminDashboardLayout />,
+    element: (
+      <AdminRoute>
+        <AdminDashboardLayout />
+      </AdminRoute>
+    ),
     children: [
       {
         path: "dashboard",

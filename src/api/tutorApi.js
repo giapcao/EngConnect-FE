@@ -1,4 +1,4 @@
-import axiosInstance from "./axiosConfig";
+﻿import axiosInstance from "./axiosConfig";
 
 export const tutorApi = {
   // Get all tutors
@@ -25,7 +25,7 @@ export const tutorApi = {
     return response.data;
   },
 
-  // Update tutor by ID (headline, bio, yearsExperience)
+  // Update tutor by ID (headline, bio, monthExperience)
   updateTutorById: async (tutorId, profileData) => {
     const response = await axiosInstance.put(`/tutors/${tutorId}`, profileData);
     return response.data;

@@ -211,7 +211,7 @@ const Profile = () => {
     {
       icon: Clock,
       label: t("tutorDashboard.profile.hoursTeached"),
-      value: `${tutorProfile?.yearsExperience || 0}y`,
+      value: `${tutorProfile?.monthExperience || 0}m`,
       color: colors.state.warning,
     },
     {

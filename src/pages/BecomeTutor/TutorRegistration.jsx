@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+﻿import React, { useState, useRef } from "react";
 import { Input, Button, Textarea, Image, Alert, addToast } from "@heroui/react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
@@ -32,7 +32,7 @@ const TutorRegistration = () => {
   const [formData, setFormData] = useState({
     headline: "",
     bio: "",
-    yearsExperience: "",
+    MonthExperience: "",
   });
   const [cvFile, setCvFile] = useState(null);
   const [introVideoFile, setIntroVideoFile] = useState(null);
@@ -60,16 +60,16 @@ const TutorRegistration = () => {
       errors.bio = t("tutorRegistration.validation.bioMinLength");
     }
 
-    if (!formData.yearsExperience) {
-      errors.yearsExperience = t(
-        "tutorRegistration.validation.yearsExperienceRequired",
+    if (!formData.MonthExperience) {
+      errors.MonthExperience = t(
+        "tutorRegistration.validation.MonthExperienceRequired",
       );
     } else if (
-      Number.isNaN(Number(formData.yearsExperience)) ||
-      Number(formData.yearsExperience) < 0
+      Number.isNaN(Number(formData.MonthExperience)) ||
+      Number(formData.MonthExperience) < 0
     ) {
-      errors.yearsExperience = t(
-        "tutorRegistration.validation.yearsExperienceInvalid",
+      errors.MonthExperience = t(
+        "tutorRegistration.validation.MonthExperienceInvalid",
       );
     }
 
@@ -95,7 +95,7 @@ const TutorRegistration = () => {
     const tutorData = {
       headline: formData.headline.trim(),
       bio: formData.bio.trim(),
-      yearsExperience: Number(formData.yearsExperience),
+      MonthExperience: Number(formData.MonthExperience),
       cvFile: cvFile || null,
       introVideoFile: introVideoFile || null,
     };
@@ -253,21 +253,21 @@ const TutorRegistration = () => {
                   className="block text-sm font-medium mb-2"
                   style={{ color: colors.text.primary }}
                 >
-                  {t("tutorRegistration.yearsExperience")}
+                  {t("tutorRegistration.MonthExperience")}
                 </label>
                 <Input
                   type="number"
-                  name="yearsExperience"
+                  name="MonthExperience"
                   placeholder={t(
-                    "tutorRegistration.yearsExperiencePlaceholder",
+                    "tutorRegistration.MonthExperiencePlaceholder",
                   )}
-                  value={formData.yearsExperience}
+                  value={formData.MonthExperience}
                   onChange={handleChange}
                   variant="flat"
                   size="lg"
                   min={0}
-                  isInvalid={!!validationErrors.yearsExperience}
-                  errorMessage={validationErrors.yearsExperience}
+                  isInvalid={!!validationErrors.MonthExperience}
+                  errorMessage={validationErrors.MonthExperience}
                   classNames={inputClassNames}
                   startContent={
                     <Briefcase

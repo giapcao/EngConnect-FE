@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { Button, Spinner } from "@heroui/react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import * as MotionLib from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { CheckCircle, XCircle } from "lucide-react";
 import BrandLogo from "../../../components/Authentication/BrandLogo";
 import { useThemeColors } from "../../../hooks/useThemeColors";
-import { googleLoginVerify } from "../../../store";
+import { googleLoginVerify, selectUser } from "../../../store";
 import "./GoogleAuthVerify.css";
 
 // eslint-disable-next-line no-unused-vars
@@ -18,6 +18,7 @@ const GoogleAuthVerify = () => {
   const dispatch = useDispatch();
   const { t } = useTranslation();
   const colors = useThemeColors();
+  const user = useSelector(selectUser);
   const [searchParams] = useSearchParams();
   const token = searchParams.get("token") || "";
 
@@ -33,9 +34,13 @@ const GoogleAuthVerify = () => {
 
     const verify = async () => {
       try {
-        await dispatch(googleLoginVerify(token)).unwrap();
+        const result = await dispatch(googleLoginVerify(token)).unwrap();
         setStatus("success");
-        setTimeout(() => navigate("/"), 1500);
+        const isAdmin = result.user?.roles?.includes("Admin");
+        setTimeout(
+          () => navigate(isAdmin ? "/admin/dashboard" : "/courses"),
+          1500,
+        );
       } catch (err) {
         setStatus("error");
         setErrorMsg(

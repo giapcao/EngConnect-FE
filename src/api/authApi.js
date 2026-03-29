@@ -1,4 +1,4 @@
-import axiosInstance from "./axiosConfig";
+﻿import axiosInstance from "./axiosConfig";
 
 export const authApi = {
   // Register - Đăng ký người dùng mới
@@ -57,7 +57,7 @@ export const authApi = {
     const formData = new FormData();
     formData.append("Headline", tutorData.headline);
     formData.append("Bio", tutorData.bio);
-    formData.append("YearsExperience", tutorData.yearsExperience);
+    formData.append("MonthExperience", tutorData.MonthExperience);
     if (tutorData.cvFile) {
       formData.append("CvFile", tutorData.cvFile);
       formData.append("CvFileName", tutorData.cvFile.name);

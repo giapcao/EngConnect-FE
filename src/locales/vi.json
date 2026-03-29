@@ -1,4 +1,4 @@
-{
+﻿{
   "brand": {
     "name": "EngConnect"
   },
@@ -98,8 +98,8 @@
     "bio": "Giới thiệu bản thân",
     "bioPlaceholder": "Hãy chia sẻ về kinh nghiệm giảng dạy, bằng cấp và điều gì khiến bạn trở thành một gia sư tuyệt vời...",
     "characters": "ký tự",
-    "yearsExperience": "Số năm kinh nghiệm",
-    "yearsExperiencePlaceholder": "VD: 5",
+    "MonthExperience": "Số tháng kinh nghiệm",
+    "MonthExperiencePlaceholder": "VD: 12",
     "slotsCount": "Số slot có sẵn",
     "slotsCountPlaceholder": "VD: 10",
     "introVideoUrl": "Video giới thiệu",
@@ -129,8 +129,8 @@
       "bioRequired": "Vui lòng nhập giới thiệu bản thân",
       "bioMinLength": "Giới thiệu phải có ít nhất 50 ký tự",
       "introVideoUrlInvalid": "Vui lòng nhập URL hợp lệ",
-      "yearsExperienceRequired": "Vui lòng nhập số năm kinh nghiệm",
-      "yearsExperienceInvalid": "Vui lòng nhập số hợp lệ",
+      "MonthExperienceRequired": "Vui lòng nhập số tháng kinh nghiệm",
+      "MonthExperienceInvalid": "Vui lòng nhập số hợp lệ",
       "cvUrlInvalid": "Vui lòng nhập URL hợp lệ",
       "slotsCountRequired": "Vui lòng nhập số slot có sẵn",
       "slotsCountInvalid": "Vui lòng nhập số hợp lệ (ít nhất 1)",
@@ -152,7 +152,7 @@
     "steps": {
       "headline": "Tiêu đề",
       "bio": "Giới thiệu",
-      "yearsExperience": "Kinh nghiệm",
+      "MonthExperience": "Kinh nghiệm",
       "cv": "CV",
       "video": "Video giới thiệu"
     },

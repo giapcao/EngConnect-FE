@@ -32,7 +32,7 @@ const Login = () => {
   const colors = useThemeColors();
   const { theme } = useTheme();
   const { inputClassNames } = useInputStyles();
-  const { isAuthenticated, loading, error } = useSelector(selectAuth);
+  const { loading, error } = useSelector(selectAuth);
   const [isVisible, setIsVisible] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [formData, setFormData] = useState({
@@ -43,13 +43,6 @@ const Login = () => {
     email: "",
     password: "",
   });
-
-  // Redirect if already authenticated
-  useEffect(() => {
-    if (isAuthenticated) {
-      navigate("/");
-    }
-  }, [isAuthenticated, navigate]);
 
   // Clear error when component unmounts
   useEffect(() => {
@@ -108,7 +101,8 @@ const Login = () => {
         color: "success",
         timeout: 3000,
       });
-      navigate("/");
+      const isAdmin = result.user?.roles?.includes("Admin");
+      navigate(isAdmin ? "/admin/dashboard" : "/courses");
     } catch (err) {
       // Error is handled by Redux and displayed in UI
       console.error("Login failed:", err);

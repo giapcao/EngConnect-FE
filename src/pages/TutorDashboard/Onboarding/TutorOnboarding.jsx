@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+﻿import { useState, useEffect, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import {
   Button,
@@ -43,7 +43,7 @@ const TutorOnboarding = () => {
   const [formData, setFormData] = useState({
     headline: "",
     bio: "",
-    yearsExperience: "",
+    monthExperience: "",
   });
 
   const cvInputRef = useRef(null);
@@ -63,9 +63,9 @@ const TutorOnboarding = () => {
         setFormData({
           headline: p.headline || "",
           bio: p.bio || "",
-          yearsExperience:
-            p.yearsExperience !== null && p.yearsExperience !== undefined
-              ? String(p.yearsExperience)
+          monthExperience:
+            p.monthExperience !== null && p.monthExperience !== undefined
+              ? String(p.monthExperience)
               : "",
         });
       }
@@ -86,10 +86,10 @@ const TutorOnboarding = () => {
     { key: "headline", done: !!formData.headline.trim() },
     { key: "bio", done: !!formData.bio.trim() },
     {
-      key: "yearsExperience",
+      key: "MonthExperience",
       done:
-        formData.yearsExperience !== "" &&
-        Number(formData.yearsExperience) >= 0,
+        formData.monthExperience !== "" &&
+        Number(formData.monthExperience) >= 0,
     },
     { key: "cv", done: !!tutorProfile?.cvUrl },
     { key: "video", done: !!tutorProfile?.introVideoUrl },
@@ -104,7 +104,7 @@ const TutorOnboarding = () => {
       const data = await tutorApi.updateTutorById(tutorProfile.id, {
         headline: formData.headline.trim(),
         bio: formData.bio.trim(),
-        yearsExperience: Number(formData.yearsExperience),
+        monthExperience: Number(formData.monthExperience),
       });
       if (data.isSuccess) {
         await fetchProfile();
@@ -462,22 +462,22 @@ const TutorOnboarding = () => {
                   className="block text-sm font-medium mb-1.5"
                   style={{ color: colors.text.primary }}
                 >
-                  {t("tutorRegistration.yearsExperience")}
+                  {t("tutorRegistration.MonthExperience")}
                 </label>
                 <Input
                   type="number"
                   variant="flat"
                   size="lg"
                   min={0}
-                  value={formData.yearsExperience}
+                  value={formData.monthExperience}
                   onChange={(e) =>
                     setFormData((p) => ({
                       ...p,
-                      yearsExperience: e.target.value,
+                      monthExperience: e.target.value,
                     }))
                   }
                   placeholder={t(
-                    "tutorRegistration.yearsExperiencePlaceholder",
+                    "tutorRegistration.MonthExperiencePlaceholder",
                   )}
                   classNames={inputClassNames}
                 />

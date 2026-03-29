@@ -1,4 +1,4 @@
-{
+﻿{
   "brand": {
     "name": "EngConnect"
   },
@@ -98,8 +98,8 @@
     "bio": "About You",
     "bioPlaceholder": "Tell us about your teaching experience, qualifications, and what makes you a great tutor...",
     "characters": "characters",
-    "yearsExperience": "Years of Experience",
-    "yearsExperiencePlaceholder": "e.g. 5",
+    "MonthExperience": "Months of Experience",
+    "MonthExperiencePlaceholder": "e.g. 12",
     "slotsCount": "Available Slots",
     "slotsCountPlaceholder": "e.g. 10",
     "introVideoUrl": "Intro Video URL",
@@ -129,8 +129,8 @@
       "bioRequired": "Bio is required",
       "bioMinLength": "Bio must be at least 50 characters",
       "introVideoUrlInvalid": "Please enter a valid URL",
-      "yearsExperienceRequired": "Years of experience is required",
-      "yearsExperienceInvalid": "Please enter a valid number",
+      "MonthExperienceRequired": "Months of experience is required",
+      "MonthExperienceInvalid": "Please enter a valid number",
       "cvUrlInvalid": "Please enter a valid URL",
       "slotsCountRequired": "Number of available slots is required",
       "slotsCountInvalid": "Please enter a valid number (at least 1)",
@@ -152,7 +152,7 @@
     "steps": {
       "headline": "Headline",
       "bio": "Bio",
-      "yearsExperience": "Experience",
+      "MonthExperience": "Experience",
       "cv": "CV",
       "video": "Intro Video"
     },
