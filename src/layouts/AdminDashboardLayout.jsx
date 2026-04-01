@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useSelector } from "react-redux";
 import { Link, useLocation, useNavigate, Outlet } from "react-router-dom";
 import {
   Button,
@@ -39,6 +40,8 @@ import {
   Gear,
   CaretLeft,
   CaretRight,
+  ShieldCheck,
+  Tag,
 } from "@phosphor-icons/react";
 
 const AdminDashboardLayout = () => {
@@ -47,11 +50,15 @@ const AdminDashboardLayout = () => {
   const { theme } = useTheme();
   const { dropdownClassNames } = useDropdownStyles();
   const { inputClassNames } = useInputStyles();
+  const user = useSelector((state) => state.user.profile);
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [logoutModalOpen, setLogoutModalOpen] = useState(false);
+  const [openSubmenus, setOpenSubmenus] = useState({});
+  const toggleSubmenu = (key) =>
+    setOpenSubmenus((prev) => ({ ...prev, [key]: !prev[key] }));
 
   const navItems = [
     {
@@ -65,14 +72,43 @@ const AdminDashboardLayout = () => {
       icon: GraduationCap,
     },
     {
-      path: "/admin/tutors",
+      submenuKey: "tutors",
       label: t("adminDashboard.nav.tutors"),
       icon: ChalkboardTeacher,
+      children: [
+        {
+          path: "/admin/tutors",
+          label: t("adminDashboard.nav.tutorList"),
+          icon: ChalkboardTeacher,
+        },
+        {
+          path: "/admin/verification",
+          label: t("adminDashboard.nav.verification"),
+          icon: ShieldCheck,
+        },
+      ],
     },
     {
-      path: "/admin/courses",
+      submenuKey: "courses",
       label: t("adminDashboard.nav.courses"),
       icon: BookOpen,
+      children: [
+        {
+          path: "/admin/courses",
+          label: t("adminDashboard.nav.courseList"),
+          icon: BookOpen,
+        },
+        {
+          path: "/admin/course-verification",
+          label: t("adminDashboard.nav.courseVerification"),
+          icon: ShieldCheck,
+        },
+        {
+          path: "/admin/categories",
+          label: t("adminDashboard.nav.categories"),
+          icon: Tag,
+        },
+      ],
     },
     {
       path: "/admin/analytics",
@@ -92,6 +128,8 @@ const AdminDashboardLayout = () => {
   ];
 
   const isActive = (path) => location.pathname === path;
+  const isSubmenuActive = (item) =>
+    item.children?.some((child) => location.pathname === child.path);
 
   return (
     <div
@@ -147,8 +185,121 @@ const AdminDashboardLayout = () => {
         {/* Navigation */}
         <nav className="flex-1 py-4 px-3 overflow-y-auto">
           <div className="space-y-1">
-            {navItems.map((item) => {
+            {navItems.map((item, idx) => {
               const Icon = item.icon;
+
+              // Submenu item
+              if (item.children) {
+                const submenuActive = isSubmenuActive(item);
+                const submenuOpen =
+                  openSubmenus[item.submenuKey] || submenuActive;
+                return (
+                  <div key={item.submenuKey}>
+                    <Tooltip
+                      content={item.label}
+                      placement="right"
+                      isDisabled={!sidebarCollapsed}
+                    >
+                      <button
+                        onClick={() => {
+                          if (sidebarCollapsed) {
+                            setSidebarCollapsed(false);
+                            setOpenSubmenus((prev) => ({
+                              ...prev,
+                              [item.submenuKey]: true,
+                            }));
+                          } else {
+                            toggleSubmenu(item.submenuKey);
+                          }
+                        }}
+                        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl w-full transition-all duration-200 ${
+                          sidebarCollapsed ? "justify-center" : ""
+                        }`}
+                        style={{
+                          backgroundColor: submenuActive
+                            ? colors.background.primaryLight
+                            : "transparent",
+                          color: submenuActive
+                            ? colors.primary.main
+                            : colors.text.secondary,
+                          border: "none",
+                          cursor: "pointer",
+                        }}
+                      >
+                        <Icon
+                          className="w-5 h-5 flex-shrink-0"
+                          weight={submenuActive ? "fill" : "regular"}
+                        />
+                        {!sidebarCollapsed && (
+                          <>
+                            <span
+                              className={`text-sm flex-1 text-left ${submenuActive ? "font-semibold" : "font-medium"}`}
+                            >
+                              {item.label}
+                            </span>
+                            <CaretDown
+                              className={`w-4 h-4 transition-transform duration-200 ${submenuOpen ? "rotate-180" : ""}`}
+                            />
+                          </>
+                        )}
+                      </button>
+                    </Tooltip>
+                    <AnimatePresence initial={false}>
+                      {!sidebarCollapsed && submenuOpen && (
+                        <motion.div
+                          key="submenu"
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.22, ease: "easeInOut" }}
+                          style={{ overflow: "hidden" }}
+                        >
+                          <div
+                            className="mx-1 mt-1 mb-1 rounded-xl p-2 space-y-0.5"
+                            style={{ backgroundColor: colors.background.gray }}
+                          >
+                            {item.children.map((child) => {
+                              const ChildIcon = child.icon;
+                              const childActive = isActive(child.path);
+                              return (
+                                <Link
+                                  key={child.path}
+                                  to={child.path}
+                                  className="flex items-center gap-3 px-3 py-2 rounded-lg no-underline transition-all duration-150"
+                                  style={{
+                                    backgroundColor: childActive
+                                      ? colors.background.primaryLight
+                                      : "transparent",
+                                    color: childActive
+                                      ? colors.primary.main
+                                      : colors.text.secondary,
+                                  }}
+                                >
+                                  <ChildIcon
+                                    className="w-4 h-4 flex-shrink-0"
+                                    weight={childActive ? "fill" : "regular"}
+                                  />
+                                  <span
+                                    className={`text-sm ${
+                                      childActive
+                                        ? "font-semibold"
+                                        : "font-medium"
+                                    }`}
+                                  >
+                                    {child.label}
+                                  </span>
+                                </Link>
+                              );
+                            })}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                );
+              }
+
+              // Regular nav item
               const active = isActive(item.path);
               return (
                 <Tooltip
@@ -266,8 +417,107 @@ const AdminDashboardLayout = () => {
               {/* Mobile Navigation */}
               <nav className="flex-1 py-4 px-3 overflow-y-auto">
                 <div className="space-y-1">
-                  {navItems.map((item) => {
+                  {navItems.map((item, idx) => {
                     const Icon = item.icon;
+
+                    // Submenu item
+                    if (item.children) {
+                      const submenuActive = isSubmenuActive(item);
+                      const submenuOpen =
+                        openSubmenus[item.submenuKey] || submenuActive;
+                      return (
+                        <div key={item.submenuKey}>
+                          <button
+                            onClick={() => toggleSubmenu(item.submenuKey)}
+                            className="flex items-center gap-3 px-3 py-2.5 rounded-xl w-full transition-all duration-200"
+                            style={{
+                              backgroundColor: submenuActive
+                                ? colors.background.primaryLight
+                                : "transparent",
+                              color: submenuActive
+                                ? colors.primary.main
+                                : colors.text.secondary,
+                              border: "none",
+                              cursor: "pointer",
+                            }}
+                          >
+                            <Icon
+                              className="w-5 h-5 flex-shrink-0"
+                              weight={submenuActive ? "fill" : "regular"}
+                            />
+                            <span
+                              className={`text-sm flex-1 text-left ${submenuActive ? "font-semibold" : "font-medium"}`}
+                            >
+                              {item.label}
+                            </span>
+                            <CaretDown
+                              className={`w-4 h-4 transition-transform duration-200 ${submenuOpen ? "rotate-180" : ""}`}
+                            />
+                          </button>
+                          <AnimatePresence initial={false}>
+                            {submenuOpen && (
+                              <motion.div
+                                key={`mobile-submenu-${item.submenuKey}`}
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: "auto", opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                transition={{
+                                  duration: 0.22,
+                                  ease: "easeInOut",
+                                }}
+                                style={{ overflow: "hidden" }}
+                              >
+                                <div
+                                  className="mx-1 mt-1 mb-1 rounded-xl p-2 space-y-0.5"
+                                  style={{
+                                    backgroundColor: colors.background.gray,
+                                  }}
+                                >
+                                  {item.children.map((child) => {
+                                    const ChildIcon = child.icon;
+                                    const childActive = isActive(child.path);
+                                    return (
+                                      <Link
+                                        key={child.path}
+                                        to={child.path}
+                                        onClick={() => setMobileMenuOpen(false)}
+                                        className="flex items-center gap-3 px-3 py-2 rounded-lg no-underline transition-all duration-150"
+                                        style={{
+                                          backgroundColor: childActive
+                                            ? colors.background.primaryLight
+                                            : "transparent",
+                                          color: childActive
+                                            ? colors.primary.main
+                                            : colors.text.secondary,
+                                        }}
+                                      >
+                                        <ChildIcon
+                                          className="w-4 h-4 flex-shrink-0"
+                                          weight={
+                                            childActive ? "fill" : "regular"
+                                          }
+                                        />
+                                        <span
+                                          className={`text-sm ${
+                                            childActive
+                                              ? "font-semibold"
+                                              : "font-medium"
+                                          }`}
+                                        >
+                                          {child.label}
+                                        </span>
+                                      </Link>
+                                    );
+                                  })}
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
+                      );
+                    }
+
+                    // Regular nav item
                     const active = isActive(item.path);
                     return (
                       <Link
@@ -396,7 +646,7 @@ const AdminDashboardLayout = () => {
               <DropdownTrigger>
                 <Button variant="light" className="gap-2 px-2">
                   <Avatar
-                    src="https://i.pravatar.cc/150?u=admin"
+                    src={user?.avatarUrl || "https://i.pravatar.cc/150?u=admin"}
                     size="sm"
                     className="w-8 h-8"
                   />
@@ -405,7 +655,9 @@ const AdminDashboardLayout = () => {
                       className="text-sm font-medium"
                       style={{ color: colors.text.primary }}
                     >
-                      Admin User
+                      {user
+                        ? `${user.firstName} ${user.lastName}`
+                        : "Admin User"}
                     </span>
                     <span
                       className="text-xs"

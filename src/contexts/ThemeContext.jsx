@@ -13,12 +13,19 @@ export const useTheme = () => {
 export const ThemeProvider = ({ children }) => {
   const [theme, setTheme] = useState(() => {
     // Lấy theme từ localStorage hoặc mặc định là 'light'
-    return localStorage.getItem("theme") || "light";
+    const saved = localStorage.getItem("theme") || "light";
+    if (saved === "dark") document.documentElement.classList.add("dark");
+    return saved;
   });
 
   useEffect(() => {
     // Áp dụng theme vào document root
     document.documentElement.setAttribute("data-theme", theme);
+    if (theme === "dark") {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
     localStorage.setItem("theme", theme);
   }, [theme]);
 

@@ -1,12 +1,18 @@
+﻿import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Button, Card, CardBody, Chip, Divider } from "@heroui/react";
-import * as MotionLib from "framer-motion";
+import {
+  Button,
+  Card,
+  CardBody,
+  Chip,
+  Divider,
+  Spinner,
+  Alert,
+} from "@heroui/react";
+import { motion } from "framer-motion";
 import { useThemeColors } from "../../../hooks/useThemeColors";
 import { useTheme } from "../../../contexts/ThemeContext";
-
-// eslint-disable-next-line no-unused-vars
-const { motion } = MotionLib;
 import {
   Star,
   Clock,
@@ -17,90 +23,37 @@ import {
   FileText,
   DeviceMobile,
   Certificate,
-  Infinity,
+  Infinity as InfinityIcon,
   ChatsCircle,
   ArrowLeft,
   PencilSimple,
+  CaretDown,
+  CaretUp,
+  ListNumbers,
+  Play,
+  WarningCircle,
+  ArrowRight,
 } from "@phosphor-icons/react";
+import { coursesApi } from "../../../api";
 
-// Temporary mock data - will be replaced with API call
-const coursesData = [
-  {
-    id: 1,
-    title: "Business English Masterclass",
-    tutor: "Sarah Johnson",
-    tutorAvatar: "https://i.pravatar.cc/150?u=tutor1",
-    tutorBio:
-      "Experienced business English instructor with 10+ years in corporate training.",
-    rating: 4.9,
-    reviews: 234,
-    students: 1250,
-    lessons: 20,
-    duration: "10 hours",
-    price: 199,
-    originalPrice: 299,
-    level: "Intermediate",
-    category: "Business",
-    image: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=800",
-    status: "published",
-  },
-  {
-    id: 2,
-    title: "IELTS Preparation Course",
-    tutor: "Sarah Johnson",
-    tutorAvatar: "https://i.pravatar.cc/150?u=tutor1",
-    tutorBio: "IELTS examiner and preparation specialist with proven results.",
-    rating: 4.8,
-    reviews: 189,
-    students: 980,
-    lessons: 24,
-    duration: "12 hours",
-    price: 249,
-    originalPrice: 349,
-    level: "Advanced",
-    category: "Exam Prep",
-    image: "https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=800",
-    status: "published",
-  },
-  {
-    id: 3,
-    title: "Conversational English",
-    tutor: "Sarah Johnson",
-    tutorAvatar: "https://i.pravatar.cc/150?u=tutor1",
-    tutorBio:
-      "Native speaker focused on building natural conversational fluency.",
-    rating: 5.0,
-    reviews: 156,
-    students: 28,
-    lessons: 15,
-    duration: "8 hours",
-    price: 149,
-    originalPrice: 249,
-    level: "Beginner",
-    category: "Speaking",
-    image: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800",
-    status: "published",
-  },
-  {
-    id: 4,
-    title: "Academic Writing",
-    tutor: "Sarah Johnson",
-    tutorAvatar: "https://i.pravatar.cc/150?u=tutor1",
-    tutorBio:
-      "Published author and academic writing coach for international students.",
-    rating: 0,
-    reviews: 0,
-    students: 0,
-    lessons: 12,
-    duration: "6 hours",
-    price: 179,
-    originalPrice: 279,
-    level: "Advanced",
-    category: "Writing",
-    image: "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=800",
-    status: "draft",
-  },
-];
+const formatDuration = (timeStr) => {
+  if (!timeStr) return "";
+  const parts = timeStr.split(":");
+  if (parts.length !== 3) return timeStr;
+  const h = parseInt(parts[0]);
+  const m = parseInt(parts[1]);
+  if (h > 0 && m > 0) return `${h}h${m}m`;
+  if (h > 0) return `${h}h`;
+  if (m > 0) return `${m}m`;
+  return timeStr;
+};
+
+const formatPrice = (price, currency) => {
+  if (currency === "VND" || !currency) {
+    return price?.toLocaleString("vi-VN") + "₫";
+  }
+  return "$" + price;
+};
 
 const TutorCourseDetail = () => {
   const { id } = useParams();
@@ -109,7 +62,41 @@ const TutorCourseDetail = () => {
   const colors = useThemeColors();
   const { theme } = useTheme();
 
-  const course = coursesData.find((c) => c.id === parseInt(id));
+  const [course, setCourse] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [expandedModules, setExpandedModules] = useState({});
+
+  useEffect(() => {
+    const fetchCourse = async () => {
+      try {
+        setLoading(true);
+        const res = await coursesApi.getCourseById(id);
+        setCourse(res.data);
+        // Auto-expand first module
+        const modules = res.data?.courseCourseModules || [];
+        if (modules.length > 0) {
+          setExpandedModules({ [modules[0].id]: true });
+        }
+      } catch (err) {
+        console.error("Failed to fetch course:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchCourse();
+  }, [id]);
+
+  const toggleModule = (moduleId) => {
+    setExpandedModules((prev) => ({ ...prev, [moduleId]: !prev[moduleId] }));
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-32">
+        <Spinner size="lg" />
+      </div>
+    );
+  }
 
   if (!course) {
     return (
@@ -132,15 +119,38 @@ const TutorCourseDetail = () => {
     );
   }
 
-  const discountPercent = course.originalPrice
-    ? Math.round(
-        ((course.originalPrice - course.price) / course.originalPrice) * 100,
-      )
-    : 0;
+  const duration = formatDuration(course.estimatedTimeLesson);
+  const allCategories = course.courseCategories || [];
+  const outcomes = course.outcomes
+    ? course.outcomes
+        .split(";")
+        .map((s) => s.trim())
+        .filter(Boolean)
+    : [];
+  const statusLower = course.status?.toLowerCase();
+  const modules = (course.courseCourseModules || []).sort(
+    (a, b) => a.moduleNumber - b.moduleNumber,
+  );
+  const totalSessions = modules.reduce(
+    (sum, m) => sum + (m.courseModuleCourseSessions?.length || 0),
+    0,
+  );
+
+  // Detect incomplete course
+  const isIncomplete = modules.length === 0 || totalSessions === 0;
+  const incompleteReason =
+    modules.length === 0
+      ? t("courses.detail.incompleteNoModules")
+      : totalSessions === 0
+        ? t("courses.detail.incompleteNoSessions")
+        : "";
+
+  // Only Draft and Inactive courses can be edited
+  const canEdit = statusLower === "draft" || statusLower === "inactive";
 
   return (
     <div className="space-y-6">
-      {/* Back Button */}
+      {/* Back + Edit */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -155,17 +165,66 @@ const TutorCourseDetail = () => {
         >
           {t("courses.detail.backToCourses")}
         </Button>
-        <Button
-          color="primary"
-          startContent={<PencilSimple size={18} />}
-          style={{
-            backgroundColor: colors.primary.main,
-            color: colors.text.white,
-          }}
-        >
-          {t("tutorDashboard.myCourses.editCourse")}
-        </Button>
+        {canEdit ? (
+          isIncomplete ? (
+            <Button
+              color="warning"
+              variant="flat"
+              startContent={<ArrowRight size={18} />}
+              onPress={() => navigate(`/tutor/create-course/${course.id}`)}
+            >
+              {t("courses.detail.continueCourse")}
+            </Button>
+          ) : (
+            <Button
+              color="primary"
+              startContent={<PencilSimple size={18} />}
+              onPress={() => navigate(`/tutor/create-course/${course.id}`)}
+              style={{
+                backgroundColor: colors.primary.main,
+                color: colors.text.white,
+              }}
+            >
+              {t("tutorDashboard.myCourses.editCourse")}
+            </Button>
+          )
+        ) : null}
       </motion.div>
+
+      {/* Incomplete course alert */}
+      {canEdit && isIncomplete && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.15 }}
+        >
+          <Alert
+            color="warning"
+            variant="flat"
+            title={t("courses.detail.incompleteTitle")}
+            description={incompleteReason}
+          />
+        </motion.div>
+      )}
+
+      {/* Non-editable status alert */}
+      {!canEdit && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.15 }}
+        >
+          <Alert
+            color={statusLower === "pending" ? "warning" : "primary"}
+            variant="flat"
+            title={
+              statusLower === "pending"
+                ? t("courses.detail.pendingEditLocked")
+                : t("courses.detail.publishedEditLocked")
+            }
+          />
+        </motion.div>
+      )}
 
       {/* Hero Banner */}
       <motion.div
@@ -191,13 +250,13 @@ const TutorCourseDetail = () => {
                       className="font-semibold"
                       style={{
                         backgroundColor:
-                          course.status === "published"
+                          statusLower === "published"
                             ? colors.state.success
                             : colors.state.warning,
                         color: "#fff",
                       }}
                     >
-                      {course.status === "published"
+                      {statusLower === "published"
                         ? t("tutorDashboard.myCourses.published")
                         : t("tutorDashboard.myCourses.draft")}
                     </Chip>
@@ -211,15 +270,20 @@ const TutorCourseDetail = () => {
                   >
                     {course.level}
                   </Chip>
-                  <Chip
-                    size="sm"
-                    style={{
-                      backgroundColor: colors.background.primaryLight,
-                      color: colors.primary.main,
-                    }}
-                  >
-                    {course.category}
-                  </Chip>
+                  {course.isCertificate && (
+                    <Chip
+                      size="sm"
+                      style={{
+                        backgroundColor: "#D1FAE5",
+                        color: "#059669",
+                      }}
+                    >
+                      <span className="flex items-center gap-1">
+                        <Certificate size={14} />{" "}
+                        {t("courses.detail.certificate")}
+                      </span>
+                    </Chip>
+                  )}
                 </div>
 
                 <h1
@@ -230,15 +294,34 @@ const TutorCourseDetail = () => {
                 </h1>
 
                 <p
-                  className="text-base mb-5 leading-relaxed"
+                  className="text-base mb-4 leading-relaxed"
                   style={{ color: colors.text.secondary }}
                 >
-                  {t("courses.detail.description")}
+                  {course.shortDescription}
                 </p>
 
-                {/* Stats */}
-                <div className="flex items-center gap-6 flex-wrap">
-                  {course.rating > 0 && (
+                {/* Categories */}
+                {allCategories.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 mb-4">
+                    {allCategories.map((cat) => (
+                      <Chip
+                        key={cat.id}
+                        size="sm"
+                        variant="flat"
+                        style={{
+                          backgroundColor: colors.background.gray,
+                          color: colors.text.secondary,
+                        }}
+                      >
+                        {cat.categoryName}
+                      </Chip>
+                    ))}
+                  </div>
+                )}
+
+                {/* Stats row */}
+                <div className="flex items-center gap-5 flex-wrap">
+                  {course.ratingAverage > 0 && (
                     <div className="flex items-center gap-1.5">
                       <div className="flex items-center gap-0.5">
                         {[...Array(5)].map((_, i) => (
@@ -248,7 +331,7 @@ const TutorCourseDetail = () => {
                             weight="fill"
                             style={{
                               color:
-                                i < Math.floor(course.rating)
+                                i < Math.floor(course.ratingAverage)
                                   ? "#F59E0B"
                                   : "rgba(0,0,0,0.1)",
                             }}
@@ -259,14 +342,13 @@ const TutorCourseDetail = () => {
                         className="font-semibold text-sm"
                         style={{ color: colors.text.primary }}
                       >
-                        {course.rating}
+                        {course.ratingAverage}
                       </span>
                       <span
                         className="text-sm"
                         style={{ color: colors.text.secondary }}
                       >
-                        ({course.reviews?.toLocaleString()}{" "}
-                        {t("courses.detail.ratings")})
+                        ({course.ratingCount?.toLocaleString() || 0})
                       </span>
                     </div>
                   )}
@@ -275,13 +357,21 @@ const TutorCourseDetail = () => {
                     style={{ color: colors.text.secondary }}
                   >
                     <Users size={16} weight="duotone" />
-                    {course.students?.toLocaleString()}{" "}
+                    {course.numberOfEnrollment?.toLocaleString() || 0}{" "}
                     {t("courses.detail.students")}
+                  </span>
+                  <span
+                    className="text-sm flex items-center gap-1.5"
+                    style={{ color: colors.text.secondary }}
+                  >
+                    <BookOpen size={16} weight="duotone" />
+                    {modules.length} {t("courses.detail.modules")} ·{" "}
+                    {totalSessions} {t("courses.detail.sessions")}
                   </span>
                 </div>
               </div>
 
-              {/* Empty space for sticky card overlap */}
+              {/* Empty for sticky card overlap */}
               <div className="hidden lg:block" />
             </div>
           </CardBody>
@@ -291,7 +381,7 @@ const TutorCourseDetail = () => {
       <div className="grid lg:grid-cols-3 gap-6">
         {/* Left Column */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Stats Grid */}
+          {/* Quick Stats Grid */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -313,10 +403,10 @@ const TutorCourseDetail = () => {
                   className="font-bold text-xl"
                   style={{ color: colors.text.primary }}
                 >
-                  {course.rating || "N/A"}
+                  {course.ratingAverage || "N/A"}
                 </p>
                 <p className="text-xs" style={{ color: colors.text.secondary }}>
-                  {course.reviews} {t("courses.detail.reviews")}
+                  {course.ratingCount || 0} {t("courses.detail.reviews")}
                 </p>
               </CardBody>
             </Card>
@@ -335,7 +425,7 @@ const TutorCourseDetail = () => {
                   className="font-bold text-xl"
                   style={{ color: colors.text.primary }}
                 >
-                  {course.students?.toLocaleString()}
+                  {course.numberOfEnrollment?.toLocaleString() || 0}
                 </p>
                 <p className="text-xs" style={{ color: colors.text.secondary }}>
                   {t("courses.detail.students")}
@@ -357,10 +447,10 @@ const TutorCourseDetail = () => {
                   className="font-bold text-xl"
                   style={{ color: colors.text.primary }}
                 >
-                  {course.lessons}
+                  {modules.length}
                 </p>
                 <p className="text-xs" style={{ color: colors.text.secondary }}>
-                  {t("courses.lessons")}
+                  {t("courses.detail.modules")}
                 </p>
               </CardBody>
             </Card>
@@ -369,7 +459,7 @@ const TutorCourseDetail = () => {
               style={{ backgroundColor: colors.background.light }}
             >
               <CardBody className="text-center p-5">
-                <Clock
+                <ListNumbers
                   size={28}
                   weight="duotone"
                   style={{ color: "#8B5CF6" }}
@@ -379,10 +469,10 @@ const TutorCourseDetail = () => {
                   className="font-bold text-xl"
                   style={{ color: colors.text.primary }}
                 >
-                  {course.duration}
+                  {totalSessions}
                 </p>
                 <p className="text-xs" style={{ color: colors.text.secondary }}>
-                  {t("courses.detail.duration")}
+                  {t("courses.detail.sessions")}
                 </p>
               </CardBody>
             </Card>
@@ -409,13 +499,60 @@ const TutorCourseDetail = () => {
                   className="leading-relaxed"
                   style={{ color: colors.text.secondary }}
                 >
-                  {t("courses.detail.description")}
+                  {course.fullDescription || course.shortDescription}
                 </p>
               </CardBody>
             </Card>
           </motion.div>
 
           {/* What You'll Learn */}
+          {outcomes.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.15 }}
+            >
+              <Card
+                className="shadow-none"
+                style={{ backgroundColor: colors.background.light }}
+              >
+                <CardBody className="p-6">
+                  <h2
+                    className="font-semibold text-xl mb-4"
+                    style={{ color: colors.text.primary }}
+                  >
+                    {t("courses.detail.whatYouLearn")}
+                  </h2>
+                  <div className="grid sm:grid-cols-2 gap-3">
+                    {outcomes.map((item, index) => (
+                      <div key={index} className="flex items-start gap-3">
+                        <div
+                          className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
+                          style={{
+                            backgroundColor: colors.background.primaryLight,
+                          }}
+                        >
+                          <Check
+                            size={14}
+                            weight="bold"
+                            style={{ color: colors.primary.main }}
+                          />
+                        </div>
+                        <span
+                          className="text-sm"
+                          style={{ color: colors.text.secondary }}
+                        >
+                          {item}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </CardBody>
+              </Card>
+            </motion.div>
+          )}
+
+          {/* ═══ Course Curriculum ═══ */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -426,38 +563,187 @@ const TutorCourseDetail = () => {
               style={{ backgroundColor: colors.background.light }}
             >
               <CardBody className="p-6">
-                <h2
-                  className="font-semibold text-xl mb-4"
-                  style={{ color: colors.text.primary }}
-                >
-                  {t("courses.detail.whatYouLearn")}
-                </h2>
-                <div className="grid sm:grid-cols-2 gap-4">
-                  {[
-                    t("courses.detail.learn1"),
-                    t("courses.detail.learn2"),
-                    t("courses.detail.learn3"),
-                    t("courses.detail.learn4"),
-                  ].map((item, index) => (
-                    <div key={index} className="flex items-start gap-3">
-                      <div
-                        className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
-                        style={{
-                          backgroundColor: colors.background.primaryLight,
-                        }}
-                      >
-                        <Check
-                          size={14}
-                          weight="bold"
-                          style={{ color: colors.primary.main }}
-                        />
-                      </div>
-                      <span style={{ color: colors.text.secondary }}>
-                        {item}
-                      </span>
-                    </div>
-                  ))}
+                <div className="flex items-center justify-between mb-5">
+                  <h2
+                    className="font-semibold text-xl"
+                    style={{ color: colors.text.primary }}
+                  >
+                    {t("courses.detail.courseCurriculum")}
+                  </h2>
+                  <span
+                    className="text-sm"
+                    style={{ color: colors.text.secondary }}
+                  >
+                    {modules.length} {t("courses.detail.modules")} ·{" "}
+                    {totalSessions} {t("courses.detail.sessions")}
+                  </span>
                 </div>
+
+                {modules.length === 0 ? (
+                  <p
+                    className="text-sm text-center py-8"
+                    style={{ color: colors.text.tertiary }}
+                  >
+                    {t("courses.detail.noModules")}
+                  </p>
+                ) : (
+                  <div className="space-y-3">
+                    {modules.map((mod) => {
+                      const isExpanded = expandedModules[mod.id];
+                      const sessions = (
+                        mod.courseModuleCourseSessions || []
+                      ).sort((a, b) => a.sessionNumber - b.sessionNumber);
+                      const moduleOutcomes = mod.moduleOutcomes
+                        ? mod.moduleOutcomes
+                            .split(";")
+                            .map((s) => s.trim())
+                            .filter(Boolean)
+                        : [];
+
+                      return (
+                        <div
+                          key={mod.id}
+                          className="rounded-xl overflow-hidden border"
+                          style={{ borderColor: colors.border.light }}
+                        >
+                          {/* Module header */}
+                          <button
+                            type="button"
+                            className="w-full flex items-center justify-between p-4 text-left"
+                            style={{ backgroundColor: colors.background.gray }}
+                            onClick={() => toggleModule(mod.id)}
+                          >
+                            <div className="flex items-center gap-3 flex-1 min-w-0">
+                              <div
+                                className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                                style={{
+                                  backgroundColor: colors.primary.main,
+                                  color: colors.text.white,
+                                }}
+                              >
+                                <span className="text-sm font-bold">
+                                  {mod.moduleNumber}
+                                </span>
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p
+                                  className="font-semibold text-sm truncate"
+                                  style={{ color: colors.text.primary }}
+                                >
+                                  {mod.moduleTitle}
+                                </p>
+                                <p
+                                  className="text-xs mt-0.5"
+                                  style={{ color: colors.text.tertiary }}
+                                >
+                                  {sessions.length}{" "}
+                                  {t("courses.detail.sessions")}
+                                </p>
+                              </div>
+                            </div>
+                            {isExpanded ? (
+                              <CaretUp
+                                size={18}
+                                weight="bold"
+                                style={{ color: colors.text.secondary }}
+                              />
+                            ) : (
+                              <CaretDown
+                                size={18}
+                                weight="bold"
+                                style={{ color: colors.text.secondary }}
+                              />
+                            )}
+                          </button>
+
+                          {/* Expanded content */}
+                          {isExpanded && (
+                            <div
+                              className="px-4 pb-4 pt-2"
+                              style={{
+                                backgroundColor: colors.background.light,
+                              }}
+                            >
+                              {/* Module description */}
+                              {mod.moduleDescription && (
+                                <p
+                                  className="text-sm mb-3 leading-relaxed"
+                                  style={{ color: colors.text.secondary }}
+                                >
+                                  {mod.moduleDescription}
+                                </p>
+                              )}
+
+                              {/* Sessions list */}
+                              {sessions.length === 0 ? (
+                                <p
+                                  className="text-xs text-center py-3"
+                                  style={{ color: colors.text.tertiary }}
+                                >
+                                  {t("courses.detail.noSessions")}
+                                </p>
+                              ) : (
+                                <div className="space-y-1.5">
+                                  {sessions.map((sess) => {
+                                    return (
+                                      <div
+                                        key={sess.id}
+                                        className="rounded-lg p-3"
+                                        style={{
+                                          backgroundColor:
+                                            colors.background.gray,
+                                        }}
+                                      >
+                                        <div className="flex items-start gap-3">
+                                          <div
+                                            className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
+                                            style={{
+                                              backgroundColor:
+                                                colors.background.primaryLight,
+                                            }}
+                                          >
+                                            <Play
+                                              size={12}
+                                              weight="fill"
+                                              style={{
+                                                color: colors.primary.main,
+                                              }}
+                                            />
+                                          </div>
+                                          <div className="flex-1 min-w-0">
+                                            <p
+                                              className="font-medium text-sm"
+                                              style={{
+                                                color: colors.text.primary,
+                                              }}
+                                            >
+                                              {sess.sessionNumber}.{" "}
+                                              {sess.sessionTitle}
+                                            </p>
+                                            {sess.sessionDescription && (
+                                              <p
+                                                className="text-xs mt-1 leading-relaxed"
+                                                style={{
+                                                  color: colors.text.secondary,
+                                                }}
+                                              >
+                                                {sess.sessionDescription}
+                                              </p>
+                                            )}
+                                          </div>
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </CardBody>
             </Card>
           </motion.div>
@@ -486,7 +772,7 @@ const TutorCourseDetail = () => {
                       style={{ color: colors.primary.main }}
                     />
                     <span style={{ color: colors.text.secondary }}>
-                      {course.duration} {t("courses.detail.onDemandVideo")}
+                      {duration} {t("courses.detail.onDemandVideo")}
                     </span>
                   </div>
                   <div className="flex items-center gap-3">
@@ -507,17 +793,19 @@ const TutorCourseDetail = () => {
                       {t("courses.detail.mobileAccess")}
                     </span>
                   </div>
+                  {course.isCertificate && (
+                    <div className="flex items-center gap-3">
+                      <Certificate
+                        size={22}
+                        style={{ color: colors.primary.main }}
+                      />
+                      <span style={{ color: colors.text.secondary }}>
+                        {t("courses.detail.certificateCompletion")}
+                      </span>
+                    </div>
+                  )}
                   <div className="flex items-center gap-3">
-                    <Certificate
-                      size={22}
-                      style={{ color: colors.primary.main }}
-                    />
-                    <span style={{ color: colors.text.secondary }}>
-                      {t("courses.detail.certificateCompletion")}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <Infinity
+                    <InfinityIcon
                       size={22}
                       style={{ color: colors.primary.main }}
                     />
@@ -540,7 +828,7 @@ const TutorCourseDetail = () => {
           </motion.div>
         </div>
 
-        {/* Right Column - Sticky Price Card (overlaps banner) */}
+        {/* Right Column - Sticky Card */}
         <div className="lg:col-span-1 lg:-mt-64">
           <motion.div
             initial={{ opacity: 0 }}
@@ -552,49 +840,48 @@ const TutorCourseDetail = () => {
               className="shadow-lg overflow-hidden"
               style={{ backgroundColor: colors.background.light }}
             >
+              {/* Thumbnail */}
               <div className="relative w-full h-48 overflow-hidden">
                 <img
-                  src={course.image}
+                  src={
+                    course.thumbnailUrl ||
+                    "https://placehold.co/400x200?text=No+Image"
+                  }
                   alt={course.title}
                   className="w-full h-full object-cover"
                 />
+                {course.demoVideoUrl && (
+                  <a
+                    href={course.demoVideoUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="absolute inset-0 flex items-center justify-center bg-black/30 hover:bg-black/40 transition-colors"
+                  >
+                    <div className="w-14 h-14 rounded-full bg-white/90 flex items-center justify-center">
+                      <Play
+                        size={24}
+                        weight="fill"
+                        style={{ color: colors.primary.main }}
+                      />
+                    </div>
+                  </a>
+                )}
               </div>
 
               <CardBody className="p-6 space-y-5">
+                {/* Price */}
                 <div>
-                  <div className="flex items-center gap-3 mb-1">
-                    <span
-                      className="text-4xl font-bold"
-                      style={{ color: colors.primary.main }}
-                    >
-                      ${course.price}
-                    </span>
-                    {course.originalPrice && (
-                      <>
-                        <span
-                          className="text-lg line-through"
-                          style={{ color: colors.text.secondary }}
-                        >
-                          ${course.originalPrice}
-                        </span>
-                        {discountPercent > 0 && (
-                          <Chip
-                            size="sm"
-                            style={{
-                              backgroundColor: "rgba(16, 185, 129, 0.1)",
-                              color: "#10B981",
-                            }}
-                          >
-                            {discountPercent}% {t("courses.detail.off")}
-                          </Chip>
-                        )}
-                      </>
-                    )}
-                  </div>
+                  <span
+                    className="text-3xl font-bold"
+                    style={{ color: colors.primary.main }}
+                  >
+                    {formatPrice(course.price, course.currency)}
+                  </span>
                 </div>
 
                 <Divider />
 
+                {/* Course overview info */}
                 <div className="space-y-3">
                   <div className="flex items-center justify-between text-sm">
                     <span
@@ -602,13 +889,13 @@ const TutorCourseDetail = () => {
                       style={{ color: colors.text.secondary }}
                     >
                       <Clock size={16} weight="duotone" />
-                      {t("courses.detail.duration")}
+                      {t("courses.detail.timePerLesson")}
                     </span>
                     <span
                       className="font-medium"
                       style={{ color: colors.text.primary }}
                     >
-                      {course.duration}
+                      {duration || "—"}
                     </span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
@@ -631,14 +918,14 @@ const TutorCourseDetail = () => {
                       className="flex items-center gap-2"
                       style={{ color: colors.text.secondary }}
                     >
-                      <Users size={16} weight="duotone" />
-                      {t("courses.detail.studentsEnrolled")}
+                      <ListNumbers size={16} weight="duotone" />
+                      {t("courses.detail.modules")}
                     </span>
                     <span
                       className="font-medium"
                       style={{ color: colors.text.primary }}
                     >
-                      {course.students?.toLocaleString()}
+                      {modules.length}
                     </span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
@@ -646,14 +933,63 @@ const TutorCourseDetail = () => {
                       className="flex items-center gap-2"
                       style={{ color: colors.text.secondary }}
                     >
-                      <BookOpen size={16} weight="duotone" />
-                      {t("courses.lessons")}
+                      <Play size={16} weight="duotone" />
+                      {t("courses.detail.sessions")}
                     </span>
                     <span
                       className="font-medium"
                       style={{ color: colors.text.primary }}
                     >
-                      {course.lessons}
+                      {totalSessions}
+                    </span>
+                  </div>
+                  {course.numsSessionInWeek > 0 && (
+                    <div className="flex items-center justify-between text-sm">
+                      <span
+                        className="flex items-center gap-2"
+                        style={{ color: colors.text.secondary }}
+                      >
+                        <Clock size={16} weight="duotone" />
+                        {t("courses.detail.sessionsPerWeek")}
+                      </span>
+                      <span
+                        className="font-medium"
+                        style={{ color: colors.text.primary }}
+                      >
+                        {course.numsSessionInWeek}
+                      </span>
+                    </div>
+                  )}
+                  <div className="flex items-center justify-between text-sm">
+                    <span
+                      className="flex items-center gap-2"
+                      style={{ color: colors.text.secondary }}
+                    >
+                      <Users size={16} weight="duotone" />
+                      {t("courses.detail.studentsEnrolled")}
+                    </span>
+                    <span
+                      className="font-medium"
+                      style={{ color: colors.text.primary }}
+                    >
+                      {course.numberOfEnrollment?.toLocaleString() || 0}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span
+                      className="flex items-center gap-2"
+                      style={{ color: colors.text.secondary }}
+                    >
+                      <Certificate size={16} weight="duotone" />
+                      {t("courses.detail.certificate")}
+                    </span>
+                    <span
+                      className="font-medium"
+                      style={{ color: colors.text.primary }}
+                    >
+                      {course.isCertificate
+                        ? t("courses.detail.yes")
+                        : t("courses.detail.no")}
                     </span>
                   </div>
                 </div>

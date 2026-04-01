@@ -162,4 +162,72 @@ export const adminApi = {
     const response = await axiosInstance.put("/admin/settings", settings);
     return response.data;
   },
+
+  // Tutor management (/api/tutors)
+  getAllTutors: async (params = {}) => {
+    const response = await axiosInstance.get("/tutors", { params });
+    return response.data;
+  },
+
+  getTutorById: async (tutorId) => {
+    const response = await axiosInstance.get(`/tutors/${tutorId}`);
+    return response.data;
+  },
+
+  createTutor: async (formData) => {
+    const response = await axiosInstance.post("/tutors", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return response.data;
+  },
+
+  updateTutor: async (tutorId, data) => {
+    const response = await axiosInstance.put(`/tutors/${tutorId}`, data);
+    return response.data;
+  },
+
+  deleteTutor: async (tutorId) => {
+    const response = await axiosInstance.delete(`/tutors/${tutorId}`);
+    return response.data;
+  },
+
+  // Tutor verification requests (/api/tutor-verification-requests)
+  getVerificationRequests: async (params = {}) => {
+    const response = await axiosInstance.get("/tutor-verification-requests", {
+      params,
+    });
+    return response.data;
+  },
+
+  getVerificationRequestById: async (requestId) => {
+    const response = await axiosInstance.get(
+      `/tutor-verification-requests/${requestId}`
+    );
+    return response.data;
+  },
+
+  reviewVerificationRequest: async (requestId, { approved, rejectionReason }) => {
+    const token = localStorage.getItem("accessToken");
+    let adminUserId = "";
+    if (token) {
+      try {
+        const payload = JSON.parse(atob(token.split(".")[1]));
+        adminUserId = payload.sub;
+      } catch {
+        console.error("Failed to decode JWT");
+      }
+    }
+    const response = await axiosInstance.post(
+      `/tutor-verification-requests/review/${requestId}`,
+      { requestId, adminUserId, approved, rejectionReason }
+    );
+    return response.data;
+  },
+
+  deleteVerificationRequest: async (requestId) => {
+    const response = await axiosInstance.delete(
+      `/tutor-verification-requests/${requestId}`
+    );
+    return response.data;
+  },
 };

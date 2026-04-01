@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Button,
   Input,
@@ -8,6 +8,7 @@ import {
   DropdownTrigger,
   DropdownMenu,
   DropdownItem,
+  Spinner,
 } from "@heroui/react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -22,85 +23,33 @@ import {
   Eye,
 } from "@phosphor-icons/react";
 import CourseCard from "../../../components/CourseCard/CourseCard";
+import { coursesApi } from "../../../api";
 
 const MyCourses = () => {
   const { t } = useTranslation();
   const colors = useThemeColors();
   const navigate = useNavigate();
   const [selectedTab, setSelectedTab] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [courses, setCourses] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const courses = [
-    {
-      id: 1,
-      title: "Business English Masterclass",
-      description: "Complete business English course for professionals",
-      image:
-        "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=400",
-      students: 45,
-      rating: 4.9,
-      reviews: 234,
-      lessons: 20,
-      duration: "10 hours",
-      price: 199,
-      originalPrice: 299,
-      level: "Intermediate",
-      status: "published",
-      category: "Business",
-    },
-    {
-      id: 2,
-      title: "IELTS Preparation Course",
-      description: "Comprehensive IELTS preparation for band 7+",
-      image:
-        "https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=400",
-      students: 32,
-      rating: 4.8,
-      reviews: 189,
-      lessons: 24,
-      duration: "12 hours",
-      price: 249,
-      originalPrice: 349,
-      level: "Advanced",
-      status: "published",
-      category: "Exam Prep",
-    },
-    {
-      id: 3,
-      title: "Conversational English",
-      description: "Improve your daily English conversation skills",
-      image:
-        "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=400",
-      students: 28,
-      rating: 5.0,
-      reviews: 156,
-      lessons: 15,
-      duration: "8 hours",
-      price: 149,
-      originalPrice: 249,
-      level: "Beginner",
-      status: "published",
-      category: "Speaking",
-    },
-    {
-      id: 4,
-      title: "Academic Writing",
-      description: "Master academic writing for university",
-      image:
-        "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=400",
-      students: 0,
-      rating: 0,
-      lessons: 12,
-      duration: "6 hours",
-      price: 179,
-      originalPrice: 279,
-      level: "Advanced",
-      status: "draft",
-      category: "Writing",
-    },
-  ];
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        const res = await coursesApi.getMyCourses({ "page-size": 50 });
+        setCourses(res?.data?.items || []);
+      } catch (error) {
+        console.error("Failed to fetch courses:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchCourses();
+  }, []);
 
   const getStatusColor = (status) => {
-    switch (status) {
+    switch (status?.toLowerCase()) {
       case "published":
         return colors.state.success;
       case "draft":
@@ -111,8 +60,12 @@ const MyCourses = () => {
   };
 
   const filteredCourses = courses.filter((course) => {
-    if (selectedTab === "all") return true;
-    return course.status === selectedTab;
+    const matchesTab =
+      selectedTab === "all" || course.status?.toLowerCase() === selectedTab;
+    const matchesSearch =
+      !searchQuery ||
+      course.title?.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesTab && matchesSearch;
   });
 
   return (
@@ -157,6 +110,8 @@ const MyCourses = () => {
       >
         <Input
           placeholder={t("tutorDashboard.myCourses.searchPlaceholder")}
+          value={searchQuery}
+          onValueChange={setSearchQuery}
           startContent={
             <MagnifyingGlass
               className="w-5 h-5"
@@ -191,75 +146,81 @@ const MyCourses = () => {
       </motion.div>
 
       {/* Courses Grid */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.15 }}
-        className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
-      >
-        {filteredCourses.map((course, index) => (
-          <motion.div
-            key={course.id}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.15 }}
-            whileHover={{
-              y: -8,
-              transition: { type: "spring", stiffness: 400, damping: 25 },
-            }}
-          >
-            <CourseCard
-              course={course}
-              showCategory={true}
-              showTutorInfo={false}
-              variant="compact"
-              basePath="/tutor/courses"
-              statusBadge={{
-                label:
-                  course.status === "published"
-                    ? t("tutorDashboard.myCourses.published")
-                    : t("tutorDashboard.myCourses.draft"),
-                color: getStatusColor(course.status),
+      {loading ? (
+        <div className="flex justify-center py-12">
+          <Spinner size="lg" />
+        </div>
+      ) : (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.15 }}
+          className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+        >
+          {filteredCourses.map((course) => (
+            <motion.div
+              key={course.id}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.15 }}
+              whileHover={{
+                y: -8,
+                transition: { type: "spring", stiffness: 400, damping: 25 },
               }}
-              topRightAction={
-                <Dropdown>
-                  <DropdownTrigger>
-                    <Button
-                      isIconOnly
-                      size="sm"
-                      variant="flat"
-                      style={{ backgroundColor: "rgba(255,255,255,0.9)" }}
-                    >
-                      <DotsThree weight="bold" className="w-5 h-5" />
-                    </Button>
-                  </DropdownTrigger>
-                  <DropdownMenu>
-                    <DropdownItem
-                      key="view"
-                      startContent={<Eye className="w-4 h-4" />}
-                    >
-                      {t("tutorDashboard.myCourses.viewCourse")}
-                    </DropdownItem>
-                    <DropdownItem
-                      key="edit"
-                      startContent={<PencilSimple className="w-4 h-4" />}
-                    >
-                      {t("tutorDashboard.myCourses.editCourse")}
-                    </DropdownItem>
-                    <DropdownItem
-                      key="delete"
-                      className="text-danger"
-                      startContent={<Trash className="w-4 h-4" />}
-                    >
-                      {t("tutorDashboard.myCourses.deleteCourse")}
-                    </DropdownItem>
-                  </DropdownMenu>
-                </Dropdown>
-              }
-            />
-          </motion.div>
-        ))}
-      </motion.div>
+            >
+              <CourseCard
+                course={course}
+                showCategory={true}
+                showTutorInfo={false}
+                variant="compact"
+                basePath="/tutor/courses"
+                statusBadge={{
+                  label:
+                    course.status?.toLowerCase() === "published"
+                      ? t("tutorDashboard.myCourses.published")
+                      : t("tutorDashboard.myCourses.draft"),
+                  color: getStatusColor(course.status),
+                }}
+                topRightAction={
+                  <Dropdown>
+                    <DropdownTrigger>
+                      <Button
+                        isIconOnly
+                        size="sm"
+                        variant="flat"
+                        style={{ backgroundColor: "rgba(255,255,255,0.9)" }}
+                      >
+                        <DotsThree weight="bold" className="w-5 h-5" />
+                      </Button>
+                    </DropdownTrigger>
+                    <DropdownMenu>
+                      <DropdownItem
+                        key="view"
+                        startContent={<Eye className="w-4 h-4" />}
+                      >
+                        {t("tutorDashboard.myCourses.viewCourse")}
+                      </DropdownItem>
+                      <DropdownItem
+                        key="edit"
+                        startContent={<PencilSimple className="w-4 h-4" />}
+                      >
+                        {t("tutorDashboard.myCourses.editCourse")}
+                      </DropdownItem>
+                      <DropdownItem
+                        key="delete"
+                        className="text-danger"
+                        startContent={<Trash className="w-4 h-4" />}
+                      >
+                        {t("tutorDashboard.myCourses.deleteCourse")}
+                      </DropdownItem>
+                    </DropdownMenu>
+                  </Dropdown>
+                }
+              />
+            </motion.div>
+          ))}
+        </motion.div>
+      )}
     </div>
   );
 };

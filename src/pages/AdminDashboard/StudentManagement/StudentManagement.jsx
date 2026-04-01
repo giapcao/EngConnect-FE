@@ -27,6 +27,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { useThemeColors } from "../../../hooks/useThemeColors";
 import useInputStyles from "../../../hooks/useInputStyles";
+import useTableStyles from "../../../hooks/useTableStyles";
 import { motion } from "framer-motion";
 import {
   MagnifyingGlass,
@@ -47,6 +48,7 @@ const StudentManagement = () => {
   const { t } = useTranslation();
   const colors = useThemeColors();
   const { inputClassNames } = useInputStyles();
+  const { tableCardStyle, tableClassNames } = useTableStyles();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [page, setPage] = useState(1);
@@ -323,18 +325,11 @@ const StudentManagement = () => {
         animate={{ opacity: 1 }}
         transition={{ duration: 0.15 }}
       >
-        <Card
-          shadow="none"
-          className="border-none"
-          style={{ backgroundColor: colors.background.light }}
-        >
+        <Card shadow="none" className="border-none" style={tableCardStyle}>
           <CardBody className="p-0">
             <Table
               aria-label="Students table"
-              classNames={{
-                wrapper: "shadow-none",
-                th: `text-xs font-semibold ${colors.text.secondary}`,
-              }}
+              classNames={tableClassNames}
               bottomContent={
                 <div className="flex w-full justify-center py-4">
                   <Pagination

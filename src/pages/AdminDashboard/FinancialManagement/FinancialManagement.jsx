@@ -20,6 +20,7 @@ import {
 } from "@heroui/react";
 import { useTranslation } from "react-i18next";
 import { useThemeColors } from "../../../hooks/useThemeColors";
+import useTableStyles from "../../../hooks/useTableStyles";
 import { motion } from "framer-motion";
 import {
   CurrencyDollar,
@@ -37,6 +38,7 @@ import {
 const FinancialManagement = () => {
   const { t } = useTranslation();
   const colors = useThemeColors();
+  const { tableCardStyle, tableClassNames } = useTableStyles();
   const [selectedPeriod, setSelectedPeriod] = useState("month");
   const [activeTab, setActiveTab] = useState("overview");
   const [page, setPage] = useState(1);
@@ -343,18 +345,11 @@ const FinancialManagement = () => {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.15 }}
         >
-          <Card
-            shadow="none"
-            className="border-none"
-            style={{ backgroundColor: colors.background.light }}
-          >
+          <Card shadow="none" className="border-none" style={tableCardStyle}>
             <CardBody className="p-0">
               <Table
                 aria-label="Transactions table"
-                classNames={{
-                  wrapper: "shadow-none",
-                  th: `text-xs font-semibold ${colors.text.secondary}`,
-                }}
+                classNames={tableClassNames}
                 bottomContent={
                   <div className="flex w-full justify-center py-4">
                     <Pagination

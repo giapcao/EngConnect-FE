@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Card,
   CardBody,
@@ -23,11 +23,16 @@ import {
   ModalHeader,
   ModalBody,
   ModalFooter,
+  Spinner,
+  Textarea,
+  addToast,
 } from "@heroui/react";
 import { useTranslation } from "react-i18next";
 import { useThemeColors } from "../../../hooks/useThemeColors";
 import useInputStyles from "../../../hooks/useInputStyles";
+import useTableStyles from "../../../hooks/useTableStyles";
 import { motion } from "framer-motion";
+import { adminApi } from "../../../api";
 import {
   MagnifyingGlass,
   DotsThree,
@@ -35,136 +40,235 @@ import {
   PencilSimple,
   Trash,
   Export,
-  Plus,
   Funnel,
   ChalkboardTeacher,
   Star,
-  CurrencyDollar,
-  Users,
   CheckCircle,
-  XCircle,
 } from "@phosphor-icons/react";
 
 const TutorManagement = () => {
   const { t } = useTranslation();
   const colors = useThemeColors();
-  const { inputClassNames } = useInputStyles();
+  const { inputClassNames, textareaClassNames } = useInputStyles();
+  const { tableCardStyle, tableClassNames } = useTableStyles();
+
+  // List state
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedStatus, setSelectedStatus] = useState("all");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [selectedVerifiedStatus, setSelectedVerifiedStatus] = useState("all");
   const [page, setPage] = useState(1);
+  const pageSize = 10;
+  const [tutors, setTutors] = useState([]);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading] = useState(false);
+
+  // Stats
+  const [totalTutorsCount, setTotalTutorsCount] = useState(0);
+  const [verifiedCount, setVerifiedCount] = useState(0);
+
+  // Detail modal
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [selectedTutor, setSelectedTutor] = useState(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+
+  // Delete modal
+  const {
+    isOpen: isDeleteOpen,
+    onOpen: onDeleteOpen,
+    onClose: onDeleteClose,
+  } = useDisclosure();
+  const [tutorToDelete, setTutorToDelete] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+
+  // Edit modal
+  const {
+    isOpen: isEditOpen,
+    onOpen: onEditOpen,
+    onClose: onEditClose,
+  } = useDisclosure();
+  const [editForm, setEditForm] = useState({
+    headline: "",
+    bio: "",
+    monthExperience: 0,
+    status: "",
+  });
+  const [editTutorId, setEditTutorId] = useState(null);
+  const [saving, setSaving] = useState(false);
+
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+      setPage(1);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  // Fetch tutors list
+  const fetchTutors = useCallback(async () => {
+    setLoading(true);
+    try {
+      const params = { page, "page-size": pageSize };
+      if (debouncedSearch) params["search-term"] = debouncedSearch;
+      if (selectedVerifiedStatus !== "all")
+        params.VerifiedStatus = selectedVerifiedStatus;
+
+      const response = await adminApi.getAllTutors(params);
+      const data = response.data;
+      setTutors(data.items || []);
+      setTotalPages(data.totalPages || 1);
+    } catch (error) {
+      console.error("Failed to fetch tutors:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [page, pageSize, debouncedSearch, selectedVerifiedStatus]);
+
+  useEffect(() => {
+    fetchTutors();
+  }, [fetchTutors]);
+
+  // Fetch stats on mount
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const [allRes, verifiedRes] = await Promise.all([
+          adminApi.getAllTutors({ "page-size": 1, page: 1 }),
+          adminApi.getAllTutors({
+            VerifiedStatus: "Verified",
+            "page-size": 1,
+            page: 1,
+          }),
+        ]);
+        setTotalTutorsCount(allRes.data.totalItems || 0);
+        setVerifiedCount(verifiedRes.data.totalItems || 0);
+      } catch (error) {
+        console.error("Failed to fetch stats:", error);
+      }
+    };
+    fetchStats();
+  }, []);
 
   const stats = [
     {
       icon: ChalkboardTeacher,
       label: t("adminDashboard.tutors.stats.totalTutors"),
-      value: "458",
+      value: totalTutorsCount.toLocaleString(),
       color: colors.primary.main,
       bg: colors.background.primaryLight,
     },
     {
       icon: CheckCircle,
       label: t("adminDashboard.tutors.stats.verified"),
-      value: "412",
+      value: verifiedCount.toLocaleString(),
       color: colors.state.success,
       bg: `${colors.state.success}20`,
     },
-    {
-      icon: Users,
-      label: t("adminDashboard.tutors.stats.totalStudents"),
-      value: "12,847",
-      color: colors.state.warning,
-      bg: `${colors.state.warning}20`,
-    },
-    {
-      icon: CurrencyDollar,
-      label: t("adminDashboard.tutors.stats.totalEarnings"),
-      value: "$248,560",
-      color: colors.state.error,
-      bg: `${colors.state.error}20`,
-    },
   ];
 
-  const tutors = [
-    {
-      id: 1,
-      name: "Sarah Johnson",
-      email: "sarah.j@example.com",
-      avatar: "https://i.pravatar.cc/150?u=tutor1",
-      specialty: "Business English",
-      rating: 4.9,
-      students: 234,
-      earnings: "$12,450",
-      status: "verified",
-      joinDate: "Jan 10, 2024",
-    },
-    {
-      id: 2,
-      name: "Michael Chen",
-      email: "michael.c@example.com",
-      avatar: "https://i.pravatar.cc/150?u=tutor2",
-      specialty: "IELTS Preparation",
-      rating: 4.8,
-      students: 189,
-      earnings: "$9,830",
-      status: "verified",
-      joinDate: "Feb 15, 2024",
-    },
-    {
-      id: 3,
-      name: "Emma Wilson",
-      email: "emma.w@example.com",
-      avatar: "https://i.pravatar.cc/150?u=tutor3",
-      specialty: "Conversational English",
-      rating: 4.9,
-      students: 312,
-      earnings: "$15,200",
-      status: "verified",
-      joinDate: "Dec 20, 2023",
-    },
-    {
-      id: 4,
-      name: "David Brown",
-      email: "david.b@example.com",
-      avatar: "https://i.pravatar.cc/150?u=pending1",
-      specialty: "Grammar Expert",
-      rating: 0,
-      students: 0,
-      earnings: "$0",
-      status: "pending",
-      joinDate: "Jan 25, 2024",
-    },
-    {
-      id: 5,
-      name: "Anna Martinez",
-      email: "anna.m@example.com",
-      avatar: "https://i.pravatar.cc/150?u=pending2",
-      specialty: "Academic Writing",
-      rating: 0,
-      students: 0,
-      earnings: "$0",
-      status: "pending",
-      joinDate: "Jan 26, 2024",
-    },
-  ];
+  const getVerifiedColor = (status) => {
+    return status === "Verified" ? "success" : "warning";
+  };
 
   const getStatusColor = (status) => {
     switch (status) {
-      case "verified":
+      case "Active":
         return "success";
-      case "pending":
-        return "warning";
-      case "suspended":
-        return "danger";
-      default:
+      case "Inactive":
         return "default";
+      default:
+        return "primary";
     }
   };
 
-  const handleViewTutor = (tutor) => {
+  const getTutorName = (tutor) => {
+    if (tutor.user) {
+      return `${tutor.user.firstName || ""} ${tutor.user.lastName || ""}`.trim();
+    }
+    return t("adminDashboard.tutors.nA");
+  };
+
+  const getTutorEmail = (tutor) => {
+    return tutor.user?.email || "";
+  };
+
+  // View detail
+  const handleViewTutor = async (tutor) => {
     setSelectedTutor(tutor);
     onOpen();
+    setDetailLoading(true);
+    try {
+      const response = await adminApi.getTutorById(tutor.id);
+      setSelectedTutor(response.data);
+    } catch (error) {
+      console.error("Failed to fetch tutor detail:", error);
+    } finally {
+      setDetailLoading(false);
+    }
+  };
+
+  // Delete
+  const handleDeleteClick = (tutor) => {
+    setTutorToDelete(tutor);
+    onDeleteOpen();
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!tutorToDelete) return;
+    setDeleting(true);
+    try {
+      await adminApi.deleteTutor(tutorToDelete.id);
+      onDeleteClose();
+      setTutorToDelete(null);
+      addToast({
+        title: t("adminDashboard.tutors.deleteSuccess"),
+        color: "success",
+      });
+      fetchTutors();
+      setTotalTutorsCount((prev) => prev - 1);
+    } catch (error) {
+      console.error("Failed to delete tutor:", error);
+      addToast({
+        title: t("adminDashboard.tutors.deleteFailed"),
+        color: "danger",
+      });
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  // Edit
+  const handleEditClick = (tutor) => {
+    setEditTutorId(tutor.id);
+    setEditForm({
+      headline: tutor.headline || "",
+      bio: tutor.bio || "",
+      monthExperience: tutor.monthExperience || 0,
+      status: tutor.status || "",
+    });
+    onEditOpen();
+  };
+
+  const handleEditSave = async () => {
+    if (!editTutorId) return;
+    setSaving(true);
+    try {
+      await adminApi.updateTutor(editTutorId, editForm);
+      onEditClose();
+      addToast({
+        title: t("adminDashboard.tutors.updateSuccess"),
+        color: "success",
+      });
+      fetchTutors();
+    } catch (error) {
+      console.error("Failed to update tutor:", error);
+      addToast({
+        title: t("adminDashboard.tutors.updateFailed"),
+        color: "danger",
+      });
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -195,20 +299,11 @@ const TutorManagement = () => {
           >
             {t("adminDashboard.tutors.export")}
           </Button>
-          <Button
-            startContent={<Plus className="w-4 h-4" />}
-            style={{
-              backgroundColor: colors.primary.main,
-              color: colors.text.white,
-            }}
-          >
-            {t("adminDashboard.tutors.addTutor")}
-          </Button>
         </div>
       </motion.div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {stats.map((stat, index) => (
           <motion.div
             key={index}
@@ -288,29 +383,31 @@ const TutorManagement = () => {
                       variant="flat"
                       startContent={<Funnel className="w-4 h-4" />}
                     >
-                      {t("adminDashboard.tutors.status")}:{" "}
-                      {selectedStatus === "all"
+                      {t("adminDashboard.tutors.verifiedStatusLabel")}:{" "}
+                      {selectedVerifiedStatus === "all"
                         ? t("adminDashboard.tutors.all")
-                        : selectedStatus}
+                        : t(
+                            `adminDashboard.tutors.${selectedVerifiedStatus === "Verified" ? "verified" : "unverified"}`,
+                          )}
                     </Button>
                   </DropdownTrigger>
                   <DropdownMenu
-                    aria-label="Status filter"
-                    onAction={(key) => setSelectedStatus(key)}
-                    selectedKeys={[selectedStatus]}
+                    aria-label="Verified status filter"
+                    onAction={(key) => {
+                      setSelectedVerifiedStatus(key);
+                      setPage(1);
+                    }}
+                    selectedKeys={[selectedVerifiedStatus]}
                     selectionMode="single"
                   >
                     <DropdownItem key="all">
                       {t("adminDashboard.tutors.all")}
                     </DropdownItem>
-                    <DropdownItem key="verified">
+                    <DropdownItem key="Verified">
                       {t("adminDashboard.tutors.verified")}
                     </DropdownItem>
-                    <DropdownItem key="pending">
-                      {t("adminDashboard.tutors.pending")}
-                    </DropdownItem>
-                    <DropdownItem key="suspended">
-                      {t("adminDashboard.tutors.suspended")}
+                    <DropdownItem key="Unverified">
+                      {t("adminDashboard.tutors.unverified")}
                     </DropdownItem>
                   </DropdownMenu>
                 </Dropdown>
@@ -326,30 +423,25 @@ const TutorManagement = () => {
         animate={{ opacity: 1 }}
         transition={{ duration: 0.15 }}
       >
-        <Card
-          shadow="none"
-          className="border-none"
-          style={{ backgroundColor: colors.background.light }}
-        >
+        <Card shadow="none" className="border-none" style={tableCardStyle}>
           <CardBody className="p-0">
             <Table
               aria-label="Tutors table"
-              classNames={{
-                wrapper: "shadow-none",
-                th: `text-xs font-semibold ${colors.text.secondary}`,
-              }}
+              classNames={tableClassNames}
               bottomContent={
-                <div className="flex w-full justify-center py-4">
-                  <Pagination
-                    isCompact
-                    showControls
-                    showShadow
-                    color="primary"
-                    page={page}
-                    total={10}
-                    onChange={(page) => setPage(page)}
-                  />
-                </div>
+                totalPages > 1 ? (
+                  <div className="flex w-full justify-center py-4">
+                    <Pagination
+                      isCompact
+                      showControls
+                      showShadow
+                      color="primary"
+                      page={page}
+                      total={totalPages}
+                      onChange={(p) => setPage(p)}
+                    />
+                  </div>
+                ) : null
               }
             >
               <TableHeader>
@@ -357,16 +449,16 @@ const TutorManagement = () => {
                   {t("adminDashboard.tutors.table.tutor")}
                 </TableColumn>
                 <TableColumn>
-                  {t("adminDashboard.tutors.table.specialty")}
+                  {t("adminDashboard.tutors.table.headline")}
+                </TableColumn>
+                <TableColumn>
+                  {t("adminDashboard.tutors.table.experience")}
                 </TableColumn>
                 <TableColumn>
                   {t("adminDashboard.tutors.table.rating")}
                 </TableColumn>
                 <TableColumn>
-                  {t("adminDashboard.tutors.table.students")}
-                </TableColumn>
-                <TableColumn>
-                  {t("adminDashboard.tutors.table.earnings")}
+                  {t("adminDashboard.tutors.table.verifiedStatus")}
                 </TableColumn>
                 <TableColumn>
                   {t("adminDashboard.tutors.table.status")}
@@ -375,7 +467,11 @@ const TutorManagement = () => {
                   {t("adminDashboard.tutors.table.actions")}
                 </TableColumn>
               </TableHeader>
-              <TableBody>
+              <TableBody
+                isLoading={loading}
+                loadingContent={<Spinner size="lg" />}
+                emptyContent={t("adminDashboard.tutors.noData")}
+              >
                 {tutors.map((tutor) => (
                   <TableRow key={tutor.id}>
                     <TableCell>
@@ -386,24 +482,34 @@ const TutorManagement = () => {
                             className="font-medium"
                             style={{ color: colors.text.primary }}
                           >
-                            {tutor.name}
+                            {getTutorName(tutor)}
                           </p>
                           <p
                             className="text-xs"
                             style={{ color: colors.text.secondary }}
                           >
-                            {tutor.email}
+                            {getTutorEmail(tutor)}
                           </p>
                         </div>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <span style={{ color: colors.text.primary }}>
-                        {tutor.specialty}
+                      <span
+                        className="line-clamp-1"
+                        style={{ color: colors.text.primary }}
+                      >
+                        {tutor.headline || t("adminDashboard.tutors.nA")}
                       </span>
                     </TableCell>
                     <TableCell>
-                      {tutor.rating > 0 ? (
+                      <span style={{ color: colors.text.primary }}>
+                        {tutor.monthExperience != null
+                          ? `${tutor.monthExperience} ${t("adminDashboard.tutors.months")}`
+                          : t("adminDashboard.tutors.nA")}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      {tutor.ratingAverage > 0 ? (
                         <div className="flex items-center gap-1">
                           <Star
                             className="w-4 h-4"
@@ -411,22 +517,31 @@ const TutorManagement = () => {
                             style={{ color: colors.state.warning }}
                           />
                           <span style={{ color: colors.text.primary }}>
-                            {tutor.rating}
+                            {tutor.ratingAverage.toFixed(1)}
+                          </span>
+                          <span
+                            className="text-xs"
+                            style={{ color: colors.text.tertiary }}
+                          >
+                            ({tutor.ratingCount})
                           </span>
                         </div>
                       ) : (
-                        <span style={{ color: colors.text.tertiary }}>N/A</span>
+                        <span style={{ color: colors.text.tertiary }}>
+                          {t("adminDashboard.tutors.nA")}
+                        </span>
                       )}
                     </TableCell>
                     <TableCell>
-                      <span style={{ color: colors.text.primary }}>
-                        {tutor.students}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <span style={{ color: colors.state.success }}>
-                        {tutor.earnings}
-                      </span>
+                      <Chip
+                        size="sm"
+                        color={getVerifiedColor(tutor.verifiedStatus)}
+                        variant="flat"
+                      >
+                        {tutor.verifiedStatus === "Verified"
+                          ? t("adminDashboard.tutors.verified")
+                          : t("adminDashboard.tutors.unverified")}
+                      </Chip>
                     </TableCell>
                     <TableCell>
                       <Chip
@@ -439,26 +554,6 @@ const TutorManagement = () => {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1">
-                        {tutor.status === "pending" && (
-                          <>
-                            <Button
-                              isIconOnly
-                              variant="light"
-                              size="sm"
-                              style={{ color: colors.state.success }}
-                            >
-                              <CheckCircle className="w-5 h-5" weight="fill" />
-                            </Button>
-                            <Button
-                              isIconOnly
-                              variant="light"
-                              size="sm"
-                              style={{ color: colors.state.error }}
-                            >
-                              <XCircle className="w-5 h-5" weight="fill" />
-                            </Button>
-                          </>
-                        )}
                         <Dropdown>
                           <DropdownTrigger>
                             <Button isIconOnly variant="light" size="sm">
@@ -482,6 +577,7 @@ const TutorManagement = () => {
                               startContent={
                                 <PencilSimple className="w-4 h-4" />
                               }
+                              onPress={() => handleEditClick(tutor)}
                             >
                               {t("adminDashboard.tutors.edit")}
                             </DropdownItem>
@@ -489,6 +585,7 @@ const TutorManagement = () => {
                               key="delete"
                               color="danger"
                               startContent={<Trash className="w-4 h-4" />}
+                              onPress={() => handleDeleteClick(tutor)}
                             >
                               {t("adminDashboard.tutors.delete")}
                             </DropdownItem>
@@ -513,7 +610,11 @@ const TutorManagement = () => {
                 {t("adminDashboard.tutors.tutorDetails")}
               </ModalHeader>
               <ModalBody>
-                {selectedTutor && (
+                {detailLoading ? (
+                  <div className="flex justify-center py-8">
+                    <Spinner size="lg" />
+                  </div>
+                ) : selectedTutor ? (
                   <div className="space-y-4">
                     <div className="flex items-center gap-4">
                       <Avatar
@@ -525,21 +626,35 @@ const TutorManagement = () => {
                           className="text-xl font-semibold"
                           style={{ color: colors.text.primary }}
                         >
-                          {selectedTutor.name}
+                          {getTutorName(selectedTutor)}
                         </h3>
                         <p style={{ color: colors.text.secondary }}>
-                          {selectedTutor.specialty}
+                          {selectedTutor.headline || ""}
                         </p>
-                        <Chip
-                          size="sm"
-                          color={getStatusColor(selectedTutor.status)}
-                          variant="flat"
-                          className="mt-2"
-                        >
-                          {selectedTutor.status}
-                        </Chip>
+                        <div className="flex gap-2 mt-2">
+                          <Chip
+                            size="sm"
+                            color={getVerifiedColor(
+                              selectedTutor.verifiedStatus,
+                            )}
+                            variant="flat"
+                          >
+                            {selectedTutor.verifiedStatus === "Verified"
+                              ? t("adminDashboard.tutors.verified")
+                              : t("adminDashboard.tutors.unverified")}
+                          </Chip>
+                          <Chip
+                            size="sm"
+                            color={getStatusColor(selectedTutor.status)}
+                            variant="flat"
+                          >
+                            {selectedTutor.status}
+                          </Chip>
+                        </div>
                       </div>
                     </div>
+
+                    {/* Stats row */}
                     <div className="grid grid-cols-3 gap-4">
                       <div
                         className="p-4 rounded-xl text-center"
@@ -555,14 +670,18 @@ const TutorManagement = () => {
                             className="text-2xl font-bold"
                             style={{ color: colors.text.primary }}
                           >
-                            {selectedTutor.rating || "N/A"}
+                            {selectedTutor.ratingAverage > 0
+                              ? selectedTutor.ratingAverage.toFixed(1)
+                              : t("adminDashboard.tutors.nA")}
                           </span>
                         </div>
                         <p
                           className="text-sm"
                           style={{ color: colors.text.secondary }}
                         >
-                          Rating
+                          {t("adminDashboard.tutors.table.rating")}
+                          {selectedTutor.ratingCount > 0 &&
+                            ` (${selectedTutor.ratingCount} ${t("adminDashboard.tutors.ratingCount")})`}
                         </p>
                       </div>
                       <div
@@ -573,13 +692,14 @@ const TutorManagement = () => {
                           className="text-2xl font-bold"
                           style={{ color: colors.text.primary }}
                         >
-                          {selectedTutor.students}
+                          {selectedTutor.monthExperience || 0}
                         </p>
                         <p
                           className="text-sm"
                           style={{ color: colors.text.secondary }}
                         >
-                          Students
+                          {t("adminDashboard.tutors.experience")} (
+                          {t("adminDashboard.tutors.months")})
                         </p>
                       </div>
                       <div
@@ -588,32 +708,254 @@ const TutorManagement = () => {
                       >
                         <p
                           className="text-2xl font-bold"
-                          style={{ color: colors.state.success }}
+                          style={{ color: colors.text.primary }}
                         >
-                          {selectedTutor.earnings}
+                          {selectedTutor.slotsCount || 0}
                         </p>
                         <p
                           className="text-sm"
                           style={{ color: colors.text.secondary }}
                         >
-                          Earnings
+                          {t("adminDashboard.tutors.slots")}
                         </p>
                       </div>
                     </div>
+
+                    {/* Info grid */}
+                    <div className="space-y-3">
+                      {selectedTutor.bio && (
+                        <div>
+                          <p
+                            className="text-sm font-semibold mb-1"
+                            style={{ color: colors.text.secondary }}
+                          >
+                            {t("adminDashboard.tutors.bio")}
+                          </p>
+                          <p style={{ color: colors.text.primary }}>
+                            {selectedTutor.bio}
+                          </p>
+                        </div>
+                      )}
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <p
+                            className="text-sm font-semibold"
+                            style={{ color: colors.text.secondary }}
+                          >
+                            {t("adminDashboard.tutors.email")}
+                          </p>
+                          <p style={{ color: colors.text.primary }}>
+                            {getTutorEmail(selectedTutor)}
+                          </p>
+                        </div>
+                        <div>
+                          <p
+                            className="text-sm font-semibold"
+                            style={{ color: colors.text.secondary }}
+                          >
+                            {t("adminDashboard.tutors.phone")}
+                          </p>
+                          <p style={{ color: colors.text.primary }}>
+                            {selectedTutor.user?.phone ||
+                              t("adminDashboard.tutors.nA")}
+                          </p>
+                        </div>
+                        <div>
+                          <p
+                            className="text-sm font-semibold"
+                            style={{ color: colors.text.secondary }}
+                          >
+                            {t("adminDashboard.tutors.joinDate")}
+                          </p>
+                          <p style={{ color: colors.text.primary }}>
+                            {selectedTutor.createdAt
+                              ? new Date(
+                                  selectedTutor.createdAt,
+                                ).toLocaleDateString()
+                              : t("adminDashboard.tutors.nA")}
+                          </p>
+                        </div>
+                      </div>
+                      {selectedTutor.introVideoUrl && (
+                        <div>
+                          <p
+                            className="text-sm font-semibold mb-1"
+                            style={{ color: colors.text.secondary }}
+                          >
+                            {t("adminDashboard.tutors.introVideo")}
+                          </p>
+                          <video
+                            src={selectedTutor.introVideoUrl}
+                            controls
+                            className="w-full max-h-60 rounded-lg"
+                          />
+                        </div>
+                      )}
+                      {selectedTutor.cvUrl && (
+                        <div>
+                          <p
+                            className="text-sm font-semibold mb-1"
+                            style={{ color: colors.text.secondary }}
+                          >
+                            {t("adminDashboard.tutors.cvFile")}
+                          </p>
+                          <a
+                            href={selectedTutor.cvUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm underline"
+                            style={{ color: colors.primary.main }}
+                          >
+                            {t("adminDashboard.tutors.view")} CV
+                          </a>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                )}
+                ) : null}
               </ModalBody>
               <ModalFooter>
                 <Button variant="light" onPress={onClose}>
                   {t("adminDashboard.tutors.close")}
                 </Button>
                 <Button
+                  onPress={() => {
+                    onClose();
+                    if (selectedTutor) handleEditClick(selectedTutor);
+                  }}
                   style={{
                     backgroundColor: colors.primary.main,
                     color: colors.text.white,
                   }}
                 >
                   {t("adminDashboard.tutors.edit")}
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <Modal isOpen={isDeleteOpen} onClose={onDeleteClose} size="sm">
+        <ModalContent style={{ backgroundColor: colors.background.light }}>
+          {(onClose) => (
+            <>
+              <ModalHeader style={{ color: colors.text.primary }}>
+                {t("adminDashboard.tutors.confirmDelete")}
+              </ModalHeader>
+              <ModalBody>
+                <p style={{ color: colors.text.secondary }}>
+                  {t("adminDashboard.tutors.confirmDeleteMsg")}
+                </p>
+                {tutorToDelete && (
+                  <div className="flex items-center gap-3 mt-3">
+                    <Avatar src={tutorToDelete.avatar} size="sm" />
+                    <div>
+                      <p
+                        className="font-medium"
+                        style={{ color: colors.text.primary }}
+                      >
+                        {getTutorName(tutorToDelete)}
+                      </p>
+                      <p
+                        className="text-xs"
+                        style={{ color: colors.text.secondary }}
+                      >
+                        {getTutorEmail(tutorToDelete)}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </ModalBody>
+              <ModalFooter>
+                <Button variant="light" onPress={onClose}>
+                  {t("adminDashboard.tutors.cancel")}
+                </Button>
+                <Button
+                  color="danger"
+                  onPress={handleDeleteConfirm}
+                  isLoading={deleting}
+                >
+                  {t("adminDashboard.tutors.delete")}
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
+
+      {/* Edit Tutor Modal */}
+      <Modal isOpen={isEditOpen} onClose={onEditClose} size="lg">
+        <ModalContent style={{ backgroundColor: colors.background.light }}>
+          {(onClose) => (
+            <>
+              <ModalHeader style={{ color: colors.text.primary }}>
+                {t("adminDashboard.tutors.editTutor")}
+              </ModalHeader>
+              <ModalBody>
+                <div className="space-y-4">
+                  <Input
+                    label={t("adminDashboard.tutors.headline")}
+                    value={editForm.headline}
+                    onChange={(e) =>
+                      setEditForm((prev) => ({
+                        ...prev,
+                        headline: e.target.value,
+                      }))
+                    }
+                    classNames={inputClassNames}
+                  />
+                  <Textarea
+                    label={t("adminDashboard.tutors.bio")}
+                    value={editForm.bio}
+                    onChange={(e) =>
+                      setEditForm((prev) => ({
+                        ...prev,
+                        bio: e.target.value,
+                      }))
+                    }
+                    classNames={textareaClassNames}
+                    minRows={3}
+                  />
+                  <Input
+                    type="number"
+                    label={`${t("adminDashboard.tutors.experience")} (${t("adminDashboard.tutors.months")})`}
+                    value={String(editForm.monthExperience)}
+                    onChange={(e) =>
+                      setEditForm((prev) => ({
+                        ...prev,
+                        monthExperience: Number.parseInt(e.target.value) || 0,
+                      }))
+                    }
+                    classNames={inputClassNames}
+                  />
+                  <Input
+                    label={t("adminDashboard.tutors.status")}
+                    value={editForm.status}
+                    onChange={(e) =>
+                      setEditForm((prev) => ({
+                        ...prev,
+                        status: e.target.value,
+                      }))
+                    }
+                    classNames={inputClassNames}
+                  />
+                </div>
+              </ModalBody>
+              <ModalFooter>
+                <Button variant="light" onPress={onClose}>
+                  {t("adminDashboard.tutors.cancel")}
+                </Button>
+                <Button
+                  onPress={handleEditSave}
+                  isLoading={saving}
+                  style={{
+                    backgroundColor: colors.primary.main,
+                    color: colors.text.white,
+                  }}
+                >
+                  {t("adminDashboard.tutors.save")}
                 </Button>
               </ModalFooter>
             </>

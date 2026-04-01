@@ -45,7 +45,10 @@ import TutorCreateCourse from "../pages/TutorDashboard/CreateCourse/CreateCourse
 import AdminDashboard from "../pages/AdminDashboard/Dashboard/Dashboard";
 import AdminStudents from "../pages/AdminDashboard/StudentManagement/StudentManagement";
 import AdminTutors from "../pages/AdminDashboard/TutorManagament/TutorManagement";
+import AdminVerification from "../pages/AdminDashboard/TutorManagament/TutorVerification";
 import AdminCourses from "../pages/AdminDashboard/CourseManagement/CourseManagement";
+import AdminCourseVerification from "../pages/AdminDashboard/CourseManagement/CourseVerification";
+import AdminCategories from "../pages/AdminDashboard/CourseManagement/CategoryManagement";
 import AdminAnalytics from "../pages/AdminDashboard/AnalyticsReports/AnalyticsReports";
 import AdminFinance from "../pages/AdminDashboard/FinancialManagement/FinancialManagement";
 import AdminSettings from "../pages/AdminDashboard/Settings/Settings";
@@ -208,6 +211,10 @@ export const router = createBrowserRouter([
         element: <TutorCreateCourse />,
       },
       {
+        path: "create-course/:courseId",
+        element: <TutorCreateCourse />,
+      },
+      {
         path: "schedule",
         element: <TutorSchedule />,
       },
@@ -250,8 +257,20 @@ export const router = createBrowserRouter([
         element: <AdminTutors />,
       },
       {
+        path: "verification",
+        element: <AdminVerification />,
+      },
+      {
         path: "courses",
         element: <AdminCourses />,
+      },
+      {
+        path: "course-verification",
+        element: <AdminCourseVerification />,
+      },
+      {
+        path: "categories",
+        element: <AdminCategories />,
       },
       {
         path: "analytics",

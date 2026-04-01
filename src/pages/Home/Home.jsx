@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Button, Card, CardBody, Image, Chip } from "@heroui/react";
+import { Button, Card, CardBody, Image, Chip, Spinner } from "@heroui/react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
@@ -21,6 +21,7 @@ import Footer from "../../components/Footer/Footer";
 import CourseCard from "../../components/CourseCard/CourseCard";
 import { useThemeColors } from "../../hooks/useThemeColors";
 import { useTheme } from "../../contexts/ThemeContext";
+import { coursesApi } from "../../api";
 import {
   IdentificationBadge,
   CalendarDots,
@@ -54,6 +55,16 @@ const Home = () => {
   const colors = useThemeColors();
   const { theme } = useTheme();
   const [activeTestimonial, setActiveTestimonial] = useState(0);
+  const [featuredCourses, setFeaturedCourses] = useState([]);
+  const [coursesLoading, setCoursesLoading] = useState(true);
+
+  useEffect(() => {
+    coursesApi
+      .getAllCourses({ Status: "Published", "page-size": 4 })
+      .then((res) => setFeaturedCourses(res?.data?.items || []))
+      .catch(() => {})
+      .finally(() => setCoursesLoading(false));
+  }, []);
 
   const testimonials = [
     {
@@ -570,92 +581,25 @@ const Home = () => {
             </p>
           </motion.div>
 
-          <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6"
-          >
-            {[
-              {
-                id: 1,
-                title: "Business English Masterclass",
-                tutor: "Sarah Johnson",
-                tutorAvatar: "https://i.pravatar.cc/150?u=tutor1",
-                rating: 4.9,
-                reviews: 234,
-                students: 1250,
-                lessons: 20,
-                duration: "10 hours",
-                price: 49.99,
-                originalPrice: 99.99,
-                level: "Intermediate",
-                category: "Business",
-                image:
-                  "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=400",
-                isBestseller: true,
-              },
-              {
-                id: 2,
-                title: "IELTS Band 7+ Preparation",
-                tutor: "Michael Chen",
-                tutorAvatar: "https://i.pravatar.cc/150?u=tutor2",
-                rating: 4.8,
-                reviews: 189,
-                students: 980,
-                lessons: 30,
-                duration: "15 hours",
-                price: 79.99,
-                originalPrice: 149.99,
-                level: "Advanced",
-                category: "IELTS",
-                image:
-                  "https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=400",
-                isBestseller: true,
-              },
-              {
-                id: 3,
-                title: "English for Beginners",
-                tutor: "Emma Wilson",
-                tutorAvatar: "https://i.pravatar.cc/150?u=tutor3",
-                rating: 4.7,
-                reviews: 456,
-                students: 2100,
-                lessons: 25,
-                duration: "12 hours",
-                price: 29.99,
-                originalPrice: 59.99,
-                level: "Beginner",
-                category: "General",
-                image:
-                  "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=400",
-                isBestseller: false,
-              },
-              {
-                id: 4,
-                title: "Conversational English Fluency",
-                tutor: "Lisa Anderson",
-                tutorAvatar: "https://i.pravatar.cc/150?u=tutor5",
-                rating: 4.9,
-                reviews: 312,
-                students: 1500,
-                lessons: 18,
-                duration: "9 hours",
-                price: 44.99,
-                originalPrice: 89.99,
-                level: "Intermediate",
-                category: "Conversation",
-                image:
-                  "https://images.unsplash.com/photo-1573164713714-d95e436ab8d6?w=400",
-                isBestseller: true,
-              },
-            ].map((course) => (
-              <motion.div key={course.id} variants={itemVariants}>
-                <CourseCard course={course} showViewButton={false} />
-              </motion.div>
-            ))}
-          </motion.div>
+          {coursesLoading ? (
+            <div className="flex justify-center py-12">
+              <Spinner size="lg" />
+            </div>
+          ) : (
+            <motion.div
+              variants={containerVariants}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6"
+            >
+              {featuredCourses.map((course) => (
+                <motion.div key={course.id} variants={itemVariants}>
+                  <CourseCard course={course} showTutorInfo={false} />
+                </motion.div>
+              ))}
+            </motion.div>
+          )}
 
           <div className="text-center mt-12">
             <Button

@@ -33,10 +33,23 @@ export const coursesApi = {
   },
 
 
+  // ==================== CATEGORY ====================
+  // Get all categories
+  getCategories: async (params = {}) => {
+    const response = await axiosInstance.get("/categories", { params });
+    return response.data;
+  },
+
   // ==================== COURSE ====================
   // Get all courses
   getAllCourses: async (params = {}) => {
     const response = await axiosInstance.get("/courses", { params });
+    return response.data;
+  },
+
+  // Get my courses (tutor)
+  getMyCourses: async (params = {}) => {
+    const response = await axiosInstance.get("/courses/my-course", { params });
     return response.data;
   },
 
@@ -46,9 +59,21 @@ export const coursesApi = {
     return response.data;
   },
 
-  // Create new course
+  // Create new course (multipart/form-data for file uploads)
   createCourse: async (courseData) => {
-    const response = await axiosInstance.post("/courses", courseData);
+    const formData = new FormData();
+    Object.entries(courseData).forEach(([key, value]) => {
+      if (value != null && value !== "") {
+        if (key === "CategoryIds" && Array.isArray(value)) {
+          value.forEach((id) => formData.append("CategoryIds", id));
+        } else {
+          formData.append(key, value);
+        }
+      }
+    });
+    const response = await axiosInstance.post("/courses", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
     return response.data;
   },
 
@@ -61,6 +86,28 @@ export const coursesApi = {
   // Delete course
   deleteCourse: async (courseId) => {
     const response = await axiosInstance.delete(`/courses/${courseId}`);
+    return response.data;
+  },
+
+  // Update course thumbnail
+  updateCourseThumbnail: async (courseId, file, fileName) => {
+    const formData = new FormData();
+    formData.append("File", file);
+    formData.append("FileName", fileName);
+    const response = await axiosInstance.put(`/courses/${courseId}/thumbnail`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return response.data;
+  },
+
+  // Update course demo video
+  updateCourseDemoVideo: async (courseId, file, fileName) => {
+    const formData = new FormData();
+    formData.append("File", file);
+    formData.append("FileName", fileName);
+    const response = await axiosInstance.put(`/courses/${courseId}/demo-video`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
     return response.data;
   },
 
@@ -104,9 +151,16 @@ export const coursesApi = {
 
 
   // ==================== COURSE MODULE ====================
-  // Get all course modules
+  // Get course modules by CourseId
   getAllCourseModules: async (params = {}) => {
     const response = await axiosInstance.get("/course-modules", { params });
+    return response.data;
+  },
+
+  // Get tutor's course modules not yet belonging to the given course
+  // Pass CourseId to exclude modules already in that course
+  getCourseModulesByTutor: async (params = {}) => {
+    const response = await axiosInstance.get("/course-modules/by-tutor", { params });
     return response.data;
   },
 
@@ -136,9 +190,16 @@ export const coursesApi = {
 
 
   // ==================== COURSE RESOURCE ====================
-  // Get all course resources
+  // Get course resources by CourseSessionId
   getAllCourseResources: async (params = {}) => {
     const response = await axiosInstance.get("/course-resources", { params });
+    return response.data;
+  },
+
+  // Get tutor's course resources not yet belonging to the given session
+  // Pass CourseSessionId to exclude resources already in that session
+  getCourseResourcesByTutor: async (params = {}) => {
+    const response = await axiosInstance.get("/course-resources/by-tutor", { params });
     return response.data;
   },
 
@@ -148,9 +209,17 @@ export const coursesApi = {
     return response.data;
   },
 
-  // Create new course resource
+  // Create new course resource (multipart/form-data for file uploads)
   createCourseResource: async (resourceData) => {
-    const response = await axiosInstance.post("/course-resources", resourceData);
+    const formData = new FormData();
+    Object.entries(resourceData).forEach(([key, value]) => {
+      if (value != null && value !== "") {
+        formData.append(key, value);
+      }
+    });
+    const response = await axiosInstance.post("/course-resources", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
     return response.data;
   },
 
@@ -168,9 +237,16 @@ export const coursesApi = {
 
   
   // ==================== COURSE SESSION ====================
-  // Get all course sessions
+  // Get course sessions by CourseModuleId
   getAllCourseSessions: async (params = {}) => {
     const response = await axiosInstance.get("/course-sessions", { params });
+    return response.data;
+  },
+
+  // Get tutor's course sessions not yet belonging to the given module
+  // Pass CourseModuleId to exclude sessions already in that module
+  getCourseSessionsByTutor: async (params = {}) => {
+    const response = await axiosInstance.get("/course-sessions/by-tutor", { params });
     return response.data;
   },
 
@@ -195,6 +271,55 @@ export const coursesApi = {
   // Delete course session
   deleteCourseSession: async (sessionId) => {
     const response = await axiosInstance.delete(`/course-sessions/${sessionId}`);
+    return response.data;
+  },
+
+
+  // ==================== COURSE VERIFICATION ====================
+  // Submit course verification request
+  createCourseVerificationRequest: async (courseId) => {
+    const response = await axiosInstance.post("/course-verification-requests", { courseId });
+    return response.data;
+  },
+
+  // Get all course verification requests (admin)
+  getCourseVerificationRequests: async (params = {}) => {
+    const response = await axiosInstance.get("/course-verification-requests", { params });
+    return response.data;
+  },
+
+  // Delete course verification request
+  deleteCourseVerificationRequest: async (id) => {
+    const response = await axiosInstance.delete(`/course-verification-requests/${id}`);
+    return response.data;
+  },
+
+  // Review course verification request (approve/reject)
+  reviewCourseVerificationRequest: async (requestId, data) => {
+    const response = await axiosInstance.post(
+      `/courses/verification-requests/${requestId}/review`,
+      data
+    );
+    return response.data;
+  },
+
+
+  // ==================== CATEGORY CRUD ====================
+  // Create category
+  createCategory: async (categoryData) => {
+    const response = await axiosInstance.post("/categories", categoryData);
+    return response.data;
+  },
+
+  // Update category
+  updateCategory: async (categoryId, categoryData) => {
+    const response = await axiosInstance.patch(`/categories/${categoryId}`, categoryData);
+    return response.data;
+  },
+
+  // Delete category
+  deleteCategory: async (categoryId) => {
+    const response = await axiosInstance.delete(`/categories/${categoryId}`);
     return response.data;
   },
 };

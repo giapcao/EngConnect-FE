@@ -6,7 +6,7 @@ const AdminRoute = ({ children }) => {
   const isAuthenticated = useSelector(selectIsAuthenticated);
   const user = useSelector(selectUser);
 
-  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  if (!isAuthenticated) return <Navigate to="/" replace />;
 
   const isAdmin = user?.roles?.includes("Admin");
   if (!isAdmin) return <Navigate to="/courses" replace />;
