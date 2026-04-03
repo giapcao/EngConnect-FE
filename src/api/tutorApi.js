@@ -106,6 +106,12 @@ export const tutorApi = {
     return response.data;
   },
 
+  // Get tutor avatar URL
+  getTutorAvatar: async () => {
+    const response = await axiosInstance.get("/tutors/avatar");
+    return response.data;
+  },
+
   // Upload avatar
   uploadAvatar: async (file, fileName) => {
     const formData = new FormData();

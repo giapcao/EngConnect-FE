@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Card,
   CardBody,
@@ -9,6 +9,8 @@ import {
   Tab,
   Switch,
   Divider,
+  Spinner,
+  addToast,
 } from "@heroui/react";
 import { useTranslation } from "react-i18next";
 import { useThemeColors } from "../../../hooks/useThemeColors";
@@ -18,9 +20,6 @@ import {
   User,
   Envelope,
   Phone,
-  MapPin,
-  Calendar,
-  GlobeHemisphereWest,
   Camera,
   PencilSimple,
   Bell,
@@ -33,24 +32,40 @@ import {
   BookOpen,
   Clock,
   Fire,
+  GraduationCap,
+  BookBookmark,
+  Note,
 } from "@phosphor-icons/react";
+import { studentApi } from "../../../api";
+import ProfileSkeleton from "../../../components/ProfileSkeleton/ProfileSkeleton";
+import { useDispatch } from "react-redux";
+import { updateUserAvatar } from "../../../store";
 
 const Profile = () => {
   const { t } = useTranslation();
   const colors = useThemeColors();
   const { inputClassNames } = useInputStyles();
+  const dispatch = useDispatch();
   const [selectedTab, setSelectedTab] = useState("profile");
   const [isEditing, setIsEditing] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [studentId, setStudentId] = useState("");
+  const [studentUserId, setStudentUserId] = useState("");
+  const fileInputRef = useRef(null);
+  const [originalData, setOriginalData] = useState(null);
 
   const [profileData, setProfileData] = useState({
-    firstName: "John",
-    lastName: "Doe",
-    email: "john.doe@email.com",
-    phone: "+1 234 567 8900",
-    location: "New York, USA",
-    birthday: "1995-06-15",
-    language: "English",
-    bio: "Passionate English learner aiming to improve my communication skills for business and travel.",
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    notes: "",
+    school: "",
+    grade: "",
+    class: "",
+    avatar: "",
   });
 
   const [notifications, setNotifications] = useState({
@@ -61,6 +76,92 @@ const Profile = () => {
     pushHomework: true,
     pushCommunity: true,
   });
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const [profileRes, avatarRes] = await Promise.all([
+          studentApi.getStudentProfile(),
+          studentApi.getStudentAvatar().catch(() => null),
+        ]);
+        const d = profileRes.data;
+        const avatarUrl = avatarRes?.data?.url || d.avatar || "";
+        setStudentId(d.id);
+        setStudentUserId(d.userId);
+        const data = {
+          firstName: d.user?.firstName || "",
+          lastName: d.user?.lastName || "",
+          email: d.user?.email || "",
+          phone: d.user?.phone || "",
+          notes: d.notes || "",
+          school: d.school || "",
+          grade: d.grade || "",
+          class: d.class || "",
+          avatar: avatarUrl,
+        };
+        setProfileData(data);
+        setOriginalData(data);
+      } catch (err) {
+        console.error("Failed to fetch profile", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProfile();
+  }, []);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await studentApi.updateStudentById(studentId, studentUserId, {
+        id: studentId,
+        userId: studentUserId,
+        notes: profileData.notes,
+        school: profileData.school,
+        grade: profileData.grade,
+        class: profileData.class,
+      });
+      setIsEditing(false);
+      setOriginalData((prev) => ({
+        ...prev,
+        notes: profileData.notes,
+        school: profileData.school,
+        grade: profileData.grade,
+        class: profileData.class,
+      }));
+      addToast({
+        title: t("studentDashboard.profile.profileUpdated"),
+        color: "success",
+        timeout: 3000,
+      });
+    } catch (err) {
+      console.error("Failed to update profile", err);
+      addToast({
+        title: t("studentDashboard.profile.profileUpdateFailed"),
+        color: "danger",
+        timeout: 3000,
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleAvatarChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingAvatar(true);
+    try {
+      await studentApi.updateStudentAvatar(file);
+      const res = await studentApi.getStudentAvatar();
+      const newUrl = res?.data?.url || "";
+      dispatch(updateUserAvatar(newUrl));
+      setProfileData((prev) => ({ ...prev, avatar: newUrl }));
+    } catch (err) {
+      console.error("Failed to update avatar", err);
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
 
   const stats = [
     {
@@ -144,6 +245,10 @@ const Profile = () => {
     },
   ];
 
+  if (loading) {
+    return <ProfileSkeleton />;
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -179,20 +284,32 @@ const Profile = () => {
               {/* Avatar */}
               <div className="relative">
                 <Avatar
-                  src="https://i.pravatar.cc/150?u=student"
+                  src={profileData.avatar || undefined}
+                  name={`${profileData.firstName} ${profileData.lastName}`}
                   className="w-24 h-24"
+                />
+                <input
+                  type="file"
+                  accept="image/*"
+                  ref={fileInputRef}
+                  className="hidden"
+                  onChange={handleAvatarChange}
                 />
                 <Button
                   isIconOnly
                   size="sm"
                   radius="full"
+                  isLoading={uploadingAvatar}
                   className="absolute bottom-0 right-0"
                   style={{
                     backgroundColor: colors.primary.main,
                     color: colors.text.white,
                   }}
+                  onPress={() => fileInputRef.current?.click()}
                 >
-                  <Camera weight="fill" className="w-4 h-4" />
+                  {!uploadingAvatar && (
+                    <Camera weight="fill" className="w-4 h-4" />
+                  )}
                 </Button>
               </div>
 
@@ -207,12 +324,14 @@ const Profile = () => {
                 <p className="mb-3" style={{ color: colors.text.secondary }}>
                   {profileData.email}
                 </p>
-                <p
-                  className="text-sm max-w-md"
-                  style={{ color: colors.text.secondary }}
-                >
-                  {profileData.bio}
-                </p>
+                {profileData.notes && (
+                  <p
+                    className="text-sm max-w-md"
+                    style={{ color: colors.text.secondary }}
+                  >
+                    {profileData.notes}
+                  </p>
+                )}
               </div>
 
               {/* Stats */}
@@ -354,41 +473,64 @@ const Profile = () => {
                 >
                   {t("studentDashboard.profile.personalInfo")}
                 </h3>
-                <Button
-                  variant={isEditing ? "solid" : "outline"}
-                  size="sm"
-                  startContent={
-                    isEditing ? (
-                      <CheckCircle weight="duotone" className="w-4 h-4" />
-                    ) : (
-                      <PencilSimple weight="duotone" className="w-4 h-4" />
-                    )
-                  }
-                  style={
-                    isEditing
-                      ? {
-                          backgroundColor: colors.primary.main,
-                          color: colors.text.white,
-                        }
-                      : {
-                          backgroundColor:
-                            colors.button.primaryLight.background,
-                          color: colors.button.primaryLight.text,
-                        }
-                  }
-                  onPress={() => setIsEditing(!isEditing)}
-                >
-                  {isEditing
-                    ? t("studentDashboard.profile.save")
-                    : t("studentDashboard.profile.edit")}
-                </Button>
+                <div className="flex items-center gap-2">
+                  {isEditing && (
+                    <Button
+                      variant="flat"
+                      size="sm"
+                      onPress={() => {
+                        if (originalData) setProfileData(originalData);
+                        setIsEditing(false);
+                      }}
+                    >
+                      {t("logoutModal.cancel")}
+                    </Button>
+                  )}
+                  <Button
+                    variant={isEditing ? "solid" : "outline"}
+                    size="sm"
+                    startContent={
+                      isEditing ? (
+                        <CheckCircle weight="duotone" className="w-4 h-4" />
+                      ) : (
+                        <PencilSimple weight="duotone" className="w-4 h-4" />
+                      )
+                    }
+                    style={
+                      isEditing
+                        ? {
+                            backgroundColor: colors.primary.main,
+                            color: colors.text.white,
+                          }
+                        : {
+                            backgroundColor:
+                              colors.button.primaryLight.background,
+                            color: colors.button.primaryLight.text,
+                          }
+                    }
+                    isLoading={saving}
+                    onPress={() => {
+                      if (isEditing) {
+                        handleSave();
+                      } else {
+                        setIsEditing(true);
+                      }
+                    }}
+                  >
+                    {isEditing
+                      ? saving
+                        ? t("studentDashboard.profile.saving")
+                        : t("studentDashboard.profile.save")
+                      : t("studentDashboard.profile.edit")}
+                  </Button>
+                </div>
               </div>
 
               <div className="grid md:grid-cols-2 gap-6">
                 <Input
                   label={t("studentDashboard.profile.firstName")}
                   value={profileData.firstName}
-                  isReadOnly={!isEditing}
+                  isDisabled
                   startContent={
                     <User
                       className="w-5 h-5"
@@ -396,14 +538,11 @@ const Profile = () => {
                     />
                   }
                   classNames={inputClassNames}
-                  onValueChange={(value) =>
-                    setProfileData({ ...profileData, firstName: value })
-                  }
                 />
                 <Input
                   label={t("studentDashboard.profile.lastName")}
                   value={profileData.lastName}
-                  isReadOnly={!isEditing}
+                  isDisabled
                   startContent={
                     <User
                       className="w-5 h-5"
@@ -411,14 +550,11 @@ const Profile = () => {
                     />
                   }
                   classNames={inputClassNames}
-                  onValueChange={(value) =>
-                    setProfileData({ ...profileData, lastName: value })
-                  }
                 />
                 <Input
                   label={t("studentDashboard.profile.email")}
                   value={profileData.email}
-                  isReadOnly={!isEditing}
+                  isDisabled
                   startContent={
                     <Envelope
                       className="w-5 h-5"
@@ -426,14 +562,11 @@ const Profile = () => {
                     />
                   }
                   classNames={inputClassNames}
-                  onValueChange={(value) =>
-                    setProfileData({ ...profileData, email: value })
-                  }
                 />
                 <Input
                   label={t("studentDashboard.profile.phone")}
                   value={profileData.phone}
-                  isReadOnly={!isEditing}
+                  isDisabled
                   startContent={
                     <Phone
                       className="w-5 h-5"
@@ -441,38 +574,65 @@ const Profile = () => {
                     />
                   }
                   classNames={inputClassNames}
-                  onValueChange={(value) =>
-                    setProfileData({ ...profileData, phone: value })
-                  }
                 />
                 <Input
-                  label={t("studentDashboard.profile.location")}
-                  value={profileData.location}
-                  isReadOnly={!isEditing}
+                  label={t("studentDashboard.profile.school")}
+                  value={profileData.school}
+                  isDisabled={!isEditing}
                   startContent={
-                    <MapPin
+                    <GraduationCap
                       className="w-5 h-5"
                       style={{ color: colors.text.secondary }}
                     />
                   }
                   classNames={inputClassNames}
                   onValueChange={(value) =>
-                    setProfileData({ ...profileData, location: value })
+                    setProfileData({ ...profileData, school: value })
                   }
                 />
                 <Input
-                  label={t("studentDashboard.profile.language")}
-                  value={profileData.language}
-                  isReadOnly={!isEditing}
+                  label={t("studentDashboard.profile.grade")}
+                  value={profileData.grade}
+                  isDisabled={!isEditing}
                   startContent={
-                    <GlobeHemisphereWest
+                    <BookBookmark
                       className="w-5 h-5"
                       style={{ color: colors.text.secondary }}
                     />
                   }
                   classNames={inputClassNames}
                   onValueChange={(value) =>
-                    setProfileData({ ...profileData, language: value })
+                    setProfileData({ ...profileData, grade: value })
+                  }
+                />
+                <Input
+                  label={t("studentDashboard.profile.class")}
+                  value={profileData.class}
+                  isDisabled={!isEditing}
+                  startContent={
+                    <BookOpen
+                      className="w-5 h-5"
+                      style={{ color: colors.text.secondary }}
+                    />
+                  }
+                  classNames={inputClassNames}
+                  onValueChange={(value) =>
+                    setProfileData({ ...profileData, class: value })
+                  }
+                />
+                <Input
+                  label={t("studentDashboard.profile.notes")}
+                  value={profileData.notes}
+                  isDisabled={!isEditing}
+                  startContent={
+                    <Note
+                      className="w-5 h-5"
+                      style={{ color: colors.text.secondary }}
+                    />
+                  }
+                  classNames={inputClassNames}
+                  onValueChange={(value) =>
+                    setProfileData({ ...profileData, notes: value })
                   }
                 />
               </div>

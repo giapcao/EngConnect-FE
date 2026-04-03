@@ -7,9 +7,28 @@ export const studentApi = {
     return response.data;
   },
 
-  // Update student profile
-  updateStudentProfile: async (profileData) => {
-    const response = await axiosInstance.put("/students/profile", profileData);
+  // Update student profile by ID
+  updateStudentById: async (id, userId, data) => {
+    const response = await axiosInstance.put(`/students/${id}`, data, {
+      params: { userId },
+    });
+    return response.data;
+  },
+
+  // Get student avatar URL
+  getStudentAvatar: async () => {
+    const response = await axiosInstance.get("/students/avatar");
+    return response.data;
+  },
+
+  // Update student avatar
+  updateStudentAvatar: async (file) => {
+    const formData = new FormData();
+    formData.append("File", file);
+    formData.append("FileName", file.name);
+    const response = await axiosInstance.put("/students/avatar", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
     return response.data;
   },
 

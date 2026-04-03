@@ -12,6 +12,7 @@ import {
 } from "@heroui/react";
 import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "framer-motion";
+import { useSelector } from "react-redux";
 import { useThemeColors } from "../hooks/useThemeColors";
 import LogoutModal from "../components/LogoutModal/LogoutModal";
 import { useTheme } from "../contexts/ThemeContext";
@@ -20,6 +21,8 @@ import useDropdownStyles from "../hooks/useDropdownStyles";
 import ThemeSwitcher from "../components/ThemeSwitcher/ThemeSwitcher";
 import LanguageSwitcher from "../components/LanguageSwitcher/LanguageSwitcher";
 import logoImage from "../assets/images/logo.png";
+import defaultAvatar from "../assets/images/null-avatar.jpg";
+import { selectUser } from "../store";
 import {
   House,
   MagnifyingGlass,
@@ -46,6 +49,7 @@ const DashboardLayout = () => {
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [logoutModalOpen, setLogoutModalOpen] = useState(false);
+  const user = useSelector(selectUser);
 
   const navItems = [
     {
@@ -144,7 +148,7 @@ const DashboardLayout = () => {
               <DropdownTrigger>
                 <Button variant="light" className="gap-2 pl-2 pr-3">
                   <Avatar
-                    src="https://i.pravatar.cc/150?u=student"
+                    src={user?.avatarUrl || defaultAvatar}
                     size="sm"
                     className="w-8 h-8"
                   />
@@ -152,7 +156,9 @@ const DashboardLayout = () => {
                     className="font-medium text-sm sm:text-base"
                     style={{ color: colors.text.primary }}
                   >
-                    John Doe
+                    {user
+                      ? `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim()
+                      : ""}
                   </span>
                   <CaretDown
                     className="w-4 h-4 hidden sm:block"

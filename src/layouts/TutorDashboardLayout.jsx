@@ -21,6 +21,8 @@ import ThemeSwitcher from "../components/ThemeSwitcher/ThemeSwitcher";
 import LanguageSwitcher from "../components/LanguageSwitcher/LanguageSwitcher";
 import logoImage from "../assets/images/logo.png";
 import { tutorApi } from "../api/tutorApi";
+import { useSelector } from "react-redux";
+import { selectUser } from "../store";
 import {
   House,
   MagnifyingGlass,
@@ -49,6 +51,7 @@ const TutorDashboardLayout = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [logoutModalOpen, setLogoutModalOpen] = useState(false);
   const [tutorProfile, setTutorProfile] = useState(null);
+  const user = useSelector(selectUser);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -180,7 +183,7 @@ const TutorDashboardLayout = () => {
               <DropdownTrigger>
                 <Button variant="light" className="gap-2 pl-2 pr-3">
                   <Avatar
-                    src={tutorProfile?.avatar}
+                    src={user?.avatarUrl || tutorProfile?.avatar}
                     size="sm"
                     className="w-8 h-8"
                   />

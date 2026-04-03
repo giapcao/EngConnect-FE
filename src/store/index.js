@@ -9,6 +9,7 @@ export {
   setCredentials,
   clearCredentials,
   clearError,
+  updateUserAvatar,
   selectAuth,
   selectIsAuthenticated,
   selectUser,
