@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button, Card, CardBody, Chip, Avatar, Divider } from "@heroui/react";
@@ -15,18 +15,12 @@ import {
   Users,
   BookOpen,
   Check,
-  VideoCamera,
-  FileText,
-  DeviceMobile,
-  Certificate,
-  Infinity,
-  ChatsCircle,
   ArrowLeft,
   CaretDown,
   CaretUp,
   Play,
 } from "@phosphor-icons/react";
-import { coursesApi } from "../../../api";
+import { coursesApi, tutorApi } from "../../../api";
 
 const formatDuration = (timeStr) => {
   if (!timeStr) return "";
@@ -57,6 +51,8 @@ const StudentCourseDetail = () => {
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
   const [expandedModules, setExpandedModules] = useState({});
+  const [tutorInfo, setTutorInfo] = useState(null);
+  const instructorRef = useRef(null);
 
   const toggleModule = (moduleId) => {
     setExpandedModules((prev) => ({ ...prev, [moduleId]: !prev[moduleId] }));
@@ -68,6 +64,14 @@ const StudentCourseDetail = () => {
         setLoading(true);
         const res = await coursesApi.getCourseById(id);
         setCourse(res.data);
+        if (res.data?.tutorId) {
+          try {
+            const tutorRes = await tutorApi.getTutorById(res.data.tutorId);
+            setTutorInfo(tutorRes.data);
+          } catch (tutorErr) {
+            console.error("Failed to fetch tutor:", tutorErr);
+          }
+        }
       } catch (err) {
         console.error("Failed to fetch course:", err);
       } finally {
@@ -231,6 +235,31 @@ const StudentCourseDetail = () => {
                     {t("courses.detail.students")}
                   </span>
                 </div>
+
+                {/* Instructor name */}
+                {tutorInfo && (
+                  <div className="mt-3 flex items-center gap-2">
+                    <span
+                      className="text-sm"
+                      style={{ color: colors.text.secondary }}
+                    >
+                      {t("courses.detail.instructor")}:
+                    </span>
+                    <button
+                      type="button"
+                      className="text-sm font-medium hover:underline"
+                      style={{ color: colors.primary.main }}
+                      onClick={() =>
+                        instructorRef.current?.scrollIntoView({
+                          behavior: "smooth",
+                          block: "start",
+                        })
+                      }
+                    >
+                      {tutorInfo.user?.firstName} {tutorInfo.user?.lastName}
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* Empty space for sticky card overlap */}
@@ -243,103 +272,6 @@ const StudentCourseDetail = () => {
       <div className="grid lg:grid-cols-3 gap-6">
         {/* Left Column */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Stats Grid */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.15 }}
-            className="grid grid-cols-2 sm:grid-cols-4 gap-4"
-          >
-            <Card
-              className="shadow-none"
-              style={{ backgroundColor: colors.background.light }}
-            >
-              <CardBody className="text-center p-5">
-                <Star
-                  size={28}
-                  weight="fill"
-                  style={{ color: "#F59E0B" }}
-                  className="mx-auto mb-2"
-                />
-                <p
-                  className="font-bold text-xl"
-                  style={{ color: colors.text.primary }}
-                >
-                  {course.ratingAverage || 0}
-                </p>
-                <p className="text-xs" style={{ color: colors.text.secondary }}>
-                  {course.ratingCount || 0} {t("courses.detail.reviews")}
-                </p>
-              </CardBody>
-            </Card>
-            <Card
-              className="shadow-none"
-              style={{ backgroundColor: colors.background.light }}
-            >
-              <CardBody className="text-center p-5">
-                <Users
-                  size={28}
-                  weight="duotone"
-                  style={{ color: colors.primary.main }}
-                  className="mx-auto mb-2"
-                />
-                <p
-                  className="font-bold text-xl"
-                  style={{ color: colors.text.primary }}
-                >
-                  {course.numberOfEnrollment?.toLocaleString() || 0}
-                </p>
-                <p className="text-xs" style={{ color: colors.text.secondary }}>
-                  {t("courses.detail.students")}
-                </p>
-              </CardBody>
-            </Card>
-            <Card
-              className="shadow-none"
-              style={{ backgroundColor: colors.background.light }}
-            >
-              <CardBody className="text-center p-5">
-                <BookOpen
-                  size={28}
-                  weight="duotone"
-                  style={{ color: "#10B981" }}
-                  className="mx-auto mb-2"
-                />
-                <p
-                  className="font-bold text-xl"
-                  style={{ color: colors.text.primary }}
-                >
-                  {course.numberOfSessions}
-                </p>
-                <p className="text-xs" style={{ color: colors.text.secondary }}>
-                  {t("courses.lessons")}
-                </p>
-              </CardBody>
-            </Card>
-            <Card
-              className="shadow-none"
-              style={{ backgroundColor: colors.background.light }}
-            >
-              <CardBody className="text-center p-5">
-                <Clock
-                  size={28}
-                  weight="duotone"
-                  style={{ color: "#8B5CF6" }}
-                  className="mx-auto mb-2"
-                />
-                <p
-                  className="font-bold text-xl"
-                  style={{ color: colors.text.primary }}
-                >
-                  {duration}
-                </p>
-                <p className="text-xs" style={{ color: colors.text.secondary }}>
-                  {t("courses.detail.duration")}
-                </p>
-              </CardBody>
-            </Card>
-          </motion.div>
-
           {/* About This Course */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -608,82 +540,98 @@ const StudentCourseDetail = () => {
             </motion.div>
           )}
 
-          {/* Course Includes */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.15 }}
-          >
-            <Card
-              className="shadow-none"
-              style={{ backgroundColor: colors.background.light }}
+          {/* About the Instructor */}
+          {tutorInfo && (
+            <motion.div
+              ref={instructorRef}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.15 }}
             >
-              <CardBody className="p-6">
-                <h2
-                  className="font-semibold text-xl mb-4"
-                  style={{ color: colors.text.primary }}
-                >
-                  {t("courses.detail.courseIncludes")}
-                </h2>
-                <div className="grid sm:grid-cols-2 gap-4">
-                  <div className="flex items-center gap-3">
-                    <VideoCamera
-                      size={22}
-                      style={{ color: colors.primary.main }}
+              <Card
+                className="shadow-none"
+                style={{ backgroundColor: colors.background.light }}
+              >
+                <CardBody className="p-6">
+                  <h2
+                    className="font-semibold text-xl mb-4"
+                    style={{ color: colors.text.primary }}
+                  >
+                    {t("courses.detail.aboutInstructor")}
+                  </h2>
+                  <div className="flex items-center gap-4 mb-4">
+                    <Avatar
+                      src={tutorInfo.avatar}
+                      name={`${tutorInfo.user?.firstName} ${tutorInfo.user?.lastName}`}
+                      size="lg"
+                      className="flex-shrink-0"
                     />
-                    <span style={{ color: colors.text.secondary }}>
-                      {duration} {t("courses.detail.onDemandVideo")}
-                    </span>
+                    <div className="flex-1 min-w-0">
+                      <p
+                        className="font-semibold text-lg"
+                        style={{ color: colors.text.primary }}
+                      >
+                        {tutorInfo.user?.firstName} {tutorInfo.user?.lastName}
+                      </p>
+                      {tutorInfo.headline && (
+                        <p
+                          className="text-sm mt-0.5"
+                          style={{ color: colors.text.secondary }}
+                        >
+                          {tutorInfo.headline}
+                        </p>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <FileText
-                      size={22}
-                      style={{ color: colors.primary.main }}
-                    />
-                    <span style={{ color: colors.text.secondary }}>
-                      {t("courses.detail.downloadableResources")}
-                    </span>
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="flex items-center gap-1">
+                      <Star
+                        size={18}
+                        weight="fill"
+                        style={{ color: "#f59e0b" }}
+                      />
+                      <span
+                        className="font-semibold text-sm"
+                        style={{ color: colors.text.primary }}
+                      >
+                        {tutorInfo.ratingAverage?.toFixed(1) || "0.0"}
+                      </span>
+                      <span
+                        className="text-sm"
+                        style={{ color: colors.text.tertiary }}
+                      >
+                        ({tutorInfo.ratingCount || 0}{" "}
+                        {t("courses.detail.reviews")})
+                      </span>
+                    </div>
+                    {tutorInfo.monthExperience > 0 && (
+                      <div className="flex items-center gap-1">
+                        <Clock
+                          size={18}
+                          style={{ color: colors.primary.main }}
+                        />
+                        <span
+                          className="text-sm"
+                          style={{ color: colors.text.secondary }}
+                        >
+                          {tutorInfo.monthExperience}{" "}
+                          {t("courses.detail.monthsExperience")}
+                        </span>
+                      </div>
+                    )}
                   </div>
-                  <div className="flex items-center gap-3">
-                    <DeviceMobile
-                      size={22}
-                      style={{ color: colors.primary.main }}
-                    />
-                    <span style={{ color: colors.text.secondary }}>
-                      {t("courses.detail.mobileAccess")}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <Certificate
-                      size={22}
-                      style={{ color: colors.primary.main }}
-                    />
-                    <span style={{ color: colors.text.secondary }}>
-                      {t("courses.detail.certificateCompletion")}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <Infinity
-                      size={22}
-                      style={{ color: colors.primary.main }}
-                    />
-                    <span style={{ color: colors.text.secondary }}>
-                      {t("courses.detail.lifetimeAccess")}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <ChatsCircle
-                      size={22}
-                      style={{ color: colors.primary.main }}
-                    />
-                    <span style={{ color: colors.text.secondary }}>
-                      {t("courses.detail.communityAccess")}
-                    </span>
-                  </div>
-                </div>
-              </CardBody>
-            </Card>
-          </motion.div>
+                  {tutorInfo.bio && (
+                    <p
+                      className="text-sm leading-relaxed"
+                      style={{ color: colors.text.secondary }}
+                    >
+                      {tutorInfo.bio}
+                    </p>
+                  )}
+                </CardBody>
+              </Card>
+            </motion.div>
+          )}
         </div>
 
         {/* Right Column - Sticky Price Card (overlaps banner) */}
