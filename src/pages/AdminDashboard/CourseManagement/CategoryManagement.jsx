@@ -18,7 +18,7 @@ import {
   ModalHeader,
   ModalBody,
   ModalFooter,
-  Spinner,
+  Skeleton,
   addToast,
 } from "@heroui/react";
 import { useTranslation } from "react-i18next";
@@ -308,8 +308,17 @@ const CategoryManagement = () => {
         <Card shadow="none" className="border-none" style={tableCardStyle}>
           <CardBody className="p-0">
             {loading ? (
-              <div className="flex justify-center items-center py-20">
-                <Spinner size="lg" />
+              <div className="p-4 space-y-4">
+                {[...Array(5)].map((_, i) => (
+                  <div key={i} className="flex items-center gap-4">
+                    <div className="flex-1 space-y-2">
+                      <Skeleton className="h-4 w-2/5 rounded-lg" />
+                      <Skeleton className="h-3 w-1/4 rounded-lg" />
+                    </div>
+                    <Skeleton className="h-4 w-24 rounded-lg" />
+                    <Skeleton className="h-8 w-8 rounded-lg" />
+                  </div>
+                ))}
               </div>
             ) : categories.length === 0 ? (
               <div className="text-center py-20">

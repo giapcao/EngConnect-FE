@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
-import { Button, Card, CardBody, Input, Spinner } from "@heroui/react";
+import { Button, Card, CardBody, Input } from "@heroui/react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import * as MotionLib from "framer-motion";
+import CourseCardSkeleton from "../../components/CourseCardSkeleton/CourseCardSkeleton";
 import Header from "../../components/Header/Header";
 import Footer from "../../components/Footer/Footer";
 import CourseCard from "../../components/CourseCard/CourseCard";
@@ -304,9 +305,10 @@ const Courses = () => {
           </motion.div>
 
           {loading ? (
-            <div className="flex justify-center py-12">
-              <Spinner size="lg" />
-            </div>
+            <CourseCardSkeleton
+              count={4}
+              cardBgColor={colors.background.light}
+            />
           ) : (
             <motion.div
               variants={containerVariants}
@@ -359,9 +361,11 @@ const Courses = () => {
           </motion.div>
 
           {loading ? (
-            <div className="flex justify-center py-12">
-              <Spinner size="lg" />
-            </div>
+            <CourseCardSkeleton
+              count={8}
+              gridClassName="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+              cardBgColor={colors.background.gray}
+            />
           ) : (
             <motion.div
               key={selectedCategory + searchQuery}

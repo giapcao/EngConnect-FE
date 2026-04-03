@@ -1,18 +1,11 @@
 ﻿import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import {
-  Button,
-  Card,
-  CardBody,
-  Chip,
-  Divider,
-  Spinner,
-  Alert,
-} from "@heroui/react";
+import { Button, Card, CardBody, Chip, Divider, Alert } from "@heroui/react";
 import { motion } from "framer-motion";
 import { useThemeColors } from "../../../hooks/useThemeColors";
 import { useTheme } from "../../../contexts/ThemeContext";
+import CourseDetailSkeleton from "../../../components/CourseDetailSkeleton/CourseDetailSkeleton";
 import {
   Star,
   Clock,
@@ -91,11 +84,7 @@ const TutorCourseDetail = () => {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-32">
-        <Spinner size="lg" />
-      </div>
-    );
+    return <CourseDetailSkeleton />;
   }
 
   if (!course) {

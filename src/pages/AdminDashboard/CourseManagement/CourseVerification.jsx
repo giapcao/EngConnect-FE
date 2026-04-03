@@ -22,7 +22,7 @@ import {
   ModalHeader,
   ModalBody,
   ModalFooter,
-  Spinner,
+  Skeleton,
   Textarea,
   Image,
   addToast,
@@ -532,8 +532,18 @@ const CourseVerification = () => {
         <Card shadow="none" className="border-none" style={tableCardStyle}>
           <CardBody className="p-0">
             {loading ? (
-              <div className="flex justify-center items-center py-20">
-                <Spinner size="lg" />
+              <div className="p-4 space-y-4">
+                {[...Array(5)].map((_, i) => (
+                  <div key={i} className="flex items-center gap-4">
+                    <Skeleton className="w-12 h-12 rounded-lg" />
+                    <div className="flex-1 space-y-2">
+                      <Skeleton className="h-4 w-3/5 rounded-lg" />
+                      <Skeleton className="h-3 w-2/5 rounded-lg" />
+                    </div>
+                    <Skeleton className="h-6 w-20 rounded-full" />
+                    <Skeleton className="h-4 w-24 rounded-lg" />
+                  </div>
+                ))}
               </div>
             ) : requests.length === 0 ? (
               <div className="text-center py-20">
@@ -730,8 +740,30 @@ const CourseVerification = () => {
               </ModalHeader>
               <ModalBody>
                 {detailLoading ? (
-                  <div className="flex justify-center py-10">
-                    <Spinner size="lg" />
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-3">
+                      {[...Array(4)].map((_, i) => (
+                        <Skeleton key={i} className="h-5 rounded-lg" />
+                      ))}
+                    </div>
+                    <div className="flex gap-4">
+                      <Skeleton className="w-24 h-16 rounded-lg" />
+                      <div className="flex-1 space-y-2">
+                        <Skeleton className="h-5 w-3/4 rounded-lg" />
+                        <Skeleton className="h-3 w-full rounded-lg" />
+                        <div className="flex gap-2">
+                          <Skeleton className="h-6 w-16 rounded-full" />
+                          <Skeleton className="h-6 w-16 rounded-full" />
+                        </div>
+                      </div>
+                    </div>
+                    <Skeleton className="h-10 w-full rounded-lg" />
+                    <div className="grid grid-cols-4 gap-2">
+                      {[...Array(4)].map((_, i) => (
+                        <Skeleton key={i} className="h-16 rounded-lg" />
+                      ))}
+                    </div>
+                    <Skeleton className="h-24 w-full rounded-lg" />
                   </div>
                 ) : (
                   selectedRequest && (

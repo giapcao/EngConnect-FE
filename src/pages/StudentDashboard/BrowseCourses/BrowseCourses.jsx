@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
-import { Input, Chip, Select, SelectItem, Spinner } from "@heroui/react";
+import { Input, Chip, Select, SelectItem } from "@heroui/react";
 import { useTranslation } from "react-i18next";
 import { useThemeColors } from "../../../hooks/useThemeColors";
 import { motion } from "framer-motion";
 import { MagnifyingGlass } from "@phosphor-icons/react";
 import CourseCard from "../../../components/CourseCard/CourseCard";
+import CourseCardSkeleton from "../../../components/CourseCardSkeleton/CourseCardSkeleton";
 import { coursesApi } from "../../../api";
 
 const BrowseCourses = () => {
@@ -178,9 +179,11 @@ const BrowseCourses = () => {
 
       {/* Course Grid */}
       {loading ? (
-        <div className="flex justify-center py-12">
-          <Spinner size="lg" />
-        </div>
+        <CourseCardSkeleton
+          count={8}
+          gridClassName="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+          cardBgColor={colors.background.light}
+        />
       ) : (
         <motion.div
           initial={{ opacity: 0 }}

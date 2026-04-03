@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { Button, Card, CardBody, Image, Chip, Spinner } from "@heroui/react";
+import { Button, Card, CardBody, Image, Chip } from "@heroui/react";
+import CourseCardSkeleton from "../../components/CourseCardSkeleton/CourseCardSkeleton";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
@@ -582,9 +583,10 @@ const Home = () => {
           </motion.div>
 
           {coursesLoading ? (
-            <div className="flex justify-center py-12">
-              <Spinner size="lg" />
-            </div>
+            <CourseCardSkeleton
+              count={4}
+              cardBgColor={colors.background.light}
+            />
           ) : (
             <motion.div
               variants={containerVariants}

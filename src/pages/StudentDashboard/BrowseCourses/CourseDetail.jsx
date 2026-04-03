@@ -1,18 +1,11 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import {
-  Button,
-  Card,
-  CardBody,
-  Chip,
-  Avatar,
-  Divider,
-  Spinner,
-} from "@heroui/react";
+import { Button, Card, CardBody, Chip, Avatar, Divider } from "@heroui/react";
 import * as MotionLib from "framer-motion";
 import { useThemeColors } from "../../../hooks/useThemeColors";
 import { useTheme } from "../../../contexts/ThemeContext";
+import CourseDetailSkeleton from "../../../components/CourseDetailSkeleton/CourseDetailSkeleton";
 
 // eslint-disable-next-line no-unused-vars
 const { motion } = MotionLib;
@@ -85,11 +78,7 @@ const StudentCourseDetail = () => {
   }, [id]);
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-32">
-        <Spinner size="lg" />
-      </div>
-    );
+    return <CourseDetailSkeleton />;
   }
 
   if (!course) {
