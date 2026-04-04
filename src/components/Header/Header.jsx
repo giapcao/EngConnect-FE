@@ -187,7 +187,7 @@ const Header = () => {
                         <button className="flex items-center gap-2 cursor-pointer focus:outline-none rounded-full px-2 py-1.5 transition-all duration-200 hover:opacity-80">
                           <Avatar
                             src={user.avatarUrl || defaultAvatar}
-                            name={user.username}
+                            name={`${user.firstName} ${user.lastName}`}
                             size="sm"
                             className="flex-shrink-0"
                             imgProps={{ referrerPolicy: "no-referrer" }}
@@ -196,7 +196,7 @@ const Header = () => {
                             className="font-medium text-sm max-w-[120px] truncate"
                             style={{ color: colors.text.primary }}
                           >
-                            {user.username}
+                            {`${user.firstName} ${user.lastName}`}
                           </span>
                         </button>
                       </DropdownTrigger>
@@ -370,7 +370,7 @@ const Header = () => {
                       >
                         <Avatar
                           src={user.avatarUrl || defaultAvatar}
-                          name={user.username}
+                          name={`${user.firstName} ${user.lastName}`}
                           size="sm"
                           imgProps={{ referrerPolicy: "no-referrer" }}
                         />
@@ -378,7 +378,7 @@ const Header = () => {
                           className="font-medium"
                           style={{ color: colors.text.primary }}
                         >
-                          {user.username}
+                          {`${user.firstName} ${user.lastName}`}
                         </span>
                       </div>
                       {hasRole("Student") && (

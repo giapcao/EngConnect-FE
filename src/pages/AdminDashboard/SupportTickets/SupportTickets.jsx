@@ -495,49 +495,53 @@ const SupportTickets = () => {
                   )}
 
                   {/* Reply section */}
-                  {selectedTicket.status !== "Closed" && selectedTicket.status !== "Resolved" && (
-                  <div
-                    className="pt-5"
-                    style={{
-                      borderTop: `1px solid ${colors.border?.main || "#e5e7eb"}`,
-                    }}
-                  >
-                    <p
-                      className="text-sm font-semibold mb-3"
-                      style={{ color: colors.text.primary }}
-                    >
-                      {t("adminDashboard.supportTickets.detail.reply")}
-                    </p>
-                    <Textarea
-                      value={messageText}
-                      onValueChange={setMessageText}
-                      placeholder={t(
-                        "adminDashboard.supportTickets.detail.replyPlaceholder",
-                      )}
-                      classNames={inputClassNames}
-                      minRows={3}
-                      maxRows={6}
-                    />
-                    <div className="flex justify-end mt-3">
-                      <Button
-                        isLoading={sending}
-                        onPress={handleSendMessage}
-                        isDisabled={!messageText.trim()}
-                        startContent={
-                          !sending && (
-                            <PaperPlaneTilt weight="fill" className="w-4 h-4" />
-                          )
-                        }
+                  {selectedTicket.status !== "Closed" &&
+                    selectedTicket.status !== "Resolved" && (
+                      <div
+                        className="pt-5"
                         style={{
-                          backgroundColor: colors.primary.main,
-                          color: colors.text.white,
+                          borderTop: `1px solid ${colors.border?.main || "#e5e7eb"}`,
                         }}
                       >
-                        {t("adminDashboard.supportTickets.detail.reply")}
-                      </Button>
-                    </div>
-                  </div>
-                  )}
+                        <p
+                          className="text-sm font-semibold mb-3"
+                          style={{ color: colors.text.primary }}
+                        >
+                          {t("adminDashboard.supportTickets.detail.reply")}
+                        </p>
+                        <Textarea
+                          value={messageText}
+                          onValueChange={setMessageText}
+                          placeholder={t(
+                            "adminDashboard.supportTickets.detail.replyPlaceholder",
+                          )}
+                          classNames={inputClassNames}
+                          minRows={3}
+                          maxRows={6}
+                        />
+                        <div className="flex justify-end mt-3">
+                          <Button
+                            isLoading={sending}
+                            onPress={handleSendMessage}
+                            isDisabled={!messageText.trim()}
+                            startContent={
+                              !sending && (
+                                <PaperPlaneTilt
+                                  weight="fill"
+                                  className="w-4 h-4"
+                                />
+                              )
+                            }
+                            style={{
+                              backgroundColor: colors.primary.main,
+                              color: colors.text.white,
+                            }}
+                          >
+                            {t("adminDashboard.supportTickets.detail.reply")}
+                          </Button>
+                        </div>
+                      </div>
+                    )}
                 </CardBody>
               </Card>
             </motion.div>

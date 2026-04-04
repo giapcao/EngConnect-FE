@@ -490,47 +490,51 @@ const HelpSupport = () => {
                   </div>
                 )}
 
-                {selectedTicket.status !== "Closed" && selectedTicket.status !== "Resolved" && (
-                  <div
-                    className="pt-5"
-                    style={{
-                      borderTop: `1px solid ${colors.border?.main || "#e5e7eb"}`,
-                    }}
-                  >
-                    <p
-                      className="text-sm font-semibold mb-3"
-                      style={{ color: colors.text.primary }}
+                {selectedTicket.status !== "Closed" &&
+                  selectedTicket.status !== "Resolved" && (
+                    <div
+                      className="pt-5"
+                      style={{
+                        borderTop: `1px solid ${colors.border?.main || "#e5e7eb"}`,
+                      }}
                     >
-                      {t("helpSupport.detail.reply")}
-                    </p>
-                    <Textarea
-                      value={messageText}
-                      onValueChange={setMessageText}
-                      placeholder={t("helpSupport.detail.replyPlaceholder")}
-                      classNames={inputClassNames}
-                      minRows={3}
-                      maxRows={6}
-                    />
-                    <div className="flex justify-end mt-3">
-                      <Button
-                        isLoading={sending}
-                        onPress={handleSendMessage}
-                        isDisabled={!messageText.trim()}
-                        startContent={
-                          !sending && (
-                            <PaperPlaneTilt weight="fill" className="w-4 h-4" />
-                          )
-                        }
-                        style={{
-                          backgroundColor: colors.primary.main,
-                          color: colors.text.white,
-                        }}
+                      <p
+                        className="text-sm font-semibold mb-3"
+                        style={{ color: colors.text.primary }}
                       >
                         {t("helpSupport.detail.reply")}
-                      </Button>
+                      </p>
+                      <Textarea
+                        value={messageText}
+                        onValueChange={setMessageText}
+                        placeholder={t("helpSupport.detail.replyPlaceholder")}
+                        classNames={inputClassNames}
+                        minRows={3}
+                        maxRows={6}
+                      />
+                      <div className="flex justify-end mt-3">
+                        <Button
+                          isLoading={sending}
+                          onPress={handleSendMessage}
+                          isDisabled={!messageText.trim()}
+                          startContent={
+                            !sending && (
+                              <PaperPlaneTilt
+                                weight="fill"
+                                className="w-4 h-4"
+                              />
+                            )
+                          }
+                          style={{
+                            backgroundColor: colors.primary.main,
+                            color: colors.text.white,
+                          }}
+                        >
+                          {t("helpSupport.detail.reply")}
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
               </CardBody>
             </Card>
           </motion.div>
