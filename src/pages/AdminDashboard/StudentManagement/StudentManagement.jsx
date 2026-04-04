@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Card,
   CardBody,
@@ -23,25 +23,24 @@ import {
   ModalHeader,
   ModalBody,
   ModalFooter,
+  Spinner,
+  addToast,
 } from "@heroui/react";
 import { useTranslation } from "react-i18next";
 import { useThemeColors } from "../../../hooks/useThemeColors";
 import useInputStyles from "../../../hooks/useInputStyles";
 import useTableStyles from "../../../hooks/useTableStyles";
 import { motion } from "framer-motion";
+import { adminApi } from "../../../api";
 import {
   MagnifyingGlass,
   DotsThree,
   Eye,
   PencilSimple,
-  Trash,
   Export,
-  Plus,
   Funnel,
   Users,
-  TrendUp,
-  BookOpen,
-  Clock,
+  CheckCircle,
 } from "@phosphor-icons/react";
 
 const StudentManagement = () => {
@@ -49,121 +48,237 @@ const StudentManagement = () => {
   const colors = useThemeColors();
   const { inputClassNames } = useInputStyles();
   const { tableCardStyle, tableClassNames } = useTableStyles();
+
+  // List state
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [page, setPage] = useState(1);
+  const pageSize = 10;
+  const [students, setStudents] = useState([]);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading] = useState(false);
+
+  // Stats
+  const [totalStudentsCount, setTotalStudentsCount] = useState(0);
+  const [activeCount, setActiveCount] = useState(0);
+
+  // Detail modal
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [selectedStudent, setSelectedStudent] = useState(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+
+  // Edit modal
+  const {
+    isOpen: isEditOpen,
+    onOpen: onEditOpen,
+    onClose: onEditClose,
+  } = useDisclosure();
+  const [editForm, setEditForm] = useState({
+    notes: "",
+    school: "",
+    grade: "",
+    class: "",
+  });
+  const [editStudent, setEditStudent] = useState(null);
+  const [saving, setSaving] = useState(false);
+
+  // Status modal
+  const {
+    isOpen: isStatusOpen,
+    onOpen: onStatusOpen,
+    onClose: onStatusClose,
+  } = useDisclosure();
+  const [statusStudent, setStatusStudent] = useState(null);
+  const [newStatus, setNewStatus] = useState("");
+  const [updatingStatus, setUpdatingStatus] = useState(false);
+
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+      setPage(1);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  // Fetch students list
+  const fetchStudents = useCallback(async () => {
+    setLoading(true);
+    try {
+      const params = { page, "page-size": pageSize };
+      if (debouncedSearch) params["search-term"] = debouncedSearch;
+      if (selectedStatus !== "all") params.Status = selectedStatus;
+
+      const response = await adminApi.getAllStudents(params);
+      const data = response.data;
+      setStudents(data.items || []);
+      setTotalPages(data.totalPages || 1);
+    } catch {
+      setStudents([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [page, pageSize, debouncedSearch, selectedStatus]);
+
+  useEffect(() => {
+    fetchStudents();
+  }, [fetchStudents]);
+
+  // Fetch stats on mount
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const [allRes, activeRes] = await Promise.all([
+          adminApi.getAllStudents({ "page-size": 1, page: 1 }),
+          adminApi.getAllStudents({
+            Status: "Active",
+            "page-size": 1,
+            page: 1,
+          }),
+        ]);
+        setTotalStudentsCount(allRes.data.totalItems || 0);
+        setActiveCount(activeRes.data.totalItems || 0);
+      } catch {
+        // stats are non-critical
+      }
+    };
+    fetchStats();
+  }, []);
 
   const stats = [
     {
       icon: Users,
       label: t("adminDashboard.students.stats.totalStudents"),
-      value: "12,847",
-      change: "+12.5%",
+      value: totalStudentsCount.toLocaleString(),
       color: colors.primary.main,
       bg: colors.background.primaryLight,
     },
     {
-      icon: TrendUp,
+      icon: CheckCircle,
       label: t("adminDashboard.students.stats.activeStudents"),
-      value: "10,234",
-      change: "+8.2%",
+      value: activeCount.toLocaleString(),
       color: colors.state.success,
       bg: `${colors.state.success}20`,
-    },
-    {
-      icon: BookOpen,
-      label: t("adminDashboard.students.stats.enrollments"),
-      value: "45,678",
-      change: "+15.3%",
-      color: colors.state.warning,
-      bg: `${colors.state.warning}20`,
-    },
-    {
-      icon: Clock,
-      label: t("adminDashboard.students.stats.avgHours"),
-      value: "24.5h",
-      change: "+5.1%",
-      color: colors.state.error,
-      bg: `${colors.state.error}20`,
-    },
-  ];
-
-  const students = [
-    {
-      id: 1,
-      name: "John Doe",
-      email: "john.doe@example.com",
-      avatar: "https://i.pravatar.cc/150?u=student1",
-      enrolledCourses: 5,
-      totalHours: 48,
-      status: "active",
-      joinDate: "Jan 15, 2024",
-      lastActive: "2 hours ago",
-    },
-    {
-      id: 2,
-      name: "Emily Chen",
-      email: "emily.chen@example.com",
-      avatar: "https://i.pravatar.cc/150?u=student2",
-      enrolledCourses: 3,
-      totalHours: 32,
-      status: "active",
-      joinDate: "Feb 20, 2024",
-      lastActive: "1 hour ago",
-    },
-    {
-      id: 3,
-      name: "Michael Brown",
-      email: "michael.b@example.com",
-      avatar: "https://i.pravatar.cc/150?u=student3",
-      enrolledCourses: 2,
-      totalHours: 16,
-      status: "inactive",
-      joinDate: "Mar 10, 2024",
-      lastActive: "5 days ago",
-    },
-    {
-      id: 4,
-      name: "Sarah Wilson",
-      email: "sarah.w@example.com",
-      avatar: "https://i.pravatar.cc/150?u=student4",
-      enrolledCourses: 7,
-      totalHours: 86,
-      status: "active",
-      joinDate: "Dec 05, 2023",
-      lastActive: "30 minutes ago",
-    },
-    {
-      id: 5,
-      name: "David Lee",
-      email: "david.lee@example.com",
-      avatar: "https://i.pravatar.cc/150?u=student5",
-      enrolledCourses: 4,
-      totalHours: 52,
-      status: "suspended",
-      joinDate: "Nov 18, 2023",
-      lastActive: "2 weeks ago",
     },
   ];
 
   const getStatusColor = (status) => {
     switch (status) {
-      case "active":
+      case "Active":
         return "success";
-      case "inactive":
-        return "warning";
-      case "suspended":
+      case "Inactive":
+        return "default";
+      case "Suspended":
         return "danger";
       default:
-        return "default";
+        return "primary";
     }
   };
 
-  const handleViewStudent = (student) => {
+  const getStudentName = (student) => {
+    if (student.user) {
+      return `${student.user.firstName || ""} ${student.user.lastName || ""}`.trim();
+    }
+    return t("adminDashboard.students.nA");
+  };
+
+  const getStudentEmail = (student) => {
+    return student.user?.email || "";
+  };
+
+  // View detail
+  const handleViewStudent = async (student) => {
     setSelectedStudent(student);
     onOpen();
+    setDetailLoading(true);
+    try {
+      const response = await adminApi.getStudentById(student.id);
+      setSelectedStudent(response.data);
+    } catch {
+      addToast({
+        title: t("adminDashboard.students.loadFailed"),
+        color: "danger",
+      });
+    } finally {
+      setDetailLoading(false);
+    }
+  };
+
+  // Edit
+  const handleEditClick = (student) => {
+    setEditStudent(student);
+    setEditForm({
+      notes: student.notes || "",
+      school: student.school || "",
+      grade: student.grade || "",
+      class: student.class || "",
+    });
+    onEditOpen();
+  };
+
+  const handleEditSave = async () => {
+    if (!editStudent) return;
+    setSaving(true);
+    try {
+      await adminApi.updateStudent(
+        editStudent.id,
+        editStudent.userId,
+        editForm,
+      );
+      onEditClose();
+      addToast({
+        title: t("adminDashboard.students.updateSuccess"),
+        color: "success",
+      });
+      fetchStudents();
+    } catch {
+      addToast({
+        title: t("adminDashboard.students.updateFailed"),
+        color: "danger",
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Status change
+  const handleStatusClick = (student) => {
+    setStatusStudent(student);
+    setNewStatus(student.status || "Active");
+    onStatusOpen();
+  };
+
+  const handleStatusSave = async () => {
+    if (!statusStudent) return;
+    setUpdatingStatus(true);
+    try {
+      await adminApi.updateStudentStatus(statusStudent.id, newStatus);
+      onStatusClose();
+      addToast({
+        title: t("adminDashboard.students.statusUpdateSuccess"),
+        color: "success",
+      });
+      fetchStudents();
+      // Refresh stats
+      const [allRes, activeRes] = await Promise.all([
+        adminApi.getAllStudents({ "page-size": 1, page: 1 }),
+        adminApi.getAllStudents({
+          Status: "Active",
+          "page-size": 1,
+          page: 1,
+        }),
+      ]);
+      setTotalStudentsCount(allRes.data.totalItems || 0);
+      setActiveCount(activeRes.data.totalItems || 0);
+    } catch {
+      addToast({
+        title: t("adminDashboard.students.statusUpdateFailed"),
+        color: "danger",
+      });
+    } finally {
+      setUpdatingStatus(false);
+    }
   };
 
   return (
@@ -194,20 +309,11 @@ const StudentManagement = () => {
           >
             {t("adminDashboard.students.export")}
           </Button>
-          <Button
-            startContent={<Plus className="w-4 h-4" />}
-            style={{
-              backgroundColor: colors.primary.main,
-              color: colors.text.white,
-            }}
-          >
-            {t("adminDashboard.students.addStudent")}
-          </Button>
         </div>
       </motion.div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {stats.map((stat, index) => (
           <motion.div
             key={index}
@@ -290,25 +396,30 @@ const StudentManagement = () => {
                       {t("adminDashboard.students.status")}:{" "}
                       {selectedStatus === "all"
                         ? t("adminDashboard.students.all")
-                        : selectedStatus}
+                        : t(
+                            `adminDashboard.students.${selectedStatus.toLowerCase()}`,
+                          )}
                     </Button>
                   </DropdownTrigger>
                   <DropdownMenu
                     aria-label="Status filter"
-                    onAction={(key) => setSelectedStatus(key)}
+                    onAction={(key) => {
+                      setSelectedStatus(key);
+                      setPage(1);
+                    }}
                     selectedKeys={[selectedStatus]}
                     selectionMode="single"
                   >
                     <DropdownItem key="all">
                       {t("adminDashboard.students.all")}
                     </DropdownItem>
-                    <DropdownItem key="active">
+                    <DropdownItem key="Active">
                       {t("adminDashboard.students.active")}
                     </DropdownItem>
-                    <DropdownItem key="inactive">
+                    <DropdownItem key="Inactive">
                       {t("adminDashboard.students.inactive")}
                     </DropdownItem>
-                    <DropdownItem key="suspended">
+                    <DropdownItem key="Suspended">
                       {t("adminDashboard.students.suspended")}
                     </DropdownItem>
                   </DropdownMenu>
@@ -331,17 +442,19 @@ const StudentManagement = () => {
               aria-label="Students table"
               classNames={tableClassNames}
               bottomContent={
-                <div className="flex w-full justify-center py-4">
-                  <Pagination
-                    isCompact
-                    showControls
-                    showShadow
-                    color="primary"
-                    page={page}
-                    total={10}
-                    onChange={(page) => setPage(page)}
-                  />
-                </div>
+                totalPages > 1 ? (
+                  <div className="flex w-full justify-center py-4">
+                    <Pagination
+                      isCompact
+                      showControls
+                      showShadow
+                      color="primary"
+                      page={page}
+                      total={totalPages}
+                      onChange={(p) => setPage(p)}
+                    />
+                  </div>
+                ) : null
               }
             >
               <TableHeader>
@@ -349,10 +462,10 @@ const StudentManagement = () => {
                   {t("adminDashboard.students.table.student")}
                 </TableColumn>
                 <TableColumn>
-                  {t("adminDashboard.students.table.courses")}
+                  {t("adminDashboard.students.table.school")}
                 </TableColumn>
                 <TableColumn>
-                  {t("adminDashboard.students.table.hours")}
+                  {t("adminDashboard.students.table.grade")}
                 </TableColumn>
                 <TableColumn>
                   {t("adminDashboard.students.table.status")}
@@ -361,13 +474,14 @@ const StudentManagement = () => {
                   {t("adminDashboard.students.table.joinDate")}
                 </TableColumn>
                 <TableColumn>
-                  {t("adminDashboard.students.table.lastActive")}
-                </TableColumn>
-                <TableColumn>
                   {t("adminDashboard.students.table.actions")}
                 </TableColumn>
               </TableHeader>
-              <TableBody>
+              <TableBody
+                isLoading={loading}
+                loadingContent={<Spinner size="lg" />}
+                emptyContent={t("adminDashboard.students.noData")}
+              >
                 {students.map((student) => (
                   <TableRow key={student.id}>
                     <TableCell>
@@ -378,25 +492,25 @@ const StudentManagement = () => {
                             className="font-medium"
                             style={{ color: colors.text.primary }}
                           >
-                            {student.name}
+                            {getStudentName(student)}
                           </p>
                           <p
                             className="text-xs"
                             style={{ color: colors.text.secondary }}
                           >
-                            {student.email}
+                            {getStudentEmail(student)}
                           </p>
                         </div>
                       </div>
                     </TableCell>
                     <TableCell>
                       <span style={{ color: colors.text.primary }}>
-                        {student.enrolledCourses}
+                        {student.school || t("adminDashboard.students.nA")}
                       </span>
                     </TableCell>
                     <TableCell>
                       <span style={{ color: colors.text.primary }}>
-                        {student.totalHours}h
+                        {student.grade || t("adminDashboard.students.nA")}
                       </span>
                     </TableCell>
                     <TableCell>
@@ -405,53 +519,55 @@ const StudentManagement = () => {
                         color={getStatusColor(student.status)}
                         variant="flat"
                       >
-                        {student.status}
+                        {student.status || t("adminDashboard.students.nA")}
                       </Chip>
                     </TableCell>
                     <TableCell>
                       <span style={{ color: colors.text.secondary }}>
-                        {student.joinDate}
+                        {student.createdAt
+                          ? new Date(student.createdAt).toLocaleDateString()
+                          : t("adminDashboard.students.nA")}
                       </span>
                     </TableCell>
                     <TableCell>
-                      <span style={{ color: colors.text.secondary }}>
-                        {student.lastActive}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <Dropdown>
-                        <DropdownTrigger>
-                          <Button isIconOnly variant="light" size="sm">
-                            <DotsThree
-                              className="w-5 h-5"
-                              weight="bold"
-                              style={{ color: colors.text.secondary }}
-                            />
-                          </Button>
-                        </DropdownTrigger>
-                        <DropdownMenu aria-label="Student actions">
-                          <DropdownItem
-                            key="view"
-                            startContent={<Eye className="w-4 h-4" />}
-                            onPress={() => handleViewStudent(student)}
-                          >
-                            {t("adminDashboard.students.view")}
-                          </DropdownItem>
-                          <DropdownItem
-                            key="edit"
-                            startContent={<PencilSimple className="w-4 h-4" />}
-                          >
-                            {t("adminDashboard.students.edit")}
-                          </DropdownItem>
-                          <DropdownItem
-                            key="delete"
-                            color="danger"
-                            startContent={<Trash className="w-4 h-4" />}
-                          >
-                            {t("adminDashboard.students.delete")}
-                          </DropdownItem>
-                        </DropdownMenu>
-                      </Dropdown>
+                      <div className="flex items-center gap-1">
+                        <Dropdown>
+                          <DropdownTrigger>
+                            <Button isIconOnly variant="light" size="sm">
+                              <DotsThree
+                                className="w-5 h-5"
+                                weight="bold"
+                                style={{ color: colors.text.secondary }}
+                              />
+                            </Button>
+                          </DropdownTrigger>
+                          <DropdownMenu aria-label="Student actions">
+                            <DropdownItem
+                              key="view"
+                              startContent={<Eye className="w-4 h-4" />}
+                              onPress={() => handleViewStudent(student)}
+                            >
+                              {t("adminDashboard.students.view")}
+                            </DropdownItem>
+                            <DropdownItem
+                              key="edit"
+                              startContent={
+                                <PencilSimple className="w-4 h-4" />
+                              }
+                              onPress={() => handleEditClick(student)}
+                            >
+                              {t("adminDashboard.students.edit")}
+                            </DropdownItem>
+                            <DropdownItem
+                              key="status"
+                              startContent={<CheckCircle className="w-4 h-4" />}
+                              onPress={() => handleStatusClick(student)}
+                            >
+                              {t("adminDashboard.students.changeStatus")}
+                            </DropdownItem>
+                          </DropdownMenu>
+                        </Dropdown>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -470,7 +586,11 @@ const StudentManagement = () => {
                 {t("adminDashboard.students.studentDetails")}
               </ModalHeader>
               <ModalBody>
-                {selectedStudent && (
+                {detailLoading ? (
+                  <div className="flex justify-center py-8">
+                    <Spinner size="lg" />
+                  </div>
+                ) : selectedStudent ? (
                   <div className="space-y-4">
                     <div className="flex items-center gap-4">
                       <Avatar
@@ -482,71 +602,309 @@ const StudentManagement = () => {
                           className="text-xl font-semibold"
                           style={{ color: colors.text.primary }}
                         >
-                          {selectedStudent.name}
+                          {getStudentName(selectedStudent)}
                         </h3>
                         <p style={{ color: colors.text.secondary }}>
-                          {selectedStudent.email}
+                          {getStudentEmail(selectedStudent)}
                         </p>
-                        <Chip
-                          size="sm"
-                          color={getStatusColor(selectedStudent.status)}
-                          variant="flat"
-                          className="mt-2"
-                        >
-                          {selectedStudent.status}
-                        </Chip>
+                        <div className="flex gap-2 mt-2">
+                          <Chip
+                            size="sm"
+                            color={getStatusColor(selectedStudent.status)}
+                            variant="flat"
+                          >
+                            {selectedStudent.status ||
+                              t("adminDashboard.students.nA")}
+                          </Chip>
+                        </div>
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div
-                        className="p-4 rounded-xl"
-                        style={{ backgroundColor: colors.background.gray }}
-                      >
-                        <p
-                          className="text-sm"
-                          style={{ color: colors.text.secondary }}
-                        >
-                          {t("adminDashboard.students.table.courses")}
-                        </p>
-                        <p
-                          className="text-2xl font-bold"
-                          style={{ color: colors.text.primary }}
-                        >
-                          {selectedStudent.enrolledCourses}
-                        </p>
+
+                    {/* Info grid */}
+                    <div className="space-y-3">
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <p
+                            className="text-sm font-semibold"
+                            style={{ color: colors.text.secondary }}
+                          >
+                            {t("adminDashboard.students.email")}
+                          </p>
+                          <p style={{ color: colors.text.primary }}>
+                            {getStudentEmail(selectedStudent)}
+                          </p>
+                        </div>
+                        <div>
+                          <p
+                            className="text-sm font-semibold"
+                            style={{ color: colors.text.secondary }}
+                          >
+                            {t("adminDashboard.students.phone")}
+                          </p>
+                          <p style={{ color: colors.text.primary }}>
+                            {selectedStudent.user?.phone ||
+                              t("adminDashboard.students.nA")}
+                          </p>
+                        </div>
+                        <div>
+                          <p
+                            className="text-sm font-semibold"
+                            style={{ color: colors.text.secondary }}
+                          >
+                            {t("adminDashboard.students.table.school")}
+                          </p>
+                          <p style={{ color: colors.text.primary }}>
+                            {selectedStudent.school ||
+                              t("adminDashboard.students.nA")}
+                          </p>
+                        </div>
+                        <div>
+                          <p
+                            className="text-sm font-semibold"
+                            style={{ color: colors.text.secondary }}
+                          >
+                            {t("adminDashboard.students.table.grade")}
+                          </p>
+                          <p style={{ color: colors.text.primary }}>
+                            {selectedStudent.grade ||
+                              t("adminDashboard.students.nA")}
+                          </p>
+                        </div>
+                        <div>
+                          <p
+                            className="text-sm font-semibold"
+                            style={{ color: colors.text.secondary }}
+                          >
+                            {t("adminDashboard.students.classLabel")}
+                          </p>
+                          <p style={{ color: colors.text.primary }}>
+                            {selectedStudent.class ||
+                              t("adminDashboard.students.nA")}
+                          </p>
+                        </div>
+                        <div>
+                          <p
+                            className="text-sm font-semibold"
+                            style={{ color: colors.text.secondary }}
+                          >
+                            {t("adminDashboard.students.username")}
+                          </p>
+                          <p style={{ color: colors.text.primary }}>
+                            {selectedStudent.user?.userName ||
+                              t("adminDashboard.students.nA")}
+                          </p>
+                        </div>
+                        <div>
+                          <p
+                            className="text-sm font-semibold"
+                            style={{ color: colors.text.secondary }}
+                          >
+                            {t("adminDashboard.students.table.joinDate")}
+                          </p>
+                          <p style={{ color: colors.text.primary }}>
+                            {selectedStudent.createdAt &&
+                            selectedStudent.createdAt !== "0001-01-01T00:00:00"
+                              ? new Date(
+                                  selectedStudent.createdAt,
+                                ).toLocaleDateString()
+                              : t("adminDashboard.students.nA")}
+                          </p>
+                        </div>
+                        <div>
+                          <p
+                            className="text-sm font-semibold"
+                            style={{ color: colors.text.secondary }}
+                          >
+                            {t("adminDashboard.students.lastUpdated")}
+                          </p>
+                          <p style={{ color: colors.text.primary }}>
+                            {selectedStudent.updatedAt
+                              ? new Date(
+                                  selectedStudent.updatedAt,
+                                ).toLocaleDateString()
+                              : t("adminDashboard.students.nA")}
+                          </p>
+                        </div>
                       </div>
-                      <div
-                        className="p-4 rounded-xl"
-                        style={{ backgroundColor: colors.background.gray }}
-                      >
-                        <p
-                          className="text-sm"
-                          style={{ color: colors.text.secondary }}
-                        >
-                          {t("adminDashboard.students.table.hours")}
-                        </p>
-                        <p
-                          className="text-2xl font-bold"
-                          style={{ color: colors.text.primary }}
-                        >
-                          {selectedStudent.totalHours}h
-                        </p>
-                      </div>
+                      {selectedStudent.notes && (
+                        <div>
+                          <p
+                            className="text-sm font-semibold mb-1"
+                            style={{ color: colors.text.secondary }}
+                          >
+                            {t("adminDashboard.students.notes")}
+                          </p>
+                          <p style={{ color: colors.text.primary }}>
+                            {selectedStudent.notes}
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </div>
-                )}
+                ) : null}
               </ModalBody>
               <ModalFooter>
                 <Button variant="light" onPress={onClose}>
                   {t("adminDashboard.students.close")}
                 </Button>
                 <Button
+                  onPress={() => {
+                    onClose();
+                    if (selectedStudent) handleEditClick(selectedStudent);
+                  }}
                   style={{
                     backgroundColor: colors.primary.main,
                     color: colors.text.white,
                   }}
                 >
                   {t("adminDashboard.students.edit")}
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
+
+      {/* Edit Student Modal */}
+      <Modal isOpen={isEditOpen} onClose={onEditClose} size="lg">
+        <ModalContent style={{ backgroundColor: colors.background.light }}>
+          {(onClose) => (
+            <>
+              <ModalHeader style={{ color: colors.text.primary }}>
+                {t("adminDashboard.students.editStudent")}
+              </ModalHeader>
+              <ModalBody>
+                <div className="space-y-4">
+                  <Input
+                    label={t("adminDashboard.students.table.school")}
+                    value={editForm.school}
+                    onChange={(e) =>
+                      setEditForm((prev) => ({
+                        ...prev,
+                        school: e.target.value,
+                      }))
+                    }
+                    classNames={inputClassNames}
+                  />
+                  <Input
+                    label={t("adminDashboard.students.table.grade")}
+                    value={editForm.grade}
+                    onChange={(e) =>
+                      setEditForm((prev) => ({
+                        ...prev,
+                        grade: e.target.value,
+                      }))
+                    }
+                    classNames={inputClassNames}
+                  />
+                  <Input
+                    label={t("adminDashboard.students.classLabel")}
+                    value={editForm.class}
+                    onChange={(e) =>
+                      setEditForm((prev) => ({
+                        ...prev,
+                        class: e.target.value,
+                      }))
+                    }
+                    classNames={inputClassNames}
+                  />
+                  <Input
+                    label={t("adminDashboard.students.notes")}
+                    value={editForm.notes}
+                    onChange={(e) =>
+                      setEditForm((prev) => ({
+                        ...prev,
+                        notes: e.target.value,
+                      }))
+                    }
+                    classNames={inputClassNames}
+                  />
+                </div>
+              </ModalBody>
+              <ModalFooter>
+                <Button variant="light" onPress={onClose}>
+                  {t("adminDashboard.students.cancel")}
+                </Button>
+                <Button
+                  onPress={handleEditSave}
+                  isLoading={saving}
+                  style={{
+                    backgroundColor: colors.primary.main,
+                    color: colors.text.white,
+                  }}
+                >
+                  {t("adminDashboard.students.save")}
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
+
+      {/* Change Status Modal */}
+      <Modal isOpen={isStatusOpen} onClose={onStatusClose} size="sm">
+        <ModalContent style={{ backgroundColor: colors.background.light }}>
+          {(onClose) => (
+            <>
+              <ModalHeader style={{ color: colors.text.primary }}>
+                {t("adminDashboard.students.changeStatus")}
+              </ModalHeader>
+              <ModalBody>
+                <p className="mb-3" style={{ color: colors.text.secondary }}>
+                  {t("adminDashboard.students.changeStatusMsg")}
+                </p>
+                {statusStudent && (
+                  <div className="flex items-center gap-3 mb-4">
+                    <Avatar src={statusStudent.avatar} size="sm" />
+                    <div>
+                      <p
+                        className="font-medium"
+                        style={{ color: colors.text.primary }}
+                      >
+                        {getStudentName(statusStudent)}
+                      </p>
+                      <p
+                        className="text-xs"
+                        style={{ color: colors.text.secondary }}
+                      >
+                        {getStudentEmail(statusStudent)}
+                      </p>
+                    </div>
+                  </div>
+                )}
+                <div className="flex flex-col gap-2">
+                  {["Active", "Inactive", "Suspended"].map((status) => (
+                    <Button
+                      key={status}
+                      variant={newStatus === status ? "solid" : "flat"}
+                      color={
+                        status === "Active"
+                          ? "success"
+                          : status === "Suspended"
+                            ? "danger"
+                            : "default"
+                      }
+                      onPress={() => setNewStatus(status)}
+                      className="justify-start"
+                    >
+                      {t(`adminDashboard.students.${status.toLowerCase()}`)}
+                    </Button>
+                  ))}
+                </div>
+              </ModalBody>
+              <ModalFooter>
+                <Button variant="light" onPress={onClose}>
+                  {t("adminDashboard.students.cancel")}
+                </Button>
+                <Button
+                  onPress={handleStatusSave}
+                  isLoading={updatingStatus}
+                  style={{
+                    backgroundColor: colors.primary.main,
+                    color: colors.text.white,
+                  }}
+                >
+                  {t("adminDashboard.students.save")}
                 </Button>
               </ModalFooter>
             </>

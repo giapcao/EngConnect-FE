@@ -230,4 +230,29 @@ export const adminApi = {
     );
     return response.data;
   },
+
+  // Student management (/api/students)
+  getAllStudents: async (params = {}) => {
+    const response = await axiosInstance.get("/students", { params });
+    return response.data;
+  },
+
+  getStudentById: async (studentId) => {
+    const response = await axiosInstance.get(`/students/${studentId}`);
+    return response.data;
+  },
+
+  updateStudent: async (studentId, userId, data) => {
+    const response = await axiosInstance.put(`/students/${studentId}`, data, {
+      params: { userId },
+    });
+    return response.data;
+  },
+
+  updateStudentStatus: async (studentId, status) => {
+    const response = await axiosInstance.put(`/students/${studentId}/status`, {
+      status,
+    });
+    return response.data;
+  },
 };

@@ -32,7 +32,6 @@ import * as MotionLib from "framer-motion";
 import Header from "../../components/Header/Header";
 import Footer from "../../components/Footer/Footer";
 import hybridWorkImage from "../../assets/illustrations/hybrid-work.avif";
-import conversationImage from "../../assets/illustrations/conversation.avif";
 import {
   Plus,
   ArrowLeft,
@@ -46,6 +45,8 @@ import {
   UsersThree,
   CaretDown,
   Question,
+  UserCircle,
+  ShieldCheck,
 } from "@phosphor-icons/react";
 
 // eslint-disable-next-line no-unused-vars
@@ -352,7 +353,7 @@ const HelpSupport = () => {
             </Card>
           </motion.div>
 
-          {/* Conversation */}
+          {/* Activity Thread */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -365,93 +366,169 @@ const HelpSupport = () => {
             >
               <CardBody className="p-6">
                 <h3
-                  className="text-lg font-semibold mb-4"
+                  className="text-lg font-semibold mb-6"
                   style={{ color: colors.text.primary }}
                 >
                   <ChatCircleDots
                     weight="duotone"
                     className="w-5 h-5 inline-block mr-2"
                   />
-                  {t("helpSupport.detail.conversation")}
+                  {t("helpSupport.detail.activity")}
                 </h3>
 
-                <div
-                  className="space-y-4 max-h-96 overflow-y-auto p-4 rounded-xl mb-4"
-                  style={{ backgroundColor: colors.background.gray }}
-                >
-                  {(!selectedTicket.supportTicketMessages ||
-                    selectedTicket.supportTicketMessages.length === 0) && (
-                    <p
-                      className="text-center py-8"
+                {(!selectedTicket.supportTicketMessages ||
+                  selectedTicket.supportTicketMessages.length === 0) && (
+                  <div
+                    className="text-center py-10 rounded-xl mb-6"
+                    style={{ backgroundColor: colors.background.gray }}
+                  >
+                    <ChatCircleDots
+                      weight="duotone"
+                      className="w-10 h-10 mx-auto mb-2"
                       style={{ color: colors.text.tertiary }}
-                    >
+                    />
+                    <p style={{ color: colors.text.tertiary }}>
                       {t("helpSupport.detail.noMessages")}
                     </p>
-                  )}
-                  {selectedTicket.supportTicketMessages
-                    ?.sort(
-                      (a, b) => new Date(a.createdAt) - new Date(b.createdAt),
-                    )
-                    .map((msg) => {
-                      const isMe = msg.senderId === user?.userId;
-                      return (
-                        <div
-                          key={msg.id}
-                          className={`flex ${isMe ? "justify-end" : "justify-start"}`}
-                        >
-                          <div
-                            className={`max-w-[75%] p-3 rounded-2xl ${isMe ? "rounded-br-sm" : "rounded-bl-sm"}`}
-                            style={{
-                              backgroundColor: isMe
-                                ? colors.primary.main
-                                : colors.background.light,
-                              color: isMe
-                                ? colors.text.white
-                                : colors.text.primary,
-                            }}
-                          >
-                            <p className="text-xs font-medium mb-1 opacity-70">
-                              {isMe
-                                ? t("helpSupport.detail.you")
-                                : t("helpSupport.detail.support")}
-                            </p>
-                            <p className="text-sm">{msg.message}</p>
-                            <p className="text-xs mt-1 opacity-50">
-                              {formatDate(msg.createdAt)}
-                            </p>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  <div ref={messagesEndRef} />
-                </div>
+                  </div>
+                )}
 
-                {selectedTicket.status !== "Closed" && (
-                  <div className="flex gap-2">
-                    <Input
+                {selectedTicket.supportTicketMessages?.length > 0 && (
+                  <div className="space-y-0 mb-6 max-h-[500px] overflow-y-auto">
+                    {selectedTicket.supportTicketMessages
+                      .sort(
+                        (a, b) => new Date(a.createdAt) - new Date(b.createdAt),
+                      )
+                      .map((msg, index, arr) => {
+                        const isMe = msg.senderId === user?.userId;
+                        return (
+                          <div key={msg.id} className="relative pl-10">
+                            {/* Timeline line */}
+                            {index < arr.length - 1 && (
+                              <div
+                                className="absolute left-[17px] top-10 bottom-0 w-[2px]"
+                                style={{
+                                  backgroundColor:
+                                    colors.border?.main || "#e5e7eb",
+                                }}
+                              />
+                            )}
+                            {/* Timeline icon */}
+                            <div
+                              className="absolute left-0 top-2 w-9 h-9 rounded-full flex items-center justify-center"
+                              style={{
+                                backgroundColor: isMe
+                                  ? colors.primary.main + "18"
+                                  : colors.background.gray || "#f3f4f6",
+                              }}
+                            >
+                              {isMe ? (
+                                <UserCircle
+                                  weight="duotone"
+                                  className="w-5 h-5"
+                                  style={{
+                                    color: colors.primary.main,
+                                  }}
+                                />
+                              ) : (
+                                <ShieldCheck
+                                  weight="duotone"
+                                  className="w-5 h-5"
+                                  style={{
+                                    color: colors.text.tertiary,
+                                  }}
+                                />
+                              )}
+                            </div>
+
+                            {/* Message card */}
+                            <div className="pb-5">
+                              <div className="flex items-center gap-2 mb-2">
+                                <span
+                                  className="text-sm font-semibold"
+                                  style={{
+                                    color: isMe
+                                      ? colors.primary.main
+                                      : colors.text.primary,
+                                  }}
+                                >
+                                  {isMe
+                                    ? t("helpSupport.detail.you")
+                                    : t("helpSupport.detail.support")}
+                                </span>
+                                <span
+                                  className="text-xs"
+                                  style={{
+                                    color: colors.text.tertiary,
+                                  }}
+                                >
+                                  {formatDate(msg.createdAt)}
+                                </span>
+                              </div>
+                              <div
+                                className="p-4 rounded-xl"
+                                style={{
+                                  backgroundColor:
+                                    colors.background.gray || "#f3f4f6",
+                                  borderLeft: `3px solid ${isMe ? colors.primary.main : colors.border?.main || "#e5e7eb"}`,
+                                }}
+                              >
+                                <p
+                                  className="text-sm whitespace-pre-wrap"
+                                  style={{
+                                    color: colors.text.primary,
+                                  }}
+                                >
+                                  {msg.message}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    <div ref={messagesEndRef} />
+                  </div>
+                )}
+
+                {selectedTicket.status !== "Closed" && selectedTicket.status !== "Resolved" && (
+                  <div
+                    className="pt-5"
+                    style={{
+                      borderTop: `1px solid ${colors.border?.main || "#e5e7eb"}`,
+                    }}
+                  >
+                    <p
+                      className="text-sm font-semibold mb-3"
+                      style={{ color: colors.text.primary }}
+                    >
+                      {t("helpSupport.detail.reply")}
+                    </p>
+                    <Textarea
                       value={messageText}
                       onValueChange={setMessageText}
                       placeholder={t("helpSupport.detail.replyPlaceholder")}
                       classNames={inputClassNames}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" && !e.shiftKey) {
-                          e.preventDefault();
-                          handleSendMessage();
-                        }
-                      }}
+                      minRows={3}
+                      maxRows={6}
                     />
-                    <Button
-                      isIconOnly
-                      isLoading={sending}
-                      onPress={handleSendMessage}
-                      isDisabled={!messageText.trim()}
-                      style={{
-                        backgroundColor: colors.primary.main,
-                        color: colors.text.white,
-                      }}
-                    >
-                      <PaperPlaneTilt weight="fill" className="w-5 h-5" />
-                    </Button>
+                    <div className="flex justify-end mt-3">
+                      <Button
+                        isLoading={sending}
+                        onPress={handleSendMessage}
+                        isDisabled={!messageText.trim()}
+                        startContent={
+                          !sending && (
+                            <PaperPlaneTilt weight="fill" className="w-4 h-4" />
+                          )
+                        }
+                        style={{
+                          backgroundColor: colors.primary.main,
+                          color: colors.text.white,
+                        }}
+                      >
+                        {t("helpSupport.detail.reply")}
+                      </Button>
+                    </div>
                   </div>
                 )}
               </CardBody>
@@ -786,7 +863,7 @@ const HelpSupport = () => {
 
                   {/* Tickets List */}
                   {loading ? (
-                    <div className="space-y-3">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {Array.from({ length: 3 }).map((_, i) => (
                         <Card
                           key={`skeleton-${i}`}
@@ -833,7 +910,7 @@ const HelpSupport = () => {
                       </CardBody>
                     </Card>
                   ) : (
-                    <div className="space-y-3">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {tickets.map((ticket) => (
                         <Card
                           key={ticket.id}
