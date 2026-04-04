@@ -37,6 +37,7 @@ import {
   MagnifyingGlassIcon,
   SquaresFour,
   ListMagnifyingGlass,
+  Question,
 } from "@phosphor-icons/react";
 
 const DashboardLayout = () => {
@@ -175,6 +176,15 @@ const DashboardLayout = () => {
                   onPress={() => navigate("/student/profile")}
                 >
                   {t("studentDashboard.nav.profile")}
+                </DropdownItem>
+                <DropdownItem
+                  key="help-support"
+                  startContent={
+                    <Question weight="duotone" className="w-5 h-5" />
+                  }
+                  onPress={() => navigate("/help-support")}
+                >
+                  {t("studentDashboard.nav.helpSupport")}
                 </DropdownItem>
                 <DropdownItem
                   key="logout"

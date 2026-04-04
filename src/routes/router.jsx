@@ -52,6 +52,10 @@ import AdminCategories from "../pages/AdminDashboard/CourseManagement/CategoryMa
 import AdminAnalytics from "../pages/AdminDashboard/AnalyticsReports/AnalyticsReports";
 import AdminFinance from "../pages/AdminDashboard/FinancialManagement/FinancialManagement";
 import AdminSettings from "../pages/AdminDashboard/Settings/Settings";
+import AdminSupportTickets from "../pages/AdminDashboard/SupportTickets/SupportTickets";
+
+// Help & Support (shared by student/tutor)
+import HelpSupport from "../pages/HelpSupport/HelpSupport";
 
 // Not Found Page
 import NotFound from "../pages/NotFound/NotFound";
@@ -145,6 +149,10 @@ export const router = createBrowserRouter([
       {
         path: "tutor/onboarding",
         element: <TutorOnboarding />,
+      },
+      {
+        path: "help-support",
+        element: <HelpSupport />,
       },
     ],
   },
@@ -283,6 +291,10 @@ export const router = createBrowserRouter([
       {
         path: "settings",
         element: <AdminSettings />,
+      },
+      {
+        path: "support-tickets",
+        element: <AdminSupportTickets />,
       },
     ],
   },

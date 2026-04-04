@@ -42,6 +42,7 @@ import {
   CaretRight,
   ShieldCheck,
   Tag,
+  Ticket,
 } from "@phosphor-icons/react";
 
 const AdminDashboardLayout = () => {
@@ -124,6 +125,11 @@ const AdminDashboardLayout = () => {
       path: "/admin/settings",
       label: t("adminDashboard.nav.settings"),
       icon: Gear,
+    },
+    {
+      path: "/admin/support-tickets",
+      label: t("adminDashboard.nav.supportTickets"),
+      icon: Ticket,
     },
   ];
 

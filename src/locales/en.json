@@ -23,6 +23,7 @@
     "getStarted": "Get Started",
     "learningDashboard": "My Learning",
     "tutorDashboard": "Tutor Dashboard",
+    "helpSupport": "Help & Support",
     "logout": "Logout"
   },
   "becomeTutor": {
@@ -529,6 +530,7 @@
       "homework": "Homework",
       "community": "Community",
       "profile": "Profile",
+      "helpSupport": "Help & Support",
       "logout": "Logout"
     },
     "search": {
@@ -745,6 +747,7 @@
       "earnings": "Earnings",
       "community": "Community",
       "profile": "Profile",
+      "helpSupport": "Help & Support",
       "logout": "Logout"
     },
     "role": "Tutor",
@@ -1252,6 +1255,114 @@
       "publishedEditLocked": "Published courses cannot be edited. Please contact admin if changes are required."
     }
   },
+  "helpSupport": {
+    "title": "Help & Support",
+    "subtitle": "Need help? Create a support ticket and we'll get back to you.",
+    "hero": {
+      "badge": "Help Center",
+      "title": "How Can We",
+      "titleHighlight": "Help You?",
+      "description": "Browse our frequently asked questions or create a support ticket to get personalized assistance from our team.",
+      "browseFaq": "Browse FAQ"
+    },
+    "faq": {
+      "title": "Frequently Asked Questions",
+      "subtitle": "Find quick answers to common questions about EngConnect.",
+      "tabs": {
+        "general": "General",
+        "student": "Student",
+        "tutor": "Tutor"
+      },
+      "general": {
+        "q1": "What is EngConnect?",
+        "a1": "EngConnect is an online platform that connects English learners with experienced tutors. Our platform offers live 1-on-1 sessions, group classes, and self-paced courses to help you improve your English skills.",
+        "q2": "How do I create an account?",
+        "a2": "Click the 'Get Started' button on our homepage. You can register using your email address or sign in with Google. The process takes less than a minute.",
+        "q3": "Is EngConnect free to use?",
+        "a3": "Creating an account is free. You can browse courses and tutor profiles at no cost. Payment is only required when you enroll in a course or book a session with a tutor.",
+        "q4": "What payment methods are accepted?",
+        "a4": "We accept major credit/debit cards, bank transfers, and various digital payment methods. All payments are processed securely through our platform.",
+        "q5": "How do I contact support?",
+        "a5": "You can create a support ticket directly from this page by clicking 'Create Ticket'. Our support team typically responds within 24 hours."
+      },
+      "student": {
+        "q1": "How do I find the right course?",
+        "a1": "Use our Browse Courses page to filter by category, level, and price. You can also read course descriptions and reviews from other students to find the perfect match.",
+        "q2": "Can I cancel or reschedule a session?",
+        "a2": "Yes, you can cancel or reschedule a session up to 24 hours before the scheduled time. Go to your Schedule page in the dashboard to manage your bookings.",
+        "q3": "How do I track my learning progress?",
+        "a3": "Your Student Dashboard shows your enrolled courses, completed lessons, upcoming sessions, and overall progress. You can also view detailed statistics for each course.",
+        "q4": "What if I'm not satisfied with a course?",
+        "a4": "If you're not satisfied, you can contact the tutor directly to discuss your concerns. You can also create a support ticket and our team will help resolve the issue.",
+        "q5": "Can I switch tutors during a course?",
+        "a5": "Course enrollment is tied to a specific tutor. If you'd like to switch, you can discuss with the current tutor or contact support for assistance."
+      },
+      "tutor": {
+        "q1": "How do I become a tutor on EngConnect?",
+        "a1": "Visit the 'Become a Tutor' page and fill out the registration form. You'll need to provide your qualifications, experience, and verify your identity. Our team will review your application within 3-5 business days.",
+        "q2": "How do I create and publish a course?",
+        "a2": "Go to your Tutor Dashboard and click 'Create Course'. Fill in the course details, upload materials, set your pricing, and submit for review. Once approved by our admin team, your course will be published.",
+        "q3": "When and how do I get paid?",
+        "a3": "Earnings are calculated based on course enrollments and completed sessions. You can view your earnings in the Tutor Dashboard and request withdrawals according to our payment schedule.",
+        "q4": "How do I manage my schedule?",
+        "a4": "Use the Schedule page in your Tutor Dashboard to set your availability, view upcoming sessions, and manage bookings. Students can only book during your available time slots.",
+        "q5": "What should I do if a student misses a session?",
+        "a5": "If a student misses a session without prior notice, you can report it through your dashboard. Our policy protects tutors in cases of no-shows."
+      }
+    },
+    "createTicket": "Create Ticket",
+    "myTickets": "My Tickets",
+    "searchPlaceholder": "Search your tickets...",
+    "allStatuses": "All Statuses",
+    "allTypes": "All Types",
+    "noTickets": "No tickets found",
+    "noTicketsDesc": "You haven't created any support tickets yet.",
+    "newTicket": {
+      "title": "New Support Ticket",
+      "subject": "Subject",
+      "subjectPlaceholder": "Brief summary of your issue",
+      "description": "Description",
+      "descriptionPlaceholder": "Describe your issue in detail...",
+      "type": "Type",
+      "selectType": "Select a type",
+      "submit": "Submit Ticket",
+      "submitting": "Submitting...",
+      "success": "Ticket created successfully!",
+      "failed": "Failed to create ticket"
+    },
+    "detail": {
+      "title": "Ticket Detail",
+      "backToList": "Back to Tickets",
+      "description": "Description",
+      "conversation": "Conversation",
+      "noMessages": "No messages yet. Start the conversation!",
+      "replyPlaceholder": "Type your message...",
+      "send": "Send",
+      "sendSuccess": "Message sent",
+      "sendFailed": "Failed to send message",
+      "you": "You",
+      "support": "Support Team"
+    },
+    "types": {
+      "Error": "Error",
+      "TechnicalIssue": "Technical Issue",
+      "Question": "Question",
+      "FeatureRequest": "Feature Request",
+      "Billing": "Billing",
+      "Other": "Other"
+    },
+    "statuses": {
+      "Open": "Open",
+      "Resolved": "Resolved",
+      "Closed": "Closed"
+    },
+    "ticketId": "Ticket ID",
+    "subject": "Subject",
+    "type": "Type",
+    "status": "Status",
+    "createdAt": "Created",
+    "updatedAt": "Updated"
+  },
   "adminDashboard": {
     "role": "Administrator",
     "nav": {
@@ -1267,6 +1378,7 @@
       "analytics": "Analytics",
       "finance": "Finance",
       "settings": "Settings",
+      "supportTickets": "Support Tickets",
       "logout": "Logout"
     },
     "search": {
@@ -1697,6 +1809,57 @@
       "newRegistrationsDesc": "Allow new users to register on the platform",
       "emailVerification": "Email Verification",
       "emailVerificationDesc": "Require email verification for new accounts"
+    },
+    "supportTickets": {
+      "title": "Support Tickets",
+      "subtitle": "Manage and respond to user support requests",
+      "searchPlaceholder": "Search tickets...",
+      "allStatuses": "All Statuses",
+      "allTypes": "All Types",
+      "noTickets": "No support tickets found",
+      "noTicketsDesc": "There are no support tickets matching your filters.",
+      "ticketId": "Ticket ID",
+      "subject": "Subject",
+      "type": "Type",
+      "status": "Status",
+      "createdAt": "Created",
+      "updatedAt": "Updated",
+      "actions": "Actions",
+      "viewDetail": "View Details",
+      "deleteTicket": "Delete Ticket",
+      "deleteConfirm": "Are you sure you want to delete this ticket?",
+      "deleteSuccess": "Ticket deleted successfully",
+      "deleteFailed": "Failed to delete ticket",
+      "updateStatusSuccess": "Ticket status updated",
+      "updateStatusFailed": "Failed to update status",
+      "detail": {
+        "title": "Ticket Detail",
+        "backToList": "Back to Tickets",
+        "description": "Description",
+        "conversation": "Conversation",
+        "noMessages": "No messages yet",
+        "replyPlaceholder": "Type your reply...",
+        "send": "Send",
+        "sendSuccess": "Message sent",
+        "sendFailed": "Failed to send message",
+        "changeStatus": "Change Status",
+        "you": "You",
+        "admin": "Admin",
+        "user": "User"
+      },
+      "types": {
+        "Error": "Error",
+        "TechnicalIssue": "Technical Issue",
+        "Question": "Question",
+        "FeatureRequest": "Feature Request",
+        "Billing": "Billing",
+        "Other": "Other"
+      },
+      "statuses": {
+        "Open": "Open",
+        "Resolved": "Resolved",
+        "Closed": "Closed"
+      }
     }
   }
 }

@@ -14,6 +14,7 @@ import {
   LogOut,
   GraduationCap,
   BookOpen,
+  HelpCircle,
 } from "lucide-react";
 import logoImage from "../../assets/images/logo.png";
 import defaultAvatar from "../../assets/images/null-avatar.jpg";
@@ -205,6 +206,13 @@ const Header = () => {
                           if (key === "logout") setIsLogoutModalOpen(true);
                         }}
                       >
+                        <DropdownItem
+                          key="help-support"
+                          startContent={<HelpCircle className="w-4 h-4" />}
+                          onPress={() => navigate("/help-support")}
+                        >
+                          {t("nav.helpSupport")}
+                        </DropdownItem>
                         <DropdownItem
                           key="logout"
                           className="text-danger"

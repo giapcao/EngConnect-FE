@@ -23,6 +23,7 @@
     "getStarted": "Bắt đầu",
     "learningDashboard": "Học Tập",
     "tutorDashboard": "Gia Sư",
+    "helpSupport": "Trợ giúp & Hỗ trợ",
     "logout": "Đăng xuất"
   },
   "becomeTutor": {
@@ -529,6 +530,7 @@
       "homework": "Bài tập",
       "community": "Cộng đồng",
       "profile": "Hồ sơ",
+      "helpSupport": "Trợ giúp & Hỗ trợ",
       "logout": "Đăng xuất"
     },
     "search": {
@@ -743,6 +745,7 @@
       "earnings": "Thu nhập",
       "community": "Cộng đồng",
       "profile": "Hồ sơ",
+      "helpSupport": "Trợ giúp & Hỗ trợ",
       "logout": "Đăng xuất"
     },
     "role": "Gia sư",
@@ -1250,6 +1253,114 @@
       "publishedEditLocked": "Khóa học đã được xuất bản không thể chỉnh sửa. Vui lòng liên hệ quản trị viên nếu cần thay đổi."
     }
   },
+  "helpSupport": {
+    "title": "Trợ giúp & Hỗ trợ",
+    "subtitle": "Cần trợ giúp? Tạo phiếu hỗ trợ và chúng tôi sẽ phản hồi sớm nhất.",
+    "hero": {
+      "badge": "Trung tâm Hỗ trợ",
+      "title": "Chúng tôi có thể",
+      "titleHighlight": "Giúp gì cho bạn?",
+      "description": "Tìm câu trả lời nhanh qua các câu hỏi thường gặp hoặc tạo phiếu hỗ trợ để nhận trợ giúp từ đội ngũ của chúng tôi.",
+      "browseFaq": "Xem FAQ"
+    },
+    "faq": {
+      "title": "Câu hỏi thường gặp",
+      "subtitle": "Tìm câu trả lời nhanh cho các câu hỏi phổ biến về EngConnect.",
+      "tabs": {
+        "general": "Chung",
+        "student": "Học viên",
+        "tutor": "Gia sư"
+      },
+      "general": {
+        "q1": "EngConnect là gì?",
+        "a1": "EngConnect là nền tảng trực tuyến kết nối người học tiếng Anh với các gia sư có kinh nghiệm. Nền tảng cung cấp các buổi học 1-1 trực tiếp, lớp nhóm và khóa học tự học để giúp bạn cải thiện kỹ năng tiếng Anh.",
+        "q2": "Làm thế nào để tạo tài khoản?",
+        "a2": "Nhấp vào nút 'Bắt đầu' trên trang chủ. Bạn có thể đăng ký bằng email hoặc đăng nhập bằng Google. Quá trình chỉ mất chưa đầy một phút.",
+        "q3": "EngConnect có miễn phí không?",
+        "a3": "Tạo tài khoản là miễn phí. Bạn có thể duyệt khóa học và hồ sơ gia sư mà không mất phí. Thanh toán chỉ cần khi bạn đăng ký khóa học hoặc đặt lịch với gia sư.",
+        "q4": "Chấp nhận phương thức thanh toán nào?",
+        "a4": "Chúng tôi chấp nhận thẻ tín dụng/ghi nợ chính, chuyển khoản ngân hàng và các phương thức thanh toán số. Tất cả giao dịch được xử lý an toàn qua nền tảng.",
+        "q5": "Làm thế nào để liên hệ hỗ trợ?",
+        "a5": "Bạn có thể tạo phiếu hỗ trợ ngay trên trang này bằng cách nhấp 'Tạo phiếu'. Đội ngũ hỗ trợ thường phản hồi trong vòng 24 giờ."
+      },
+      "student": {
+        "q1": "Làm thế nào để tìm khóa học phù hợp?",
+        "a1": "Sử dụng trang Duyệt khóa học để lọc theo danh mục, trình độ và giá. Bạn cũng có thể đọc mô tả khóa học và đánh giá từ học viên khác.",
+        "q2": "Tôi có thể hủy hoặc đổi lịch buổi học không?",
+        "a2": "Có, bạn có thể hủy hoặc đổi lịch trước 24 giờ so với thời gian đã đặt. Vào trang Lịch học trong bảng điều khiển để quản lý.",
+        "q3": "Làm thế nào để theo dõi tiến độ học tập?",
+        "a3": "Bảng điều khiển Học viên hiển thị các khóa học đã đăng ký, bài học đã hoàn thành, buổi học sắp tới và tiến độ tổng thể.",
+        "q4": "Nếu tôi không hài lòng với khóa học thì sao?",
+        "a4": "Bạn có thể liên hệ trực tiếp với gia sư để thảo luận. Bạn cũng có thể tạo phiếu hỗ trợ và đội ngũ sẽ giúp giải quyết vấn đề.",
+        "q5": "Tôi có thể đổi gia sư trong khóa học không?",
+        "a5": "Đăng ký khóa học gắn liền với gia sư cụ thể. Nếu muốn đổi, bạn có thể thảo luận với gia sư hiện tại hoặc liên hệ hỗ trợ."
+      },
+      "tutor": {
+        "q1": "Làm thế nào để trở thành gia sư trên EngConnect?",
+        "a1": "Truy cập trang 'Trở thành Gia sư' và điền đơn đăng ký. Bạn cần cung cấp bằng cấp, kinh nghiệm và xác minh danh tính. Đội ngũ sẽ xem xét đơn trong 3-5 ngày làm việc.",
+        "q2": "Làm thế nào để tạo và xuất bản khóa học?",
+        "a2": "Vào Bảng điều khiển Gia sư và nhấp 'Tạo khóa học'. Điền thông tin, tải tài liệu, đặt giá và gửi xét duyệt. Sau khi admin phê duyệt, khóa học sẽ được xuất bản.",
+        "q3": "Khi nào và bằng cách nào tôi nhận thanh toán?",
+        "a3": "Thu nhập được tính dựa trên đăng ký khóa học và buổi học hoàn thành. Bạn có thể xem thu nhập trong Bảng điều khiển và yêu cầu rút tiền theo lịch thanh toán.",
+        "q4": "Làm thế nào để quản lý lịch dạy?",
+        "a4": "Sử dụng trang Lịch trong Bảng điều khiển Gia sư để đặt thời gian rảnh, xem buổi học sắp tới và quản lý đặt lịch.",
+        "q5": "Phải làm gì nếu học viên vắng buổi học?",
+        "a5": "Nếu học viên vắng mặt không báo trước, bạn có thể báo cáo qua bảng điều khiển. Chính sách của chúng tôi bảo vệ gia sư trong trường hợp này."
+      }
+    },
+    "createTicket": "Tạo phiếu",
+    "myTickets": "Phiếu của tôi",
+    "searchPlaceholder": "Tìm kiếm phiếu hỗ trợ...",
+    "allStatuses": "Tất cả trạng thái",
+    "allTypes": "Tất cả loại",
+    "noTickets": "Không tìm thấy phiếu hỗ trợ",
+    "noTicketsDesc": "Bạn chưa tạo phiếu hỗ trợ nào.",
+    "newTicket": {
+      "title": "Tạo phiếu hỗ trợ mới",
+      "subject": "Tiêu đề",
+      "subjectPlaceholder": "Tóm tắt ngắn gọn vấn đề của bạn",
+      "description": "Mô tả",
+      "descriptionPlaceholder": "Mô tả chi tiết vấn đề của bạn...",
+      "type": "Loại",
+      "selectType": "Chọn loại",
+      "submit": "Gửi phiếu",
+      "submitting": "Đang gửi...",
+      "success": "Tạo phiếu hỗ trợ thành công!",
+      "failed": "Tạo phiếu hỗ trợ thất bại"
+    },
+    "detail": {
+      "title": "Chi tiết phiếu",
+      "backToList": "Quay lại danh sách",
+      "description": "Mô tả",
+      "conversation": "Cuộc trò chuyện",
+      "noMessages": "Chưa có tin nhắn. Hãy bắt đầu cuộc trò chuyện!",
+      "replyPlaceholder": "Nhập tin nhắn...",
+      "send": "Gửi",
+      "sendSuccess": "Đã gửi tin nhắn",
+      "sendFailed": "Gửi tin nhắn thất bại",
+      "you": "Bạn",
+      "support": "Đội hỗ trợ"
+    },
+    "types": {
+      "Error": "Lỗi",
+      "TechnicalIssue": "Sự cố kỹ thuật",
+      "Question": "Câu hỏi",
+      "FeatureRequest": "Yêu cầu tính năng",
+      "Billing": "Thanh toán",
+      "Other": "Khác"
+    },
+    "statuses": {
+      "Open": "Mở",
+      "Resolved": "Đã giải quyết",
+      "Closed": "Đã đóng"
+    },
+    "ticketId": "Mã phiếu",
+    "subject": "Tiêu đề",
+    "type": "Loại",
+    "status": "Trạng thái",
+    "createdAt": "Ngày tạo",
+    "updatedAt": "Cập nhật"
+  },
   "adminDashboard": {
     "role": "Quản trị viên",
     "nav": {
@@ -1265,6 +1376,7 @@
       "analytics": "Phân tích",
       "finance": "Tài chính",
       "settings": "Cài đặt",
+      "supportTickets": "Phiếu hỗ trợ",
       "logout": "Đăng xuất"
     },
     "search": {
@@ -1695,6 +1807,57 @@
       "newRegistrationsDesc": "Cho phép người dùng mới đăng ký trên nền tảng",
       "emailVerification": "Xác minh email",
       "emailVerificationDesc": "Yêu cầu xác minh email cho tài khoản mới"
+    },
+    "supportTickets": {
+      "title": "Phiếu hỗ trợ",
+      "subtitle": "Quản lý và phản hồi các yêu cầu hỗ trợ từ người dùng",
+      "searchPlaceholder": "Tìm kiếm phiếu...",
+      "allStatuses": "Tất cả trạng thái",
+      "allTypes": "Tất cả loại",
+      "noTickets": "Không tìm thấy phiếu hỗ trợ",
+      "noTicketsDesc": "Không có phiếu hỗ trợ nào phù hợp với bộ lọc.",
+      "ticketId": "Mã phiếu",
+      "subject": "Tiêu đề",
+      "type": "Loại",
+      "status": "Trạng thái",
+      "createdAt": "Ngày tạo",
+      "updatedAt": "Cập nhật",
+      "actions": "Thao tác",
+      "viewDetail": "Xem chi tiết",
+      "deleteTicket": "Xóa phiếu",
+      "deleteConfirm": "Bạn có chắc muốn xóa phiếu hỗ trợ này?",
+      "deleteSuccess": "Đã xóa phiếu hỗ trợ",
+      "deleteFailed": "Xóa phiếu hỗ trợ thất bại",
+      "updateStatusSuccess": "Đã cập nhật trạng thái phiếu",
+      "updateStatusFailed": "Cập nhật trạng thái thất bại",
+      "detail": {
+        "title": "Chi tiết phiếu",
+        "backToList": "Quay lại danh sách",
+        "description": "Mô tả",
+        "conversation": "Cuộc trò chuyện",
+        "noMessages": "Chưa có tin nhắn",
+        "replyPlaceholder": "Nhập phản hồi...",
+        "send": "Gửi",
+        "sendSuccess": "Đã gửi tin nhắn",
+        "sendFailed": "Gửi tin nhắn thất bại",
+        "changeStatus": "Đổi trạng thái",
+        "you": "Bạn",
+        "admin": "Admin",
+        "user": "Người dùng"
+      },
+      "types": {
+        "Error": "Lỗi",
+        "TechnicalIssue": "Sự cố kỹ thuật",
+        "Question": "Câu hỏi",
+        "FeatureRequest": "Yêu cầu tính năng",
+        "Billing": "Thanh toán",
+        "Other": "Khác"
+      },
+      "statuses": {
+        "Open": "Mở",
+        "Resolved": "Đã giải quyết",
+        "Closed": "Đã đóng"
+      }
     }
   }
 }

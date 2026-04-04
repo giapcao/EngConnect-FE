@@ -38,6 +38,7 @@ import {
   Student,
   ChalkboardTeacher,
   SealCheck,
+  Question,
 } from "@phosphor-icons/react";
 
 const TutorDashboardLayout = () => {
@@ -208,6 +209,15 @@ const TutorDashboardLayout = () => {
                   onPress={() => navigate("/tutor/profile")}
                 >
                   {t("tutorDashboard.nav.profile")}
+                </DropdownItem>
+                <DropdownItem
+                  key="help-support"
+                  startContent={
+                    <Question weight="duotone" className="w-5 h-5" />
+                  }
+                  onPress={() => navigate("/help-support")}
+                >
+                  {t("tutorDashboard.nav.helpSupport")}
                 </DropdownItem>
                 <DropdownItem
                   key="logout"
