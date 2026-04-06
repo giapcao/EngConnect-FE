@@ -24,6 +24,7 @@ import {
 import CourseCard from "../../../components/CourseCard/CourseCard";
 import CourseCardSkeleton from "../../../components/CourseCardSkeleton/CourseCardSkeleton";
 import { coursesApi } from "../../../api";
+import IconsDrawingImage from "../../../assets/illustrations/icons-drawing.avif";
 
 const MyCourses = () => {
   const { t } = useTranslation();
@@ -54,8 +55,27 @@ const MyCourses = () => {
         return colors.state.success;
       case "draft":
         return colors.state.warning;
+      case "pending":
+        return colors.state.info;
+      case "inactive":
+        return colors.text.secondary;
       default:
         return colors.text.secondary;
+    }
+  };
+
+  const getStatusLabel = (status) => {
+    switch (status?.toLowerCase()) {
+      case "published":
+        return t("tutorDashboard.myCourses.published");
+      case "draft":
+        return t("tutorDashboard.myCourses.draft");
+      case "pending":
+        return t("tutorDashboard.myCourses.pending");
+      case "inactive":
+        return t("tutorDashboard.myCourses.inactive");
+      default:
+        return status || "";
     }
   };
 
@@ -130,7 +150,8 @@ const MyCourses = () => {
         <Tabs
           selectedKey={selectedTab}
           onSelectionChange={setSelectedTab}
-          variant="light"
+          //variant="light"
+          color="primary"
           classNames={{
             tabList: "gap-2",
             tab: "px-4",
@@ -142,6 +163,8 @@ const MyCourses = () => {
             title={t("tutorDashboard.myCourses.published")}
           />
           <Tab key="draft" title={t("tutorDashboard.myCourses.draft")} />
+          <Tab key="pending" title={t("tutorDashboard.myCourses.pending")} />
+          <Tab key="inactive" title={t("tutorDashboard.myCourses.inactive")} />
         </Tabs>
       </motion.div>
 
@@ -152,6 +175,42 @@ const MyCourses = () => {
           gridClassName="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
           cardBgColor={colors.background.light}
         />
+      ) : courses.length === 0 ? (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.15 }}
+          className="flex flex-col items-center justify-center gap-4"
+        >
+          <img
+            src={IconsDrawingImage}
+            alt="No courses"
+            className="w-68 h-68 object-contain"
+          />
+          <h3
+            className="text-xl font-semibold"
+            style={{ color: colors.text.primary }}
+          >
+            {t("tutorDashboard.myCourses.emptyTitle")}
+          </h3>
+          <p
+            className="text-center max-w-sm"
+            style={{ color: colors.text.secondary }}
+          >
+            {t("tutorDashboard.myCourses.emptySubtitle")}
+          </p>
+          <Button
+            color="primary"
+            startContent={<Plus weight="bold" className="w-5 h-5" />}
+            style={{
+              backgroundColor: colors.primary.main,
+              color: colors.text.white,
+            }}
+            onPress={() => navigate("/tutor/create-course")}
+          >
+            {t("tutorDashboard.myCourses.createCourse")}
+          </Button>
+        </motion.div>
       ) : (
         <motion.div
           initial={{ opacity: 0 }}
@@ -177,10 +236,7 @@ const MyCourses = () => {
                 variant="compact"
                 basePath="/tutor/courses"
                 statusBadge={{
-                  label:
-                    course.status?.toLowerCase() === "published"
-                      ? t("tutorDashboard.myCourses.published")
-                      : t("tutorDashboard.myCourses.draft"),
+                  label: getStatusLabel(course.status),
                   color: getStatusColor(course.status),
                 }}
                 topRightAction={

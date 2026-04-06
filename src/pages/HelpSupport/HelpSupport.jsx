@@ -32,6 +32,8 @@ import * as MotionLib from "framer-motion";
 import Header from "../../components/Header/Header";
 import Footer from "../../components/Footer/Footer";
 import hybridWorkImage from "../../assets/illustrations/hybrid-work.avif";
+import chill from "../../assets/illustrations/chill.avif";
+
 import {
   Plus,
   ArrowLeft,
@@ -896,14 +898,19 @@ const HelpSupport = () => {
                       className="border-none"
                       style={{ backgroundColor: colors.background.light }}
                     >
-                      <CardBody className="p-12 text-center">
-                        <Ticket
+                      <CardBody className="p-4 mb-10 flex flex-col items-center justify-center">
+                        {/* <Ticket
                           weight="duotone"
                           className="w-16 h-16 mx-auto mb-4"
                           style={{ color: colors.text.tertiary }}
+                        /> */}
+                        <img
+                          src={chill}
+                          alt="No courses"
+                          className="w-68 h-68 object-contain"
                         />
                         <p
-                          className="text-lg font-medium mb-2"
+                          className="text-lg font-medium"
                           style={{ color: colors.text.primary }}
                         >
                           {t("helpSupport.noTickets")}

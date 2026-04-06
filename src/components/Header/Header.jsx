@@ -29,6 +29,7 @@ import LanguageSwitcher from "../LanguageSwitcher/LanguageSwitcher";
 import ThemeSwitcher from "../ThemeSwitcher/ThemeSwitcher";
 import LogoutModal from "../LogoutModal/LogoutModal";
 import useDropdownStyles from "../../hooks/useDropdownStyles";
+import { tutorApi } from "../../api/tutorApi";
 
 // eslint-disable-next-line no-unused-vars
 const { motion, AnimatePresence } = MotionLib;
@@ -45,8 +46,29 @@ const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+  const [tutorVerifiedStatus, setTutorVerifiedStatus] = useState(
+    () => sessionStorage.getItem("tutorVerifiedStatus") || null,
+  );
 
   const hasRole = (role) => user?.roles?.includes(role);
+
+  useEffect(() => {
+    if (hasRole("Tutor")) {
+      tutorApi
+        .getTutorProfile()
+        .then((data) => {
+          if (data.isSuccess) {
+            const status = data.data?.verifiedStatus;
+            setTutorVerifiedStatus(status);
+            if (status) sessionStorage.setItem("tutorVerifiedStatus", status);
+          }
+        })
+        .catch(() => {});
+    } else {
+      sessionStorage.removeItem("tutorVerifiedStatus");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   // Handle scroll effect
   useEffect(() => {
@@ -173,9 +195,19 @@ const Header = () => {
                             colors.button.primaryLight.background,
                           color: colors.button.primaryLight.text,
                         }}
-                        onPress={() => navigate("/tutor/dashboard")}
+                        onPress={() =>
+                          navigate(
+                            tutorVerifiedStatus === "Verified" ||
+                              tutorVerifiedStatus === "Pending"
+                              ? "/tutor/dashboard"
+                              : "/tutor/onboarding",
+                          )
+                        }
                       >
-                        {t("nav.tutorDashboard")}
+                        {tutorVerifiedStatus === "Verified" ||
+                        tutorVerifiedStatus === "Pending"
+                          ? t("nav.tutorDashboard")
+                          : t("nav.completeTutorProfile")}
                       </Button>
                     )}
                     <Dropdown
@@ -406,11 +438,19 @@ const Header = () => {
                           startContent={<GraduationCap className="w-5 h-5" />}
                           style={{ color: colors.primary.main }}
                           onPress={() => {
-                            navigate("/tutor/dashboard");
+                            navigate(
+                              tutorVerifiedStatus === "Verified" ||
+                                tutorVerifiedStatus === "Pending"
+                                ? "/tutor/dashboard"
+                                : "/tutor/onboarding",
+                            );
                             setIsMobileMenuOpen(false);
                           }}
                         >
-                          {t("nav.tutorDashboard")}
+                          {tutorVerifiedStatus === "Verified" ||
+                          tutorVerifiedStatus === "Pending"
+                            ? t("nav.tutorDashboard")
+                            : t("nav.completeTutorProfile")}
                         </Button>
                       )}
                       <Button

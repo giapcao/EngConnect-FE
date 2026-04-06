@@ -37,9 +37,10 @@ import {
   Note,
 } from "@phosphor-icons/react";
 import { studentApi } from "../../../api";
+import { authApi } from "../../../api/authApi";
 import ProfileSkeleton from "../../../components/ProfileSkeleton/ProfileSkeleton";
 import { useDispatch } from "react-redux";
-import { updateUserAvatar } from "../../../store";
+import { updateUserAvatar, updateUserInfo } from "../../../store";
 
 const Profile = () => {
   const { t } = useTranslation();
@@ -113,22 +114,38 @@ const Profile = () => {
   const handleSave = async () => {
     setSaving(true);
     try {
-      await studentApi.updateStudentById(studentId, studentUserId, {
-        id: studentId,
-        userId: studentUserId,
-        notes: profileData.notes,
-        school: profileData.school,
-        grade: profileData.grade,
-        class: profileData.class,
-      });
+      await Promise.all([
+        studentApi.updateStudentById(studentId, studentUserId, {
+          id: studentId,
+          userId: studentUserId,
+          notes: profileData.notes,
+          school: profileData.school,
+          grade: profileData.grade,
+          class: profileData.class,
+        }),
+        authApi.updateUser(studentUserId, {
+          firstName: profileData.firstName,
+          lastName: profileData.lastName,
+          phone: profileData.phone,
+        }),
+      ]);
       setIsEditing(false);
       setOriginalData((prev) => ({
         ...prev,
+        firstName: profileData.firstName,
+        lastName: profileData.lastName,
+        phone: profileData.phone,
         notes: profileData.notes,
         school: profileData.school,
         grade: profileData.grade,
         class: profileData.class,
       }));
+      dispatch(
+        updateUserInfo({
+          firstName: profileData.firstName,
+          lastName: profileData.lastName,
+        }),
+      );
       addToast({
         title: t("studentDashboard.profile.profileUpdated"),
         color: "success",
@@ -530,7 +547,7 @@ const Profile = () => {
                 <Input
                   label={t("studentDashboard.profile.firstName")}
                   value={profileData.firstName}
-                  isDisabled
+                  isDisabled={!isEditing}
                   startContent={
                     <User
                       className="w-5 h-5"
@@ -538,11 +555,14 @@ const Profile = () => {
                     />
                   }
                   classNames={inputClassNames}
+                  onValueChange={(value) =>
+                    setProfileData({ ...profileData, firstName: value })
+                  }
                 />
                 <Input
                   label={t("studentDashboard.profile.lastName")}
                   value={profileData.lastName}
-                  isDisabled
+                  isDisabled={!isEditing}
                   startContent={
                     <User
                       className="w-5 h-5"
@@ -550,6 +570,9 @@ const Profile = () => {
                     />
                   }
                   classNames={inputClassNames}
+                  onValueChange={(value) =>
+                    setProfileData({ ...profileData, lastName: value })
+                  }
                 />
                 <Input
                   label={t("studentDashboard.profile.email")}
@@ -566,7 +589,7 @@ const Profile = () => {
                 <Input
                   label={t("studentDashboard.profile.phone")}
                   value={profileData.phone}
-                  isDisabled
+                  isDisabled={!isEditing}
                   startContent={
                     <Phone
                       className="w-5 h-5"
@@ -574,6 +597,9 @@ const Profile = () => {
                     />
                   }
                   classNames={inputClassNames}
+                  onValueChange={(value) =>
+                    setProfileData({ ...profileData, phone: value })
+                  }
                 />
                 <Input
                   label={t("studentDashboard.profile.school")}

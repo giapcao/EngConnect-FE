@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Button, Card, CardBody, Input } from "@heroui/react";
+import { Button, Card, CardBody, Input, Tooltip } from "@heroui/react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import * as MotionLib from "framer-motion";
@@ -62,11 +62,13 @@ const Courses = () => {
       key: "all",
       label: t("courses.categories.all"),
       icon: (props) => <BookOpen weight="duotone" {...props} />,
+      description: null,
     },
     ...categories.map((cat) => ({
       key: cat.id,
       label: cat.name,
       icon: (props) => <BookOpen weight="duotone" {...props} />,
+      description: cat.description,
     })),
   ];
 
@@ -258,19 +260,28 @@ const Courses = () => {
           >
             {categoryButtons.map((category) => (
               <motion.div key={category.key} variants={itemVariants}>
-                <Button
-                  variant={selectedCategory === category.key ? "solid" : "flat"}
-                  color={
-                    selectedCategory === category.key ? "primary" : "default"
-                  }
-                  className={`px-6 py-3 ${
-                    selectedCategory !== category.key ? "shadow-none" : ""
-                  }`}
-                  startContent={category.icon({ size: 20 })}
-                  onPress={() => setSelectedCategory(category.key)}
+                <Tooltip
+                  content={category.description}
+                  isDisabled={!category.description}
+                  placement="top"
+                  delay={300}
                 >
-                  {category.label}
-                </Button>
+                  <Button
+                    variant={
+                      selectedCategory === category.key ? "solid" : "flat"
+                    }
+                    color={
+                      selectedCategory === category.key ? "primary" : "default"
+                    }
+                    className={`px-6 py-3 ${
+                      selectedCategory !== category.key ? "shadow-none" : ""
+                    }`}
+                    startContent={category.icon({ size: 20 })}
+                    onPress={() => setSelectedCategory(category.key)}
+                  >
+                    {category.label}
+                  </Button>
+                </Tooltip>
               </motion.div>
             ))}
           </motion.div>

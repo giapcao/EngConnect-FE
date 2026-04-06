@@ -259,6 +259,7 @@ const initialState = {
   accessToken: localStorage.getItem("accessToken") || null,
   refreshToken: localStorage.getItem("refreshToken") || null,
   isAuthenticated: !!localStorage.getItem("accessToken"),
+  tutorAvatarUrl: sessionStorage.getItem("tutorAvatarUrl") || null,
   loading: false,
   error: null,
 };
@@ -281,15 +282,31 @@ const authSlice = createSlice({
         localStorage.setItem("user", JSON.stringify(state.user));
       }
     },
+    updateUserInfo: (state, action) => {
+      if (state.user) {
+        state.user = { ...state.user, ...action.payload };
+        localStorage.setItem("user", JSON.stringify(state.user));
+      }
+    },
+    updateTutorAvatar: (state, action) => {
+      state.tutorAvatarUrl = action.payload;
+      if (action.payload) {
+        sessionStorage.setItem("tutorAvatarUrl", action.payload);
+      } else {
+        sessionStorage.removeItem("tutorAvatarUrl");
+      }
+    },
     clearCredentials: (state) => {
       state.user = null;
       state.accessToken = null;
       state.refreshToken = null;
       state.isAuthenticated = false;
       state.error = null;
+      state.tutorAvatarUrl = null;
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
       localStorage.removeItem("user");
+      sessionStorage.removeItem("tutorAvatarUrl");
     },
     clearError: (state) => {
       state.error = null;
@@ -368,6 +385,8 @@ const authSlice = createSlice({
         state.refreshToken = null;
         state.isAuthenticated = false;
         state.error = null;
+        state.tutorAvatarUrl = null;
+        sessionStorage.removeItem("tutorAvatarUrl");
       })
       .addCase(logout.rejected, (state) => {
         state.loading = false;
@@ -375,6 +394,8 @@ const authSlice = createSlice({
         state.accessToken = null;
         state.refreshToken = null;
         state.isAuthenticated = false;
+        state.tutorAvatarUrl = null;
+        sessionStorage.removeItem("tutorAvatarUrl");
       })
       // Refresh Token
       .addCase(refreshToken.pending, (state) => {
@@ -411,7 +432,7 @@ const authSlice = createSlice({
   },
 });
 
-export const { setCredentials, clearCredentials, clearError, updateUserAvatar } =
+export const { setCredentials, clearCredentials, clearError, updateUserAvatar, updateUserInfo, updateTutorAvatar } =
   authSlice.actions;
 
 export default authSlice.reducer;
@@ -422,3 +443,4 @@ export const selectIsAuthenticated = (state) => state.auth.isAuthenticated;
 export const selectUser = (state) => state.auth.user;
 export const selectAuthLoading = (state) => state.auth.loading;
 export const selectAuthError = (state) => state.auth.error;
+export const selectTutorAvatarUrl = (state) => state.auth.tutorAvatarUrl;

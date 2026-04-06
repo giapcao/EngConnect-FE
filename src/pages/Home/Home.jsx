@@ -247,61 +247,6 @@ const Home = () => {
                 >
                   {t("home.hero.startLearning")}
                 </Button>
-                {/* <Button
-                  size="lg"
-                  radius="full"
-                  className="font-semibold text-lg px-8 h-14"
-                  style={{
-                    backgroundColor: colors.button.primaryLight.background,
-                    color: colors.button.primaryLight.text,
-                  }}
-                >
-                  {t("home.hero.watchDemo")}
-                </Button> */}
-              </div>
-
-              {/* Trust indicators */}
-              <div className="flex items-center gap-6">
-                <div className="flex -space-x-2">
-                  {[
-                    { src: avatarDylan, name: "Dylan" },
-                    { src: avatarKaius, name: "Kaius" },
-                    { src: avatarEira, name: "Eira" },
-                    { src: avatarZane, name: "Zane" },
-                  ].map((avatar) => (
-                    <img
-                      key={avatar.name}
-                      src={avatar.src}
-                      alt="Student"
-                      className="w-10 h-10 rounded-full border-2"
-                      style={{ borderColor: colors.background.light }}
-                    />
-                  ))}
-                </div>
-                <div>
-                  <div className="flex items-center gap-1">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <Star
-                        key={`star-${star}`}
-                        className="w-4 h-4"
-                        fill={colors.state.warning}
-                        color={colors.state.warning}
-                      />
-                    ))}
-                    <span
-                      className="ml-2 font-semibold"
-                      style={{ color: colors.text.primary }}
-                    >
-                      4.9
-                    </span>
-                  </div>
-                  <p
-                    className="text-sm"
-                    style={{ color: colors.text.secondary }}
-                  >
-                    {t("home.hero.lovedBy")}
-                  </p>
-                </div>
               </div>
             </motion.div>
 

@@ -713,6 +713,22 @@ const CourseDetail = () => {
                       alt={course.title}
                       className="w-full h-full object-cover"
                     />
+                    {course.demoVideoUrl && (
+                      <a
+                        href={course.demoVideoUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="absolute inset-0 flex items-center justify-center bg-black/30 hover:bg-black/40 transition-colors"
+                      >
+                        <div className="w-14 h-14 rounded-full bg-white/90 flex items-center justify-center">
+                          <Play
+                            size={24}
+                            weight="fill"
+                            style={{ color: colors.primary.main }}
+                          />
+                        </div>
+                      </a>
+                    )}
                   </div>
 
                   <CardBody className="p-6 space-y-5">

@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from "react";
+﻿import { useState, useEffect, useCallback } from "react";
 import {
   Input,
   Button,
@@ -13,6 +13,11 @@ import {
   Checkbox,
   Spinner,
   addToast,
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
 } from "@heroui/react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
@@ -30,6 +35,10 @@ import {
   ArrowRight,
   PaperPlaneTilt,
   File as FileIcon,
+  ClockCounterClockwise,
+  ArrowCounterClockwise,
+  CaretUp,
+  CaretDown,
 } from "@phosphor-icons/react";
 import { coursesApi } from "../../../api";
 
@@ -84,7 +93,13 @@ const CreateCourse = () => {
 
   // Step 2: Modules
   const [modules, setModules] = useState([
-    { title: "", description: "", outcomes: "", moduleNumber: 1 },
+    {
+      title: "",
+      description: "",
+      outcomes: "",
+      moduleNumber: 1,
+      _key: "new-init",
+    },
   ]);
   const [existingModules, setExistingModules] = useState([]);
   const [selectedExistingModules, setSelectedExistingModules] = useState([]);
@@ -110,6 +125,20 @@ const CreateCourse = () => {
   const [deletedResourceIds, setDeletedResourceIds] = useState([]);
   const [thumbnailChanged, setThumbnailChanged] = useState(false);
   const [demoVideoChanged, setDemoVideoChanged] = useState(false);
+
+  // Ordering for create flow
+  const [moduleOrder, setModuleOrder] = useState([]);
+  const [sessionOrder, setSessionOrder] = useState({});
+
+  // Delete confirmation
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
+
+  // Version history
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [historyData, setHistoryData] = useState(null);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyType, setHistoryType] = useState(""); // "module" | "session"
+  const [historyItemName, setHistoryItemName] = useState("");
 
   // Load categories on mount
   useEffect(() => {
@@ -178,10 +207,12 @@ const CreateCourse = () => {
           setCreatedModules(
             mods.map((m) => ({
               id: m.courseModuleId,
+              joinId: m.id,
               title: m.moduleTitle || "",
               description: m.moduleDescription || "",
               outcomes: m.moduleOutcomes || "",
               moduleNumber: m.moduleNumber,
+              _key: `loaded-${m.courseModuleId}`,
             })),
           );
 
@@ -194,10 +225,12 @@ const CreateCourse = () => {
             );
             allSessions[m.courseModuleId] = sess.map((s) => ({
               id: s.courseSessionId,
+              joinId: s.id,
               title: s.sessionTitle || "",
               description: s.sessionDescription || "",
               outcomes: s.sessionOutcomes || "",
               sessionNumber: s.sessionNumber,
+              _key: `loaded-${s.courseSessionId}`,
             }));
             if (sess.length > 0) hasSessions = true;
           });
@@ -215,6 +248,7 @@ const CreateCourse = () => {
                       description: "",
                       outcomes: "",
                       sessionNumber: 1,
+                      _key: `new-init-${m.courseModuleId}`,
                     },
                   ],
                 ]),
@@ -265,28 +299,37 @@ const CreateCourse = () => {
   };
 
   const addModule = () => {
-    setModules((prev) => [
-      ...prev,
-      {
-        title: "",
-        description: "",
-        outcomes: "",
-        moduleNumber: prev.length + 1,
-      },
-    ]);
+    setModules((prev) => {
+      const maxNum = prev.reduce(
+        (max, m) => Math.max(max, m.moduleNumber || 0),
+        0,
+      );
+      return [
+        ...prev,
+        {
+          title: "",
+          description: "",
+          outcomes: "",
+          moduleNumber: maxNum + 1,
+          _key: `new-${Date.now()}`,
+        },
+      ];
+    });
   };
 
   const removeModule = (index) => {
     if (modules.length <= 1) return;
     const mod = modules[index];
-    if (mod.id) {
-      setDeletedModuleIds((prev) => [...prev, mod.id]);
+    if (mod.joinId) {
+      setDeletedModuleIds((prev) => [...prev, mod.joinId]);
     }
-    setModules((prev) =>
-      prev
-        .filter((_, i) => i !== index)
-        .map((m, i) => ({ ...m, moduleNumber: i + 1 })),
-    );
+    const isEditing = createdModules.length > 0;
+    setModules((prev) => {
+      const filtered = prev.filter((_, i) => i !== index);
+      return isEditing
+        ? filtered
+        : filtered.map((m, i) => ({ ...m, moduleNumber: i + 1 }));
+    });
   };
 
   const getSessionsForModule = (moduleId) => sessions[moduleId] || [];
@@ -302,6 +345,10 @@ const CreateCourse = () => {
   const addSession = (moduleId) => {
     setSessions((prev) => {
       const arr = prev[moduleId] || [];
+      const maxNum = arr.reduce(
+        (max, s) => Math.max(max, s.sessionNumber || 0),
+        0,
+      );
       return {
         ...prev,
         [moduleId]: [
@@ -310,7 +357,8 @@ const CreateCourse = () => {
             title: "",
             description: "",
             outcomes: "",
-            sessionNumber: arr.length + 1,
+            sessionNumber: maxNum + 1,
+            _key: `new-${Date.now()}`,
           },
         ],
       };
@@ -320,14 +368,17 @@ const CreateCourse = () => {
   const removeSession = (moduleId, index) => {
     const sessArr = sessions[moduleId] || [];
     const sess = sessArr[index];
-    if (sess?.id) {
-      setDeletedSessionIds((prev) => [...prev, sess.id]);
+    if (sess?.joinId) {
+      setDeletedSessionIds((prev) => [...prev, sess.joinId]);
     }
+    const isEditing = Object.keys(createdSessions).length > 0;
     setSessions((prev) => {
       const arr = (prev[moduleId] || []).filter((_, i) => i !== index);
       return {
         ...prev,
-        [moduleId]: arr.map((s, i) => ({ ...s, sessionNumber: i + 1 })),
+        [moduleId]: isEditing
+          ? arr
+          : arr.map((s, i) => ({ ...s, sessionNumber: i + 1 })),
       };
     });
   };
@@ -409,16 +460,246 @@ const CreateCourse = () => {
     }
   };
 
+  // Version history
+  const loadModuleHistory = async (courseModuleId, title) => {
+    setHistoryType("module");
+    setHistoryItemName(title || "");
+    setHistoryOpen(true);
+    setHistoryLoading(true);
+    setHistoryData(null);
+    try {
+      const res = await coursesApi.getCourseModuleTree(courseModuleId);
+      setHistoryData(res.data || res);
+    } catch {
+      setHistoryData(null);
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
+
+  const loadSessionHistory = async (courseSessionId, title) => {
+    setHistoryType("session");
+    setHistoryItemName(title || "");
+    setHistoryOpen(true);
+    setHistoryLoading(true);
+    setHistoryData(null);
+    try {
+      const res = await coursesApi.getCourseSessionTree(courseSessionId);
+      setHistoryData(res.data || res);
+    } catch {
+      setHistoryData(null);
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
+
+  const handleRevertModule = useCallback(
+    (version) => {
+      if (!version) return;
+      setModules((prev) =>
+        prev.map((m) =>
+          m.id === version.id
+            ? {
+                ...m,
+                title: version.title || "",
+                description: version.description || "",
+                outcomes: version.outcomes || "",
+              }
+            : m,
+        ),
+      );
+      setHistoryOpen(false);
+      addToast({
+        title: t("tutorDashboard.createCourse.versionHistory.revertApplied"),
+        color: "success",
+        timeout: 3000,
+      });
+    },
+    [t],
+  );
+
+  const handleRevertSession = useCallback(
+    (moduleId, version) => {
+      if (!version) return;
+      setSessions((prev) => {
+        const arr = (prev[moduleId] || []).map((s) =>
+          s.id === version.id
+            ? {
+                ...s,
+                title: version.title || "",
+                description: version.description || "",
+                outcomes: version.outcomes || "",
+              }
+            : s,
+        );
+        return { ...prev, [moduleId]: arr };
+      });
+      setHistoryOpen(false);
+      addToast({
+        title: t("tutorDashboard.createCourse.versionHistory.revertApplied"),
+        color: "success",
+        timeout: 3000,
+      });
+    },
+    [t],
+  );
+
+  // Order sync: rebuild module order when modules or selected existing modules change
+  useEffect(() => {
+    setModuleOrder((prev) => {
+      const newItems = modules.map((m) => ({ type: "new", _key: m._key }));
+      const existItems = selectedExistingModules.map((id) => ({
+        type: "existing",
+        existingId: id,
+      }));
+      const allKeySet = new Set([
+        ...newItems.map((n) => `new:${n._key}`),
+        ...existItems.map((e) => `ex:${e.existingId}`),
+      ]);
+      const kept = prev.filter((p) => {
+        const key = p.type === "new" ? `new:${p._key}` : `ex:${p.existingId}`;
+        return allKeySet.has(key);
+      });
+      const keptSet = new Set(
+        kept.map((p) =>
+          p.type === "new" ? `new:${p._key}` : `ex:${p.existingId}`,
+        ),
+      );
+      const added = [
+        ...newItems.filter((n) => !keptSet.has(`new:${n._key}`)),
+        ...existItems.filter((e) => !keptSet.has(`ex:${e.existingId}`)),
+      ];
+      const result = [...kept, ...added];
+      if (
+        result.length === prev.length &&
+        result.every((r, i) => {
+          const p = prev[i];
+          if (!p || r.type !== p.type) return false;
+          return r.type === "new"
+            ? r._key === p._key
+            : r.existingId === p.existingId;
+        })
+      )
+        return prev;
+      return result;
+    });
+  }, [modules, selectedExistingModules]);
+
+  // Order sync: rebuild session order for active module
+  useEffect(() => {
+    if (!activeModuleForSessions) return;
+    const modId = activeModuleForSessions;
+    const modSessions = sessions[modId] || [];
+    const selectedForModule = selectedExistingSessions[modId] || [];
+
+    setSessionOrder((prev) => {
+      const prevForModule = prev[modId] || [];
+      const newItems = modSessions.map((s) => ({ type: "new", _key: s._key }));
+      const existItems = selectedForModule.map((id) => ({
+        type: "existing",
+        existingId: id,
+      }));
+      const allKeySet = new Set([
+        ...newItems.map((n) => `new:${n._key}`),
+        ...existItems.map((e) => `ex:${e.existingId}`),
+      ]);
+      const kept = prevForModule.filter((p) => {
+        const key = p.type === "new" ? `new:${p._key}` : `ex:${p.existingId}`;
+        return allKeySet.has(key);
+      });
+      const keptSet = new Set(
+        kept.map((p) =>
+          p.type === "new" ? `new:${p._key}` : `ex:${p.existingId}`,
+        ),
+      );
+      const added = [
+        ...newItems.filter((n) => !keptSet.has(`new:${n._key}`)),
+        ...existItems.filter((e) => !keptSet.has(`ex:${e.existingId}`)),
+      ];
+      const result = [...kept, ...added];
+      if (
+        result.length === prevForModule.length &&
+        result.every((r, i) => {
+          const p = prevForModule[i];
+          if (!p || r.type !== p.type) return false;
+          return r.type === "new"
+            ? r._key === p._key
+            : r.existingId === p.existingId;
+        })
+      )
+        return prev;
+      return { ...prev, [modId]: result };
+    });
+  }, [sessions, selectedExistingSessions, activeModuleForSessions]);
+
+  const moveModuleOrder = (index, direction) => {
+    setModuleOrder((prev) => {
+      const arr = [...prev];
+      const targetIdx = index + direction;
+      if (targetIdx < 0 || targetIdx >= arr.length) return prev;
+      [arr[index], arr[targetIdx]] = [arr[targetIdx], arr[index]];
+      return arr;
+    });
+  };
+
+  const moveSessionOrder = (moduleId, index, direction) => {
+    setSessionOrder((prev) => {
+      const arr = [...(prev[moduleId] || [])];
+      const targetIdx = index + direction;
+      if (targetIdx < 0 || targetIdx >= arr.length) return prev;
+      [arr[index], arr[targetIdx]] = [arr[targetIdx], arr[index]];
+      return { ...prev, [moduleId]: arr };
+    });
+  };
+
+  const getModuleOrderInfo = (item) => {
+    if (item.type === "new") {
+      const idx = modules.findIndex((m) => m._key === item._key);
+      const mod = idx >= 0 ? modules[idx] : null;
+      return {
+        title: mod?.title || t("tutorDashboard.createCourse.untitledModule"),
+        desc: mod?.description || "",
+        tag: t("tutorDashboard.createCourse.newTag"),
+      };
+    }
+    const existMod = existingModules.find((m) => m.id === item.existingId);
+    return {
+      title: existMod?.title || item.existingId,
+      desc: existMod?.description || "",
+      tag: t("tutorDashboard.createCourse.reused"),
+    };
+  };
+
+  const getSessionOrderInfo = (moduleId, item) => {
+    if (item.type === "new") {
+      const modSessions = sessions[moduleId] || [];
+      const sess = modSessions.find((s) => s._key === item._key);
+      return {
+        title: sess?.title || t("tutorDashboard.createCourse.untitledSession"),
+        desc: sess?.description || "",
+        tag: t("tutorDashboard.createCourse.newTag"),
+      };
+    }
+    const existSess = existingSessions.find((s) => s.id === item.existingId);
+    return {
+      title: existSess?.title || item.existingId,
+      desc: existSess?.description || "",
+      tag: t("tutorDashboard.createCourse.reused"),
+    };
+  };
+
   // Navigate back and populate form from created data
   const goBackToStep = (targetStep) => {
     if (targetStep === 2 && createdModules.length > 0) {
       setModules(
         createdModules.map((m) => ({
           id: m.id,
+          joinId: m.joinId,
           title: m.title || "",
           description: m.description || "",
           outcomes: m.outcomes || "",
           moduleNumber: m.moduleNumber,
+          _key: m._key || `back-${m.id}`,
         })),
       );
       setSelectedExistingModules([]);
@@ -430,10 +711,12 @@ const CreateCourse = () => {
       Object.entries(createdSessions).forEach(([modId, sessArr]) => {
         sessionMap[modId] = sessArr.map((s) => ({
           id: s.id,
+          joinId: s.joinId,
           title: s.title || "",
           description: s.description || "",
           outcomes: s.outcomes || "",
           sessionNumber: s.sessionNumber,
+          _key: s._key || `back-${s.id}`,
         }));
       });
       setSessions(sessionMap);
@@ -608,25 +891,29 @@ const CreateCourse = () => {
       const isEditing = createdModules.length > 0;
 
       if (isEditing) {
-        // DELETE removed modules
-        for (const id of deletedModuleIds) {
-          await coursesApi.deleteCourseModule(id);
+        // DELETE removed modules (using join-table IDs)
+        for (const joinId of deletedModuleIds) {
+          await coursesApi.removeCourseModule(joinId);
         }
         // UPDATE existing modules
         const existingMods = modules.filter((m) => m.id);
         for (const mod of existingMods) {
           await coursesApi.updateCourseModule(mod.id, {
+            courseId: createdCourseId,
             title: mod.title,
             description: mod.description,
             outcomes: mod.outcomes,
-            moduleNumber: mod.moduleNumber,
           });
         }
         // CREATE new modules
         const newMods = modules.filter((m) => !m.id && m.title.trim());
+        const maxModNum = modules.reduce(
+          (max, m) => Math.max(max, m.moduleNumber || 0),
+          0,
+        );
         const existingIds = selectedExistingModules.map((id, idx) => ({
           courseModuleId: id,
-          moduleNumber: modules.length + idx + 1,
+          moduleNumber: maxModNum + idx + 1,
         }));
         if (newMods.length > 0 || existingIds.length > 0) {
           const payload = {
@@ -660,21 +947,47 @@ const CreateCourse = () => {
         setStep(3);
         loadExistingSessions(updatedModules[0]?.id);
       } else {
-        // CREATE mode (original flow)
-        const newMods = modules.filter((m) => m.title.trim());
-        const existingIds = selectedExistingModules.map((id, idx) => ({
-          courseModuleId: id,
-          moduleNumber: newMods.length + idx + 1,
-        }));
+        // CREATE mode — use moduleOrder for proper numbering
+        const newModulesPayload = [];
+        const existingModulesPayload = [];
+        moduleOrder.forEach((item, idx) => {
+          const num = idx + 1;
+          if (item.type === "new") {
+            const mod = modules.find((m) => m._key === item._key);
+            if (mod?.title.trim()) {
+              newModulesPayload.push({
+                title: mod.title,
+                description: mod.description,
+                outcomes: mod.outcomes,
+                moduleNumber: num,
+              });
+            }
+          } else {
+            existingModulesPayload.push({
+              courseModuleId: item.existingId,
+              moduleNumber: num,
+            });
+          }
+        });
+        // Fallback: modules not in order (e.g. order not populated yet)
+        const orderedNewKeys = new Set(
+          moduleOrder.filter((i) => i.type === "new").map((i) => i._key),
+        );
+        modules.forEach((m) => {
+          if (m.title.trim() && !orderedNewKeys.has(m._key)) {
+            newModulesPayload.push({
+              title: m.title,
+              description: m.description,
+              outcomes: m.outcomes,
+              moduleNumber:
+                newModulesPayload.length + existingModulesPayload.length + 1,
+            });
+          }
+        });
         const payload = {
           courseId: createdCourseId,
-          newCourseModules: newMods.map((m) => ({
-            title: m.title,
-            description: m.description,
-            outcomes: m.outcomes,
-            moduleNumber: m.moduleNumber,
-          })),
-          courseModuleIdExists: existingIds,
+          newCourseModules: newModulesPayload,
+          courseModuleIdExists: existingModulesPayload,
         };
         const res = await coursesApi.createCourseModule(payload);
         if (!res.isSuccess) {
@@ -714,9 +1027,9 @@ const CreateCourse = () => {
       const isEditing = Object.keys(createdSessions).length > 0;
 
       if (isEditing) {
-        // DELETE removed sessions
-        for (const id of deletedSessionIds) {
-          await coursesApi.deleteCourseSession(id);
+        // DELETE removed sessions (using join-table IDs)
+        for (const joinId of deletedSessionIds) {
+          await coursesApi.removeModuleSession(joinId);
         }
         // UPDATE existing sessions & CREATE new ones
         for (const mod of createdModules) {
@@ -726,17 +1039,21 @@ const CreateCourse = () => {
           // Update existing
           for (const sess of existingSess) {
             await coursesApi.updateCourseSession(sess.id, {
+              courseModuleId: mod.id,
               title: sess.title,
               description: sess.description,
               outcomes: sess.outcomes,
-              sessionNumber: sess.sessionNumber,
             });
           }
           // Create new
+          const maxSessNum = modSessions.reduce(
+            (max, s) => Math.max(max, s.sessionNumber || 0),
+            0,
+          );
           const existingIds = (selectedExistingSessions[mod.id] || []).map(
             (id, idx) => ({
               courseSessionId: id,
-              sessionNumber: modSessions.length + idx + 1,
+              sessionNumber: maxSessNum + idx + 1,
             }),
           );
           if (newSess.length > 0 || existingIds.length > 0) {
@@ -778,28 +1095,81 @@ const CreateCourse = () => {
         setDeletedSessionIds([]);
         setStep(4);
       } else {
-        // CREATE mode (original flow)
+        // CREATE mode — use sessionOrder for proper numbering
         const allCreatedSessions = {};
         for (const mod of createdModules) {
-          const newSess = (sessions[mod.id] || []).filter((s) =>
-            s.title.trim(),
-          );
-          const existingIds = (selectedExistingSessions[mod.id] || []).map(
-            (id, idx) => ({
-              courseSessionId: id,
-              sessionNumber: newSess.length + idx + 1,
-            }),
-          );
-          if (newSess.length === 0 && existingIds.length === 0) continue;
+          const modSessions = sessions[mod.id] || [];
+          const modSessionOrder = sessionOrder[mod.id] || [];
+          const newSessionsPayload = [];
+          const existingSessionsPayload = [];
+
+          if (modSessionOrder.length > 0) {
+            modSessionOrder.forEach((item, idx) => {
+              const num = idx + 1;
+              if (item.type === "new") {
+                const sess = modSessions.find((s) => s._key === item._key);
+                if (sess?.title.trim()) {
+                  newSessionsPayload.push({
+                    title: sess.title,
+                    description: sess.description,
+                    outcomes: sess.outcomes,
+                    sessionNumber: num,
+                  });
+                }
+              } else {
+                existingSessionsPayload.push({
+                  courseSessionId: item.existingId,
+                  sessionNumber: num,
+                });
+              }
+            });
+            // Fallback for sessions not in order
+            const orderedKeys = new Set(
+              modSessionOrder
+                .filter((i) => i.type === "new")
+                .map((i) => i._key),
+            );
+            modSessions.forEach((s) => {
+              if (s.title.trim() && !orderedKeys.has(s._key)) {
+                newSessionsPayload.push({
+                  title: s.title,
+                  description: s.description,
+                  outcomes: s.outcomes,
+                  sessionNumber:
+                    newSessionsPayload.length +
+                    existingSessionsPayload.length +
+                    1,
+                });
+              }
+            });
+          } else {
+            // No order set — fallback
+            const newSess = modSessions.filter((s) => s.title.trim());
+            newSess.forEach((s, idx) => {
+              newSessionsPayload.push({
+                title: s.title,
+                description: s.description,
+                outcomes: s.outcomes,
+                sessionNumber: idx + 1,
+              });
+            });
+            (selectedExistingSessions[mod.id] || []).forEach((id, idx) => {
+              existingSessionsPayload.push({
+                courseSessionId: id,
+                sessionNumber: newSess.length + idx + 1,
+              });
+            });
+          }
+
+          if (
+            newSessionsPayload.length === 0 &&
+            existingSessionsPayload.length === 0
+          )
+            continue;
           const payload = {
             courseModuleId: mod.id,
-            newCourseSessions: newSess.map((s) => ({
-              title: s.title,
-              description: s.description,
-              outcomes: s.outcomes,
-              sessionNumber: s.sessionNumber,
-            })),
-            courseSessionIdExists: existingIds,
+            newCourseSessions: newSessionsPayload,
+            courseSessionIdExists: existingSessionsPayload,
           };
           const res = await coursesApi.createCourseSession(payload);
           if (res.isSuccess) {
@@ -1621,17 +1991,34 @@ const CreateCourse = () => {
                       number: mod.moduleNumber,
                     })}
                   </h3>
-                  {modules.length > 1 && (
-                    <Button
-                      isIconOnly
-                      variant="light"
-                      color="danger"
-                      size="sm"
-                      onPress={() => removeModule(index)}
-                    >
-                      <Trash className="w-4 h-4" />
-                    </Button>
-                  )}
+                  <div className="flex items-center gap-1">
+                    {mod.id && (
+                      <Button
+                        isIconOnly
+                        variant="light"
+                        size="sm"
+                        onPress={() => loadModuleHistory(mod.id, mod.title)}
+                        title={t(
+                          "tutorDashboard.createCourse.versionHistory.title",
+                        )}
+                      >
+                        <ClockCounterClockwise className="w-4 h-4" />
+                      </Button>
+                    )}
+                    {modules.length > 1 && (
+                      <Button
+                        isIconOnly
+                        variant="light"
+                        color="danger"
+                        size="sm"
+                        onPress={() =>
+                          setDeleteConfirm({ type: "module", index })
+                        }
+                      >
+                        <Trash className="w-4 h-4" />
+                      </Button>
+                    )}
+                  </div>
                 </div>
                 <Input
                   label={t("tutorDashboard.createCourse.moduleTitle")}
@@ -1690,6 +2077,107 @@ const CreateCourse = () => {
           >
             {t("tutorDashboard.createCourse.addModule")}
           </Button>
+
+          {/* Arrange Order — only in create mode */}
+          {createdModules.length === 0 && moduleOrder.length > 1 && (
+            <Card
+              shadow="none"
+              style={{ backgroundColor: colors.background.light }}
+            >
+              <CardBody className="p-6 space-y-3">
+                <div>
+                  <h3
+                    className="text-base font-semibold"
+                    style={{ color: colors.text.primary }}
+                  >
+                    {t("tutorDashboard.createCourse.arrangeOrder")}
+                  </h3>
+                  <p
+                    className="text-sm"
+                    style={{ color: colors.text.secondary }}
+                  >
+                    {t("tutorDashboard.createCourse.arrangeOrderDesc")}
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  {moduleOrder.map((item, index) => {
+                    const info = getModuleOrderInfo(item);
+                    return (
+                      <div
+                        key={item.type === "new" ? item._key : item.existingId}
+                        className="flex items-center gap-3 p-3 rounded-lg"
+                        style={{ backgroundColor: colors.background.gray }}
+                      >
+                        <span
+                          className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
+                          style={{
+                            backgroundColor: colors.primary.main,
+                            color: colors.text.white,
+                          }}
+                        >
+                          {index + 1}
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <span
+                            className="text-sm font-medium truncate block"
+                            style={{ color: colors.text.primary }}
+                          >
+                            {info.title}
+                          </span>
+                          {info.desc && (
+                            <span
+                              className="text-xs truncate block"
+                              style={{ color: colors.text.tertiary }}
+                            >
+                              {info.desc}
+                            </span>
+                          )}
+                        </div>
+                        <Chip
+                          size="sm"
+                          variant="flat"
+                          style={{
+                            backgroundColor:
+                              item.type === "existing"
+                                ? colors.background.primaryLight
+                                : colors.background.gray,
+                            color:
+                              item.type === "existing"
+                                ? colors.primary.main
+                                : colors.text.secondary,
+                          }}
+                        >
+                          {info.tag}
+                        </Chip>
+                        <div className="flex flex-col">
+                          <Button
+                            isIconOnly
+                            variant="light"
+                            size="sm"
+                            isDisabled={index === 0}
+                            onPress={() => moveModuleOrder(index, -1)}
+                            className="w-6 h-6 min-w-6"
+                          >
+                            <CaretUp weight="bold" className="w-3.5 h-3.5" />
+                          </Button>
+                          <Button
+                            isIconOnly
+                            variant="light"
+                            size="sm"
+                            isDisabled={index === moduleOrder.length - 1}
+                            onPress={() => moveModuleOrder(index, 1)}
+                            className="w-6 h-6 min-w-6"
+                          >
+                            <CaretDown weight="bold" className="w-3.5 h-3.5" />
+                          </Button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardBody>
+            </Card>
+          )}
 
           <Divider />
           <div className="flex justify-between gap-4">
@@ -1817,17 +2305,38 @@ const CreateCourse = () => {
                                 number: sess.sessionNumber,
                               })}
                             </h3>
-                            <Button
-                              isIconOnly
-                              variant="light"
-                              color="danger"
-                              size="sm"
-                              onPress={() =>
-                                removeSession(activeModuleForSessions, index)
-                              }
-                            >
-                              <Trash className="w-4 h-4" />
-                            </Button>
+                            <div className="flex items-center gap-1">
+                              {sess.id && (
+                                <Button
+                                  isIconOnly
+                                  variant="light"
+                                  size="sm"
+                                  onPress={() =>
+                                    loadSessionHistory(sess.id, sess.title)
+                                  }
+                                  title={t(
+                                    "tutorDashboard.createCourse.versionHistory.title",
+                                  )}
+                                >
+                                  <ClockCounterClockwise className="w-4 h-4" />
+                                </Button>
+                              )}
+                              <Button
+                                isIconOnly
+                                variant="light"
+                                color="danger"
+                                size="sm"
+                                onPress={() =>
+                                  setDeleteConfirm({
+                                    type: "session",
+                                    index,
+                                    moduleId: activeModuleForSessions,
+                                  })
+                                }
+                              >
+                                <Trash className="w-4 h-4" />
+                              </Button>
+                            </div>
                           </div>
                           <Input
                             label={t(
@@ -1908,6 +2417,152 @@ const CreateCourse = () => {
                   >
                     {t("tutorDashboard.createCourse.addSession")}
                   </Button>
+
+                  {/* Arrange Session Order — only in create mode */}
+                  {Object.keys(createdSessions).length === 0 &&
+                    (sessionOrder[activeModuleForSessions] || []).length >
+                      1 && (
+                      <Card
+                        shadow="none"
+                        style={{
+                          backgroundColor: colors.background.light,
+                        }}
+                      >
+                        <CardBody className="p-6 space-y-3">
+                          <div>
+                            <h3
+                              className="text-base font-semibold"
+                              style={{ color: colors.text.primary }}
+                            >
+                              {t("tutorDashboard.createCourse.arrangeOrder")}
+                            </h3>
+                            <p
+                              className="text-sm"
+                              style={{ color: colors.text.secondary }}
+                            >
+                              {t(
+                                "tutorDashboard.createCourse.arrangeSessionOrderDesc",
+                              )}
+                            </p>
+                          </div>
+                          <div className="space-y-2">
+                            {(sessionOrder[activeModuleForSessions] || []).map(
+                              (item, index) => {
+                                const info = getSessionOrderInfo(
+                                  activeModuleForSessions,
+                                  item,
+                                );
+                                return (
+                                  <div
+                                    key={
+                                      item.type === "new"
+                                        ? item._key
+                                        : item.existingId
+                                    }
+                                    className="flex items-center gap-3 p-3 rounded-lg"
+                                    style={{
+                                      backgroundColor: colors.background.gray,
+                                    }}
+                                  >
+                                    <span
+                                      className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
+                                      style={{
+                                        backgroundColor: colors.primary.main,
+                                        color: colors.text.white,
+                                      }}
+                                    >
+                                      {index + 1}
+                                    </span>
+                                    <div className="flex-1 min-w-0">
+                                      <span
+                                        className="text-sm font-medium truncate block"
+                                        style={{ color: colors.text.primary }}
+                                      >
+                                        {info.title}
+                                      </span>
+                                      {info.desc && (
+                                        <span
+                                          className="text-xs truncate block"
+                                          style={{
+                                            color: colors.text.tertiary,
+                                          }}
+                                        >
+                                          {info.desc}
+                                        </span>
+                                      )}
+                                    </div>
+                                    <Chip
+                                      size="sm"
+                                      variant="flat"
+                                      style={{
+                                        backgroundColor:
+                                          item.type === "existing"
+                                            ? colors.background.primaryLight
+                                            : colors.background.gray,
+                                        color:
+                                          item.type === "existing"
+                                            ? colors.primary.main
+                                            : colors.text.secondary,
+                                      }}
+                                    >
+                                      {info.tag}
+                                    </Chip>
+                                    <div className="flex flex-col">
+                                      <Button
+                                        isIconOnly
+                                        variant="light"
+                                        size="sm"
+                                        isDisabled={index === 0}
+                                        onPress={() =>
+                                          moveSessionOrder(
+                                            activeModuleForSessions,
+                                            index,
+                                            -1,
+                                          )
+                                        }
+                                        className="w-6 h-6 min-w-6"
+                                      >
+                                        <CaretUp
+                                          weight="bold"
+                                          className="w-3.5 h-3.5"
+                                        />
+                                      </Button>
+                                      <Button
+                                        isIconOnly
+                                        variant="light"
+                                        size="sm"
+                                        isDisabled={
+                                          index ===
+                                          (
+                                            sessionOrder[
+                                              activeModuleForSessions
+                                            ] || []
+                                          ).length -
+                                            1
+                                        }
+                                        onPress={() =>
+                                          moveSessionOrder(
+                                            activeModuleForSessions,
+                                            index,
+                                            1,
+                                          )
+                                        }
+                                        className="w-6 h-6 min-w-6"
+                                      >
+                                        <CaretDown
+                                          weight="bold"
+                                          className="w-3.5 h-3.5"
+                                        />
+                                      </Button>
+                                    </div>
+                                  </div>
+                                );
+                              },
+                            )}
+                          </div>
+                        </CardBody>
+                      </Card>
+                    )}
                 </>
               )}
             </>
@@ -2385,6 +3040,249 @@ const CreateCourse = () => {
           </div>
         </motion.div>
       )}
+
+      {/* Version History Modal */}
+      <Modal
+        isOpen={historyOpen}
+        onOpenChange={setHistoryOpen}
+        size="2xl"
+        scrollBehavior="inside"
+      >
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalHeader className="flex flex-col gap-1">
+                <div className="flex items-center gap-2">
+                  <ClockCounterClockwise className="w-5 h-5" />
+                  <span>
+                    {t("tutorDashboard.createCourse.versionHistory.title")}
+                  </span>
+                </div>
+                {historyItemName && (
+                  <p
+                    className="text-sm font-normal"
+                    style={{ color: colors.text.secondary }}
+                  >
+                    {historyItemName}
+                  </p>
+                )}
+              </ModalHeader>
+              <ModalBody>
+                {historyLoading ? (
+                  <div className="flex justify-center py-8">
+                    <Spinner size="lg" />
+                  </div>
+                ) : !historyData ? (
+                  <Alert
+                    color="warning"
+                    variant="flat"
+                    title={t(
+                      "tutorDashboard.createCourse.versionHistory.noHistory",
+                    )}
+                  />
+                ) : (
+                  <div className="space-y-4">
+                    {/* Current version */}
+                    <div>
+                      <h4
+                        className="text-sm font-semibold mb-2"
+                        style={{ color: colors.text.primary }}
+                      >
+                        {t(
+                          "tutorDashboard.createCourse.versionHistory.currentVersion",
+                        )}
+                      </h4>
+                      <Card
+                        shadow="none"
+                        style={{
+                          backgroundColor: colors.background.light,
+                          borderLeft: `3px solid ${colors.primary.main}`,
+                        }}
+                      >
+                        <CardBody className="p-4 space-y-1">
+                          <p
+                            className="font-medium"
+                            style={{ color: colors.text.primary }}
+                          >
+                            {historyType === "module"
+                              ? historyData.module?.title
+                              : historyData.session?.title}
+                          </p>
+                          <p
+                            className="text-sm"
+                            style={{ color: colors.text.secondary }}
+                          >
+                            {historyType === "module"
+                              ? historyData.module?.description
+                              : historyData.session?.description}
+                          </p>
+                          {(historyType === "module"
+                            ? historyData.module?.outcomes
+                            : historyData.session?.outcomes) && (
+                            <p
+                              className="text-xs"
+                              style={{ color: colors.text.tertiary }}
+                            >
+                              {historyType === "module"
+                                ? historyData.module?.outcomes
+                                : historyData.session?.outcomes}
+                            </p>
+                          )}
+                        </CardBody>
+                      </Card>
+                    </div>
+
+                    {/* Previous versions (parentChain) */}
+                    {historyData.parentChain &&
+                      historyData.parentChain.length > 0 && (
+                        <div>
+                          <h4
+                            className="text-sm font-semibold mb-2"
+                            style={{ color: colors.text.primary }}
+                          >
+                            {t(
+                              "tutorDashboard.createCourse.versionHistory.previousVersions",
+                            )}
+                          </h4>
+                          <div className="space-y-3">
+                            {historyData.parentChain.map((version, idx) => (
+                              <Card
+                                key={version.id || idx}
+                                shadow="none"
+                                style={{
+                                  backgroundColor: colors.background.light,
+                                  borderLeft: `3px solid ${colors.border.main}`,
+                                }}
+                              >
+                                <CardBody className="p-4">
+                                  <div className="flex items-start justify-between gap-3">
+                                    <div className="flex-1 space-y-1">
+                                      <p
+                                        className="font-medium"
+                                        style={{ color: colors.text.primary }}
+                                      >
+                                        {version.title}
+                                      </p>
+                                      <p
+                                        className="text-sm"
+                                        style={{
+                                          color: colors.text.secondary,
+                                        }}
+                                      >
+                                        {version.description}
+                                      </p>
+                                      {version.outcomes && (
+                                        <p
+                                          className="text-xs"
+                                          style={{
+                                            color: colors.text.tertiary,
+                                          }}
+                                        >
+                                          {version.outcomes}
+                                        </p>
+                                      )}
+                                    </div>
+                                    <Button
+                                      size="sm"
+                                      variant="flat"
+                                      startContent={
+                                        <ArrowCounterClockwise className="w-4 h-4" />
+                                      }
+                                      onPress={() => {
+                                        if (historyType === "module") {
+                                          handleRevertModule(version);
+                                        } else {
+                                          handleRevertSession(
+                                            activeModuleForSessions,
+                                            version,
+                                          );
+                                        }
+                                      }}
+                                      style={{
+                                        color: colors.primary.main,
+                                      }}
+                                    >
+                                      {t(
+                                        "tutorDashboard.createCourse.versionHistory.revert",
+                                      )}
+                                    </Button>
+                                  </div>
+                                </CardBody>
+                              </Card>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                    {(!historyData.parentChain ||
+                      historyData.parentChain.length === 0) && (
+                      <Alert
+                        color="default"
+                        variant="flat"
+                        title={t(
+                          "tutorDashboard.createCourse.versionHistory.noPreviousVersions",
+                        )}
+                      />
+                    )}
+                  </div>
+                )}
+              </ModalBody>
+              <ModalFooter>
+                <Button variant="light" onPress={onClose}>
+                  {t("tutorDashboard.createCourse.versionHistory.close")}
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={!!deleteConfirm}
+        onOpenChange={(open) => {
+          if (!open) setDeleteConfirm(null);
+        }}
+        size="sm"
+      >
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalHeader>
+                {t("tutorDashboard.createCourse.confirmDeleteTitle")}
+              </ModalHeader>
+              <ModalBody>
+                <p style={{ color: colors.text.secondary }}>
+                  {deleteConfirm?.type === "module"
+                    ? t("tutorDashboard.createCourse.confirmDeleteModule")
+                    : t("tutorDashboard.createCourse.confirmDeleteSession")}
+                </p>
+              </ModalBody>
+              <ModalFooter>
+                <Button variant="light" onPress={onClose}>
+                  {t("tutorDashboard.createCourse.cancel")}
+                </Button>
+                <Button
+                  color="danger"
+                  onPress={() => {
+                    if (deleteConfirm?.type === "module") {
+                      removeModule(deleteConfirm.index);
+                    } else if (deleteConfirm?.type === "session") {
+                      removeSession(
+                        deleteConfirm.moduleId,
+                        deleteConfirm.index,
+                      );
+                    }
+                    setDeleteConfirm(null);
+                  }}
+                >
+                  {t("tutorDashboard.createCourse.delete")}
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
     </div>
   );
 };

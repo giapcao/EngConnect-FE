@@ -7,7 +7,10 @@ import Header from "../../components/Header/Header";
 import Footer from "../../components/Footer/Footer";
 import { useThemeColors } from "../../hooks/useThemeColors";
 import { useTheme } from "../../contexts/ThemeContext";
-import { selectIsAuthenticated } from "../../store/slices/authSlice";
+import {
+  selectIsAuthenticated,
+  selectUser,
+} from "../../store/slices/authSlice";
 import {
   Clock,
   CurrencyDollar,
@@ -33,6 +36,8 @@ const BecomeTutor = () => {
   const colors = useThemeColors();
   const { theme } = useTheme();
   const isAuthenticated = useSelector(selectIsAuthenticated);
+  const user = useSelector(selectUser);
+  const isTutor = user?.roles?.includes("Tutor");
 
   const handleApply = () => {
     navigate(isAuthenticated ? "/register-tutor" : "/register");
@@ -166,19 +171,21 @@ const BecomeTutor = () => {
                 {t("becomeTutor.hero.description")}
               </p>
 
-              <Button
-                size="lg"
-                radius="full"
-                className="font-semibold px-8"
-                style={{
-                  backgroundColor: colors.primary.main,
-                  color: colors.text.white,
-                }}
-                endContent={<ArrowRight className="w-5 h-5" />}
-                onPress={handleApply}
-              >
-                {t("becomeTutor.cta.button")}
-              </Button>
+              {!isTutor && (
+                <Button
+                  size="lg"
+                  radius="full"
+                  className="font-semibold px-8"
+                  style={{
+                    backgroundColor: colors.primary.main,
+                    color: colors.text.white,
+                  }}
+                  endContent={<ArrowRight className="w-5 h-5" />}
+                  onPress={handleApply}
+                >
+                  {t("becomeTutor.cta.button")}
+                </Button>
+              )}
             </motion.div>
 
             <motion.div
@@ -446,19 +453,21 @@ const BecomeTutor = () => {
             >
               {t("becomeTutor.cta.description")}
             </p>
-            <Button
-              size="lg"
-              radius="full"
-              className="font-semibold text-lg px-10 h-14"
-              style={{
-                backgroundColor: colors.background.light,
-                color: colors.primary.main,
-              }}
-              endContent={<ArrowRight className="w-5 h-5" />}
-              onPress={handleApply}
-            >
-              {t("becomeTutor.cta.button")}
-            </Button>
+            {!isTutor && (
+              <Button
+                size="lg"
+                radius="full"
+                className="font-semibold text-lg px-10 h-14"
+                style={{
+                  backgroundColor: colors.background.light,
+                  color: colors.primary.main,
+                }}
+                endContent={<ArrowRight className="w-5 h-5" />}
+                onPress={handleApply}
+              >
+                {t("becomeTutor.cta.button")}
+              </Button>
+            )}
           </motion.div>
         </div>
       </section>

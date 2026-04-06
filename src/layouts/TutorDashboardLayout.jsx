@@ -21,8 +21,8 @@ import ThemeSwitcher from "../components/ThemeSwitcher/ThemeSwitcher";
 import LanguageSwitcher from "../components/LanguageSwitcher/LanguageSwitcher";
 import logoImage from "../assets/images/logo.png";
 import { tutorApi } from "../api/tutorApi";
-import { useSelector } from "react-redux";
-import { selectUser } from "../store";
+import { useSelector, useDispatch } from "react-redux";
+import { selectUser, selectTutorAvatarUrl, updateTutorAvatar } from "../store";
 import {
   House,
   MagnifyingGlass,
@@ -53,6 +53,8 @@ const TutorDashboardLayout = () => {
   const [logoutModalOpen, setLogoutModalOpen] = useState(false);
   const [tutorProfile, setTutorProfile] = useState(null);
   const user = useSelector(selectUser);
+  const tutorAvatarUrl = useSelector(selectTutorAvatarUrl);
+  const dispatch = useDispatch();
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -60,6 +62,7 @@ const TutorDashboardLayout = () => {
         const data = await tutorApi.getTutorProfile();
         if (data.isSuccess) {
           setTutorProfile(data.data);
+          dispatch(updateTutorAvatar(data.data.avatar || ""));
         }
       } catch (err) {
         console.error("Failed to fetch tutor profile:", err);
@@ -71,16 +74,17 @@ const TutorDashboardLayout = () => {
   const isVerified = tutorProfile?.verifiedStatus === "Verified";
   const isPending = tutorProfile?.verifiedStatus === "Pending";
   const isUnverified = tutorProfile?.verifiedStatus === "Unverified";
+  const isRejected = tutorProfile?.verifiedStatus === "Rejected";
   const displayName = tutorProfile
     ? `${tutorProfile.user?.firstName || ""} ${tutorProfile.user?.lastName || ""}`.trim()
     : "";
 
-  // Redirect unverified tutors to the onboarding page
+  // Redirect unverified/rejected tutors to the onboarding page
   useEffect(() => {
-    if (tutorProfile && isUnverified) {
+    if (tutorProfile && (isUnverified || isRejected)) {
       navigate("/tutor/onboarding", { replace: true });
     }
-  }, [tutorProfile, isUnverified, navigate]);
+  }, [tutorProfile, isUnverified, isRejected, navigate]);
 
   const navItems = [
     {
@@ -184,7 +188,7 @@ const TutorDashboardLayout = () => {
               <DropdownTrigger>
                 <Button variant="light" className="gap-2 pl-2 pr-3">
                   <Avatar
-                    src={user?.avatarUrl || tutorProfile?.avatar}
+                    src={tutorAvatarUrl || tutorProfile?.avatar}
                     size="sm"
                     className="w-8 h-8"
                   />

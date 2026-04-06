@@ -39,16 +39,28 @@ import {
   SealCheck,
 } from "@phosphor-icons/react";
 import { tutorApi } from "../../../api/tutorApi";
+import { authApi } from "../../../api/authApi";
 import ProfileSkeleton from "../../../components/ProfileSkeleton/ProfileSkeleton";
-import { useDispatch } from "react-redux";
-import { updateUserAvatar } from "../../../store";
+import { useDispatch, useSelector } from "react-redux";
+import { updateTutorAvatar, updateUserInfo, selectUser } from "../../../store";
 
 const Profile = () => {
   const { t } = useTranslation();
   const colors = useThemeColors();
   const { inputClassNames, textareaClassNames } = useInputStyles();
   const dispatch = useDispatch();
+  const currentUser = useSelector(selectUser);
   const [isEditing, setIsEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [editData, setEditData] = useState({
+    firstName: "",
+    lastName: "",
+    phone: "",
+    headline: "",
+    bio: "",
+    monthExperience: "",
+  });
+  const [originalEditData, setOriginalEditData] = useState(null);
 
   const [notifications, setNotifications] = useState({
     emailBookings: true,
@@ -83,7 +95,7 @@ const Profile = () => {
       if (data.isSuccess) {
         const avatarRes = await tutorApi.getTutorAvatar().catch(() => null);
         const newUrl = avatarRes?.data?.url || data.data?.avatarUrl || "";
-        if (newUrl) dispatch(updateUserAvatar(newUrl));
+        if (newUrl) dispatch(updateTutorAvatar(newUrl));
         setTutorProfile((prev) => ({
           ...prev,
           avatar: newUrl || (data.data?.avatarUrl ?? prev.avatar),
@@ -111,12 +123,69 @@ const Profile = () => {
     try {
       const data = await tutorApi.getTutorProfile();
       if (data.isSuccess) {
-        setTutorProfile(data.data);
+        const p = data.data;
+        setTutorProfile(p);
+        dispatch(updateTutorAvatar(p.avatar || ""));
+        const snapshot = {
+          firstName: p.user?.firstName || "",
+          lastName: p.user?.lastName || "",
+          phone: p.user?.phone || "",
+          headline: p.headline || "",
+          bio: p.bio || "",
+          monthExperience:
+            p.monthExperience == null ? "" : String(p.monthExperience),
+        };
+        setEditData(snapshot);
+        setOriginalEditData(snapshot);
       }
     } catch (err) {
       console.error("Failed to fetch tutor profile:", err);
     } finally {
       setProfileLoading(false);
+    }
+  };
+
+  const handleSaveProfile = async () => {
+    setSaving(true);
+    try {
+      const tutorPayload = {
+        headline: editData.headline,
+        bio: editData.bio,
+        monthExperience:
+          editData.monthExperience === ""
+            ? 0
+            : Number(editData.monthExperience),
+      };
+      const userPayload = {
+        firstName: editData.firstName,
+        lastName: editData.lastName,
+        phone: editData.phone,
+      };
+      await Promise.all([
+        tutorApi.updateTutorById(tutorProfile.id, tutorPayload),
+        authApi.updateUser(currentUser.userId, userPayload),
+      ]);
+      setIsEditing(false);
+      const updated = { ...editData };
+      setOriginalEditData(updated);
+      setTutorProfile((prev) => ({
+        ...prev,
+        ...tutorPayload,
+        user: { ...prev.user, ...userPayload },
+      }));
+      dispatch(updateUserInfo(userPayload));
+      addToast({
+        title: t("tutorDashboard.profile.profileUpdated"),
+        color: "success",
+      });
+    } catch (err) {
+      console.error("Failed to update tutor profile:", err);
+      addToast({
+        title: t("tutorDashboard.profile.profileUpdateFailed"),
+        color: "danger",
+      });
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -481,7 +550,7 @@ const Profile = () => {
                   </div>
                 }
               />
-              <Tab
+              {/* <Tab
                 key="notifications"
                 title={
                   <div className="flex items-center gap-2">
@@ -513,7 +582,7 @@ const Profile = () => {
                     </span>
                   </div>
                 }
-              />
+              /> */}
               <Tab
                 key="verification"
                 title={
@@ -550,41 +619,67 @@ const Profile = () => {
                 >
                   {t("tutorDashboard.profile.personalInfo")}
                 </h3>
-                <Button
-                  variant={isEditing ? "solid" : "outline"}
-                  size="sm"
-                  startContent={
-                    isEditing ? (
-                      <CheckCircle weight="duotone" className="w-4 h-4" />
-                    ) : (
+                {isEditing ? (
+                  <div className="flex gap-2">
+                    <Button
+                      variant="solid"
+                      size="sm"
+                      isLoading={saving}
+                      startContent={
+                        !saving && (
+                          <CheckCircle weight="duotone" className="w-4 h-4" />
+                        )
+                      }
+                      style={{
+                        backgroundColor: colors.primary.main,
+                        color: colors.text.white,
+                      }}
+                      onPress={handleSaveProfile}
+                    >
+                      {t("tutorDashboard.profile.save")}
+                    </Button>
+                    <Button
+                      variant="flat"
+                      size="sm"
+                      isDisabled={saving}
+                      style={{
+                        backgroundColor: colors.background.gray,
+                        color: colors.text.secondary,
+                      }}
+                      onPress={() => {
+                        setEditData(originalEditData);
+                        setIsEditing(false);
+                      }}
+                    >
+                      {t("tutorDashboard.profile.cancel")}
+                    </Button>
+                  </div>
+                ) : (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    startContent={
                       <PencilSimple weight="duotone" className="w-4 h-4" />
-                    )
-                  }
-                  style={
-                    isEditing
-                      ? {
-                          backgroundColor: colors.primary.main,
-                          color: colors.text.white,
-                        }
-                      : {
-                          backgroundColor:
-                            colors.button.primaryLight.background,
-                          color: colors.button.primaryLight.text,
-                        }
-                  }
-                  onPress={() => setIsEditing(!isEditing)}
-                >
-                  {isEditing
-                    ? t("tutorDashboard.profile.save")
-                    : t("tutorDashboard.profile.edit")}
-                </Button>
+                    }
+                    style={{
+                      backgroundColor: colors.button.primaryLight.background,
+                      color: colors.button.primaryLight.text,
+                    }}
+                    onPress={() => setIsEditing(true)}
+                  >
+                    {t("tutorDashboard.profile.edit")}
+                  </Button>
+                )}
               </div>
 
               <div className="grid md:grid-cols-2 gap-6">
                 <Input
                   label={t("tutorDashboard.profile.firstName")}
-                  value={tutorProfile?.user?.firstName || ""}
-                  isReadOnly={!isEditing}
+                  value={editData.firstName}
+                  isDisabled={!isEditing}
+                  onValueChange={(v) =>
+                    setEditData((prev) => ({ ...prev, firstName: v }))
+                  }
                   startContent={
                     <User
                       className="w-5 h-5"
@@ -595,8 +690,11 @@ const Profile = () => {
                 />
                 <Input
                   label={t("tutorDashboard.profile.lastName")}
-                  value={tutorProfile?.user?.lastName || ""}
-                  isReadOnly={!isEditing}
+                  value={editData.lastName}
+                  isDisabled={!isEditing}
+                  onValueChange={(v) =>
+                    setEditData((prev) => ({ ...prev, lastName: v }))
+                  }
                   startContent={
                     <User
                       className="w-5 h-5"
@@ -608,7 +706,7 @@ const Profile = () => {
                 <Input
                   label={t("tutorDashboard.profile.email")}
                   value={tutorProfile?.user?.email || ""}
-                  isReadOnly
+                  isDisabled
                   startContent={
                     <Envelope
                       className="w-5 h-5"
@@ -619,8 +717,11 @@ const Profile = () => {
                 />
                 <Input
                   label={t("tutorDashboard.profile.phone")}
-                  value={tutorProfile?.user?.phone || ""}
-                  isReadOnly={!isEditing}
+                  value={editData.phone}
+                  isDisabled={!isEditing}
+                  onValueChange={(v) =>
+                    setEditData((prev) => ({ ...prev, phone: v }))
+                  }
                   startContent={
                     <Phone
                       className="w-5 h-5"
@@ -629,13 +730,36 @@ const Profile = () => {
                   }
                   classNames={inputClassNames}
                 />
+                <Input
+                  label={t("tutorDashboard.profile.headline")}
+                  value={editData.headline}
+                  isDisabled={!isEditing}
+                  onValueChange={(v) =>
+                    setEditData((prev) => ({ ...prev, headline: v }))
+                  }
+                  classNames={inputClassNames}
+                />
+                <Input
+                  label={t("tutorDashboard.profile.monthExperience")}
+                  type="number"
+                  min={0}
+                  value={editData.monthExperience}
+                  isDisabled={!isEditing}
+                  onValueChange={(v) =>
+                    setEditData((prev) => ({ ...prev, monthExperience: v }))
+                  }
+                  classNames={inputClassNames}
+                />
               </div>
 
               <div className="mt-6">
                 <Textarea
                   label={t("tutorDashboard.profile.bio")}
-                  value={tutorProfile?.bio || ""}
-                  isReadOnly={!isEditing}
+                  value={editData.bio}
+                  isDisabled={!isEditing}
+                  onValueChange={(v) =>
+                    setEditData((prev) => ({ ...prev, bio: v }))
+                  }
                   classNames={textareaClassNames}
                 />
               </div>

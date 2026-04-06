@@ -15,10 +15,13 @@ import {
   Star,
 } from "@phosphor-icons/react";
 import IllustrationImage from "../../../assets/illustrations/morning.avif";
+import { useSelector } from "react-redux";
+import { selectUser } from "../../../store";
 
 const Dashboard = () => {
   const { t } = useTranslation();
   const colors = useThemeColors();
+  const user = useSelector(selectUser);
 
   const stats = [
     {
@@ -155,7 +158,8 @@ const Dashboard = () => {
                   className="text-2xl lg:text-3xl font-bold mb-2"
                   style={{ color: colors.text.primary }}
                 >
-                  {t("studentDashboard.dashboard.welcome")}, Minh Thien! 👋
+                  {t("studentDashboard.dashboard.welcome")}, {user?.firstName}!
+                  👋
                 </h1>
                 <p className="mb-4" style={{ color: colors.text.secondary }}>
                   {t("studentDashboard.dashboard.welcomeSubtitle")}

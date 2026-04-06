@@ -188,6 +188,18 @@ export const coursesApi = {
     return response.data;
   },
 
+  // Remove a module from a course (using the join-table id from courseCourseModules)
+  removeCourseModule: async (courseCourseModuleId) => {
+    const response = await axiosInstance.delete(`/courses-modules/${courseCourseModuleId}`);
+    return response.data;
+  },
+
+  // Get course module version tree (parentChain history)
+  getCourseModuleTree: async (courseModuleId) => {
+    const response = await axiosInstance.get(`/course-modules/${courseModuleId}/tree`);
+    return response.data;
+  },
+
 
   // ==================== COURSE RESOURCE ====================
   // Get course resources by CourseSessionId
@@ -271,6 +283,18 @@ export const coursesApi = {
   // Delete course session
   deleteCourseSession: async (sessionId) => {
     const response = await axiosInstance.delete(`/course-sessions/${sessionId}`);
+    return response.data;
+  },
+
+  // Remove a session from a module (using the join-table id from courseModuleCourseSessions)
+  removeModuleSession: async (moduleSessionId) => {
+    const response = await axiosInstance.delete(`/modules-sessions/${moduleSessionId}`);
+    return response.data;
+  },
+
+  // Get course session version tree (parentChain history)
+  getCourseSessionTree: async (courseSessionId) => {
+    const response = await axiosInstance.get(`/course-sessions/${courseSessionId}/tree`);
     return response.data;
   },
 

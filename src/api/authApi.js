@@ -84,4 +84,10 @@ export const authApi = {
     });
     return response.data;
   },
+
+  // Update user basic info (firstName, lastName, phone)
+  updateUser: async (userId, data) => {
+    const response = await axiosInstance.patch(`/users/${userId}`, data);
+    return response.data;
+  },
 };

@@ -10,11 +10,14 @@ export {
   clearCredentials,
   clearError,
   updateUserAvatar,
+  updateUserInfo,
+  updateTutorAvatar,
   selectAuth,
   selectIsAuthenticated,
   selectUser,
   selectAuthLoading,
   selectAuthError,
+  selectTutorAvatarUrl,
 } from "./slices/authSlice";
 
 export {
