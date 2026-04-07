@@ -23,6 +23,23 @@ import readingImage from "../../assets/illustrations/boy-and-laptop.avif";
 // eslint-disable-next-line no-unused-vars
 const { motion } = MotionLib;
 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.15, delayChildren: 0.1 },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.5 },
+  },
+};
+
 const Courses = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -104,23 +121,6 @@ const Courses = () => {
       bgColor: "rgba(139, 92, 246, 0.1)",
     },
   ];
-
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { staggerChildren: 0.15, delayChildren: 0.1 },
-    },
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.5 },
-    },
-  };
 
   const filteredCourses =
     selectedCategory === "all"

@@ -25,6 +25,23 @@ import {
 // eslint-disable-next-line no-unused-vars
 const { motion } = MotionLib;
 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.15, delayChildren: 0.1 },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.5 },
+  },
+};
+
 // Import images
 import avatarDylan from "../../assets/images/avatar-dylan.png";
 import avatarKaius from "../../assets/images/avatar-kaius.png";
@@ -124,23 +141,6 @@ const About = () => {
     },
   ];
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { staggerChildren: 0.15, delayChildren: 0.1 },
-    },
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.5 },
-    },
-  };
-
   return (
     <div
       className="min-h-screen"
@@ -210,8 +210,8 @@ const About = () => {
             viewport={{ once: true }}
             className="grid grid-cols-2 md:grid-cols-4 gap-6"
           >
-            {stats.map((stat) => (
-              <motion.div key={stat.label} variants={itemVariants}>
+            {stats.map((stat, index) => (
+              <motion.div key={index} variants={itemVariants}>
                 <Card
                   className="h-full shadow-none"
                   style={{ backgroundColor: colors.background.gray }}
@@ -423,8 +423,8 @@ const About = () => {
                 color: "#8B5CF6",
                 bgColor: "rgba(139, 92, 246, 0.1)",
               },
-            ].map((item) => (
-              <motion.div key={item.title} variants={itemVariants}>
+            ].map((item, index) => (
+              <motion.div key={index} variants={itemVariants}>
                 <Card
                   className="shadow-none h-full"
                   style={{ backgroundColor: colors.background.gray }}
@@ -496,8 +496,8 @@ const About = () => {
             viewport={{ once: true }}
             className="grid md:grid-cols-2 lg:grid-cols-4 gap-6"
           >
-            {values.map((value) => (
-              <motion.div key={value.title} variants={itemVariants}>
+            {values.map((value, index) => (
+              <motion.div key={index} variants={itemVariants}>
                 <Card
                   className="h-full shadow-none"
                   style={{ backgroundColor: colors.background.light }}

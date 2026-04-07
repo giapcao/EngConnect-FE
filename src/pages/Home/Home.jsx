@@ -36,6 +36,23 @@ import {
 // eslint-disable-next-line no-unused-vars
 const { motion } = MotionLib;
 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.2, delayChildren: 0.1 },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.6 },
+  },
+};
+
 // Import images
 import heroImage from "../../assets/images/poster.png";
 import avatarDylan from "../../assets/images/avatar-dylan.png";
@@ -163,23 +180,6 @@ const Home = () => {
     return () => clearInterval(interval);
   }, [testimonials.length]);
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { staggerChildren: 0.2, delayChildren: 0.1 },
-    },
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.6 },
-    },
-  };
-
   return (
     <div
       className="min-h-screen"
@@ -303,8 +303,8 @@ const Home = () => {
             viewport={{ once: true }}
             className="grid md:grid-cols-2 lg:grid-cols-4 gap-6"
           >
-            {features.map((feature) => (
-              <motion.div key={feature.title} variants={itemVariants}>
+            {features.map((feature, index) => (
+              <motion.div key={index} variants={itemVariants}>
                 <Card
                   className="h-full hover:border-primary transition-colors shadow-none"
                   style={{
