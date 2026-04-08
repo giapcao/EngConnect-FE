@@ -9,6 +9,9 @@ import {
   Divider,
   Alert,
   Avatar,
+  Modal,
+  ModalContent,
+  ModalBody,
 } from "@heroui/react";
 import { motion } from "framer-motion";
 import { useThemeColors } from "../../../hooks/useThemeColors";
@@ -62,6 +65,7 @@ const TutorCourseDetail = () => {
   const [loading, setLoading] = useState(true);
   const [expandedModules, setExpandedModules] = useState({});
   const [tutorInfo, setTutorInfo] = useState(null);
+  const [videoOpen, setVideoOpen] = useState(false);
   const instructorRef = useRef(null);
 
   useEffect(() => {
@@ -78,11 +82,7 @@ const TutorCourseDetail = () => {
             console.error("Failed to fetch tutor:", tutorErr);
           }
         }
-        // Auto-expand first module
-        const modules = res.data?.courseCourseModules || [];
-        if (modules.length > 0) {
-          setExpandedModules({ [modules[0].id]: true });
-        }
+        // All modules start collapsed
       } catch (err) {
         console.error("Failed to fetch course:", err);
       } finally {
@@ -518,7 +518,7 @@ const TutorCourseDetail = () => {
                   </p>
                 ) : (
                   <div className="space-y-3">
-                    {modules.map((mod) => {
+                    {modules.map((mod, idx) => {
                       const isExpanded = expandedModules[mod.id];
                       const sessions = (
                         mod.courseModuleCourseSessions || []
@@ -552,7 +552,7 @@ const TutorCourseDetail = () => {
                                 }}
                               >
                                 <span className="text-sm font-bold">
-                                  {mod.moduleNumber}
+                                  {idx + 1}
                                 </span>
                               </div>
                               <div className="flex-1 min-w-0">
@@ -795,10 +795,8 @@ const TutorCourseDetail = () => {
                   className="w-full h-full object-cover"
                 />
                 {course.demoVideoUrl && (
-                  <a
-                    href={course.demoVideoUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  <button
+                    onClick={() => setVideoOpen(true)}
                     className="absolute inset-0 flex items-center justify-center bg-black/30 hover:bg-black/40 transition-colors"
                   >
                     <div className="w-14 h-14 rounded-full bg-white/90 flex items-center justify-center">
@@ -808,7 +806,7 @@ const TutorCourseDetail = () => {
                         style={{ color: colors.primary.main }}
                       />
                     </div>
-                  </a>
+                  </button>
                 )}
               </div>
 
@@ -942,6 +940,31 @@ const TutorCourseDetail = () => {
           </motion.div>
         </div>
       </div>
+
+      {/* Demo Video Modal */}
+      <Modal
+        isOpen={videoOpen}
+        onOpenChange={setVideoOpen}
+        size="3xl"
+        hideCloseButton
+        classNames={{ body: "p-0" }}
+      >
+        <ModalContent>
+          <ModalBody>
+            <div
+              className="relative w-full"
+              style={{ paddingBottom: "56.25%" }}
+            >
+              <iframe
+                src={course?.demoVideoUrl}
+                className="absolute inset-0 w-full h-full rounded-xl"
+                allow="autoplay; fullscreen"
+                allowFullScreen
+              />
+            </div>
+          </ModalBody>
+        </ModalContent>
+      </Modal>
     </div>
   );
 };

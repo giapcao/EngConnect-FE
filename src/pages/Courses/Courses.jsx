@@ -190,9 +190,16 @@ const Courses = () => {
               {/* Search Bar */}
               <div className="max-w-xl">
                 <Input
-                  placeholder={t("courses.hero.searchPlaceholder")}
+                  placeholder={t("courses.search.searchPlaceholder")}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && searchQuery.trim()) {
+                      navigate(
+                        `/courses/search?q=${encodeURIComponent(searchQuery.trim())}`,
+                      );
+                    }
+                  }}
                   startContent={
                     <MagnifyingGlass
                       size={20}
@@ -514,19 +521,6 @@ const Courses = () => {
                 onPress={() => navigate("/register")}
               >
                 {t("courses.cta.button")}
-              </Button>
-              <Button
-                size="lg"
-                radius="full"
-                variant="bordered"
-                className="font-semibold text-lg px-10 h-14"
-                style={{
-                  borderColor: colors.text.white,
-                  color: colors.text.white,
-                }}
-                onPress={() => navigate("/pricing")}
-              >
-                {t("courses.cta.viewPricing")}
               </Button>
             </div>
           </motion.div>

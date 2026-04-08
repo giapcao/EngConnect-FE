@@ -1,7 +1,17 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Button, Card, CardBody, Chip, Divider, Avatar } from "@heroui/react";
+import {
+  Button,
+  Card,
+  CardBody,
+  Chip,
+  Divider,
+  Avatar,
+  Modal,
+  ModalContent,
+  ModalBody,
+} from "@heroui/react";
 import * as MotionLib from "framer-motion";
 import Header from "../../components/Header/Header";
 import Footer from "../../components/Footer/Footer";
@@ -54,6 +64,7 @@ const CourseDetail = () => {
   const [loading, setLoading] = useState(true);
   const [expandedModules, setExpandedModules] = useState({});
   const [tutorInfo, setTutorInfo] = useState(null);
+  const [videoOpen, setVideoOpen] = useState(false);
   const instructorRef = useRef(null);
 
   const toggleModule = (moduleId) => {
@@ -442,7 +453,7 @@ const CourseDetail = () => {
                         </span>
                       </div>
                       <div className="space-y-3">
-                        {modules.map((mod) => {
+                        {modules.map((mod, idx) => {
                           const isExpanded = expandedModules[mod.id];
                           const sessions = (
                             mod.courseModuleCourseSessions || []
@@ -470,7 +481,7 @@ const CourseDetail = () => {
                                     }}
                                   >
                                     <span className="text-sm font-bold">
-                                      {mod.moduleNumber}
+                                      {idx + 1}
                                     </span>
                                   </div>
                                   <div className="flex-1 min-w-0">
@@ -714,10 +725,8 @@ const CourseDetail = () => {
                       className="w-full h-full object-cover"
                     />
                     {course.demoVideoUrl && (
-                      <a
-                        href={course.demoVideoUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                      <button
+                        onClick={() => setVideoOpen(true)}
                         className="absolute inset-0 flex items-center justify-center bg-black/30 hover:bg-black/40 transition-colors"
                       >
                         <div className="w-14 h-14 rounded-full bg-white/90 flex items-center justify-center">
@@ -727,7 +736,7 @@ const CourseDetail = () => {
                             style={{ color: colors.primary.main }}
                           />
                         </div>
-                      </a>
+                      </button>
                     )}
                   </div>
 
@@ -835,6 +844,31 @@ const CourseDetail = () => {
       </section>
 
       <Footer />
+
+      {/* Demo Video Modal */}
+      <Modal
+        isOpen={videoOpen}
+        onOpenChange={setVideoOpen}
+        size="3xl"
+        hideCloseButton
+        classNames={{ body: "p-0" }}
+      >
+        <ModalContent>
+          <ModalBody>
+            <div
+              className="relative w-full"
+              style={{ paddingBottom: "56.25%" }}
+            >
+              <iframe
+                src={course?.demoVideoUrl}
+                className="absolute inset-0 w-full h-full rounded-xl"
+                allow="autoplay; fullscreen"
+                allowFullScreen
+              />
+            </div>
+          </ModalBody>
+        </ModalContent>
+      </Modal>
     </div>
   );
 };

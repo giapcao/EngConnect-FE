@@ -18,6 +18,7 @@ import LoginFailed from "../pages/Authentication/LoginFailed/LoginFailed";
 import About from "../pages/AboutUs/About";
 import Courses from "../pages/Courses/Courses";
 import CourseDetail from "../pages/Courses/CourseDetail";
+import SearchResults from "../pages/Courses/SearchResults";
 import BecomeTutor from "../pages/BecomeTutor/BecomeTutor";
 import TutorRegistration from "../pages/BecomeTutor/TutorRegistration";
 import TutorOnboarding from "../pages/TutorDashboard/Onboarding/TutorOnboarding";
@@ -134,6 +135,10 @@ export const router = createBrowserRouter([
       {
         path: "courses",
         element: <Courses />,
+      },
+      {
+        path: "courses/search",
+        element: <SearchResults />,
       },
       {
         path: "courses/:id",

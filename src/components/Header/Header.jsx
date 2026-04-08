@@ -5,7 +5,12 @@ import {
   DropdownTrigger,
   DropdownMenu,
   DropdownItem,
+  DropdownSection,
   Avatar,
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+  Input,
 } from "@heroui/react";
 import {
   Menu,
@@ -15,6 +20,7 @@ import {
   GraduationCap,
   BookOpen,
   HelpCircle,
+  Search,
 } from "lucide-react";
 import logoImage from "../../assets/images/logo.png";
 import defaultAvatar from "../../assets/images/null-avatar.jpg";
@@ -49,6 +55,8 @@ const Header = () => {
   const [tutorVerifiedStatus, setTutorVerifiedStatus] = useState(
     () => sessionStorage.getItem("tutorVerifiedStatus") || null,
   );
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const hasRole = (role) => user?.roles?.includes(role);
 
@@ -156,6 +164,64 @@ const Header = () => {
 
             {/* Right Section */}
             <div className="flex items-center gap-2">
+              {/* Search */}
+              <Popover
+                isOpen={searchOpen}
+                onOpenChange={setSearchOpen}
+                placement="bottom"
+                offset={10}
+              >
+                <PopoverTrigger>
+                  <Button
+                    isIconOnly
+                    variant="light"
+                    size="sm"
+                    radius="full"
+                    aria-label="Search"
+                  >
+                    <Search
+                      className="w-[18px] h-[18px]"
+                      style={{ color: colors.text.secondary }}
+                    />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent
+                  className="p-3 w-80"
+                  style={{ backgroundColor: colors.background.light }}
+                >
+                  <Input
+                    autoFocus
+                    placeholder={t("courses.search.searchPlaceholder")}
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && searchQuery.trim()) {
+                        setSearchOpen(false);
+                        navigate(
+                          `/courses/search?q=${encodeURIComponent(searchQuery.trim())}`,
+                        );
+                        setSearchQuery("");
+                      }
+                    }}
+                    startContent={
+                      <Search
+                        className="w-4 h-4"
+                        style={{ color: colors.text.secondary }}
+                      />
+                    }
+                    classNames={{
+                      input: "text-sm",
+                      inputWrapper: `shadow-none ${
+                        theme === "dark"
+                          ? "bg-gray-800 border-gray-700"
+                          : "bg-white border-gray-200"
+                      }`,
+                    }}
+                    size="md"
+                  />
+                </PopoverContent>
+              </Popover>
+
               {/* Theme & Language Switchers */}
               <div className="hidden sm:flex items-center gap-1">
                 <ThemeSwitcher />
@@ -216,7 +282,7 @@ const Header = () => {
                       classNames={dropdownClassNames}
                     >
                       <DropdownTrigger>
-                        <button className="flex items-center gap-2 cursor-pointer focus:outline-none rounded-full px-2 py-1.5 transition-all duration-200 hover:opacity-80">
+                        <button className="cursor-pointer focus:outline-none rounded-full transition-all duration-200 hover:opacity-80">
                           <Avatar
                             src={user.avatarUrl || defaultAvatar}
                             name={`${user.firstName} ${user.lastName}`}
@@ -224,12 +290,6 @@ const Header = () => {
                             className="flex-shrink-0"
                             imgProps={{ referrerPolicy: "no-referrer" }}
                           />
-                          <span
-                            className="font-medium text-sm max-w-[120px] truncate"
-                            style={{ color: colors.text.primary }}
-                          >
-                            {`${user.firstName} ${user.lastName}`}
-                          </span>
                         </button>
                       </DropdownTrigger>
                       <DropdownMenu
@@ -238,21 +298,46 @@ const Header = () => {
                           if (key === "logout") setIsLogoutModalOpen(true);
                         }}
                       >
-                        <DropdownItem
-                          key="help-support"
-                          startContent={<HelpCircle className="w-4 h-4" />}
-                          onPress={() => navigate("/help-support")}
-                        >
-                          {t("nav.helpSupport")}
-                        </DropdownItem>
-                        <DropdownItem
-                          key="logout"
-                          className="text-danger"
-                          color="danger"
-                          startContent={<LogOut className="w-4 h-4" />}
-                        >
-                          {t("nav.logout")}
-                        </DropdownItem>
+                        <DropdownSection showDivider>
+                          <DropdownItem
+                            key="profile-info"
+                            isReadOnly
+                            className="cursor-default opacity-100"
+                            textValue={`${user.firstName} ${user.lastName}`}
+                          >
+                            <div className="flex items-center gap-3 py-1">
+                              <Avatar
+                                src={user.avatarUrl || defaultAvatar}
+                                name={`${user.firstName} ${user.lastName}`}
+                                size="md"
+                                imgProps={{ referrerPolicy: "no-referrer" }}
+                              />
+                              <span
+                                className="font-semibold text-sm"
+                                style={{ color: colors.text.primary }}
+                              >
+                                {`${user.firstName} ${user.lastName}`}
+                              </span>
+                            </div>
+                          </DropdownItem>
+                        </DropdownSection>
+                        <DropdownSection>
+                          <DropdownItem
+                            key="help-support"
+                            startContent={<HelpCircle className="w-4 h-4" />}
+                            onPress={() => navigate("/help-support")}
+                          >
+                            {t("nav.helpSupport")}
+                          </DropdownItem>
+                          <DropdownItem
+                            key="logout"
+                            className="text-danger"
+                            color="danger"
+                            startContent={<LogOut className="w-4 h-4" />}
+                          >
+                            {t("nav.logout")}
+                          </DropdownItem>
+                        </DropdownSection>
                       </DropdownMenu>
                     </Dropdown>
                   </>

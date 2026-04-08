@@ -39,6 +39,10 @@ import {
   ArrowCounterClockwise,
   CaretUp,
   CaretDown,
+  PencilSimple,
+  FloppyDisk,
+  X,
+  Eye,
 } from "@phosphor-icons/react";
 import { coursesApi } from "../../../api";
 
@@ -133,12 +137,25 @@ const CreateCourse = () => {
   // Delete confirmation
   const [deleteConfirm, setDeleteConfirm] = useState(null);
 
+  // Inline edit mode for existing items
+  const [editingModuleIndex, setEditingModuleIndex] = useState(null);
+  const [moduleSnapshot, setModuleSnapshot] = useState(null);
+  const [editingSessionKey, setEditingSessionKey] = useState(null); // "moduleId-index"
+  const [sessionSnapshot, setSessionSnapshot] = useState(null);
+  const [savingModule, setSavingModule] = useState(false);
+  const [savingSession, setSavingSession] = useState(false);
+
   // Version history
   const [historyOpen, setHistoryOpen] = useState(false);
   const [historyData, setHistoryData] = useState(null);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [historyType, setHistoryType] = useState(""); // "module" | "session"
   const [historyItemName, setHistoryItemName] = useState("");
+
+  // Module detail preview
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [detailData, setDetailData] = useState(null);
+  const [detailLoading, setDetailLoading] = useState(false);
 
   // Load categories on mount
   useEffect(() => {
@@ -383,6 +400,126 @@ const CreateCourse = () => {
     });
   };
 
+  // Inline edit handlers for existing modules
+  const startEditModule = (index) => {
+    setEditingModuleIndex(index);
+    setModuleSnapshot({ ...modules[index] });
+  };
+
+  const cancelEditModule = () => {
+    if (moduleSnapshot && editingModuleIndex !== null) {
+      const updated = [...modules];
+      updated[editingModuleIndex] = moduleSnapshot;
+      setModules(updated);
+    }
+    setEditingModuleIndex(null);
+    setModuleSnapshot(null);
+  };
+
+  const saveEditModule = async (index) => {
+    const mod = modules[index];
+    if (!mod.id) return;
+    setSavingModule(true);
+    try {
+      await coursesApi.updateCourseModule(mod.id, {
+        courseId: createdCourseId,
+        title: mod.title,
+        description: mod.description,
+        outcomes: mod.outcomes,
+      });
+      // Update createdModules to reflect saved data
+      setCreatedModules((prev) =>
+        prev.map((m) =>
+          m.id === mod.id
+            ? {
+                ...m,
+                title: mod.title,
+                description: mod.description,
+                outcomes: mod.outcomes,
+              }
+            : m,
+        ),
+      );
+      setEditingModuleIndex(null);
+      setModuleSnapshot(null);
+      addToast({
+        title: t("tutorDashboard.createCourse.moduleSaved"),
+        color: "success",
+      });
+    } catch (err) {
+      console.error("Failed to save module:", err);
+      addToast({
+        title: t("tutorDashboard.createCourse.error.createFailed"),
+        color: "danger",
+      });
+    } finally {
+      setSavingModule(false);
+    }
+  };
+
+  // Inline edit handlers for existing sessions
+  const startEditSession = (moduleId, index) => {
+    const sessArr = sessions[moduleId] || [];
+    setEditingSessionKey(`${moduleId}-${index}`);
+    setSessionSnapshot({ ...sessArr[index] });
+  };
+
+  const cancelEditSession = () => {
+    if (sessionSnapshot && editingSessionKey) {
+      const [moduleId, indexStr] = editingSessionKey.split("-");
+      const index = Number.parseInt(indexStr, 10);
+      setSessions((prev) => {
+        const arr = [...(prev[moduleId] || [])];
+        arr[index] = sessionSnapshot;
+        return { ...prev, [moduleId]: arr };
+      });
+    }
+    setEditingSessionKey(null);
+    setSessionSnapshot(null);
+  };
+
+  const saveEditSession = async (moduleId, index) => {
+    const sess = (sessions[moduleId] || [])[index];
+    if (!sess?.id) return;
+    setSavingSession(true);
+    try {
+      await coursesApi.updateCourseSession(sess.id, {
+        courseModuleId: moduleId,
+        title: sess.title,
+        description: sess.description,
+        outcomes: sess.outcomes,
+      });
+      // Update createdSessions to reflect saved data
+      setCreatedSessions((prev) => ({
+        ...prev,
+        [moduleId]: (prev[moduleId] || []).map((s) =>
+          s.id === sess.id
+            ? {
+                ...s,
+                title: sess.title,
+                description: sess.description,
+                outcomes: sess.outcomes,
+              }
+            : s,
+        ),
+      }));
+      setEditingSessionKey(null);
+      setSessionSnapshot(null);
+      addToast({
+        title: t("tutorDashboard.createCourse.sessionSaved"),
+        color: "success",
+      });
+    } catch (err) {
+      console.error("Failed to save session:", err);
+      addToast({
+        title: t("tutorDashboard.createCourse.error.createFailed"),
+        color: "danger",
+      });
+    } finally {
+      setSavingSession(false);
+    }
+  };
+
   const getResourcesForSession = (sessionId) => resources[sessionId] || [];
 
   const handleResourceChange = (sessionId, index, field, value) => {
@@ -413,6 +550,23 @@ const CreateCourse = () => {
       const arr = (prev[sessionId] || []).filter((_, i) => i !== index);
       return { ...prev, [sessionId]: arr };
     });
+  };
+
+  // View module detail
+  const handleViewModuleDetail = async (moduleId) => {
+    setDetailOpen(true);
+    setDetailLoading(true);
+    setDetailData(null);
+    try {
+      const res = await coursesApi.getCourseModuleById(moduleId);
+      if (res?.isSuccess) {
+        setDetailData(res.data);
+      }
+    } catch (err) {
+      console.error("Failed to load module detail:", err);
+    } finally {
+      setDetailLoading(false);
+    }
   };
 
   // Load existing items
@@ -1379,6 +1533,7 @@ const CreateCourse = () => {
     onSearchChange,
     loadingItems,
     searchPlaceholder,
+    onViewDetail,
   }) => (
     <Card shadow="none" style={{ backgroundColor: colors.background.light }}>
       <CardBody className="p-6 space-y-4">
@@ -1450,6 +1605,21 @@ const CreateCourse = () => {
                       </p>
                     )}
                   </div>
+                  {onViewDetail && (
+                    <Button
+                      isIconOnly
+                      variant="light"
+                      size="sm"
+                      onPress={(e) => {
+                        e?.stopPropagation?.();
+                        onViewDetail(item.id);
+                      }}
+                      title={t("tutorDashboard.createCourse.viewDetail")}
+                      className="shrink-0"
+                    >
+                      <Eye className="w-4 h-4" />
+                    </Button>
+                  )}
                 </div>
               ))}
             {items.filter(
@@ -1972,98 +2142,144 @@ const CreateCourse = () => {
             onSearchChange={setModuleSearch}
             loadingItems={loadingExistingModules}
             searchPlaceholder={t("tutorDashboard.createCourse.searchModules")}
+            onViewDetail={handleViewModuleDetail}
           />
 
           {/* New modules */}
-          {modules.map((mod, index) => (
-            <Card
-              key={index}
-              shadow="none"
-              style={{ backgroundColor: colors.background.light }}
-            >
-              <CardBody className="space-y-4 p-6">
-                <div className="flex items-center justify-between">
-                  <h3
-                    className="text-base font-semibold"
-                    style={{ color: colors.text.primary }}
-                  >
-                    {t("tutorDashboard.createCourse.moduleNumber", {
-                      number: mod.moduleNumber,
-                    })}
-                  </h3>
-                  <div className="flex items-center gap-1">
-                    {mod.id && (
-                      <Button
-                        isIconOnly
-                        variant="light"
-                        size="sm"
-                        onPress={() => loadModuleHistory(mod.id, mod.title)}
-                        title={t(
-                          "tutorDashboard.createCourse.versionHistory.title",
-                        )}
-                      >
-                        <ClockCounterClockwise className="w-4 h-4" />
-                      </Button>
-                    )}
-                    {modules.length > 1 && (
-                      <Button
-                        isIconOnly
-                        variant="light"
-                        color="danger"
-                        size="sm"
-                        onPress={() =>
-                          setDeleteConfirm({ type: "module", index })
-                        }
-                      >
-                        <Trash className="w-4 h-4" />
-                      </Button>
-                    )}
+          {modules.map((mod, index) => {
+            const isExisting = !!mod.id;
+            const isEditingThis = editingModuleIndex === index;
+            const isDisabled = isExisting && !isEditingThis;
+            return (
+              <Card
+                key={index}
+                shadow="none"
+                style={{ backgroundColor: colors.background.light }}
+              >
+                <CardBody className="space-y-4 p-6">
+                  <div className="flex items-center justify-between">
+                    <h3
+                      className="text-base font-semibold"
+                      style={{ color: colors.text.primary }}
+                    >
+                      {t("tutorDashboard.createCourse.moduleNumber", {
+                        number: mod.moduleNumber,
+                      })}
+                    </h3>
+                    <div className="flex items-center gap-1">
+                      {isExisting && !isEditingThis && (
+                        <Button
+                          isIconOnly
+                          variant="light"
+                          size="sm"
+                          onPress={() => startEditModule(index)}
+                          title={t("tutorDashboard.createCourse.editItem")}
+                        >
+                          <PencilSimple className="w-4 h-4" />
+                        </Button>
+                      )}
+                      {isExisting && isEditingThis && (
+                        <>
+                          <Button
+                            size="sm"
+                            variant="flat"
+                            color="danger"
+                            onPress={cancelEditModule}
+                            startContent={<X className="w-4 h-4" />}
+                          >
+                            {t("tutorDashboard.createCourse.cancel")}
+                          </Button>
+                          <Button
+                            size="sm"
+                            color="primary"
+                            onPress={() => saveEditModule(index)}
+                            isLoading={savingModule}
+                            startContent={
+                              !savingModule && (
+                                <FloppyDisk className="w-4 h-4" />
+                              )
+                            }
+                          >
+                            {t("tutorDashboard.createCourse.saveItem")}
+                          </Button>
+                        </>
+                      )}
+                      {mod.id && (
+                        <Button
+                          isIconOnly
+                          variant="light"
+                          size="sm"
+                          onPress={() => loadModuleHistory(mod.id, mod.title)}
+                          title={t(
+                            "tutorDashboard.createCourse.versionHistory.title",
+                          )}
+                        >
+                          <ClockCounterClockwise className="w-4 h-4" />
+                        </Button>
+                      )}
+                      {modules.length > 1 && (
+                        <Button
+                          isIconOnly
+                          variant="light"
+                          color="danger"
+                          size="sm"
+                          onPress={() =>
+                            setDeleteConfirm({ type: "module", index })
+                          }
+                        >
+                          <Trash className="w-4 h-4" />
+                        </Button>
+                      )}
+                    </div>
                   </div>
-                </div>
-                <Input
-                  label={t("tutorDashboard.createCourse.moduleTitle")}
-                  placeholder={t(
-                    "tutorDashboard.createCourse.moduleTitlePlaceholder",
-                  )}
-                  labelPlacement="outside"
-                  value={mod.title}
-                  onChange={(e) =>
-                    handleModuleChange(index, "title", e.target.value)
-                  }
-                  classNames={inputClassNames}
-                  isRequired
-                />
-                <Textarea
-                  label={t("tutorDashboard.createCourse.moduleDescription")}
-                  placeholder={t(
-                    "tutorDashboard.createCourse.moduleDescPlaceholder",
-                  )}
-                  labelPlacement="outside"
-                  value={mod.description}
-                  onChange={(e) =>
-                    handleModuleChange(index, "description", e.target.value)
-                  }
-                  classNames={inputClassNames}
-                  minRows={2}
-                  maxRows={4}
-                />
-                <Textarea
-                  label={t("tutorDashboard.createCourse.moduleOutcomes")}
-                  placeholder={t(
-                    "tutorDashboard.createCourse.moduleOutcomesPlaceholder",
-                  )}
-                  labelPlacement="outside"
-                  value={mod.outcomes}
-                  onChange={(e) =>
-                    handleModuleChange(index, "outcomes", e.target.value)
-                  }
-                  classNames={inputClassNames}
-                  minRows={2}
-                  maxRows={3}
-                />
-              </CardBody>
-            </Card>
-          ))}
+                  <Input
+                    label={t("tutorDashboard.createCourse.moduleTitle")}
+                    placeholder={t(
+                      "tutorDashboard.createCourse.moduleTitlePlaceholder",
+                    )}
+                    labelPlacement="outside"
+                    value={mod.title}
+                    onChange={(e) =>
+                      handleModuleChange(index, "title", e.target.value)
+                    }
+                    classNames={inputClassNames}
+                    isRequired
+                    isDisabled={isDisabled}
+                  />
+                  <Textarea
+                    label={t("tutorDashboard.createCourse.moduleDescription")}
+                    placeholder={t(
+                      "tutorDashboard.createCourse.moduleDescPlaceholder",
+                    )}
+                    labelPlacement="outside"
+                    value={mod.description}
+                    onChange={(e) =>
+                      handleModuleChange(index, "description", e.target.value)
+                    }
+                    classNames={inputClassNames}
+                    minRows={2}
+                    maxRows={4}
+                    isDisabled={isDisabled}
+                  />
+                  <Textarea
+                    label={t("tutorDashboard.createCourse.moduleOutcomes")}
+                    placeholder={t(
+                      "tutorDashboard.createCourse.moduleOutcomesPlaceholder",
+                    )}
+                    labelPlacement="outside"
+                    value={mod.outcomes}
+                    onChange={(e) =>
+                      handleModuleChange(index, "outcomes", e.target.value)
+                    }
+                    classNames={inputClassNames}
+                    minRows={2}
+                    maxRows={3}
+                    isDisabled={isDisabled}
+                  />
+                </CardBody>
+              </Card>
+            );
+          })}
 
           <Button
             variant="flat"
@@ -2231,30 +2447,43 @@ const CreateCourse = () => {
           ) : (
             <>
               {/* Module tabs */}
-              <div className="flex flex-wrap gap-2">
-                {createdModules.map((mod) => (
-                  <Chip
-                    key={mod.id}
-                    variant={
-                      activeModuleForSessions === mod.id ? "solid" : "flat"
-                    }
-                    className="cursor-pointer"
-                    style={{
-                      backgroundColor:
-                        activeModuleForSessions === mod.id
-                          ? colors.primary.main
-                          : colors.background.gray,
-                      color:
-                        activeModuleForSessions === mod.id
-                          ? colors.text.white
-                          : colors.text.primary,
-                    }}
-                    onClick={() => setActiveModuleForSessions(mod.id)}
+              <Card
+                shadow="none"
+                style={{ backgroundColor: colors.background.light }}
+              >
+                <CardBody className="p-4 space-y-3">
+                  <h3
+                    className="text-sm font-semibold"
+                    style={{ color: colors.text.secondary }}
                   >
-                    {mod.title}
-                  </Chip>
-                ))}
-              </div>
+                    {t("tutorDashboard.createCourse.selectModule")}
+                  </h3>
+                  <div className="flex flex-wrap gap-2">
+                    {createdModules.map((mod) => (
+                      <Chip
+                        key={mod.id}
+                        variant={
+                          activeModuleForSessions === mod.id ? "solid" : "flat"
+                        }
+                        className="cursor-pointer"
+                        style={{
+                          backgroundColor:
+                            activeModuleForSessions === mod.id
+                              ? colors.primary.main
+                              : colors.background.gray,
+                          color:
+                            activeModuleForSessions === mod.id
+                              ? colors.text.white
+                              : colors.text.primary,
+                        }}
+                        onClick={() => setActiveModuleForSessions(mod.id)}
+                      >
+                        {mod.title}
+                      </Chip>
+                    ))}
+                  </div>
+                </CardBody>
+              </Card>
 
               {activeModuleForSessions && (
                 <>
@@ -2289,120 +2518,183 @@ const CreateCourse = () => {
 
                   {/* New sessions for active module */}
                   {getSessionsForModule(activeModuleForSessions).map(
-                    (sess, index) => (
-                      <Card
-                        key={index}
-                        shadow="none"
-                        style={{ backgroundColor: colors.background.light }}
-                      >
-                        <CardBody className="space-y-4 p-6">
-                          <div className="flex items-center justify-between">
-                            <h3
-                              className="text-base font-semibold"
-                              style={{ color: colors.text.primary }}
-                            >
-                              {t("tutorDashboard.createCourse.sessionNumber", {
-                                number: sess.sessionNumber,
-                              })}
-                            </h3>
-                            <div className="flex items-center gap-1">
-                              {sess.id && (
+                    (sess, index) => {
+                      const isExistingSess = !!sess.id;
+                      const sessKey = `${activeModuleForSessions}-${index}`;
+                      const isEditingSess = editingSessionKey === sessKey;
+                      const isDisabledSess = isExistingSess && !isEditingSess;
+                      return (
+                        <Card
+                          key={index}
+                          shadow="none"
+                          style={{ backgroundColor: colors.background.light }}
+                        >
+                          <CardBody className="space-y-4 p-6">
+                            <div className="flex items-center justify-between">
+                              <h3
+                                className="text-base font-semibold"
+                                style={{ color: colors.text.primary }}
+                              >
+                                {t(
+                                  "tutorDashboard.createCourse.sessionNumber",
+                                  {
+                                    number: sess.sessionNumber,
+                                  },
+                                )}
+                              </h3>
+                              <div className="flex items-center gap-1">
+                                {isExistingSess && !isEditingSess && (
+                                  <Button
+                                    isIconOnly
+                                    variant="light"
+                                    size="sm"
+                                    onPress={() =>
+                                      startEditSession(
+                                        activeModuleForSessions,
+                                        index,
+                                      )
+                                    }
+                                    title={t(
+                                      "tutorDashboard.createCourse.editItem",
+                                    )}
+                                  >
+                                    <PencilSimple className="w-4 h-4" />
+                                  </Button>
+                                )}
+                                {isExistingSess && isEditingSess && (
+                                  <>
+                                    <Button
+                                      size="sm"
+                                      variant="flat"
+                                      color="danger"
+                                      onPress={cancelEditSession}
+                                      startContent={<X className="w-4 h-4" />}
+                                    >
+                                      {t("tutorDashboard.createCourse.cancel")}
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      color="primary"
+                                      onPress={() =>
+                                        saveEditSession(
+                                          activeModuleForSessions,
+                                          index,
+                                        )
+                                      }
+                                      isLoading={savingSession}
+                                      startContent={
+                                        !savingSession && (
+                                          <FloppyDisk className="w-4 h-4" />
+                                        )
+                                      }
+                                    >
+                                      {t(
+                                        "tutorDashboard.createCourse.saveItem",
+                                      )}
+                                    </Button>
+                                  </>
+                                )}
+                                {sess.id && (
+                                  <Button
+                                    isIconOnly
+                                    variant="light"
+                                    size="sm"
+                                    onPress={() =>
+                                      loadSessionHistory(sess.id, sess.title)
+                                    }
+                                    title={t(
+                                      "tutorDashboard.createCourse.versionHistory.title",
+                                    )}
+                                  >
+                                    <ClockCounterClockwise className="w-4 h-4" />
+                                  </Button>
+                                )}
                                 <Button
                                   isIconOnly
                                   variant="light"
+                                  color="danger"
                                   size="sm"
                                   onPress={() =>
-                                    loadSessionHistory(sess.id, sess.title)
+                                    setDeleteConfirm({
+                                      type: "session",
+                                      index,
+                                      moduleId: activeModuleForSessions,
+                                    })
                                   }
-                                  title={t(
-                                    "tutorDashboard.createCourse.versionHistory.title",
-                                  )}
                                 >
-                                  <ClockCounterClockwise className="w-4 h-4" />
+                                  <Trash className="w-4 h-4" />
                                 </Button>
-                              )}
-                              <Button
-                                isIconOnly
-                                variant="light"
-                                color="danger"
-                                size="sm"
-                                onPress={() =>
-                                  setDeleteConfirm({
-                                    type: "session",
-                                    index,
-                                    moduleId: activeModuleForSessions,
-                                  })
-                                }
-                              >
-                                <Trash className="w-4 h-4" />
-                              </Button>
+                              </div>
                             </div>
-                          </div>
-                          <Input
-                            label={t(
-                              "tutorDashboard.createCourse.sessionTitle",
-                            )}
-                            placeholder={t(
-                              "tutorDashboard.createCourse.sessionTitlePlaceholder",
-                            )}
-                            labelPlacement="outside"
-                            value={sess.title}
-                            onChange={(e) =>
-                              handleSessionChange(
-                                activeModuleForSessions,
-                                index,
-                                "title",
-                                e.target.value,
-                              )
-                            }
-                            classNames={inputClassNames}
-                            isRequired
-                          />
-                          <Textarea
-                            label={t(
-                              "tutorDashboard.createCourse.sessionDescription",
-                            )}
-                            placeholder={t(
-                              "tutorDashboard.createCourse.sessionDescPlaceholder",
-                            )}
-                            labelPlacement="outside"
-                            value={sess.description}
-                            onChange={(e) =>
-                              handleSessionChange(
-                                activeModuleForSessions,
-                                index,
-                                "description",
-                                e.target.value,
-                              )
-                            }
-                            classNames={inputClassNames}
-                            minRows={2}
-                            maxRows={4}
-                          />
-                          <Textarea
-                            label={t(
-                              "tutorDashboard.createCourse.sessionOutcomes",
-                            )}
-                            placeholder={t(
-                              "tutorDashboard.createCourse.sessionOutcomesPlaceholder",
-                            )}
-                            labelPlacement="outside"
-                            value={sess.outcomes}
-                            onChange={(e) =>
-                              handleSessionChange(
-                                activeModuleForSessions,
-                                index,
-                                "outcomes",
-                                e.target.value,
-                              )
-                            }
-                            classNames={inputClassNames}
-                            minRows={2}
-                            maxRows={3}
-                          />
-                        </CardBody>
-                      </Card>
-                    ),
+                            <Input
+                              label={t(
+                                "tutorDashboard.createCourse.sessionTitle",
+                              )}
+                              placeholder={t(
+                                "tutorDashboard.createCourse.sessionTitlePlaceholder",
+                              )}
+                              labelPlacement="outside"
+                              value={sess.title}
+                              onChange={(e) =>
+                                handleSessionChange(
+                                  activeModuleForSessions,
+                                  index,
+                                  "title",
+                                  e.target.value,
+                                )
+                              }
+                              classNames={inputClassNames}
+                              isRequired
+                              isDisabled={isDisabledSess}
+                            />
+                            <Textarea
+                              label={t(
+                                "tutorDashboard.createCourse.sessionDescription",
+                              )}
+                              placeholder={t(
+                                "tutorDashboard.createCourse.sessionDescPlaceholder",
+                              )}
+                              labelPlacement="outside"
+                              value={sess.description}
+                              onChange={(e) =>
+                                handleSessionChange(
+                                  activeModuleForSessions,
+                                  index,
+                                  "description",
+                                  e.target.value,
+                                )
+                              }
+                              classNames={inputClassNames}
+                              minRows={2}
+                              maxRows={4}
+                              isDisabled={isDisabledSess}
+                            />
+                            <Textarea
+                              label={t(
+                                "tutorDashboard.createCourse.sessionOutcomes",
+                              )}
+                              placeholder={t(
+                                "tutorDashboard.createCourse.sessionOutcomesPlaceholder",
+                              )}
+                              labelPlacement="outside"
+                              value={sess.outcomes}
+                              onChange={(e) =>
+                                handleSessionChange(
+                                  activeModuleForSessions,
+                                  index,
+                                  "outcomes",
+                                  e.target.value,
+                                )
+                              }
+                              classNames={inputClassNames}
+                              minRows={2}
+                              maxRows={3}
+                              isDisabled={isDisabledSess}
+                            />
+                          </CardBody>
+                        </Card>
+                      );
+                    },
                   )}
 
                   <Button
@@ -2620,49 +2912,73 @@ const CreateCourse = () => {
           ) : (
             <>
               {/* Session tabs grouped by module */}
-              {createdModules.map((mod) => {
-                const modSessions = createdSessions[mod.id] || [];
-                if (modSessions.length === 0) return null;
-                return (
-                  <div key={mod.id} className="space-y-2">
-                    <p
-                      className="text-sm font-medium"
-                      style={{ color: colors.text.secondary }}
-                    >
-                      {mod.title}
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                      {modSessions.map((sess) => (
-                        <Chip
-                          key={sess.id}
-                          variant={
-                            activeSessionForResources === sess.id
-                              ? "solid"
-                              : "flat"
-                          }
-                          className="cursor-pointer"
-                          style={{
-                            backgroundColor:
-                              activeSessionForResources === sess.id
-                                ? colors.primary.main
-                                : colors.background.gray,
-                            color:
-                              activeSessionForResources === sess.id
-                                ? colors.text.white
-                                : colors.text.primary,
-                          }}
-                          onClick={() => {
-                            setActiveSessionForResources(sess.id);
-                            loadExistingResources(sess.id);
-                          }}
+              <Card
+                shadow="none"
+                style={{ backgroundColor: colors.background.light }}
+              >
+                <CardBody className="p-4 space-y-4">
+                  <h3
+                    className="text-sm font-semibold"
+                    style={{ color: colors.text.secondary }}
+                  >
+                    {t("tutorDashboard.createCourse.selectSession")}
+                  </h3>
+                  {createdModules.map((mod) => {
+                    const modSessions = createdSessions[mod.id] || [];
+                    if (modSessions.length === 0) return null;
+                    return (
+                      <div key={mod.id} className="space-y-2">
+                        <p
+                          className="text-xs font-semibold uppercase tracking-wide"
+                          style={{ color: colors.text.tertiary }}
                         >
-                          {sess.title}
-                        </Chip>
-                      ))}
-                    </div>
-                  </div>
-                );
-              })}
+                          {mod.title}
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          {modSessions.map((sess) => (
+                            <Chip
+                              key={sess.id}
+                              variant={
+                                activeSessionForResources === sess.id
+                                  ? "solid"
+                                  : "flat"
+                              }
+                              className="cursor-pointer"
+                              style={{
+                                backgroundColor:
+                                  activeSessionForResources === sess.id
+                                    ? colors.primary.main
+                                    : colors.background.gray,
+                                color:
+                                  activeSessionForResources === sess.id
+                                    ? colors.text.white
+                                    : colors.text.primary,
+                              }}
+                              onClick={() => {
+                                setActiveSessionForResources(sess.id);
+                                loadExistingResources(sess.id);
+                              }}
+                            >
+                              {sess.title}
+                            </Chip>
+                          ))}
+                        </div>
+                        {mod !==
+                          createdModules
+                            .filter(
+                              (m) => (createdSessions[m.id] || []).length > 0,
+                            )
+                            .at(-1) && (
+                          <Divider
+                            className="my-1"
+                            style={{ backgroundColor: colors.border.light }}
+                          />
+                        )}
+                      </div>
+                    );
+                  })}
+                </CardBody>
+              </Card>
 
               {activeSessionForResources && (
                 <>
@@ -3277,6 +3593,147 @@ const CreateCourse = () => {
                   }}
                 >
                   {t("tutorDashboard.createCourse.delete")}
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
+
+      {/* Module Detail Modal */}
+      <Modal
+        isOpen={detailOpen}
+        onOpenChange={(open) => {
+          if (!open) setDetailOpen(false);
+        }}
+        size="2xl"
+        scrollBehavior="inside"
+      >
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalHeader>
+                {t("tutorDashboard.createCourse.moduleDetail")}
+              </ModalHeader>
+              <ModalBody>
+                {detailLoading ? (
+                  <div className="flex justify-center py-8">
+                    <Spinner />
+                  </div>
+                ) : detailData ? (
+                  <div className="flex flex-col gap-4">
+                    <div>
+                      <p
+                        className="text-sm font-semibold mb-1"
+                        style={{ color: colors.text.secondary }}
+                      >
+                        {t("tutorDashboard.createCourse.moduleTitle")}
+                      </p>
+                      <p style={{ color: colors.text.primary }}>
+                        {detailData.title}
+                      </p>
+                    </div>
+
+                    {detailData.description && (
+                      <div>
+                        <p
+                          className="text-sm font-semibold mb-1"
+                          style={{ color: colors.text.secondary }}
+                        >
+                          {t("tutorDashboard.createCourse.moduleDescription")}
+                        </p>
+                        <p style={{ color: colors.text.primary }}>
+                          {detailData.description}
+                        </p>
+                      </div>
+                    )}
+
+                    {detailData.outcomes && (
+                      <div>
+                        <p
+                          className="text-sm font-semibold mb-1"
+                          style={{ color: colors.text.secondary }}
+                        >
+                          {t("tutorDashboard.createCourse.outcomes")}
+                        </p>
+                        <p style={{ color: colors.text.primary }}>
+                          {detailData.outcomes}
+                        </p>
+                      </div>
+                    )}
+
+                    <Divider />
+
+                    <div>
+                      <p
+                        className="text-sm font-semibold mb-2"
+                        style={{ color: colors.text.secondary }}
+                      >
+                        {t("tutorDashboard.createCourse.sessions")} (
+                        {detailData.courseSessions?.length || 0})
+                      </p>
+                      {detailData.courseSessions?.length > 0 ? (
+                        <div className="flex flex-col gap-2">
+                          {[...detailData.courseSessions]
+                            .sort(
+                              (a, b) =>
+                                (a.sessionNumber || 0) - (b.sessionNumber || 0),
+                            )
+                            .map((session, idx) => (
+                              <Card
+                                key={idx}
+                                shadow="none"
+                                style={{
+                                  backgroundColor: colors.background.input,
+                                  border: `1px solid ${colors.border.light}`,
+                                }}
+                              >
+                                <CardBody className="gap-1">
+                                  <p
+                                    className="font-medium"
+                                    style={{ color: colors.text.primary }}
+                                  >
+                                    {session.sessionNumber || idx + 1}.{" "}
+                                    {session.sessionTitle}
+                                  </p>
+                                  {session.sessionDescription && (
+                                    <p
+                                      className="text-sm"
+                                      style={{ color: colors.text.secondary }}
+                                    >
+                                      {session.sessionDescription}
+                                    </p>
+                                  )}
+                                  {session.sessionOutcomes && (
+                                    <p
+                                      className="text-xs mt-1"
+                                      style={{ color: colors.text.tertiary }}
+                                    >
+                                      {t(
+                                        "tutorDashboard.createCourse.outcomes",
+                                      )}
+                                      : {session.sessionOutcomes}
+                                    </p>
+                                  )}
+                                </CardBody>
+                              </Card>
+                            ))}
+                        </div>
+                      ) : (
+                        <p
+                          className="text-sm"
+                          style={{ color: colors.text.tertiary }}
+                        >
+                          {t("tutorDashboard.createCourse.noSessions")}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                ) : null}
+              </ModalBody>
+              <ModalFooter>
+                <Button variant="light" onPress={onClose}>
+                  {t("tutorDashboard.createCourse.close")}
                 </Button>
               </ModalFooter>
             </>
