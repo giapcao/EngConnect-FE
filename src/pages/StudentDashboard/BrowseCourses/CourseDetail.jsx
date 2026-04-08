@@ -1,21 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import {
-  Button,
-  Card,
-  CardBody,
-  Chip,
-  Avatar,
-  Divider,
-  Modal,
-  ModalContent,
-  ModalBody,
-} from "@heroui/react";
+import { Button, Card, CardBody, Chip, Avatar, Divider } from "@heroui/react";
 import * as MotionLib from "framer-motion";
 import { useThemeColors } from "../../../hooks/useThemeColors";
 import { useTheme } from "../../../contexts/ThemeContext";
 import CourseDetailSkeleton from "../../../components/CourseDetailSkeleton/CourseDetailSkeleton";
+import VideoModal from "../../../components/VideoModal/VideoModal";
 
 // eslint-disable-next-line no-unused-vars
 const { motion } = MotionLib;
@@ -783,30 +774,11 @@ const StudentCourseDetail = () => {
         </div>
       </div>
 
-      {/* Demo Video Modal */}
-      <Modal
+      <VideoModal
         isOpen={videoOpen}
         onOpenChange={setVideoOpen}
-        size="3xl"
-        hideCloseButton
-        classNames={{ body: "p-0" }}
-      >
-        <ModalContent>
-          <ModalBody>
-            <div
-              className="relative w-full"
-              style={{ paddingBottom: "56.25%" }}
-            >
-              <iframe
-                src={course?.demoVideoUrl}
-                className="absolute inset-0 w-full h-full rounded-xl"
-                allow="autoplay; fullscreen"
-                allowFullScreen
-              />
-            </div>
-          </ModalBody>
-        </ModalContent>
-      </Modal>
+        videoUrl={course?.demoVideoUrl}
+      />
     </div>
   );
 };
