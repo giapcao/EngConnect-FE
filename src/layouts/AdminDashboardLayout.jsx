@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useSelector } from "react-redux";
+import { selectUser } from "../store";
 import { Link, useLocation, useNavigate, Outlet } from "react-router-dom";
 import {
   Button,
@@ -23,6 +24,7 @@ import ThemeSwitcher from "../components/ThemeSwitcher/ThemeSwitcher";
 import LanguageSwitcher from "../components/LanguageSwitcher/LanguageSwitcher";
 import logoImage from "../assets/images/logo.png";
 import logoNoTextImage from "../assets/images/logo-no-text.png";
+import defaultAvatar from "../assets/images/null-avatar.jpg";
 import {
   House,
   MagnifyingGlass,
@@ -51,7 +53,7 @@ const AdminDashboardLayout = () => {
   const { theme } = useTheme();
   const { dropdownClassNames } = useDropdownStyles();
   const { inputClassNames } = useInputStyles();
-  const user = useSelector((state) => state.user.profile);
+  const user = useSelector(selectUser);
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -652,7 +654,7 @@ const AdminDashboardLayout = () => {
               <DropdownTrigger>
                 <Button variant="light" className="gap-2 px-2">
                   <Avatar
-                    src={user?.avatarUrl || "https://i.pravatar.cc/150?u=admin"}
+                    src={user?.avatarUrl || defaultAvatar}
                     size="sm"
                     className="w-8 h-8"
                   />

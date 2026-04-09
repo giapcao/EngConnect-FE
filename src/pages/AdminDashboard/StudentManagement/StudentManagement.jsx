@@ -639,18 +639,6 @@ const StudentManagement = () => {
                             className="text-sm font-semibold"
                             style={{ color: colors.text.secondary }}
                           >
-                            {t("adminDashboard.students.phone")}
-                          </p>
-                          <p style={{ color: colors.text.primary }}>
-                            {selectedStudent.user?.phone ||
-                              t("adminDashboard.students.nA")}
-                          </p>
-                        </div>
-                        <div>
-                          <p
-                            className="text-sm font-semibold"
-                            style={{ color: colors.text.secondary }}
-                          >
                             {t("adminDashboard.students.table.school")}
                           </p>
                           <p style={{ color: colors.text.primary }}>

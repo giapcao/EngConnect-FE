@@ -898,18 +898,6 @@ const TutorVerification = () => {
                                 className="text-sm font-semibold"
                                 style={{ color: colors.text.secondary }}
                               >
-                                {t("adminDashboard.verification.phone")}
-                              </p>
-                              <p style={{ color: colors.text.primary }}>
-                                {detailTutor.user?.phone ||
-                                  t("adminDashboard.verification.nA")}
-                              </p>
-                            </div>
-                            <div>
-                              <p
-                                className="text-sm font-semibold"
-                                style={{ color: colors.text.secondary }}
-                              >
                                 {t("adminDashboard.verification.joinDate")}
                               </p>
                               <p style={{ color: colors.text.primary }}>

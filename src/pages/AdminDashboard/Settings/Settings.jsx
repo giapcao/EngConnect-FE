@@ -204,13 +204,6 @@ const Settings = () => {
                     <EnvelopeSimple className="w-4 h-4 text-gray-400" />
                   }
                 />
-                <Input
-                  label={t("adminDashboard.settings.phone")}
-                  defaultValue="+1 234 567 890"
-                  type="tel"
-                  variant="bordered"
-                  classNames={inputClassNames}
-                />
               </div>
 
               <div className="flex justify-end mt-6">

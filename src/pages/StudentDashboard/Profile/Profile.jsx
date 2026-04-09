@@ -19,7 +19,6 @@ import { motion } from "framer-motion";
 import {
   User,
   Envelope,
-  Phone,
   Camera,
   PencilSimple,
   Bell,
@@ -61,7 +60,6 @@ const Profile = () => {
     firstName: "",
     lastName: "",
     email: "",
-    phone: "",
     notes: "",
     school: "",
     grade: "",
@@ -93,7 +91,6 @@ const Profile = () => {
           firstName: d.user?.firstName || "",
           lastName: d.user?.lastName || "",
           email: d.user?.email || "",
-          phone: d.user?.phone || "",
           notes: d.notes || "",
           school: d.school || "",
           grade: d.grade || "",
@@ -126,7 +123,6 @@ const Profile = () => {
         authApi.updateUser(studentUserId, {
           firstName: profileData.firstName,
           lastName: profileData.lastName,
-          phone: profileData.phone,
         }),
       ]);
       setIsEditing(false);
@@ -134,7 +130,6 @@ const Profile = () => {
         ...prev,
         firstName: profileData.firstName,
         lastName: profileData.lastName,
-        phone: profileData.phone,
         notes: profileData.notes,
         school: profileData.school,
         grade: profileData.grade,
@@ -585,21 +580,6 @@ const Profile = () => {
                     />
                   }
                   classNames={inputClassNames}
-                />
-                <Input
-                  label={t("studentDashboard.profile.phone")}
-                  value={profileData.phone}
-                  isDisabled={!isEditing}
-                  startContent={
-                    <Phone
-                      className="w-5 h-5"
-                      style={{ color: colors.text.secondary }}
-                    />
-                  }
-                  classNames={inputClassNames}
-                  onValueChange={(value) =>
-                    setProfileData({ ...profileData, phone: value })
-                  }
                 />
                 <Input
                   label={t("studentDashboard.profile.school")}

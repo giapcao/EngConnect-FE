@@ -20,7 +20,6 @@ import { motion } from "framer-motion";
 import {
   User,
   Envelope,
-  Phone,
   Camera,
   PencilSimple,
   Bell,
@@ -55,7 +54,6 @@ const Profile = () => {
   const [editData, setEditData] = useState({
     firstName: "",
     lastName: "",
-    phone: "",
     headline: "",
     bio: "",
     monthExperience: "",
@@ -129,7 +127,6 @@ const Profile = () => {
         const snapshot = {
           firstName: p.user?.firstName || "",
           lastName: p.user?.lastName || "",
-          phone: p.user?.phone || "",
           headline: p.headline || "",
           bio: p.bio || "",
           monthExperience:
@@ -159,7 +156,6 @@ const Profile = () => {
       const userPayload = {
         firstName: editData.firstName,
         lastName: editData.lastName,
-        phone: editData.phone,
       };
       await Promise.all([
         tutorApi.updateTutorById(tutorProfile.id, tutorPayload),
@@ -709,21 +705,6 @@ const Profile = () => {
                   isDisabled
                   startContent={
                     <Envelope
-                      className="w-5 h-5"
-                      style={{ color: colors.text.secondary }}
-                    />
-                  }
-                  classNames={inputClassNames}
-                />
-                <Input
-                  label={t("tutorDashboard.profile.phone")}
-                  value={editData.phone}
-                  isDisabled={!isEditing}
-                  onValueChange={(v) =>
-                    setEditData((prev) => ({ ...prev, phone: v }))
-                  }
-                  startContent={
-                    <Phone
                       className="w-5 h-5"
                       style={{ color: colors.text.secondary }}
                     />

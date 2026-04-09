@@ -753,18 +753,6 @@ const TutorManagement = () => {
                             className="text-sm font-semibold"
                             style={{ color: colors.text.secondary }}
                           >
-                            {t("adminDashboard.tutors.phone")}
-                          </p>
-                          <p style={{ color: colors.text.primary }}>
-                            {selectedTutor.user?.phone ||
-                              t("adminDashboard.tutors.nA")}
-                          </p>
-                        </div>
-                        <div>
-                          <p
-                            className="text-sm font-semibold"
-                            style={{ color: colors.text.secondary }}
-                          >
                             {t("adminDashboard.tutors.joinDate")}
                           </p>
                           <p style={{ color: colors.text.primary }}>
