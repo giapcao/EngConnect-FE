@@ -55,6 +55,9 @@ import AdminAnalytics from "../pages/AdminDashboard/AnalyticsReports/AnalyticsRe
 import AdminFinance from "../pages/AdminDashboard/FinancialManagement/FinancialManagement";
 import AdminSettings from "../pages/AdminDashboard/Settings/Settings";
 import AdminSupportTickets from "../pages/AdminDashboard/SupportTickets/SupportTickets";
+import AdminCourseDetail from "../pages/AdminDashboard/CourseManagement/CourseDetail";
+import AdminCourseVerificationDetail from "../pages/AdminDashboard/CourseManagement/CourseVerificationDetail";
+import AdminTutorDetail from "../pages/AdminDashboard/TutorManagament/TutorDetail";
 
 // Help & Support (shared by student/tutor)
 import HelpSupport from "../pages/HelpSupport/HelpSupport";
@@ -275,6 +278,10 @@ export const router = createBrowserRouter([
         element: <AdminTutors />,
       },
       {
+        path: "tutors/:id",
+        element: <AdminTutorDetail />,
+      },
+      {
         path: "verification",
         element: <AdminVerification />,
       },
@@ -283,8 +290,16 @@ export const router = createBrowserRouter([
         element: <AdminCourses />,
       },
       {
+        path: "courses/:id",
+        element: <AdminCourseDetail />,
+      },
+      {
         path: "course-verification",
         element: <AdminCourseVerification />,
+      },
+      {
+        path: "course-verification/:id",
+        element: <AdminCourseVerificationDetail />,
       },
       {
         path: "categories",

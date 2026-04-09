@@ -754,13 +754,6 @@ const CourseDetail = () => {
                       {t("courses.detail.enrollNow")}
                     </Button>
 
-                    <p
-                      className="text-xs text-center"
-                      style={{ color: colors.text.secondary }}
-                    >
-                      {t("courses.detail.moneyBackGuarantee")}
-                    </p>
-
                     <Divider />
 
                     {/* Quick Stats */}

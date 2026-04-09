@@ -28,6 +28,7 @@ import {
   addToast,
 } from "@heroui/react";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 import { useThemeColors } from "../../../hooks/useThemeColors";
 import useInputStyles from "../../../hooks/useInputStyles";
 import useTableStyles from "../../../hooks/useTableStyles";
@@ -51,6 +52,7 @@ const TutorManagement = () => {
   const colors = useThemeColors();
   const { inputClassNames, textareaClassNames } = useInputStyles();
   const { tableCardStyle, tableClassNames } = useTableStyles();
+  const navigate = useNavigate();
 
   // List state
   const [searchQuery, setSearchQuery] = useState("");
@@ -65,11 +67,6 @@ const TutorManagement = () => {
   // Stats
   const [totalTutorsCount, setTotalTutorsCount] = useState(0);
   const [verifiedCount, setVerifiedCount] = useState(0);
-
-  // Detail modal
-  const { isOpen, onOpen, onClose } = useDisclosure();
-  const [selectedTutor, setSelectedTutor] = useState(null);
-  const [detailLoading, setDetailLoading] = useState(false);
 
   // Delete modal
   const {
@@ -193,18 +190,8 @@ const TutorManagement = () => {
   };
 
   // View detail
-  const handleViewTutor = async (tutor) => {
-    setSelectedTutor(tutor);
-    onOpen();
-    setDetailLoading(true);
-    try {
-      const response = await adminApi.getTutorById(tutor.id);
-      setSelectedTutor(response.data);
-    } catch (error) {
-      console.error("Failed to fetch tutor detail:", error);
-    } finally {
-      setDetailLoading(false);
-    }
+  const handleViewTutor = (tutor) => {
+    navigate(`/admin/tutors/${tutor.id}`);
   };
 
   // Delete
@@ -600,229 +587,6 @@ const TutorManagement = () => {
           </CardBody>
         </Card>
       </motion.div>
-
-      {/* Tutor Detail Modal */}
-      <Modal isOpen={isOpen} onClose={onClose} size="2xl">
-        <ModalContent style={{ backgroundColor: colors.background.light }}>
-          {(onClose) => (
-            <>
-              <ModalHeader style={{ color: colors.text.primary }}>
-                {t("adminDashboard.tutors.tutorDetails")}
-              </ModalHeader>
-              <ModalBody>
-                {detailLoading ? (
-                  <div className="flex justify-center py-8">
-                    <Spinner size="lg" />
-                  </div>
-                ) : selectedTutor ? (
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-4">
-                      <Avatar
-                        src={selectedTutor.avatar}
-                        className="w-20 h-20"
-                      />
-                      <div>
-                        <h3
-                          className="text-xl font-semibold"
-                          style={{ color: colors.text.primary }}
-                        >
-                          {getTutorName(selectedTutor)}
-                        </h3>
-                        <p style={{ color: colors.text.secondary }}>
-                          {selectedTutor.headline || ""}
-                        </p>
-                        <div className="flex gap-2 mt-2">
-                          <Chip
-                            size="sm"
-                            color={getVerifiedColor(
-                              selectedTutor.verifiedStatus,
-                            )}
-                            variant="flat"
-                          >
-                            {selectedTutor.verifiedStatus === "Verified"
-                              ? t("adminDashboard.tutors.verified")
-                              : t("adminDashboard.tutors.unverified")}
-                          </Chip>
-                          <Chip
-                            size="sm"
-                            color={getStatusColor(selectedTutor.status)}
-                            variant="flat"
-                          >
-                            {selectedTutor.status}
-                          </Chip>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Stats row */}
-                    <div className="grid grid-cols-3 gap-4">
-                      <div
-                        className="p-4 rounded-xl text-center"
-                        style={{ backgroundColor: colors.background.gray }}
-                      >
-                        <div className="flex items-center justify-center gap-1 mb-1">
-                          <Star
-                            className="w-5 h-5"
-                            weight="fill"
-                            style={{ color: colors.state.warning }}
-                          />
-                          <span
-                            className="text-2xl font-bold"
-                            style={{ color: colors.text.primary }}
-                          >
-                            {selectedTutor.ratingAverage > 0
-                              ? selectedTutor.ratingAverage.toFixed(1)
-                              : t("adminDashboard.tutors.nA")}
-                          </span>
-                        </div>
-                        <p
-                          className="text-sm"
-                          style={{ color: colors.text.secondary }}
-                        >
-                          {t("adminDashboard.tutors.table.rating")}
-                          {selectedTutor.ratingCount > 0 &&
-                            ` (${selectedTutor.ratingCount} ${t("adminDashboard.tutors.ratingCount")})`}
-                        </p>
-                      </div>
-                      <div
-                        className="p-4 rounded-xl text-center"
-                        style={{ backgroundColor: colors.background.gray }}
-                      >
-                        <p
-                          className="text-2xl font-bold"
-                          style={{ color: colors.text.primary }}
-                        >
-                          {selectedTutor.monthExperience || 0}
-                        </p>
-                        <p
-                          className="text-sm"
-                          style={{ color: colors.text.secondary }}
-                        >
-                          {t("adminDashboard.tutors.experience")} (
-                          {t("adminDashboard.tutors.months")})
-                        </p>
-                      </div>
-                      <div
-                        className="p-4 rounded-xl text-center"
-                        style={{ backgroundColor: colors.background.gray }}
-                      >
-                        <p
-                          className="text-2xl font-bold"
-                          style={{ color: colors.text.primary }}
-                        >
-                          {selectedTutor.slotsCount || 0}
-                        </p>
-                        <p
-                          className="text-sm"
-                          style={{ color: colors.text.secondary }}
-                        >
-                          {t("adminDashboard.tutors.slots")}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Info grid */}
-                    <div className="space-y-3">
-                      {selectedTutor.bio && (
-                        <div>
-                          <p
-                            className="text-sm font-semibold mb-1"
-                            style={{ color: colors.text.secondary }}
-                          >
-                            {t("adminDashboard.tutors.bio")}
-                          </p>
-                          <p style={{ color: colors.text.primary }}>
-                            {selectedTutor.bio}
-                          </p>
-                        </div>
-                      )}
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <p
-                            className="text-sm font-semibold"
-                            style={{ color: colors.text.secondary }}
-                          >
-                            {t("adminDashboard.tutors.email")}
-                          </p>
-                          <p style={{ color: colors.text.primary }}>
-                            {getTutorEmail(selectedTutor)}
-                          </p>
-                        </div>
-                        <div>
-                          <p
-                            className="text-sm font-semibold"
-                            style={{ color: colors.text.secondary }}
-                          >
-                            {t("adminDashboard.tutors.joinDate")}
-                          </p>
-                          <p style={{ color: colors.text.primary }}>
-                            {selectedTutor.createdAt
-                              ? new Date(
-                                  selectedTutor.createdAt,
-                                ).toLocaleDateString()
-                              : t("adminDashboard.tutors.nA")}
-                          </p>
-                        </div>
-                      </div>
-                      {selectedTutor.introVideoUrl && (
-                        <div>
-                          <p
-                            className="text-sm font-semibold mb-1"
-                            style={{ color: colors.text.secondary }}
-                          >
-                            {t("adminDashboard.tutors.introVideo")}
-                          </p>
-                          <video
-                            src={selectedTutor.introVideoUrl}
-                            controls
-                            className="w-full max-h-60 rounded-lg"
-                          />
-                        </div>
-                      )}
-                      {selectedTutor.cvUrl && (
-                        <div>
-                          <p
-                            className="text-sm font-semibold mb-1"
-                            style={{ color: colors.text.secondary }}
-                          >
-                            {t("adminDashboard.tutors.cvFile")}
-                          </p>
-                          <a
-                            href={selectedTutor.cvUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-sm underline"
-                            style={{ color: colors.primary.main }}
-                          >
-                            {t("adminDashboard.tutors.view")} CV
-                          </a>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ) : null}
-              </ModalBody>
-              <ModalFooter>
-                <Button variant="light" onPress={onClose}>
-                  {t("adminDashboard.tutors.close")}
-                </Button>
-                <Button
-                  onPress={() => {
-                    onClose();
-                    if (selectedTutor) handleEditClick(selectedTutor);
-                  }}
-                  style={{
-                    backgroundColor: colors.primary.main,
-                    color: colors.text.white,
-                  }}
-                >
-                  {t("adminDashboard.tutors.edit")}
-                </Button>
-              </ModalFooter>
-            </>
-          )}
-        </ModalContent>
-      </Modal>
 
       {/* Delete Confirmation Modal */}
       <Modal isOpen={isDeleteOpen} onClose={onDeleteClose} size="sm">
