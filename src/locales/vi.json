@@ -910,6 +910,11 @@
       "saveItem": "Lưu",
       "moduleSaved": "Đã lưu module thành công",
       "sessionSaved": "Đã lưu buổi học thành công",
+      "moduleDeleted": "Đã xóa module thành công",
+      "sessionDeleted": "Đã xóa buổi học thành công",
+      "saveNewModules": "Lưu Module Mới",
+      "saveNewSessions": "Lưu Buổi Học Mới",
+      "saved": "Đã lưu",
       "viewDetail": "Xem chi tiết",
       "moduleDetail": "Chi tiết Module",
       "sessions": "Buổi học",
@@ -943,7 +948,8 @@
       },
       "error": {
         "createFailed": "Tạo khóa học thất bại. Vui lòng thử lại.",
-        "loadFailed": "Tải dữ liệu khóa học thất bại. Vui lòng thử lại."
+        "loadFailed": "Tải dữ liệu khóa học thất bại. Vui lòng thử lại.",
+        "deleteFailed": "Xóa thất bại. Vui lòng thử lại."
       }
     },
     "schedule": {
@@ -1193,6 +1199,7 @@
       "title": "Duyệt theo danh mục",
       "subtitle": "Tìm khóa học phù hợp với mục tiêu học tập của bạn",
       "all": "Tất cả khóa học",
+      "allLevels": "Tất cả cấp độ",
       "business": "Kinh doanh",
       "ielts": "IELTS",
       "toefl": "TOEFL",
@@ -1244,6 +1251,7 @@
       "searching": "Đang tìm kiếm...",
       "found": "Tìm thấy {{count}} khóa học",
       "filterByCategory": "Lọc theo danh mục",
+      "filterByLevel": "Lọc theo cấp độ",
       "noResults": "Không tìm thấy khóa học",
       "noResultsDesc": "Chúng tôi không tìm thấy khóa học nào phù hợp. Hãy thử từ khóa khác hoặc xóa bộ lọc.",
       "clearFilters": "Xóa bộ lọc"
@@ -1260,7 +1268,8 @@
       "reviews": "đánh giá",
       "students": "Học viên",
       "studentsEnrolled": "Học viên đã đăng ký",
-      "duration": "Thời lượng",
+      "totalDuration": "Tổng thời gian",
+      "duration": "Thời gian/Bài học",
       "level": "Cấp độ",
       "aboutCourse": "Về khóa học này",
       "description": "Khóa học toàn diện này được thiết kế để giúp bạn làm chủ các kỹ năng tiếng Anh cần thiết. Thông qua các bài học được biên soạn kỹ lưỡng, bài tập tương tác và ứng dụng thực tế, bạn sẽ xây dựng sự tự tin và đạt được sự thành thạo. Giảng viên chuyên nghiệp của chúng tôi sẽ hướng dẫn bạn trong từng bước.",

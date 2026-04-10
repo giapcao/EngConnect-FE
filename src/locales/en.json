@@ -912,6 +912,11 @@
       "saveItem": "Save",
       "moduleSaved": "Module saved successfully",
       "sessionSaved": "Session saved successfully",
+      "moduleDeleted": "Module deleted successfully",
+      "sessionDeleted": "Session deleted successfully",
+      "saveNewModules": "Save New Modules",
+      "saveNewSessions": "Save New Sessions",
+      "saved": "Saved",
       "viewDetail": "View Details",
       "moduleDetail": "Module Details",
       "sessions": "Sessions",
@@ -945,7 +950,8 @@
       },
       "error": {
         "createFailed": "Failed to create course. Please try again.",
-        "loadFailed": "Failed to load course data. Please try again."
+        "loadFailed": "Failed to load course data. Please try again.",
+        "deleteFailed": "Failed to delete item. Please try again."
       }
     },
     "schedule": {
@@ -1195,6 +1201,7 @@
       "title": "Browse by Category",
       "subtitle": "Find courses that match your learning objectives",
       "all": "All Courses",
+      "allLevels": "All Levels",
       "business": "Business",
       "ielts": "IELTS",
       "toefl": "TOEFL",
@@ -1246,6 +1253,7 @@
       "searching": "Searching...",
       "found": "{{count}} courses found",
       "filterByCategory": "Filter by category",
+      "filterByLevel": "Filter by level",
       "noResults": "No courses found",
       "noResultsDesc": "We couldn't find any courses matching your search. Try different keywords or clear your filters.",
       "clearFilters": "Clear Filters"
@@ -1262,7 +1270,8 @@
       "reviews": "reviews",
       "students": "Students",
       "studentsEnrolled": "Students Enrolled",
-      "duration": "Duration",
+      "totalDuration": "Total Duration",
+      "duration": "Time/Lesson",
       "level": "Level",
       "aboutCourse": "About This Course",
       "description": "This comprehensive course is designed to help you master essential English skills. Through carefully crafted lessons, interactive exercises, and real-world applications, you'll build confidence and achieve fluency. Our expert instructor will guide you every step of the way.",

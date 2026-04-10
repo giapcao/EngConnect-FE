@@ -22,16 +22,19 @@ export const login = createAsyncThunk(
         localStorage.setItem("accessToken", accessToken);
         localStorage.setItem("refreshToken", refreshToken);
 
-        // Decode JWT to get userId
-        let userId = null;
+        // Decode JWT to get userId, email, tutorId, studentId
+        let userId = null, email = null, tutorId = null, studentId = null;
         try {
           const payload = JSON.parse(atob(accessToken.split(".")[1]));
           userId = payload.sub;
+          email = payload.email ?? null;
+          tutorId = payload.tutorId ?? null;
+          studentId = payload.studentId ?? null;
         } catch (e) {
           console.error("Failed to decode JWT:", e);
         }
 
-        const user = { firstName, lastName, username, roles, avatarUrl, userId };
+        const user = { firstName, lastName, username, roles, avatarUrl, userId, email, tutorId, studentId };
         // Persist user info for page reload
         localStorage.setItem("user", JSON.stringify(user));
 
@@ -116,17 +119,20 @@ export const registerTutor = createAsyncThunk(
         localStorage.setItem("refreshToken", refreshToken);
 
         // Decode JWT to get updated user info (roles now include "Tutor")
-        let userId = null;
+        let userId = null, email = null, tutorId = null, studentId = null;
         try {
           const payload = JSON.parse(atob(accessToken.split(".")[1]));
           userId = payload.sub;
+          email = payload.email ?? null;
+          tutorId = payload.tutorId ?? null;
+          studentId = payload.studentId ?? null;
         } catch (e) {
           console.error("Failed to decode JWT:", e);
         }
 
         // Update stored user with new roles
         const existingUser = JSON.parse(localStorage.getItem("user") || "{}");
-        const user = { ...existingUser, userId, roles: [...(existingUser.roles || []), "Tutor"] };
+        const user = { ...existingUser, userId, email, tutorId, studentId, roles: [...(existingUser.roles || []), "Tutor"] };
         localStorage.setItem("user", JSON.stringify(user));
 
         return { user, accessToken, refreshToken };
@@ -180,15 +186,18 @@ export const googleLoginVerify = createAsyncThunk(
         localStorage.setItem("accessToken", accessToken);
         localStorage.setItem("refreshToken", refreshToken);
 
-        let userId = null;
+        let userId = null, email = null, tutorId = null, studentId = null;
         try {
           const payload = JSON.parse(atob(accessToken.split(".")[1]));
           userId = payload.sub;
+          email = payload.email ?? null;
+          tutorId = payload.tutorId ?? null;
+          studentId = payload.studentId ?? null;
         } catch (e) {
           console.error("Failed to decode JWT:", e);
         }
 
-        const user = { firstName, lastName, username, roles, avatarUrl, userId };
+        const user = { firstName, lastName, username, roles, avatarUrl, userId, email, tutorId, studentId };
         localStorage.setItem("user", JSON.stringify(user));
 
         return { user, accessToken, refreshToken };

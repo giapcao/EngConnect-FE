@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Button, Chip, Input, Spinner } from "@heroui/react";
+import { Button, Input, Select, SelectItem, Spinner } from "@heroui/react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useThemeColors } from "../../hooks/useThemeColors";
@@ -12,7 +12,6 @@ import CourseCardSkeleton from "../../components/CourseCardSkeleton/CourseCardSk
 import {
   MagnifyingGlass,
   ArrowLeft,
-  BookOpen,
   FunnelSimple,
 } from "@phosphor-icons/react";
 import searchImage from "../../assets/illustrations/search.avif";
@@ -26,13 +25,23 @@ const SearchResults = () => {
 
   const queryFromUrl = searchParams.get("q") || "";
   const categoryFromUrl = searchParams.get("category") || "all";
+  const levelFromUrl = searchParams.get("level") || "";
 
   const [searchInput, setSearchInput] = useState(queryFromUrl);
   const [courses, setCourses] = useState([]);
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(categoryFromUrl);
+  const [selectedLevel, setSelectedLevel] = useState(levelFromUrl);
   const [loading, setLoading] = useState(true);
   const [loadingCategories, setLoadingCategories] = useState(true);
+
+  const LEVELS = [
+    "Beginner",
+    "Elementary",
+    "Intermediate",
+    "Upper-Intermediate",
+    "Advanced",
+  ];
 
   // Load categories on mount
   useEffect(() => {
@@ -64,6 +73,9 @@ const SearchResults = () => {
         if (categoryFromUrl && categoryFromUrl !== "all") {
           params.CategoryId = categoryFromUrl;
         }
+        if (levelFromUrl) {
+          params.Level = levelFromUrl;
+        }
         const res = await coursesApi.getAllCourses(params);
         setCourses(res?.data?.items || []);
       } catch (err) {
@@ -74,7 +86,7 @@ const SearchResults = () => {
       }
     };
     fetchCourses();
-  }, [queryFromUrl, categoryFromUrl]);
+  }, [queryFromUrl, categoryFromUrl, levelFromUrl]);
 
   const handleSearch = (e) => {
     if (e.key === "Enter" && searchInput.trim()) {
@@ -82,6 +94,9 @@ const SearchResults = () => {
       params.set("q", searchInput.trim());
       if (selectedCategory !== "all") {
         params.set("category", selectedCategory);
+      }
+      if (selectedLevel) {
+        params.set("level", selectedLevel);
       }
       setSearchParams(params);
     }
@@ -95,6 +110,24 @@ const SearchResults = () => {
     }
     if (categoryKey !== "all") {
       params.set("category", categoryKey);
+    }
+    if (selectedLevel) {
+      params.set("level", selectedLevel);
+    }
+    setSearchParams(params);
+  };
+
+  const handleLevelChange = (level) => {
+    setSelectedLevel(level);
+    const params = new URLSearchParams();
+    if (queryFromUrl.trim()) {
+      params.set("q", queryFromUrl.trim());
+    }
+    if (selectedCategory !== "all") {
+      params.set("category", selectedCategory);
+    }
+    if (level) {
+      params.set("level", level);
     }
     setSearchParams(params);
   };
@@ -171,8 +204,8 @@ const SearchResults = () => {
       {/* Category filter + results */}
       <section className="py-8 px-6 md:px-12">
         <div className="max-w-7xl mx-auto">
-          {/* Category filter */}
-          {!loadingCategories && categories.length > 0 && (
+          {/* Category + Level filters */}
+          {!loadingCategories && (
             <div className="mb-8">
               <div className="flex items-center gap-2 mb-3">
                 <FunnelSimple
@@ -186,47 +219,45 @@ const SearchResults = () => {
                   {t("courses.search.filterByCategory")}
                 </span>
               </div>
-              <div className="flex flex-wrap gap-2">
-                <Chip
-                  variant={selectedCategory === "all" ? "solid" : "flat"}
-                  className="cursor-pointer"
-                  style={{
-                    backgroundColor:
-                      selectedCategory === "all"
-                        ? colors.primary.main
-                        : colors.background.gray,
-                    color:
-                      selectedCategory === "all"
-                        ? colors.text.white
-                        : colors.text.primary,
-                  }}
-                  startContent={
-                    <BookOpen weight="duotone" className="w-3.5 h-3.5" />
-                  }
-                  onClick={() => handleCategoryChange("all")}
-                >
-                  {t("courses.categories.all")}
-                </Chip>
-                {categories.map((cat) => (
-                  <Chip
-                    key={cat.id}
-                    variant={selectedCategory === cat.id ? "solid" : "flat"}
-                    className="cursor-pointer"
-                    style={{
-                      backgroundColor:
-                        selectedCategory === cat.id
-                          ? colors.primary.main
-                          : colors.background.gray,
-                      color:
-                        selectedCategory === cat.id
-                          ? colors.text.white
-                          : colors.text.primary,
-                    }}
-                    onClick={() => handleCategoryChange(cat.id)}
+              <div className="flex flex-wrap gap-4">
+                {categories.length > 0 && (
+                  <div className="w-72">
+                    <Select
+                      label={t("courses.search.filterByCategory")}
+                      selectedKeys={new Set([selectedCategory])}
+                      onSelectionChange={(keys) =>
+                        handleCategoryChange([...keys][0] ?? "all")
+                      }
+                      classNames={{ trigger: "shadow-none" }}
+                    >
+                      <SelectItem key="all">
+                        {t("courses.categories.all")}
+                      </SelectItem>
+                      {categories.map((cat) => (
+                        <SelectItem key={cat.id}>{cat.name}</SelectItem>
+                      ))}
+                    </Select>
+                  </div>
+                )}
+                <div className="w-72">
+                  <Select
+                    label={t("courses.search.filterByLevel")}
+                    selectedKeys={
+                      selectedLevel ? new Set([selectedLevel]) : new Set()
+                    }
+                    onSelectionChange={(keys) =>
+                      handleLevelChange([...keys][0] ?? "")
+                    }
+                    classNames={{ trigger: "shadow-none" }}
                   >
-                    {cat.name}
-                  </Chip>
-                ))}
+                    <SelectItem key="">
+                      {t("courses.categories.allLevels")}
+                    </SelectItem>
+                    {LEVELS.map((level) => (
+                      <SelectItem key={level}>{level}</SelectItem>
+                    ))}
+                  </Select>
+                </div>
               </div>
             </div>
           )}
@@ -277,6 +308,7 @@ const SearchResults = () => {
                   setSearchInput("");
                   setSearchParams({});
                   setSelectedCategory("all");
+                  setSelectedLevel("");
                 }}
               >
                 {t("courses.search.clearFilters")}

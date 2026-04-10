@@ -312,12 +312,22 @@ const Header = () => {
                                 size="md"
                                 imgProps={{ referrerPolicy: "no-referrer" }}
                               />
-                              <span
-                                className="font-semibold text-sm"
-                                style={{ color: colors.text.primary }}
-                              >
-                                {`${user.firstName} ${user.lastName}`}
-                              </span>
+                              <div className="flex flex-col">
+                                <span
+                                  className="font-semibold text-sm"
+                                  style={{ color: colors.text.primary }}
+                                >
+                                  {`${user.firstName} ${user.lastName}`}
+                                </span>
+                                {user.email && (
+                                  <span
+                                    className="text-xs"
+                                    style={{ color: colors.text.secondary }}
+                                  >
+                                    {user.email}
+                                  </span>
+                                )}
+                              </div>
                             </div>
                           </DropdownItem>
                         </DropdownSection>
@@ -491,12 +501,22 @@ const Header = () => {
                           size="sm"
                           imgProps={{ referrerPolicy: "no-referrer" }}
                         />
-                        <span
-                          className="font-medium"
-                          style={{ color: colors.text.primary }}
-                        >
-                          {`${user.firstName} ${user.lastName}`}
-                        </span>
+                        <div className="flex flex-col">
+                          <span
+                            className="font-medium"
+                            style={{ color: colors.text.primary }}
+                          >
+                            {`${user.firstName} ${user.lastName}`}
+                          </span>
+                          {user.email && (
+                            <span
+                              className="text-xs"
+                              style={{ color: colors.text.secondary }}
+                            >
+                              {user.email}
+                            </span>
+                          )}
+                        </div>
                       </div>
                       {hasRole("Student") && (
                         <Button

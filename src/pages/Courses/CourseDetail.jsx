@@ -18,6 +18,7 @@ import {
   CaretDown,
   CaretUp,
   Play,
+  Certificate,
 } from "@phosphor-icons/react";
 import { coursesApi, tutorApi } from "../../api";
 import VideoModal from "../../components/VideoModal/VideoModal";
@@ -764,13 +765,28 @@ const CourseDetail = () => {
                           style={{ color: colors.text.secondary }}
                         >
                           <Clock size={16} weight="duotone" />
-                          {t("courses.detail.duration")}
+                          {t("courses.detail.totalDuration")}
                         </span>
                         <span
                           className="font-medium"
                           style={{ color: colors.text.primary }}
                         >
-                          {duration}
+                          {formatDuration(course.estimatedTime) || "—"}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span
+                          className="flex items-center gap-2"
+                          style={{ color: colors.text.secondary }}
+                        >
+                          <Clock size={16} weight="duotone" />
+                          {t("courses.detail.timePerLesson")}
+                        </span>
+                        <span
+                          className="font-medium"
+                          style={{ color: colors.text.primary }}
+                        >
+                          {duration || "—"}
                         </span>
                       </div>
                       <div className="flex items-center justify-between text-sm">
@@ -788,6 +804,23 @@ const CourseDetail = () => {
                           {course.level}
                         </span>
                       </div>
+                      {course.numsSessionInWeek > 0 && (
+                        <div className="flex items-center justify-between text-sm">
+                          <span
+                            className="flex items-center gap-2"
+                            style={{ color: colors.text.secondary }}
+                          >
+                            <Clock size={16} weight="duotone" />
+                            {t("courses.detail.sessionsPerWeek")}
+                          </span>
+                          <span
+                            className="font-medium"
+                            style={{ color: colors.text.primary }}
+                          >
+                            {course.numsSessionInWeek}
+                          </span>
+                        </div>
+                      )}
                       <div className="flex items-center justify-between text-sm">
                         <span
                           className="flex items-center gap-2"
@@ -808,14 +841,16 @@ const CourseDetail = () => {
                           className="flex items-center gap-2"
                           style={{ color: colors.text.secondary }}
                         >
-                          <BookOpen size={16} weight="duotone" />
-                          {t("courses.lessons")}
+                          <Certificate size={16} weight="duotone" />
+                          {t("courses.detail.certificate")}
                         </span>
                         <span
                           className="font-medium"
                           style={{ color: colors.text.primary }}
                         >
-                          {course.numberOfSessions}
+                          {course.isCertificate
+                            ? t("courses.detail.yes")
+                            : t("courses.detail.no")}
                         </span>
                       </div>
                     </div>

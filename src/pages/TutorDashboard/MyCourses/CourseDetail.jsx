@@ -829,6 +829,21 @@ const TutorCourseDetail = () => {
                       style={{ color: colors.text.secondary }}
                     >
                       <Clock size={16} weight="duotone" />
+                      {t("courses.detail.totalDuration")}
+                    </span>
+                    <span
+                      className="font-medium"
+                      style={{ color: colors.text.primary }}
+                    >
+                      {formatDuration(course.estimatedTime) || "—"}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span
+                      className="flex items-center gap-2"
+                      style={{ color: colors.text.secondary }}
+                    >
+                      <Clock size={16} weight="duotone" />
                       {t("courses.detail.timePerLesson")}
                     </span>
                     <span
@@ -851,36 +866,6 @@ const TutorCourseDetail = () => {
                       style={{ color: colors.text.primary }}
                     >
                       {course.level}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <span
-                      className="flex items-center gap-2"
-                      style={{ color: colors.text.secondary }}
-                    >
-                      <ListNumbers size={16} weight="duotone" />
-                      {t("courses.detail.modules")}
-                    </span>
-                    <span
-                      className="font-medium"
-                      style={{ color: colors.text.primary }}
-                    >
-                      {modules.length}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <span
-                      className="flex items-center gap-2"
-                      style={{ color: colors.text.secondary }}
-                    >
-                      <Play size={16} weight="duotone" />
-                      {t("courses.detail.sessions")}
-                    </span>
-                    <span
-                      className="font-medium"
-                      style={{ color: colors.text.primary }}
-                    >
-                      {totalSessions}
                     </span>
                   </div>
                   {course.numsSessionInWeek > 0 && (

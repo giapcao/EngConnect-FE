@@ -631,7 +631,7 @@ const AdminDashboardLayout = () => {
             <LanguageSwitcher />
 
             {/* Notifications */}
-            <Badge content="5" color="danger" shape="circle" size="sm">
+            {/* <Badge content="5" color="danger" shape="circle" size="sm">
               <Button
                 isIconOnly
                 variant="light"
@@ -643,7 +643,7 @@ const AdminDashboardLayout = () => {
                   style={{ color: colors.text.secondary }}
                 />
               </Button>
-            </Badge>
+            </Badge> */}
 
             {/* User Menu */}
             <Dropdown

@@ -1,5 +1,12 @@
 import { useState, useEffect } from "react";
-import { Button, Card, CardBody, Input, Tooltip } from "@heroui/react";
+import {
+  Button,
+  Card,
+  CardBody,
+  Input,
+  Select,
+  SelectItem,
+} from "@heroui/react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import * as MotionLib from "framer-motion";
@@ -12,7 +19,6 @@ import { useTheme } from "../../contexts/ThemeContext";
 import { coursesApi } from "../../api";
 import {
   MagnifyingGlass,
-  BookOpen,
   Target,
   Lightning,
   TrendUp,
@@ -47,6 +53,7 @@ const Courses = () => {
   const { theme } = useTheme();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedLevel, setSelectedLevel] = useState("");
   const [courses, setCourses] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -73,21 +80,6 @@ const Courses = () => {
     };
     fetchData();
   }, []);
-
-  const categoryButtons = [
-    {
-      key: "all",
-      label: t("courses.categories.all"),
-      icon: (props) => <BookOpen weight="duotone" {...props} />,
-      description: null,
-    },
-    ...categories.map((cat) => ({
-      key: cat.id,
-      label: cat.name,
-      icon: (props) => <BookOpen weight="duotone" {...props} />,
-      description: cat.description,
-    })),
-  ];
 
   const featuredCourses = courses.slice(0, 4);
 
@@ -122,14 +114,23 @@ const Courses = () => {
     },
   ];
 
-  const filteredCourses =
-    selectedCategory === "all"
-      ? courses
-      : courses.filter((course) =>
-          course.courseCategories?.some(
-            (cat) => cat.categoryId === selectedCategory,
-          ),
-        );
+  const LEVELS = [
+    "Beginner",
+    "Elementary",
+    "Intermediate",
+    "Upper-Intermediate",
+    "Advanced",
+  ];
+
+  const filteredCourses = courses.filter((course) => {
+    const categoryMatch =
+      selectedCategory === "all" ||
+      course.courseCategories?.some(
+        (cat) => cat.categoryId === selectedCategory,
+      );
+    const levelMatch = !selectedLevel || course.level === selectedLevel;
+    return categoryMatch && levelMatch;
+  });
 
   const searchedCourses = searchQuery
     ? filteredCourses.filter((course) =>
@@ -263,34 +264,43 @@ const Courses = () => {
             variants={containerVariants}
             initial="hidden"
             animate="visible"
-            className="flex flex-wrap justify-center gap-3"
+            className="flex flex-wrap justify-center gap-4"
           >
-            {categoryButtons.map((category) => (
-              <motion.div key={category.key} variants={itemVariants}>
-                <Tooltip
-                  content={category.description}
-                  isDisabled={!category.description}
-                  placement="top"
-                  delay={300}
-                >
-                  <Button
-                    variant={
-                      selectedCategory === category.key ? "solid" : "flat"
-                    }
-                    color={
-                      selectedCategory === category.key ? "primary" : "default"
-                    }
-                    className={`px-6 py-3 ${
-                      selectedCategory !== category.key ? "shadow-none" : ""
-                    }`}
-                    startContent={category.icon({ size: 20 })}
-                    onPress={() => setSelectedCategory(category.key)}
-                  >
-                    {category.label}
-                  </Button>
-                </Tooltip>
-              </motion.div>
-            ))}
+            <motion.div variants={itemVariants} className="w-72">
+              <Select
+                label={t("courses.search.filterByCategory")}
+                selectedKeys={new Set([selectedCategory])}
+                onSelectionChange={(keys) =>
+                  setSelectedCategory([...keys][0] ?? "all")
+                }
+                classNames={{ trigger: "shadow-none" }}
+              >
+                <SelectItem key="all">{t("courses.categories.all")}</SelectItem>
+                {categories.map((cat) => (
+                  <SelectItem key={cat.id}>{cat.name}</SelectItem>
+                ))}
+              </Select>
+            </motion.div>
+
+            <motion.div variants={itemVariants} className="w-72">
+              <Select
+                label={t("courses.search.filterByLevel")}
+                selectedKeys={
+                  selectedLevel ? new Set([selectedLevel]) : new Set()
+                }
+                onSelectionChange={(keys) =>
+                  setSelectedLevel([...keys][0] ?? "")
+                }
+                classNames={{ trigger: "shadow-none" }}
+              >
+                <SelectItem key="">
+                  {t("courses.categories.allLevels")}
+                </SelectItem>
+                {LEVELS.map((level) => (
+                  <SelectItem key={level}>{level}</SelectItem>
+                ))}
+              </Select>
+            </motion.div>
           </motion.div>
         </div>
       </section>
@@ -386,7 +396,7 @@ const Courses = () => {
             />
           ) : (
             <motion.div
-              key={selectedCategory + searchQuery}
+              key={selectedCategory + selectedLevel + searchQuery}
               variants={containerVariants}
               initial="hidden"
               animate="visible"

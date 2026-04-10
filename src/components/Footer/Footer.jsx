@@ -185,35 +185,8 @@ const Footer = () => {
 
             {/* Social Column */}
             <div className="lg:col-span-3">
-              <h4
-                className="text-sm font-bold uppercase tracking-wider mb-4 pb-2 relative inline-block"
-                style={{ color: colors.text.primary }}
-              >
-                {t("footer.social.title")}
-                <span
-                  className="absolute bottom-0 left-0 h-0.5 w-1/2"
-                  style={{ backgroundColor: colors.primary.main }}
-                />
-              </h4>
-              <div className="flex gap-3">
-                {socialLinks.map((social) => (
-                  <Link
-                    key={social.label}
-                    href={social.href}
-                    aria-label={social.label}
-                    className="w-11 h-11 rounded-lg flex items-center justify-center transition-all duration-200 hover:scale-110"
-                    style={{
-                      backgroundColor: colors.background.input,
-                      color: colors.text.secondary,
-                    }}
-                  >
-                    <social.icon className="w-5 h-5" />
-                  </Link>
-                ))}
-              </div>
-
               {/* Contact Information */}
-              <div className="mt-6">
+              <div>
                 <p
                   className="text-sm font-bold uppercase tracking-wider mb-3 pb-2 relative inline-block"
                   style={{ color: colors.text.primary }}

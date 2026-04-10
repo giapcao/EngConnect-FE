@@ -128,10 +128,10 @@ const CourseCard = ({
               {course.numberOfEnrollment?.toLocaleString()}
             </span>
           )}
-          {course.estimatedTimeLesson && (
+          {course.estimatedTime && (
             <span className="flex items-center gap-1">
               <Clock size={14} weight="duotone" />
-              {formatDuration(course.estimatedTimeLesson)}
+              {formatDuration(course.estimatedTime)}
             </span>
           )}
         </div>
