@@ -16,6 +16,7 @@ import Footer from "../../components/Footer/Footer";
 import CourseCard from "../../components/CourseCard/CourseCard";
 import { useThemeColors } from "../../hooks/useThemeColors";
 import { useTheme } from "../../contexts/ThemeContext";
+import useInputStyles from "../../hooks/useInputStyles";
 import { coursesApi } from "../../api";
 import {
   MagnifyingGlass,
@@ -57,6 +58,7 @@ const Courses = () => {
   const [courses, setCourses] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { selectClassNames } = useInputStyles();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -273,7 +275,7 @@ const Courses = () => {
                 onSelectionChange={(keys) =>
                   setSelectedCategory([...keys][0] ?? "all")
                 }
-                classNames={{ trigger: "shadow-none" }}
+                classNames={selectClassNames}
               >
                 <SelectItem key="all">{t("courses.categories.all")}</SelectItem>
                 {categories.map((cat) => (
@@ -291,7 +293,7 @@ const Courses = () => {
                 onSelectionChange={(keys) =>
                   setSelectedLevel([...keys][0] ?? "")
                 }
-                classNames={{ trigger: "shadow-none" }}
+                classNames={selectClassNames}
               >
                 <SelectItem key="">
                   {t("courses.categories.allLevels")}
