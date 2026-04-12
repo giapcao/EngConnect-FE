@@ -1,22 +1,15 @@
-﻿import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { selectUser } from "../../../store";
 import { useTranslation } from "react-i18next";
 import {
   Button,
   Card,
   CardBody,
   Chip,
-  Divider,
-  Alert,
   Avatar,
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
-  Input,
-  Select,
-  SelectItem,
+  Divider,
   Spinner,
 } from "@heroui/react";
 import { motion } from "framer-motion";
@@ -30,24 +23,19 @@ import {
   Users,
   BookOpen,
   Check,
-  Certificate,
   ArrowLeft,
-  PencilSimple,
   CaretDown,
   CaretUp,
-  ListNumbers,
   Play,
-  WarningCircle,
-  ArrowRight,
+  Certificate,
   FileText,
   FilePdf,
   VideoCamera,
-  Link,
-  Trash,
+  Link as LinkIcon,
   ArrowSquareOut,
+  CalendarDots,
 } from "@phosphor-icons/react";
-import { coursesApi, tutorApi } from "../../../api";
-import useInputStyles from "../../../hooks/useInputStyles";
+import { coursesApi, tutorApi, studentApi } from "../../../api";
 
 const formatDuration = (timeStr) => {
   if (!timeStr) return "";
@@ -61,20 +49,29 @@ const formatDuration = (timeStr) => {
   return timeStr;
 };
 
-const formatPrice = (price, currency) => {
-  if (currency === "VND" || !currency) {
-    return price?.toLocaleString("vi-VN") + "₫";
+const getResourceIcon = (type) => {
+  switch (type?.toLowerCase()) {
+    case "pdf":
+      return <FilePdf size={14} weight="fill" style={{ color: "#EF4444" }} />;
+    case "video":
+      return (
+        <VideoCamera size={14} weight="fill" style={{ color: "#8B5CF6" }} />
+      );
+    case "link":
+      return <LinkIcon size={14} weight="fill" style={{ color: "#3B82F6" }} />;
+    default:
+      return <FileText size={14} weight="fill" style={{ color: "#6B7280" }} />;
   }
-  return "$" + price;
 };
 
-const TutorCourseDetail = () => {
+const StudentMyCourseDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const dateLocale = i18n.language === "vi" ? "vi-VN" : "en-US";
   const colors = useThemeColors();
   const { theme } = useTheme();
-  const { inputClassNames, selectClassNames } = useInputStyles();
+  const user = useSelector(selectUser);
 
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -83,15 +80,45 @@ const TutorCourseDetail = () => {
   const [videoOpen, setVideoOpen] = useState(false);
   const instructorRef = useRef(null);
 
-  // Resource state
+  // Resources state
   const [expandedSessions, setExpandedSessions] = useState({});
   const [sessionResources, setSessionResources] = useState({});
   const [loadingResources, setLoadingResources] = useState({});
-  const [editResourceModal, setEditResourceModal] = useState(false);
-  const [editResourceData, setEditResourceData] = useState(null);
-  const [savingResource, setSavingResource] = useState(false);
-  const [removeResourceId, setRemoveResourceId] = useState(null);
-  const [removingResource, setRemovingResource] = useState(false);
+
+  // Lessons state
+  const [lessons, setLessons] = useState([]);
+  const [lessonsLoading, setLessonsLoading] = useState(true);
+
+  const toggleModule = (moduleId) => {
+    setExpandedModules((prev) => ({ ...prev, [moduleId]: !prev[moduleId] }));
+  };
+
+  const toggleSessionResources = useCallback(
+    async (sessionId) => {
+      setExpandedSessions((prev) => ({
+        ...prev,
+        [sessionId]: !prev[sessionId],
+      }));
+      if (!sessionResources[sessionId] && !loadingResources[sessionId]) {
+        try {
+          setLoadingResources((prev) => ({ ...prev, [sessionId]: true }));
+          const res = await coursesApi.getAllCourseResources({
+            CourseSessionId: sessionId,
+            "page-size": 100,
+          });
+          setSessionResources((prev) => ({
+            ...prev,
+            [sessionId]: res?.data?.items || [],
+          }));
+        } catch (err) {
+          console.error("Failed to fetch resources:", err);
+        } finally {
+          setLoadingResources((prev) => ({ ...prev, [sessionId]: false }));
+        }
+      }
+    },
+    [sessionResources, loadingResources],
+  );
 
   useEffect(() => {
     const fetchCourse = async () => {
@@ -107,7 +134,6 @@ const TutorCourseDetail = () => {
             console.error("Failed to fetch tutor:", tutorErr);
           }
         }
-        // All modules start collapsed
       } catch (err) {
         console.error("Failed to fetch course:", err);
       } finally {
@@ -117,114 +143,73 @@ const TutorCourseDetail = () => {
     fetchCourse();
   }, [id]);
 
-  const toggleModule = (moduleId) => {
-    setExpandedModules((prev) => ({ ...prev, [moduleId]: !prev[moduleId] }));
-  };
-
-  const toggleSessionResources = async (sessionId) => {
-    if (expandedSessions[sessionId]) {
-      setExpandedSessions((prev) => ({ ...prev, [sessionId]: false }));
-      return;
-    }
-    setExpandedSessions((prev) => ({ ...prev, [sessionId]: true }));
-    if (!sessionResources[sessionId]) {
-      setLoadingResources((prev) => ({ ...prev, [sessionId]: true }));
+  useEffect(() => {
+    const fetchLessons = async () => {
+      if (!user?.studentId || !id) return;
       try {
-        const res = await coursesApi.getAllCourseResources({
-          CourseSessionId: sessionId,
-          "page-size": 100,
+        setLessonsLoading(true);
+        const res = await studentApi.getLessons({
+          StudentId: user.studentId,
+          CourseId: id,
+          "page-size": 200,
         });
-        if (res.isSuccess) {
-          setSessionResources((prev) => ({
-            ...prev,
-            [sessionId]: res.data.items || [],
-          }));
-        }
-      } catch {
-        setSessionResources((prev) => ({ ...prev, [sessionId]: [] }));
+        setLessons(res?.data?.items || []);
+      } catch (err) {
+        console.error("Failed to fetch lessons:", err);
       } finally {
-        setLoadingResources((prev) => ({ ...prev, [sessionId]: false }));
+        setLessonsLoading(false);
       }
-    }
-  };
+    };
+    fetchLessons();
+  }, [user?.studentId, id]);
 
-  const openEditResource = (resource) => {
-    setEditResourceData({
-      id: resource.id,
-      title: resource.title || "",
-      resourceType: resource.resourceType || "",
-      url: resource.url || "",
-      status: resource.status || "",
+  const formatLessonTime = (dateStr) => {
+    if (!dateStr) return "";
+    const d = new Date(dateStr);
+    return d.toLocaleTimeString(dateLocale, {
+      hour: "2-digit",
+      minute: "2-digit",
     });
-    setEditResourceModal(true);
   };
 
-  const handleSaveResource = async () => {
-    if (!editResourceData) return;
-    setSavingResource(true);
-    try {
-      const res = await coursesApi.updateCourseResource(editResourceData.id, {
-        title: editResourceData.title,
-        resourceType: editResourceData.resourceType,
-        url: editResourceData.url,
-        status: editResourceData.status || null,
-      });
-      if (res.isSuccess) {
-        setSessionResources((prev) => {
-          const next = { ...prev };
-          for (const key in next) {
-            next[key] = next[key].map((r) =>
-              r.id === editResourceData.id ? { ...r, ...editResourceData } : r,
-            );
-          }
-          return next;
-        });
-        setEditResourceModal(false);
-      }
-    } catch {
-      // silent
-    } finally {
-      setSavingResource(false);
+  const formatLessonDate = (dateStr) => {
+    if (!dateStr) return "";
+    const d = new Date(dateStr);
+    return d.toLocaleDateString(dateLocale, {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+    });
+  };
+
+  const getLessonStatusColor = (status) => {
+    switch (status) {
+      case "Scheduled":
+        return colors.primary.main;
+      case "Completed":
+        return colors.state.success;
+      case "Cancelled":
+        return colors.state.error;
+      case "InProgress":
+        return colors.state.warning;
+      default:
+        return colors.text.secondary;
     }
   };
 
-  const handleRemoveResource = async () => {
-    if (!removeResourceId) return;
-    setRemovingResource(true);
-    try {
-      await coursesApi.removeSessionResource(removeResourceId);
-      setSessionResources((prev) => {
-        const next = { ...prev };
-        for (const key in next) {
-          next[key] = next[key].filter((r) => r.id !== removeResourceId);
-        }
-        return next;
-      });
-      setRemoveResourceId(null);
-    } catch {
-      // silent
-    } finally {
-      setRemovingResource(false);
+  const getLessonStatusLabel = (status) => {
+    switch (status) {
+      case "Scheduled":
+        return t("studentDashboard.schedule.scheduled");
+      case "Completed":
+        return t("studentDashboard.schedule.completed");
+      case "Cancelled":
+        return t("studentDashboard.schedule.cancelled");
+      case "InProgress":
+        return t("studentDashboard.schedule.inProgress");
+      default:
+        return status || "";
     }
-  };
-
-  const getResourceIcon = (type) => {
-    const t = (type || "").toLowerCase();
-    if (t === "pdf")
-      return <FilePdf size={14} weight="fill" style={{ color: "#ef4444" }} />;
-    if (t === "video")
-      return (
-        <VideoCamera size={14} weight="fill" style={{ color: "#8b5cf6" }} />
-      );
-    if (t === "link")
-      return <Link size={14} weight="bold" style={{ color: "#3b82f6" }} />;
-    return (
-      <FileText
-        size={14}
-        weight="fill"
-        style={{ color: colors.text.secondary }}
-      />
-    );
   };
 
   if (loading) {
@@ -244,23 +229,22 @@ const TutorCourseDetail = () => {
           color="primary"
           variant="flat"
           startContent={<ArrowLeft size={18} />}
-          onPress={() => navigate("/tutor/my-courses")}
+          onPress={() => navigate("/student/my-courses")}
         >
-          {t("courses.detail.backToCourses")}
+          {t("studentDashboard.myCourses.backToMyCourses")}
         </Button>
       </div>
     );
   }
 
   const duration = formatDuration(course.estimatedTimeLesson);
-  const allCategories = course.courseCategories || [];
+  const category = course.courseCategories?.[0]?.categoryName;
   const outcomes = course.outcomes
     ? course.outcomes
         .split(";")
         .map((s) => s.trim())
         .filter(Boolean)
     : [];
-  const statusLower = course.status?.toLowerCase();
   const modules = (course.courseCourseModules || []).sort(
     (a, b) => a.moduleNumber - b.moduleNumber,
   );
@@ -269,95 +253,35 @@ const TutorCourseDetail = () => {
     0,
   );
 
-  // Detect incomplete course
-  const isIncomplete = modules.length === 0 || totalSessions === 0;
-  const incompleteReason =
-    modules.length === 0
-      ? t("courses.detail.incompleteNoModules")
-      : totalSessions === 0
-        ? t("courses.detail.incompleteNoSessions")
-        : "";
+  const upcomingLessons = lessons
+    .filter(
+      (l) => new Date(l.startTime) >= new Date() && l.status !== "Cancelled",
+    )
+    .sort((a, b) => new Date(a.startTime) - new Date(b.startTime));
 
-  // Only Draft and Inactive courses can be edited
-  const canEdit = statusLower === "draft" || statusLower === "inactive";
+  const pastLessons = lessons
+    .filter(
+      (l) => new Date(l.startTime) < new Date() || l.status === "Completed",
+    )
+    .sort((a, b) => new Date(b.startTime) - new Date(a.startTime));
 
   return (
     <div className="space-y-6">
-      {/* Back + Edit */}
+      {/* Back Button */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.15 }}
-        className="flex items-center justify-between"
       >
         <Button
           variant="light"
           startContent={<ArrowLeft size={18} />}
-          onPress={() => navigate("/tutor/my-courses")}
+          onPress={() => navigate("/student/my-courses")}
           style={{ color: colors.text.secondary }}
         >
-          {t("courses.detail.backToCourses")}
+          {t("studentDashboard.myCourses.backToMyCourses")}
         </Button>
-        {canEdit ? (
-          isIncomplete ? (
-            <Button
-              color="warning"
-              variant="flat"
-              startContent={<ArrowRight size={18} />}
-              onPress={() => navigate(`/tutor/create-course/${course.id}`)}
-            >
-              {t("courses.detail.continueCourse")}
-            </Button>
-          ) : (
-            <Button
-              color="primary"
-              startContent={<PencilSimple size={18} />}
-              onPress={() => navigate(`/tutor/create-course/${course.id}`)}
-              style={{
-                backgroundColor: colors.primary.main,
-                color: colors.text.white,
-              }}
-            >
-              {t("tutorDashboard.myCourses.editCourse")}
-            </Button>
-          )
-        ) : null}
       </motion.div>
-
-      {/* Incomplete course alert */}
-      {canEdit && isIncomplete && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.15 }}
-        >
-          <Alert
-            color="warning"
-            variant="flat"
-            title={t("courses.detail.incompleteTitle")}
-            description={incompleteReason}
-          />
-        </motion.div>
-      )}
-
-      {/* Non-editable status alert */}
-      {!canEdit && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.15 }}
-        >
-          <Alert
-            color={statusLower === "pending" ? "warning" : "primary"}
-            variant="flat"
-            title={
-              statusLower === "pending"
-                ? t("courses.detail.pendingEditLocked")
-                : t("courses.detail.publishedEditLocked")
-            }
-          />
-        </motion.div>
-      )}
 
       {/* Hero Banner */}
       <motion.div
@@ -377,23 +301,6 @@ const TutorCourseDetail = () => {
               <div className="lg:col-span-2">
                 {/* Badges */}
                 <div className="flex items-center gap-2 mb-4 flex-wrap">
-                  {course.status && (
-                    <Chip
-                      size="sm"
-                      className="font-semibold"
-                      style={{
-                        backgroundColor:
-                          statusLower === "published"
-                            ? colors.state.success
-                            : colors.state.warning,
-                        color: "#fff",
-                      }}
-                    >
-                      {statusLower === "published"
-                        ? t("tutorDashboard.myCourses.published")
-                        : t("tutorDashboard.myCourses.draft")}
-                    </Chip>
-                  )}
                   <Chip
                     size="sm"
                     style={{
@@ -403,18 +310,15 @@ const TutorCourseDetail = () => {
                   >
                     {course.level}
                   </Chip>
-                  {course.isCertificate && (
+                  {category && (
                     <Chip
                       size="sm"
                       style={{
-                        backgroundColor: "#D1FAE5",
-                        color: "#059669",
+                        backgroundColor: colors.background.primaryLight,
+                        color: colors.primary.main,
                       }}
                     >
-                      <span className="flex items-center gap-1">
-                        <Certificate size={14} />{" "}
-                        {t("courses.detail.certificate")}
-                      </span>
+                      {category}
                     </Chip>
                   )}
                 </div>
@@ -427,64 +331,44 @@ const TutorCourseDetail = () => {
                 </h1>
 
                 <p
-                  className="text-base mb-4 leading-relaxed"
+                  className="text-base mb-5 leading-relaxed"
                   style={{ color: colors.text.secondary }}
                 >
                   {course.shortDescription}
                 </p>
 
-                {/* Categories */}
-                {allCategories.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5 mb-4">
-                    {allCategories.map((cat) => (
-                      <Chip
-                        key={cat.id}
-                        size="sm"
-                        variant="flat"
-                        style={{
-                          backgroundColor: colors.background.gray,
-                          color: colors.text.secondary,
-                        }}
-                      >
-                        {cat.categoryName}
-                      </Chip>
-                    ))}
-                  </div>
-                )}
-
-                {/* Stats row */}
-                <div className="flex items-center gap-5 flex-wrap">
-                  {course.ratingAverage > 0 && (
-                    <div className="flex items-center gap-1.5">
-                      <div className="flex items-center gap-0.5">
-                        {[...Array(5)].map((_, i) => (
-                          <Star
-                            key={i}
-                            size={16}
-                            weight="fill"
-                            style={{
-                              color:
-                                i < Math.floor(course.ratingAverage)
-                                  ? "#F59E0B"
-                                  : "rgba(0,0,0,0.1)",
-                            }}
-                          />
-                        ))}
-                      </div>
-                      <span
-                        className="font-semibold text-sm"
-                        style={{ color: colors.text.primary }}
-                      >
-                        {course.ratingAverage}
-                      </span>
-                      <span
-                        className="text-sm"
-                        style={{ color: colors.text.secondary }}
-                      >
-                        ({course.ratingCount?.toLocaleString() || 0})
-                      </span>
+                {/* Stats */}
+                <div className="flex items-center gap-6 flex-wrap">
+                  <div className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-0.5">
+                      {[...Array(5)].map((_, i) => (
+                        <Star
+                          key={i}
+                          size={16}
+                          weight="fill"
+                          style={{
+                            color:
+                              i < Math.floor(course.ratingAverage || 0)
+                                ? "#F59E0B"
+                                : "rgba(0,0,0,0.1)",
+                          }}
+                        />
+                      ))}
                     </div>
-                  )}
+                    <span
+                      className="font-semibold text-sm"
+                      style={{ color: colors.text.primary }}
+                    >
+                      {course.ratingAverage || 0}
+                    </span>
+                    <span
+                      className="text-sm"
+                      style={{ color: colors.text.secondary }}
+                    >
+                      ({course.ratingCount?.toLocaleString() || 0}{" "}
+                      {t("courses.detail.ratings")})
+                    </span>
+                  </div>
                   <span
                     className="text-sm flex items-center gap-1.5"
                     style={{ color: colors.text.secondary }}
@@ -492,14 +376,6 @@ const TutorCourseDetail = () => {
                     <Users size={16} weight="duotone" />
                     {course.numberOfEnrollment?.toLocaleString() || 0}{" "}
                     {t("courses.detail.students")}
-                  </span>
-                  <span
-                    className="text-sm flex items-center gap-1.5"
-                    style={{ color: colors.text.secondary }}
-                  >
-                    <BookOpen size={16} weight="duotone" />
-                    {modules.length} {t("courses.detail.modules")} ·{" "}
-                    {totalSessions} {t("courses.detail.sessions")}
                   </span>
                 </div>
 
@@ -529,7 +405,7 @@ const TutorCourseDetail = () => {
                 )}
               </div>
 
-              {/* Empty for sticky card overlap */}
+              {/* Empty space for sticky card overlap */}
               <div className="hidden lg:block" />
             </div>
           </CardBody>
@@ -567,53 +443,6 @@ const TutorCourseDetail = () => {
           </motion.div>
 
           {/* What You'll Learn */}
-          {outcomes.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.15 }}
-            >
-              <Card
-                className="shadow-none"
-                style={{ backgroundColor: colors.background.light }}
-              >
-                <CardBody className="p-6">
-                  <h2
-                    className="font-semibold text-xl mb-4"
-                    style={{ color: colors.text.primary }}
-                  >
-                    {t("courses.detail.whatYouLearn")}
-                  </h2>
-                  <div className="grid sm:grid-cols-2 gap-3">
-                    {outcomes.map((item, index) => (
-                      <div key={index} className="flex items-start gap-3">
-                        <div
-                          className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
-                          style={{
-                            backgroundColor: colors.background.primaryLight,
-                          }}
-                        >
-                          <Check
-                            size={14}
-                            weight="bold"
-                            style={{ color: colors.primary.main }}
-                          />
-                        </div>
-                        <span
-                          className="text-sm"
-                          style={{ color: colors.text.secondary }}
-                        >
-                          {item}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </CardBody>
-              </Card>
-            </motion.div>
-          )}
-
-          {/* ═══ Course Curriculum ═══ */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -624,54 +453,107 @@ const TutorCourseDetail = () => {
               style={{ backgroundColor: colors.background.light }}
             >
               <CardBody className="p-6">
-                <div className="flex items-center justify-between mb-5">
-                  <h2
-                    className="font-semibold text-xl"
-                    style={{ color: colors.text.primary }}
-                  >
-                    {t("courses.detail.courseCurriculum")}
-                  </h2>
-                  <span
-                    className="text-sm"
-                    style={{ color: colors.text.secondary }}
-                  >
-                    {modules.length} {t("courses.detail.modules")} ·{" "}
-                    {totalSessions} {t("courses.detail.sessions")}
-                  </span>
+                <h2
+                  className="font-semibold text-xl mb-4"
+                  style={{ color: colors.text.primary }}
+                >
+                  {t("courses.detail.whatYouLearn")}
+                </h2>
+                <div className="grid sm:grid-cols-2 gap-4">
+                  {outcomes.length > 0
+                    ? outcomes.map((item, index) => (
+                        <div key={index} className="flex items-start gap-3">
+                          <div
+                            className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
+                            style={{
+                              backgroundColor: colors.background.primaryLight,
+                            }}
+                          >
+                            <Check
+                              size={14}
+                              weight="bold"
+                              style={{ color: colors.primary.main }}
+                            />
+                          </div>
+                          <span style={{ color: colors.text.secondary }}>
+                            {item}
+                          </span>
+                        </div>
+                      ))
+                    : [
+                        t("courses.detail.learn1"),
+                        t("courses.detail.learn2"),
+                        t("courses.detail.learn3"),
+                        t("courses.detail.learn4"),
+                      ].map((item, index) => (
+                        <div key={index} className="flex items-start gap-3">
+                          <div
+                            className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
+                            style={{
+                              backgroundColor: colors.background.primaryLight,
+                            }}
+                          >
+                            <Check
+                              size={14}
+                              weight="bold"
+                              style={{ color: colors.primary.main }}
+                            />
+                          </div>
+                          <span style={{ color: colors.text.secondary }}>
+                            {item}
+                          </span>
+                        </div>
+                      ))}
                 </div>
+              </CardBody>
+            </Card>
+          </motion.div>
 
-                {modules.length === 0 ? (
-                  <p
-                    className="text-sm text-center py-8"
-                    style={{ color: colors.text.tertiary }}
-                  >
-                    {t("courses.detail.noModules")}
-                  </p>
-                ) : (
+          {/* Course Curriculum with Resources */}
+          {modules.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.15 }}
+            >
+              <Card
+                className="shadow-none"
+                style={{ backgroundColor: colors.background.light }}
+              >
+                <CardBody className="p-6">
+                  <div className="flex items-center justify-between mb-5">
+                    <h2
+                      className="font-semibold text-xl"
+                      style={{ color: colors.text.primary }}
+                    >
+                      {t("courses.detail.courseCurriculum")}
+                    </h2>
+                    <span
+                      className="text-sm"
+                      style={{ color: colors.text.secondary }}
+                    >
+                      {modules.length} {t("courses.detail.modules")} ·{" "}
+                      {totalSessions} {t("courses.detail.sessions")}
+                    </span>
+                  </div>
                   <div className="space-y-3">
                     {modules.map((mod, idx) => {
                       const isExpanded = expandedModules[mod.id];
                       const sessions = (
                         mod.courseModuleCourseSessions || []
                       ).sort((a, b) => a.sessionNumber - b.sessionNumber);
-                      const moduleOutcomes = mod.moduleOutcomes
-                        ? mod.moduleOutcomes
-                            .split(";")
-                            .map((s) => s.trim())
-                            .filter(Boolean)
-                        : [];
-
                       return (
                         <div
                           key={mod.id}
                           className="rounded-xl overflow-hidden border"
                           style={{ borderColor: colors.border.light }}
                         >
-                          {/* Module header */}
                           <button
                             type="button"
                             className="w-full flex items-center justify-between p-4 text-left"
-                            style={{ backgroundColor: colors.background.gray }}
+                            style={{
+                              backgroundColor: colors.background.gray,
+                            }}
                             onClick={() => toggleModule(mod.id)}
                           >
                             <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -679,7 +561,7 @@ const TutorCourseDetail = () => {
                                 className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
                                 style={{
                                   backgroundColor: colors.primary.main,
-                                  color: colors.text.white,
+                                  color: "#fff",
                                 }}
                               >
                                 <span className="text-sm font-bold">
@@ -716,8 +598,6 @@ const TutorCourseDetail = () => {
                               />
                             )}
                           </button>
-
-                          {/* Expanded content */}
                           {isExpanded && (
                             <div
                               className="px-4 pb-4 pt-2"
@@ -725,7 +605,6 @@ const TutorCourseDetail = () => {
                                 backgroundColor: colors.background.light,
                               }}
                             >
-                              {/* Module description */}
                               {mod.moduleDescription && (
                                 <p
                                   className="text-sm mb-3 leading-relaxed"
@@ -734,8 +613,6 @@ const TutorCourseDetail = () => {
                                   {mod.moduleDescription}
                                 </p>
                               )}
-
-                              {/* Sessions list */}
                               {sessions.length === 0 ? (
                                 <p
                                   className="text-xs text-center py-3"
@@ -921,45 +798,6 @@ const TutorCourseDetail = () => {
                                                               }}
                                                             />
                                                           </a>
-                                                          <button
-                                                            type="button"
-                                                            title={t(
-                                                              "courses.detail.resources.edit",
-                                                            )}
-                                                            onClick={() =>
-                                                              openEditResource(
-                                                                res,
-                                                              )
-                                                            }
-                                                          >
-                                                            <PencilSimple
-                                                              size={14}
-                                                              style={{
-                                                                color:
-                                                                  colors.text
-                                                                    .secondary,
-                                                              }}
-                                                            />
-                                                          </button>
-                                                          <button
-                                                            type="button"
-                                                            title={t(
-                                                              "courses.detail.resources.remove",
-                                                            )}
-                                                            onClick={() =>
-                                                              setRemoveResourceId(
-                                                                res.id,
-                                                              )
-                                                            }
-                                                          >
-                                                            <Trash
-                                                              size={14}
-                                                              style={{
-                                                                color:
-                                                                  "#ef4444",
-                                                              }}
-                                                            />
-                                                          </button>
                                                         </div>
                                                       ))
                                                     )}
@@ -979,6 +817,233 @@ const TutorCourseDetail = () => {
                         </div>
                       );
                     })}
+                  </div>
+                </CardBody>
+              </Card>
+            </motion.div>
+          )}
+
+          {/* Lesson Schedule */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.15 }}
+          >
+            <Card
+              className="shadow-none"
+              style={{ backgroundColor: colors.background.light }}
+            >
+              <CardBody className="p-6">
+                <h2
+                  className="font-semibold text-xl mb-4 flex items-center gap-2"
+                  style={{ color: colors.text.primary }}
+                >
+                  <CalendarDots
+                    weight="duotone"
+                    className="w-5 h-5"
+                    style={{ color: colors.primary.main }}
+                  />
+                  {t("studentDashboard.myCourses.lessonSchedule")}
+                </h2>
+
+                {lessonsLoading ? (
+                  <div className="flex justify-center py-8">
+                    <Spinner size="lg" />
+                  </div>
+                ) : lessons.length === 0 ? (
+                  <p
+                    className="text-sm text-center py-6"
+                    style={{ color: colors.text.tertiary }}
+                  >
+                    {t("studentDashboard.myCourses.noLessonsYet")}
+                  </p>
+                ) : (
+                  <div className="space-y-4">
+                    {/* Upcoming */}
+                    {upcomingLessons.length > 0 && (
+                      <div>
+                        <h3
+                          className="text-sm font-semibold mb-2 flex items-center gap-2"
+                          style={{ color: colors.primary.main }}
+                        >
+                          <Clock weight="duotone" className="w-4 h-4" />
+                          {t("studentDashboard.schedule.upcomingLessons")} (
+                          {upcomingLessons.length})
+                        </h3>
+                        <div className="space-y-2">
+                          {upcomingLessons.map((lesson) => (
+                            <div
+                              key={lesson.id}
+                              className="flex items-center justify-between p-3 rounded-lg"
+                              style={{
+                                backgroundColor: colors.background.gray,
+                              }}
+                            >
+                              <div className="flex items-center gap-3 flex-1 min-w-0">
+                                <div
+                                  className="w-10 h-10 rounded-lg flex flex-col items-center justify-center flex-shrink-0"
+                                  style={{
+                                    backgroundColor:
+                                      colors.background.primaryLight,
+                                  }}
+                                >
+                                  <span
+                                    className="text-xs font-bold"
+                                    style={{ color: colors.primary.main }}
+                                  >
+                                    {new Date(lesson.startTime).getDate()}
+                                  </span>
+                                  <span
+                                    className="text-xs"
+                                    style={{
+                                      color: colors.primary.main,
+                                      fontSize: "9px",
+                                    }}
+                                  >
+                                    {new Date(
+                                      lesson.startTime,
+                                    ).toLocaleDateString(dateLocale, {
+                                      month: "short",
+                                    })}
+                                  </span>
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p
+                                    className="font-medium text-sm truncate"
+                                    style={{ color: colors.text.primary }}
+                                  >
+                                    {lesson.sessionTitle ||
+                                      t("studentDashboard.schedule.lesson")}
+                                  </p>
+                                  <div className="flex items-center gap-2 mt-0.5">
+                                    <span
+                                      className="text-xs"
+                                      style={{ color: colors.text.tertiary }}
+                                    >
+                                      {formatLessonTime(lesson.startTime)} —{" "}
+                                      {formatLessonTime(lesson.endTime)}
+                                    </span>
+                                    <Chip
+                                      size="sm"
+                                      className="h-4"
+                                      style={{
+                                        backgroundColor: `${getLessonStatusColor(lesson.status)}20`,
+                                        color: getLessonStatusColor(
+                                          lesson.status,
+                                        ),
+                                        fontSize: "10px",
+                                      }}
+                                    >
+                                      {getLessonStatusLabel(lesson.status)}
+                                    </Chip>
+                                  </div>
+                                </div>
+                              </div>
+                              <Button
+                                size="sm"
+                                style={{
+                                  backgroundColor: colors.primary.main,
+                                  color: colors.text.white,
+                                }}
+                                startContent={
+                                  <VideoCamera
+                                    weight="fill"
+                                    className="w-3.5 h-3.5"
+                                  />
+                                }
+                                onPress={() =>
+                                  navigate(`/meeting/${lesson.id}`)
+                                }
+                              >
+                                {t("studentDashboard.schedule.joinNow")}
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Past Lessons */}
+                    {pastLessons.length > 0 && (
+                      <div>
+                        <h3
+                          className="text-sm font-semibold mb-2 flex items-center gap-2"
+                          style={{ color: colors.text.tertiary }}
+                        >
+                          {t("studentDashboard.myCourses.pastLessons")} (
+                          {pastLessons.length})
+                        </h3>
+                        <div className="space-y-2">
+                          {pastLessons.slice(0, 5).map((lesson) => (
+                            <div
+                              key={lesson.id}
+                              className="flex items-center gap-3 p-3 rounded-lg"
+                              style={{
+                                backgroundColor: colors.background.gray,
+                                opacity: 0.7,
+                              }}
+                            >
+                              <div
+                                className="w-10 h-10 rounded-lg flex flex-col items-center justify-center flex-shrink-0"
+                                style={{
+                                  backgroundColor: colors.background.gray,
+                                }}
+                              >
+                                <span
+                                  className="text-xs font-bold"
+                                  style={{ color: colors.text.secondary }}
+                                >
+                                  {new Date(lesson.startTime).getDate()}
+                                </span>
+                                <span
+                                  className="text-xs"
+                                  style={{
+                                    color: colors.text.tertiary,
+                                    fontSize: "9px",
+                                  }}
+                                >
+                                  {new Date(
+                                    lesson.startTime,
+                                  ).toLocaleDateString(dateLocale, {
+                                    month: "short",
+                                  })}
+                                </span>
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p
+                                  className="font-medium text-sm truncate"
+                                  style={{ color: colors.text.primary }}
+                                >
+                                  {lesson.sessionTitle ||
+                                    t("studentDashboard.schedule.lesson")}
+                                </p>
+                                <div className="flex items-center gap-2 mt-0.5">
+                                  <span
+                                    className="text-xs"
+                                    style={{ color: colors.text.tertiary }}
+                                  >
+                                    {formatLessonDate(lesson.startTime)}
+                                  </span>
+                                  <Chip
+                                    size="sm"
+                                    className="h-4"
+                                    style={{
+                                      backgroundColor: `${getLessonStatusColor(lesson.status)}20`,
+                                      color: getLessonStatusColor(
+                                        lesson.status,
+                                      ),
+                                      fontSize: "10px",
+                                    }}
+                                  >
+                                    {getLessonStatusLabel(lesson.status)}
+                                  </Chip>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </CardBody>
@@ -1079,7 +1144,7 @@ const TutorCourseDetail = () => {
           )}
         </div>
 
-        {/* Right Column - Sticky Card */}
+        {/* Right Column — Course Info Card */}
         <div className="lg:col-span-1 lg:-mt-64">
           <motion.div
             initial={{ opacity: 0 }}
@@ -1091,7 +1156,6 @@ const TutorCourseDetail = () => {
               className="shadow-lg overflow-hidden"
               style={{ backgroundColor: colors.background.light }}
             >
-              {/* Thumbnail */}
               <div className="relative w-full h-48 overflow-hidden">
                 <img
                   src={
@@ -1118,19 +1182,20 @@ const TutorCourseDetail = () => {
               </div>
 
               <CardBody className="p-6 space-y-5">
-                {/* Price */}
-                <div>
-                  <span
-                    className="text-3xl font-bold"
-                    style={{ color: colors.primary.main }}
-                  >
-                    {formatPrice(course.price, course.currency)}
-                  </span>
-                </div>
+                {/* Enrollment status */}
+                <Chip
+                  size="lg"
+                  className="w-full flex justify-center font-semibold"
+                  style={{
+                    backgroundColor: `${colors.state.success}20`,
+                    color: colors.state.success,
+                  }}
+                >
+                  {t("studentDashboard.myCourses.enrolled")}
+                </Chip>
 
                 <Divider />
 
-                {/* Course overview info */}
                 <div className="space-y-3">
                   <div className="flex items-center justify-between text-sm">
                     <span
@@ -1199,14 +1264,14 @@ const TutorCourseDetail = () => {
                       className="flex items-center gap-2"
                       style={{ color: colors.text.secondary }}
                     >
-                      <Users size={16} weight="duotone" />
-                      {t("courses.detail.studentsEnrolled")}
+                      <CalendarDots size={16} weight="duotone" />
+                      {t("studentDashboard.myCourses.totalLessons")}
                     </span>
                     <span
                       className="font-medium"
                       style={{ color: colors.text.primary }}
                     >
-                      {course.numberOfEnrollment?.toLocaleString() || 0}
+                      {lessons.length}
                     </span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
@@ -1238,116 +1303,8 @@ const TutorCourseDetail = () => {
         onOpenChange={setVideoOpen}
         videoUrl={course?.demoVideoUrl}
       />
-
-      {/* Edit Resource Modal */}
-      <Modal
-        isOpen={editResourceModal}
-        onOpenChange={setEditResourceModal}
-        size="md"
-      >
-        <ModalContent style={{ backgroundColor: colors.background.light }}>
-          {(onClose) => (
-            <>
-              <ModalHeader style={{ color: colors.text.primary }}>
-                {t("courses.detail.resources.editTitle")}
-              </ModalHeader>
-              <ModalBody className="space-y-4">
-                <Input
-                  label={t("courses.detail.resources.fieldTitle")}
-                  value={editResourceData?.title || ""}
-                  onValueChange={(v) =>
-                    setEditResourceData((prev) => ({ ...prev, title: v }))
-                  }
-                  classNames={inputClassNames}
-                />
-                <Select
-                  label={t("courses.detail.resources.fieldType")}
-                  classNames={selectClassNames}
-                  selectedKeys={
-                    editResourceData?.resourceType
-                      ? [editResourceData.resourceType]
-                      : []
-                  }
-                  onSelectionChange={(keys) =>
-                    setEditResourceData((prev) => ({
-                      ...prev,
-                      resourceType: [...keys][0] || "",
-                    }))
-                  }
-                >
-                  {["PDF", "Video", "Link", "Audio", "Image", "Document"].map(
-                    (type) => (
-                      <SelectItem key={type}>{type}</SelectItem>
-                    ),
-                  )}
-                </Select>
-                <Input
-                  label={t("courses.detail.resources.fieldUrl")}
-                  value={editResourceData?.url || ""}
-                  onValueChange={(v) =>
-                    setEditResourceData((prev) => ({ ...prev, url: v }))
-                  }
-                  classNames={inputClassNames}
-                />
-              </ModalBody>
-              <ModalFooter>
-                <Button variant="flat" onPress={onClose}>
-                  {t("common.cancel")}
-                </Button>
-                <Button
-                  color="primary"
-                  isLoading={savingResource}
-                  onPress={handleSaveResource}
-                  style={{
-                    backgroundColor: colors.primary.main,
-                    color: colors.text.white,
-                  }}
-                >
-                  {t("common.save")}
-                </Button>
-              </ModalFooter>
-            </>
-          )}
-        </ModalContent>
-      </Modal>
-
-      {/* Remove Resource Confirmation Modal */}
-      <Modal
-        isOpen={!!removeResourceId}
-        onOpenChange={(open) => {
-          if (!open) setRemoveResourceId(null);
-        }}
-        size="sm"
-      >
-        <ModalContent style={{ backgroundColor: colors.background.light }}>
-          {(onClose) => (
-            <>
-              <ModalHeader style={{ color: colors.text.primary }}>
-                {t("courses.detail.resources.removeTitle")}
-              </ModalHeader>
-              <ModalBody>
-                <p className="text-sm" style={{ color: colors.text.secondary }}>
-                  {t("courses.detail.resources.removeMessage")}
-                </p>
-              </ModalBody>
-              <ModalFooter>
-                <Button variant="flat" onPress={onClose}>
-                  {t("common.cancel")}
-                </Button>
-                <Button
-                  color="danger"
-                  isLoading={removingResource}
-                  onPress={handleRemoveResource}
-                >
-                  {t("common.remove")}
-                </Button>
-              </ModalFooter>
-            </>
-          )}
-        </ModalContent>
-      </Modal>
     </div>
   );
 };
 
-export default TutorCourseDetail;
+export default StudentMyCourseDetail;

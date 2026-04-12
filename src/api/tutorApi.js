@@ -139,4 +139,36 @@ export const tutorApi = {
     const response = await axiosInstance.post("/tutor-verification-requests");
     return response.data;
   },
+
+  // ---- Tutor Schedules ----
+
+  // Get tutor schedules (list)
+  getTutorSchedules: async (params = {}) => {
+    const response = await axiosInstance.get("/tutor-schedules", { params });
+    return response.data;
+  },
+
+  // Get tutor schedule by ID
+  getTutorScheduleById: async (id) => {
+    const response = await axiosInstance.get(`/tutor-schedules/${id}`);
+    return response.data;
+  },
+
+  // Create tutor schedule
+  createTutorSchedule: async (data) => {
+    const response = await axiosInstance.post("/tutor-schedules", data);
+    return response.data;
+  },
+
+  // Update tutor schedule
+  updateTutorSchedule: async (id, data) => {
+    const response = await axiosInstance.patch(`/tutor-schedules/${id}`, data);
+    return response.data;
+  },
+
+  // Delete tutor schedule
+  deleteTutorSchedule: async (id) => {
+    const response = await axiosInstance.delete(`/tutor-schedules/${id}`);
+    return response.data;
+  },
 };

@@ -1,6 +1,14 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Card, CardBody, Button, Chip, Image, Skeleton } from "@heroui/react";
+import {
+  Card,
+  CardBody,
+  Button,
+  Chip,
+  Image,
+  Skeleton,
+  Spinner,
+} from "@heroui/react";
 import { useTranslation } from "react-i18next";
 import { useThemeColors } from "../../../hooks/useThemeColors";
 import { motion } from "framer-motion";
@@ -18,6 +26,10 @@ import {
   Clock,
   CalendarBlank,
   Target,
+  FileText,
+  FilePdf,
+  Link,
+  ArrowSquareOut,
 } from "@phosphor-icons/react";
 
 const AdminCourseDetail = () => {
@@ -30,9 +42,58 @@ const AdminCourseDetail = () => {
   const [loading, setLoading] = useState(true);
   const [tutorInfo, setTutorInfo] = useState(null);
   const [expandedModules, setExpandedModules] = useState({});
+  const [expandedSessions, setExpandedSessions] = useState({});
+  const [sessionResources, setSessionResources] = useState({});
+  const [loadingResources, setLoadingResources] = useState({});
 
   const toggleModule = (moduleId) =>
     setExpandedModules((prev) => ({ ...prev, [moduleId]: !prev[moduleId] }));
+
+  const toggleSessionResources = async (sessId) => {
+    if (expandedSessions[sessId]) {
+      setExpandedSessions((prev) => ({ ...prev, [sessId]: false }));
+      return;
+    }
+    setExpandedSessions((prev) => ({ ...prev, [sessId]: true }));
+    if (!sessionResources[sessId]) {
+      setLoadingResources((prev) => ({ ...prev, [sessId]: true }));
+      try {
+        const res = await coursesApi.getAllCourseResources({
+          CourseSessionId: sessId,
+          "page-size": 100,
+        });
+        if (res.isSuccess) {
+          setSessionResources((prev) => ({
+            ...prev,
+            [sessId]: res.data.items || [],
+          }));
+        }
+      } catch {
+        setSessionResources((prev) => ({ ...prev, [sessId]: [] }));
+      } finally {
+        setLoadingResources((prev) => ({ ...prev, [sessId]: false }));
+      }
+    }
+  };
+
+  const getResourceIcon = (type) => {
+    const lo = (type || "").toLowerCase();
+    if (lo === "pdf")
+      return <FilePdf size={13} weight="fill" style={{ color: "#ef4444" }} />;
+    if (lo === "video")
+      return (
+        <VideoCamera size={13} weight="fill" style={{ color: "#8b5cf6" }} />
+      );
+    if (lo === "link")
+      return <Link size={13} weight="bold" style={{ color: "#3b82f6" }} />;
+    return (
+      <FileText
+        size={13}
+        weight="fill"
+        style={{ color: colors.text.secondary }}
+      />
+    );
+  };
 
   useEffect(() => {
     const fetchDetail = async () => {
@@ -746,61 +807,213 @@ const AdminCourseDetail = () => {
                                       </p>
                                     ) : (
                                       <div className="space-y-1.5">
-                                        {sessions.map((sess) => (
-                                          <div
-                                            key={
-                                              sess.courseSessionId ?? sess.id
-                                            }
-                                            className="rounded-lg p-2.5"
-                                            style={{
-                                              backgroundColor:
-                                                colors.background.gray,
-                                            }}
-                                          >
-                                            <div className="flex items-start gap-2">
-                                              <div
-                                                className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
-                                                style={{
-                                                  backgroundColor:
-                                                    colors.background
-                                                      .primaryLight,
-                                                }}
-                                              >
-                                                <Play
-                                                  size={10}
-                                                  weight="fill"
+                                        {sessions.map((sess) => {
+                                          const sessId =
+                                            sess.courseSessionId ?? sess.id;
+                                          const isResExp =
+                                            expandedSessions[sessId];
+                                          const resources =
+                                            sessionResources[sessId] || [];
+                                          const isResLoading =
+                                            loadingResources[sessId];
+                                          return (
+                                            <div
+                                              key={
+                                                sess.courseSessionId ?? sess.id
+                                              }
+                                              className="rounded-lg p-2.5"
+                                              style={{
+                                                backgroundColor:
+                                                  colors.background.gray,
+                                              }}
+                                            >
+                                              <div className="flex items-start gap-2">
+                                                <div
+                                                  className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
                                                   style={{
-                                                    color: colors.primary.main,
-                                                  }}
-                                                />
-                                              </div>
-                                              <div className="flex-1 min-w-0">
-                                                <p
-                                                  className="font-medium text-xs"
-                                                  style={{
-                                                    color: colors.text.primary,
+                                                    backgroundColor:
+                                                      colors.background
+                                                        .primaryLight,
                                                   }}
                                                 >
-                                                  {sess.sessionNumber
-                                                    ? `${sess.sessionNumber}. `
-                                                    : ""}
-                                                  {sess.sessionTitle}
-                                                </p>
-                                                {sess.sessionDescription && (
-                                                  <p
-                                                    className="text-xs mt-0.5 leading-relaxed"
+                                                  <Play
+                                                    size={10}
+                                                    weight="fill"
                                                     style={{
                                                       color:
-                                                        colors.text.secondary,
+                                                        colors.primary.main,
+                                                    }}
+                                                  />
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                  <p
+                                                    className="font-medium text-xs"
+                                                    style={{
+                                                      color:
+                                                        colors.text.primary,
                                                     }}
                                                   >
-                                                    {sess.sessionDescription}
+                                                    {sess.sessionNumber
+                                                      ? `${sess.sessionNumber}. `
+                                                      : ""}
+                                                    {sess.sessionTitle}
                                                   </p>
-                                                )}
+                                                  {sess.sessionDescription && (
+                                                    <p
+                                                      className="text-xs mt-0.5 leading-relaxed"
+                                                      style={{
+                                                        color:
+                                                          colors.text.secondary,
+                                                      }}
+                                                    >
+                                                      {sess.sessionDescription}
+                                                    </p>
+                                                  )}
+                                                  {/* Resources toggle */}
+                                                  {sessId && (
+                                                    <div className="mt-1.5">
+                                                      <button
+                                                        type="button"
+                                                        className="flex items-center gap-1 text-xs px-1.5 py-0.5 rounded-md"
+                                                        style={{
+                                                          color:
+                                                            colors.primary.main,
+                                                          backgroundColor:
+                                                            colors.background
+                                                              .primaryLight,
+                                                        }}
+                                                        onClick={() =>
+                                                          toggleSessionResources(
+                                                            sessId,
+                                                          )
+                                                        }
+                                                      >
+                                                        <FileText
+                                                          size={12}
+                                                          weight="fill"
+                                                        />
+                                                        {t(
+                                                          "courses.detail.resources.label",
+                                                        )}
+                                                        {isResExp ? (
+                                                          <CaretUp
+                                                            size={10}
+                                                            weight="bold"
+                                                          />
+                                                        ) : (
+                                                          <CaretDown
+                                                            size={10}
+                                                            weight="bold"
+                                                          />
+                                                        )}
+                                                      </button>
+                                                      {isResExp && (
+                                                        <div className="mt-1.5 space-y-1">
+                                                          {isResLoading ? (
+                                                            <div className="flex items-center gap-1.5 py-1">
+                                                              <Spinner size="sm" />
+                                                              <span
+                                                                className="text-xs"
+                                                                style={{
+                                                                  color:
+                                                                    colors.text
+                                                                      .tertiary,
+                                                                }}
+                                                              >
+                                                                {t(
+                                                                  "courses.detail.resources.loading",
+                                                                )}
+                                                              </span>
+                                                            </div>
+                                                          ) : resources.length ===
+                                                            0 ? (
+                                                            <p
+                                                              className="text-xs py-1"
+                                                              style={{
+                                                                color:
+                                                                  colors.text
+                                                                    .tertiary,
+                                                              }}
+                                                            >
+                                                              {t(
+                                                                "courses.detail.resources.empty",
+                                                              )}
+                                                            </p>
+                                                          ) : (
+                                                            resources.map(
+                                                              (res) => (
+                                                                <div
+                                                                  key={res.id}
+                                                                  className="flex items-center gap-1.5 px-2 py-1 rounded-md"
+                                                                  style={{
+                                                                    backgroundColor:
+                                                                      colors
+                                                                        .background
+                                                                        .light,
+                                                                  }}
+                                                                >
+                                                                  <span className="flex-shrink-0">
+                                                                    {getResourceIcon(
+                                                                      res.resourceType,
+                                                                    )}
+                                                                  </span>
+                                                                  <span
+                                                                    className="flex-1 text-xs font-medium truncate"
+                                                                    style={{
+                                                                      color:
+                                                                        colors
+                                                                          .text
+                                                                          .primary,
+                                                                    }}
+                                                                  >
+                                                                    {res.title}
+                                                                  </span>
+                                                                  <Chip
+                                                                    size="sm"
+                                                                    variant="flat"
+                                                                    className="h-4"
+                                                                    style={{
+                                                                      fontSize:
+                                                                        "10px",
+                                                                    }}
+                                                                  >
+                                                                    {
+                                                                      res.resourceType
+                                                                    }
+                                                                  </Chip>
+                                                                  <a
+                                                                    href={
+                                                                      res.url
+                                                                    }
+                                                                    target="_blank"
+                                                                    rel="noreferrer"
+                                                                    title={t(
+                                                                      "courses.detail.resources.open",
+                                                                    )}
+                                                                  >
+                                                                    <ArrowSquareOut
+                                                                      size={13}
+                                                                      style={{
+                                                                        color:
+                                                                          colors
+                                                                            .primary
+                                                                            .main,
+                                                                      }}
+                                                                    />
+                                                                  </a>
+                                                                </div>
+                                                              ),
+                                                            )
+                                                          )}
+                                                        </div>
+                                                      )}
+                                                    </div>
+                                                  )}
+                                                </div>
                                               </div>
                                             </div>
-                                          </div>
-                                        ))}
+                                          );
+                                        })}
                                       </div>
                                     )}
                                   </div>

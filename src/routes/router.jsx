@@ -18,6 +18,8 @@ import LoginFailed from "../pages/Authentication/LoginFailed/LoginFailed";
 import About from "../pages/AboutUs/About";
 import Courses from "../pages/Courses/Courses";
 import CourseDetail from "../pages/Courses/CourseDetail";
+import Checkout from "../pages/Courses/Checkout";
+import PaymentReturn from "../pages/Courses/PaymentReturn";
 import SearchResults from "../pages/Courses/SearchResults";
 import BecomeTutor from "../pages/BecomeTutor/BecomeTutor";
 import TutorRegistration from "../pages/BecomeTutor/TutorRegistration";
@@ -25,8 +27,7 @@ import TutorOnboarding from "../pages/TutorDashboard/Onboarding/TutorOnboarding"
 
 // Student Dashboard Pages
 import Dashboard from "../pages/StudentDashboard/Dashboard/Dashboard";
-import BrowseCourses from "../pages/StudentDashboard/BrowseCourses/BrowseCourses";
-import StudentCourseDetail from "../pages/StudentDashboard/BrowseCourses/CourseDetail";
+import StudentCourseDetail from "../pages/StudentDashboard/MyCourses/CourseDetail";
 import MyCourses from "../pages/StudentDashboard/MyCourses/MyCourses";
 import Schedule from "../pages/StudentDashboard/Schedule/Schedule";
 import Profile from "../pages/StudentDashboard/Profile/Profile";
@@ -61,6 +62,9 @@ import AdminTutorDetail from "../pages/AdminDashboard/TutorManagament/TutorDetai
 
 // Help & Support (shared by student/tutor)
 import HelpSupport from "../pages/HelpSupport/HelpSupport";
+
+// Video Call
+import VideoCall from "../pages/VideoCall/VideoCall";
 
 // Not Found Page
 import NotFound from "../pages/NotFound/NotFound";
@@ -148,6 +152,14 @@ export const router = createBrowserRouter([
         element: <CourseDetail />,
       },
       {
+        path: "checkout/:id",
+        element: <Checkout />,
+      },
+      {
+        path: "api/payments/payos/return",
+        element: <PaymentReturn />,
+      },
+      {
         path: "become-tutor",
         element: <BecomeTutor />,
       },
@@ -180,10 +192,6 @@ export const router = createBrowserRouter([
       {
         path: "dashboard",
         element: <Dashboard />,
-      },
-      {
-        path: "browse-courses",
-        element: <BrowseCourses />,
       },
       {
         path: "courses/:id",
@@ -322,6 +330,10 @@ export const router = createBrowserRouter([
         element: <AdminSupportTickets />,
       },
     ],
+  },
+  {
+    path: "/meeting/:lessonId",
+    element: <VideoCall />,
   },
   {
     path: "*",

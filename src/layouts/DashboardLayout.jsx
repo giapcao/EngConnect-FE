@@ -36,7 +36,6 @@ import {
   CaretDown,
   MagnifyingGlassIcon,
   SquaresFour,
-  ListMagnifyingGlass,
   Question,
 } from "@phosphor-icons/react";
 
@@ -57,11 +56,6 @@ const DashboardLayout = () => {
       path: "/student/dashboard",
       label: t("studentDashboard.nav.dashboard"),
       icon: House,
-    },
-    {
-      path: "/student/browse-courses",
-      label: t("studentDashboard.nav.browseCourses"),
-      icon: ListMagnifyingGlass,
     },
     {
       path: "/student/my-courses",

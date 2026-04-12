@@ -1,0 +1,277 @@
+1) Base Endpoints
+
+-   SignalR Hub URL:
+      wss://<API_HOST>/hubs/video-call (or
+      https://<API_HOST>/hubs/video-call for negotiation)
+
+-   HTTP API base:
+      https://<API_HOST>/api/meetings
+
+2) Authentication (Required)
+
+Both Hub and HTTP endpoints require auth.
+
+-   Backend uses [Authorize].
+
+-   User identity is read from JWT claim: sub (fallback: userId).
+
+-   HTTP: send Authorization: Bearer <token>.
+
+-   SignalR: provide access token in connection config
+      (accessTokenFactory in @microsoft/signalr).
+
+3) HTTP APIs frontend must call
+
+3.1 Get meeting info
+
+-   GET /api/meetings/{lessonId}
+
+-   Auth required.
+
+-   Use this to fetch initial meeting state before joining UI flow.
+
+3.2 End meeting
+
+-   POST /api/meetings/{lessonId}/end?totalChunks={number?}
+
+-   Auth required.
+
+-   Typically called by tutor.
+
+-   totalChunks is optional.
+
+3.3 Upload recording chunk
+
+-   POST /api/meetings/{lessonId}/recordings/chunks
+
+-   Content-Type: multipart/form-data
+
+-   Auth required.
+
+-   Form fields:
+
+    -   chunkTimestamp (number, required)
+
+    -   chunk (file/blob, required)
+
+-   Recommended file naming/content type:
+
+    -   filename like chunk-<timestamp>.webm
+
+    -   content type video/webm
+
+4) SignalR Hub methods to invoke
+
+All methods below are invoked on hub /hubs/video-call.
+
+1.  CreateRoom(lessonId: Guid)
+
+    -   Tutor creates room.
+
+2.  JoinRoom(lessonId: Guid)
+
+    -   Tutor or student joins existing room.
+
+3.  SendOffer(lessonId: Guid, targetConnectionId: string, sdp: object)
+
+    -   Relay WebRTC offer.
+
+4.  SendAnswer(lessonId: Guid, targetConnectionId: string, sdp: object)
+
+    -   Relay WebRTC answer.
+
+5.  SendIceCandidate(lessonId: Guid, targetConnectionId: string,
+    candidate: object)
+
+    -   Relay ICE candidate.
+
+6.  LeaveRoom(lessonId: Guid)
+
+    -   Graceful leave.
+
+7.  EndMeeting(lessonId: Guid, totalChunks?: number)
+
+    -   End meeting and notify all participants.
+
+8.  ToggleMedia(lessonId: Guid, isAudioEnabled: bool, isVideoEnabled:
+    bool)
+
+    -   Broadcast media state.
+
+9.  SendChatMessage(lessonId: Guid, message: string)
+
+    -   In-room chat.
+
+5) SignalR events frontend must handle
+
+1.  RoomCreated
+
+  {
+
+  "roomId": "lesson-<lessonId>",
+
+  "lessonId": "<guid>",
+
+  "meetingStatus": "Waiting|InProgress|Ended|..."
+
+  }
+
+2.  RoomJoined
+
+  {
+
+  "roomId": "lesson-<lessonId>",
+
+  "lessonId": "<guid>",
+
+  "userId": "<guid>",
+
+  "role": "Tutor|Student",
+
+  "meetingStatus": "Waiting|InProgress|..."
+
+  }
+
+3.  UserJoined
+
+  {
+
+  "userId": "<guid>",
+
+  "role": "Tutor|Student",
+
+  "connectionId": "<signalr-connection-id>"
+
+  }
+
+4.  UserLeft
+
+  {
+
+  "userId": "<guid>",
+
+  "connectionId": "<signalr-connection-id>"
+
+  }
+
+5.  ReceiveOffer
+
+  {
+
+  "callerConnectionId": "<signalr-connection-id>",
+
+  "userId": "<guid>",
+
+  "sdp": { }
+
+  }
+
+6.  ReceiveAnswer
+
+  {
+
+  "calleeConnectionId": "<signalr-connection-id>",
+
+  "userId": "<guid>",
+
+  "sdp": { }
+
+  }
+
+7.  ReceiveIceCandidate
+
+  {
+
+  "connectionId": "<signalr-connection-id>",
+
+  "userId": "<guid>",
+
+  "candidate": { }
+
+  }
+
+8.  MeetingEnded
+
+  {
+
+  "lessonId": "<guid>",
+
+  "endedAt": "<utc-datetime|null>",
+
+  "endedBy": "<guid>"
+
+  }
+
+9.  MediaToggled
+
+  {
+
+  "userId": "<guid>",
+
+  "connectionId": "<signalr-connection-id>",
+
+  "isAudioEnabled": true,
+
+  "isVideoEnabled": true
+
+  }
+
+10. ReceiveChatMessage
+
+  {
+
+  "lessonId": "<guid>",
+
+  "userId": "<guid>",
+
+  "message": "text",
+
+  "sentAt": "<utc-datetime>"
+
+  }
+
+6) Required frontend meeting flow (recommended)
+
+-   Connect SignalR with bearer token.
+
+-   Tutor: call CreateRoom(lessonId).
+
+-   Participants: call JoinRoom(lessonId).
+
+-   Maintain participant list from UserJoined / UserLeft.
+
+-   WebRTC signaling:
+
+    -   create peer connection per remote connectionId
+
+    -   send offer/answer/ice via hub methods above
+
+    -   apply incoming ReceiveOffer/ReceiveAnswer/ReceiveIceCandidate.
+
+-   During meeting, record chunks (e.g., MediaRecorder every ~30s):
+
+    -   upload each chunk via HTTP chunk endpoint with chunkTimestamp.
+
+-   On finish:
+
+    -   tutor calls hub EndMeeting(lessonId, totalChunks) (or HTTP end
+        endpoint)
+
+    -   handle MeetingEnded and stop media/recording/UI.
+
+7) Important constraints FE must respect
+
+-   Only tutor should expose “Create room” and “End meeting” actions.
+
+-   Do not send empty chat; max length ~2000 chars.
+
+-   Use robust reconnect strategy for SignalR.
+
+-   targetConnectionId for signaling must come from UserJoined/peer
+      presence state.
+
+-   Chunk upload must continue independently from signaling reliability
+      (retry HTTP on transient failures).
+
+-   Use monotonic timestamps for chunk ordering (Date.now() is
+      acceptable).

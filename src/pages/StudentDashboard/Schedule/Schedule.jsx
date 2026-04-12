@@ -1,7 +1,20 @@
-import { useState } from "react";
-import { Card, CardBody, Button, Avatar, Chip, Tabs, Tab } from "@heroui/react";
+import { useState, useEffect, useCallback } from "react";
+import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { selectUser } from "../../../store";
+import { studentApi } from "../../../api";
+import {
+  Card,
+  CardBody,
+  Button,
+  Chip,
+  Spinner,
+  Select,
+  SelectItem,
+} from "@heroui/react";
 import { useTranslation } from "react-i18next";
 import { useThemeColors } from "../../../hooks/useThemeColors";
+import useInputStyles from "../../../hooks/useInputStyles";
 import { motion } from "framer-motion";
 import {
   CalendarDots,
@@ -9,37 +22,47 @@ import {
   VideoCamera,
   CaretLeft,
   CaretRight,
-  Plus,
-  MapPin,
-  User,
 } from "@phosphor-icons/react";
+import calendarIllustration from "../../../assets/illustrations/calendar.avif";
 
 const Schedule = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const dateLocale = i18n.language === "vi" ? "vi-VN" : "en-US";
   const colors = useThemeColors();
-  const [selectedTab, setSelectedTab] = useState("week");
-  const [currentDate, setCurrentDate] = useState(new Date());
+  const navigate = useNavigate();
+  const { selectClassNames } = useInputStyles();
+  const user = useSelector(selectUser);
 
-  const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-  const months = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
-  ];
+  const [lessons, setLessons] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [statusFilter, setStatusFilter] = useState("all");
+
+  const fetchLessons = useCallback(async () => {
+    if (!user?.studentId) return;
+    try {
+      setLoading(true);
+      const params = {
+        StudentId: user.studentId,
+        "page-size": 200,
+      };
+      if (statusFilter !== "all") params.Status = statusFilter;
+      const res = await studentApi.getLessons(params);
+      setLessons(res?.data?.items || []);
+    } catch (err) {
+      console.error("Failed to fetch lessons:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, [user?.studentId, statusFilter]);
+
+  useEffect(() => {
+    fetchLessons();
+  }, [fetchLessons]);
 
   const getWeekDays = () => {
     const startOfWeek = new Date(currentDate);
     startOfWeek.setDate(currentDate.getDate() - currentDate.getDay());
-
     return Array.from({ length: 7 }, (_, i) => {
       const day = new Date(startOfWeek);
       day.setDate(startOfWeek.getDate() + i);
@@ -49,86 +72,171 @@ const Schedule = () => {
 
   const weekDays = getWeekDays();
 
-  const lessons = [
-    {
-      id: 1,
-      title: "Business English - Meeting Skills",
-      tutor: "Sarah Johnson",
-      tutorAvatar: "https://i.pravatar.cc/150?u=tutor1",
-      date: new Date().toDateString(),
-      time: "10:00 AM",
-      duration: "45 min",
-      type: "video",
-      status: "upcoming",
-    },
-    {
-      id: 2,
-      title: "IELTS Writing Task 2",
-      tutor: "Michael Chen",
-      tutorAvatar: "https://i.pravatar.cc/150?u=tutor2",
-      date: new Date().toDateString(),
-      time: "2:00 PM",
-      duration: "60 min",
-      type: "video",
-      status: "upcoming",
-    },
-    {
-      id: 3,
-      title: "Conversational English",
-      tutor: "Emma Wilson",
-      tutorAvatar: "https://i.pravatar.cc/150?u=tutor3",
-      date: new Date(Date.now() + 86400000).toDateString(),
-      time: "9:00 AM",
-      duration: "30 min",
-      type: "video",
-      status: "scheduled",
-    },
-    {
-      id: 4,
-      title: "Grammar Review Session",
-      tutor: "David Brown",
-      tutorAvatar: "https://i.pravatar.cc/150?u=tutor4",
-      date: new Date(Date.now() + 172800000).toDateString(),
-      time: "11:00 AM",
-      duration: "45 min",
-      type: "video",
-      status: "scheduled",
-    },
-    {
-      id: 5,
-      title: "Pronunciation Practice",
-      tutor: "Lisa Anderson",
-      tutorAvatar: "https://i.pravatar.cc/150?u=tutor5",
-      date: new Date(Date.now() + 259200000).toDateString(),
-      time: "3:00 PM",
-      duration: "30 min",
-      type: "video",
-      status: "scheduled",
-    },
-  ];
-
-  const todayLessons = lessons.filter(
-    (lesson) => lesson.date === new Date().toDateString(),
-  );
-
-  const upcomingLessons = lessons.filter(
-    (lesson) => new Date(lesson.date) > new Date(),
-  );
-
   const navigateWeek = (direction) => {
     const newDate = new Date(currentDate);
     newDate.setDate(currentDate.getDate() + direction * 7);
     setCurrentDate(newDate);
   };
 
-  const isToday = (date) => {
-    const today = new Date();
-    return date.toDateString() === today.toDateString();
+  const isToday = (date) => date.toDateString() === new Date().toDateString();
+
+  const hasLessonsOnDay = (date) =>
+    lessons.some(
+      (l) => new Date(l.startTime).toDateString() === date.toDateString(),
+    );
+
+  const formatTime = (dateStr) => {
+    if (!dateStr) return "";
+    const d = new Date(dateStr);
+    return d.toLocaleTimeString(dateLocale, {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   };
 
-  const hasLessons = (date) => {
-    return lessons.some((lesson) => lesson.date === date.toDateString());
+  const formatDuration = (start, end) => {
+    if (!start || !end) return "";
+    const ms = new Date(end) - new Date(start);
+    const mins = Math.round(ms / 60000);
+    if (mins >= 60) return `${Math.floor(mins / 60)}h ${mins % 60}m`;
+    return `${mins}m`;
   };
+
+  // TODO: restore date filter after testing
+  const todayLessons = [...lessons].sort(
+    (a, b) => new Date(a.startTime) - new Date(b.startTime),
+  );
+
+  const upcomingLessons = lessons
+    .filter((l) => new Date(l.startTime) > new Date())
+    .sort((a, b) => new Date(a.startTime) - new Date(b.startTime));
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "Scheduled":
+        return colors.primary.main;
+      case "Completed":
+        return colors.state.success;
+      case "Cancelled":
+        return colors.state.error;
+      case "InProgress":
+        return colors.state.warning;
+      default:
+        return colors.text.secondary;
+    }
+  };
+
+  const getStatusLabel = (status) => {
+    switch (status) {
+      case "Scheduled":
+        return t("studentDashboard.schedule.scheduled");
+      case "Completed":
+        return t("studentDashboard.schedule.completed");
+      case "Cancelled":
+        return t("studentDashboard.schedule.cancelled");
+      case "InProgress":
+        return t("studentDashboard.schedule.inProgress");
+      default:
+        return status || "";
+    }
+  };
+
+  const renderLessonCard = (lesson, highlight = false) => (
+    <Card
+      key={lesson.id}
+      shadow="none"
+      className="border-none"
+      style={{ backgroundColor: colors.background.light }}
+    >
+      <CardBody className="p-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div
+              className="w-16 h-16 rounded-xl flex flex-col items-center justify-center flex-shrink-0"
+              style={{
+                backgroundColor: highlight
+                  ? colors.background.primaryLight
+                  : colors.background.gray,
+              }}
+            >
+              <span
+                className="text-xs"
+                style={{
+                  color: highlight
+                    ? colors.primary.main
+                    : colors.text.secondary,
+                }}
+              >
+                {new Date(lesson.startTime).toLocaleDateString(dateLocale, {
+                  weekday: "short",
+                })}
+              </span>
+              <span
+                className="text-lg font-bold"
+                style={{
+                  color: highlight ? colors.primary.main : colors.text.primary,
+                }}
+              >
+                {new Date(lesson.startTime).getDate()}
+              </span>
+            </div>
+
+            <div>
+              <h3
+                className="font-semibold mb-1"
+                style={{ color: colors.text.primary }}
+              >
+                {lesson.courseName || t("studentDashboard.schedule.lesson")}
+              </h3>
+              {lesson.sessionTitle && (
+                <p
+                  className="text-sm mb-1"
+                  style={{ color: colors.text.secondary }}
+                >
+                  {lesson.sessionTitle}
+                </p>
+              )}
+              <div className="flex items-center gap-3 flex-wrap">
+                <Chip
+                  size="sm"
+                  variant="flat"
+                  startContent={<Clock weight="duotone" className="w-3 h-3" />}
+                  style={{
+                    backgroundColor: colors.background.gray,
+                    color: colors.text.secondary,
+                  }}
+                >
+                  {formatTime(lesson.startTime)} — {formatTime(lesson.endTime)}
+                </Chip>
+                <Chip
+                  size="sm"
+                  variant="flat"
+                  style={{
+                    backgroundColor: `${getStatusColor(lesson.status)}20`,
+                    color: getStatusColor(lesson.status),
+                  }}
+                >
+                  {getStatusLabel(lesson.status)}
+                </Chip>
+              </div>
+            </div>
+          </div>
+
+          <Button
+            size="sm"
+            style={{
+              backgroundColor: colors.primary.main,
+              color: colors.text.white,
+            }}
+            startContent={<VideoCamera weight="fill" className="w-4 h-4" />}
+            onPress={() => navigate(`/meeting/${lesson.id}`)}
+          >
+            {t("studentDashboard.schedule.joinNow")}
+          </Button>
+        </div>
+      </CardBody>
+    </Card>
+  );
 
   return (
     <div className="space-y-6">
@@ -150,15 +258,29 @@ const Schedule = () => {
             {t("studentDashboard.schedule.subtitle")}
           </p>
         </div>
-        <Button
-          style={{
-            backgroundColor: colors.primary.main,
-            color: colors.text.white,
+        <Select
+          label={t("studentDashboard.schedule.filterStatus")}
+          selectedKeys={[statusFilter]}
+          classNames={selectClassNames}
+          className="max-w-[180px]"
+          onSelectionChange={(keys) => {
+            const val = Array.from(keys)[0];
+            if (val) setStatusFilter(val);
           }}
-          startContent={<Plus weight="bold" className="w-5 h-5" />}
         >
-          {t("studentDashboard.schedule.bookLesson")}
-        </Button>
+          <SelectItem key="all">
+            {t("studentDashboard.schedule.all")}
+          </SelectItem>
+          <SelectItem key="Scheduled">
+            {t("studentDashboard.schedule.scheduled")}
+          </SelectItem>
+          <SelectItem key="Completed">
+            {t("studentDashboard.schedule.completed")}
+          </SelectItem>
+          <SelectItem key="Cancelled">
+            {t("studentDashboard.schedule.cancelled")}
+          </SelectItem>
+        </Select>
       </motion.div>
 
       {/* Calendar Navigation */}
@@ -168,17 +290,20 @@ const Schedule = () => {
         transition={{ duration: 0.15 }}
       >
         <Card
-          shadow="none" className="border-none"
+          shadow="none"
+          className="border-none"
           style={{ backgroundColor: colors.background.light }}
         >
           <CardBody className="p-4">
-            {/* Month & Navigation */}
             <div className="flex items-center justify-between mb-4">
               <h2
                 className="text-lg font-semibold"
                 style={{ color: colors.text.primary }}
               >
-                {months[currentDate.getMonth()]} {currentDate.getFullYear()}
+                {currentDate.toLocaleDateString(dateLocale, {
+                  month: "long",
+                  year: "numeric",
+                })}
               </h2>
               <div className="flex items-center gap-2">
                 <Button
@@ -215,7 +340,6 @@ const Schedule = () => {
               </div>
             </div>
 
-            {/* Week Days */}
             <div className="grid grid-cols-7 gap-2">
               {weekDays.map((day, index) => (
                 <button
@@ -226,7 +350,7 @@ const Schedule = () => {
                   style={{
                     backgroundColor: isToday(day)
                       ? colors.background.primaryLight
-                      : hasLessons(day)
+                      : hasLessonsOnDay(day)
                         ? colors.background.gray
                         : "transparent",
                     ringColor: colors.primary.main,
@@ -237,12 +361,10 @@ const Schedule = () => {
                     className="text-xs font-medium mb-1"
                     style={{ color: colors.text.secondary }}
                   >
-                    {daysOfWeek[day.getDay()]}
+                    {day.toLocaleDateString(dateLocale, { weekday: "short" })}
                   </p>
                   <p
-                    className={`text-lg font-semibold ${
-                      isToday(day) ? "" : ""
-                    }`}
+                    className="text-lg font-semibold"
                     style={{
                       color: isToday(day)
                         ? colors.primary.main
@@ -251,7 +373,7 @@ const Schedule = () => {
                   >
                     {day.getDate()}
                   </p>
-                  {hasLessons(day) && (
+                  {hasLessonsOnDay(day) && (
                     <div
                       className="w-2 h-2 rounded-full mx-auto mt-1"
                       style={{ backgroundColor: colors.primary.main }}
@@ -264,240 +386,88 @@ const Schedule = () => {
         </Card>
       </motion.div>
 
-      {/* Today's Lessons */}
-      {todayLessons.length > 0 && (
+      {loading ? (
+        <div className="flex justify-center py-12">
+          <Spinner size="lg" />
+        </div>
+      ) : lessons.length === 0 ? (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.15 }}
+          className="flex flex-col items-center justify-center gap-4 py-8"
         >
-          <h2
-            className="text-lg font-semibold mb-4"
+          <img
+            src={calendarIllustration}
+            alt="No lessons"
+            className="w-52 h-52 object-contain"
+          />
+          <h3
+            className="text-xl font-semibold"
             style={{ color: colors.text.primary }}
           >
-            <CalendarDots
-              weight="duotone"
-              className="w-5 h-5 inline-block mr-2"
-              style={{ color: colors.primary.main }}
-            />
-            {t("studentDashboard.schedule.todayLessons")} ({todayLessons.length}
-            )
-          </h2>
-
-          <div className="space-y-3">
-            {todayLessons.map((lesson, index) => (
-              <motion.div
-                key={lesson.id}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.15 }}
-              >
-                <Card
-                  shadow="none" className="border-none"
-                  style={{ backgroundColor: colors.background.light }}
-                >
-                  <CardBody className="p-4">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                      <div className="flex items-center gap-4">
-                        <div
-                          className="w-16 h-16 rounded-xl flex flex-col items-center justify-center"
-                          style={{
-                            backgroundColor: colors.background.primaryLight,
-                          }}
-                        >
-                          <span
-                            className="text-xs"
-                            style={{ color: colors.primary.main }}
-                          >
-                            {lesson.time.split(" ")[1]}
-                          </span>
-                          <span
-                            className="text-lg font-bold"
-                            style={{ color: colors.primary.main }}
-                          >
-                            {lesson.time.split(" ")[0]}
-                          </span>
-                        </div>
-
-                        <div>
-                          <h3
-                            className="font-semibold mb-1"
-                            style={{ color: colors.text.primary }}
-                          >
-                            {lesson.title}
-                          </h3>
-                          <div className="flex items-center gap-2 mb-2">
-                            <Avatar
-                              src={lesson.tutorAvatar}
-                              size="sm"
-                              className="w-6 h-6"
-                            />
-                            <span
-                              className="text-sm"
-                              style={{ color: colors.text.secondary }}
-                            >
-                              {lesson.tutor}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <Chip
-                              size="sm"
-                              variant="flat"
-                              startContent={
-                                <Clock weight="duotone" className="w-3 h-3" />
-                              }
-                              style={{
-                                backgroundColor: colors.background.gray,
-                                color: colors.text.secondary,
-                              }}
-                            >
-                              {lesson.duration}
-                            </Chip>
-                            <Chip
-                              size="sm"
-                              variant="flat"
-                              startContent={
-                                <VideoCamera
-                                  weight="duotone"
-                                  className="w-3 h-3"
-                                />
-                              }
-                              style={{
-                                backgroundColor: colors.background.gray,
-                                color: colors.text.secondary,
-                              }}
-                            >
-                              {t("studentDashboard.schedule.videoCall")}
-                            </Chip>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex gap-2">
-                        <Button variant="bordered" size="sm">
-                          {t("studentDashboard.schedule.reschedule")}
-                        </Button>
-                        <Button
-                          size="sm"
-                          style={{
-                            backgroundColor: colors.primary.main,
-                            color: colors.text.white,
-                          }}
-                          startContent={
-                            <VideoCamera weight="fill" className="w-4 h-4" />
-                          }
-                        >
-                          {t("studentDashboard.schedule.joinNow")}
-                        </Button>
-                      </div>
-                    </div>
-                  </CardBody>
-                </Card>
-              </motion.div>
-            ))}
-          </div>
+            {t("studentDashboard.schedule.noLessons")}
+          </h3>
+          <p
+            className="text-center max-w-sm"
+            style={{ color: colors.text.secondary }}
+          >
+            {t("studentDashboard.schedule.noLessonsDesc")}
+          </p>
         </motion.div>
-      )}
-
-      {/* Upcoming Lessons */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.15 }}
-      >
-        <h2
-          className="text-lg font-semibold mb-4"
-          style={{ color: colors.text.primary }}
-        >
-          <Clock
-            weight="duotone"
-            className="w-5 h-5 inline-block mr-2"
-            style={{ color: colors.state.warning }}
-          />
-          {t("studentDashboard.schedule.upcomingLessons")}
-        </h2>
-
-        <div className="space-y-3">
-          {upcomingLessons.map((lesson, index) => (
+      ) : (
+        <>
+          {/* Today's Lessons */}
+          {todayLessons.length > 0 && (
             <motion.div
-              key={lesson.id}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.15 }}
             >
-              <Card
-                shadow="none" className="border-none"
-                style={{ backgroundColor: colors.background.light }}
+              <h2
+                className="text-lg font-semibold mb-4"
+                style={{ color: colors.text.primary }}
               >
-                <CardBody className="p-4">
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div className="flex items-center gap-4">
-                      <div
-                        className="w-16 h-16 rounded-xl flex flex-col items-center justify-center"
-                        style={{ backgroundColor: colors.background.gray }}
-                      >
-                        <span
-                          className="text-xs"
-                          style={{ color: colors.text.secondary }}
-                        >
-                          {new Date(lesson.date).toLocaleDateString("en-US", {
-                            weekday: "short",
-                          })}
-                        </span>
-                        <span
-                          className="text-lg font-bold"
-                          style={{ color: colors.text.primary }}
-                        >
-                          {new Date(lesson.date).getDate()}
-                        </span>
-                      </div>
-
-                      <div>
-                        <h3
-                          className="font-semibold mb-1"
-                          style={{ color: colors.text.primary }}
-                        >
-                          {lesson.title}
-                        </h3>
-                        <div className="flex items-center gap-2 mb-2">
-                          <Avatar
-                            src={lesson.tutorAvatar}
-                            size="sm"
-                            className="w-6 h-6"
-                          />
-                          <span
-                            className="text-sm"
-                            style={{ color: colors.text.secondary }}
-                          >
-                            {lesson.tutor}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <span
-                            className="text-sm"
-                            style={{ color: colors.text.secondary }}
-                          >
-                            {lesson.time} • {lesson.duration}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex gap-2">
-                      <Button variant="light" size="sm">
-                        {t("studentDashboard.schedule.cancel")}
-                      </Button>
-                      <Button variant="bordered" size="sm">
-                        {t("studentDashboard.schedule.reschedule")}
-                      </Button>
-                    </div>
-                  </div>
-                </CardBody>
-              </Card>
+                <CalendarDots
+                  weight="duotone"
+                  className="w-5 h-5 inline-block mr-2"
+                  style={{ color: colors.primary.main }}
+                />
+                {t("studentDashboard.schedule.todayLessons")} (
+                {todayLessons.length})
+              </h2>
+              <div className="space-y-3">
+                {todayLessons.map((lesson) => renderLessonCard(lesson, true))}
+              </div>
             </motion.div>
-          ))}
-        </div>
-      </motion.div>
+          )}
+
+          {/* Upcoming Lessons */}
+          {upcomingLessons.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.15 }}
+            >
+              <h2
+                className="text-lg font-semibold mb-4"
+                style={{ color: colors.text.primary }}
+              >
+                <Clock
+                  weight="duotone"
+                  className="w-5 h-5 inline-block mr-2"
+                  style={{ color: colors.state.warning }}
+                />
+                {t("studentDashboard.schedule.upcomingLessons")} (
+                {upcomingLessons.length})
+              </h2>
+              <div className="space-y-3">
+                {upcomingLessons.map((lesson) => renderLessonCard(lesson))}
+              </div>
+            </motion.div>
+          )}
+        </>
+      )}
     </div>
   );
 };

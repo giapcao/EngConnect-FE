@@ -1,4 +1,12 @@
 ﻿{
+  "common": {
+    "cancel": "Hủy",
+    "save": "Lưu",
+    "remove": "Xóa",
+    "confirm": "Xác nhận",
+    "delete": "Xóa",
+    "close": "Đóng"
+  },
   "brand": {
     "name": "EngConnect"
   },
@@ -581,9 +589,13 @@
     "myCourses": {
       "title": "Khóa học của tôi",
       "subtitle": "Theo dõi tiến độ và tiếp tục học tập",
-      "inProgress": "Đang học",
+      "all": "Tất cả",
+      "active": "Đang học",
       "completed": "Đã hoàn thành",
-      "wishlist": "Yêu thích",
+      "pending": "Chờ xử lý",
+      "searchPlaceholder": "Tìm kiếm khóa học...",
+      "emptyTitle": "Chưa có khóa học",
+      "emptySubtitle": "Duyệt danh mục khóa học và đăng ký để bắt đầu.",
       "lessons": "bài học",
       "continue": "Tiếp tục",
       "nextLesson": "Tiếp theo",
@@ -591,19 +603,36 @@
       "viewCertificate": "Chứng chỉ",
       "reviewCourse": "Xem lại",
       "students": "học viên",
-      "enrollNow": "Đăng ký ngay"
+      "enrollNow": "Đăng ký ngay",
+      "inProgress": "Đang học",
+      "wishlist": "Yêu thích",
+      "backToMyCourses": "Quay lại khóa học",
+      "enrolled": "Đã đăng ký",
+      "lessonSchedule": "Lịch học",
+      "noLessonsYet": "Chưa có buổi học nào cho khóa học này.",
+      "pastLessons": "Buổi học đã qua",
+      "totalLessons": "Tổng buổi học"
     },
     "schedule": {
       "title": "Lịch học",
       "subtitle": "Quản lý buổi học và lịch sắp tới",
-      "bookLesson": "Đặt buổi học",
       "today": "Hôm nay",
       "todayLessons": "Buổi học hôm nay",
       "upcomingLessons": "Buổi học sắp tới",
+      "joinNow": "Tham gia",
+      "lesson": "Buổi học",
+      "filterStatus": "Trạng thái",
+      "all": "Tất cả",
+      "scheduled": "Đã lên lịch",
+      "completed": "Đã hoàn thành",
+      "cancelled": "Đã hủy",
+      "inProgress": "Đang diễn ra",
+      "noLessons": "Chưa có buổi học",
+      "noLessonsDesc": "Buổi học của bạn sẽ xuất hiện ở đây sau khi đăng ký khóa học.",
       "videoCall": "Video Call",
       "reschedule": "Đổi lịch",
       "cancel": "Hủy",
-      "joinNow": "Tham gia"
+      "bookLesson": "Đặt buổi học"
     },
     "homework": {
       "title": "Bài tập",
@@ -955,16 +984,61 @@
     "schedule": {
       "title": "Lịch dạy",
       "subtitle": "Quản lý thời gian rảnh và buổi học",
+      "addSchedule": "Thêm lịch",
+      "editSchedule": "Sửa lịch",
       "setAvailability": "Cài đặt lịch rảnh",
       "confirmed": "Đã xác nhận",
       "pending": "Chờ xác nhận",
       "available": "Có thể dạy",
       "todayLessons": "Buổi học hôm nay",
+      "todaySchedule": "Lịch hôm nay",
       "noLessonsToday": "Hôm nay không có buổi học",
+      "noScheduleToday": "Hôm nay không có lịch",
       "setWeeklyAvailability": "Cài đặt lịch rảnh hàng tuần",
       "cancel": "Hủy",
       "save": "Lưu thay đổi",
-      "addSlot": "Thêm khung giờ"
+      "addSlot": "Thêm khung giờ",
+      "today": "Hôm nay",
+      "slots": "khung giờ",
+      "noSlots": "Chưa có lịch",
+      "overview": "Tổng quan",
+      "weekday": "Thứ",
+      "startTime": "Giờ bắt đầu",
+      "endTime": "Giờ kết thúc",
+      "edit": "Sửa",
+      "delete": "Xóa",
+      "confirmDelete": "Xác nhận xóa",
+      "deleteMessage": "Bạn có chắc chắn muốn xóa khung giờ này? Hành động này không thể hoàn tác.",
+      "errorConflict": "Khung giờ này bị trùng lặp với lịch đã tồn tại.",
+      "scheduleSlots": "Khung giờ",
+      "myLessons": "Buổi học",
+      "noLessons": "Chưa có buổi học",
+      "noLessonsDesc": "Buổi học sẽ xuất hiện khi học viên đăng ký khóa học của bạn.",
+      "upcomingLessons": "Buổi học sắp tới",
+      "joinLesson": "Tham gia",
+      "lessonLabel": "Buổi học",
+      "lessonStatus": {
+        "scheduled": "Đã lên lịch",
+        "completed": "Đã hoàn thành",
+        "cancelled": "Đã hủy",
+        "inProgress": "Đang diễn ra"
+      },
+      "days": {
+        "monday": "Thứ Hai",
+        "tuesday": "Thứ Ba",
+        "wednesday": "Thứ Tư",
+        "thursday": "Thứ Năm",
+        "friday": "Thứ Sáu",
+        "saturday": "Thứ Bảy",
+        "sunday": "Chủ Nhật"
+      },
+      "status": {
+        "open": "Mở",
+        "booked": "Đã đặt",
+        "pending": "Chờ xử lý",
+        "inactive": "Không hoạt động"
+      },
+      "studentLabel": "Học viên"
     },
     "students": {
       "title": "Học viên của tôi",
@@ -1291,6 +1365,7 @@
       "reviews": "đánh giá",
       "off": "GIẢM",
       "enrollNow": "Đăng ký ngay",
+      "viewMyCourse": "Xem khóa học của tôi",
       "backToCourses": "Quay lại khóa học",
       "notFound": "Không tìm thấy khóa học",
       "courseCurriculum": "Nội dung khóa học",
@@ -1314,8 +1389,51 @@
       "incompleteNoSessions": "Khóa học này có module nhưng chưa có buổi học. Tiếp tục tạo để thêm buổi học và tài liệu.",
       "continueCourse": "Tiếp tục tạo",
       "pendingEditLocked": "Khóa học đang chờ xét duyệt, không thể chỉnh sửa. Vui lòng chờ quản trị viên phê duyệt hoặc từ chối.",
-      "publishedEditLocked": "Khóa học đã được xuất bản không thể chỉnh sửa. Vui lòng liên hệ quản trị viên nếu cần thay đổi."
+      "publishedEditLocked": "Khóa học đã được xuất bản không thể chỉnh sửa. Vui lòng liên hệ quản trị viên nếu cần thay đổi.",
+      "resources": {
+        "label": "Tài liệu",
+        "loading": "Đang tải tài liệu...",
+        "empty": "Không có tài liệu cho buổi học này",
+        "open": "Mở tài liệu",
+        "edit": "Chỉnh sửa tài liệu",
+        "remove": "Xóa khỏi buổi học",
+        "editTitle": "Chỉnh sửa tài liệu",
+        "fieldTitle": "Tiêu đề",
+        "fieldType": "Loại tài liệu",
+        "fieldUrl": "URL",
+        "removeTitle": "Xóa tài liệu",
+        "removeMessage": "Bạn có chắc muốn xóa tài liệu này khỏi buổi học không?"
+      }
     }
+  },
+  "checkout": {
+    "title": "Thanh toán",
+    "backToCourse": "Quay lại khóa học",
+    "selectSlots": "Chọn khung giờ học",
+    "selectSlotsDesc": "Bạn cần chọn đúng {{count}} khung giờ mỗi tuần cho khóa học này.",
+    "notEnoughSlots": "Không đủ khung giờ. Khóa học yêu cầu {{required}} khung giờ nhưng chỉ còn {{available}} khung giờ khả dụng.",
+    "noSlots": "Không có khung giờ khả dụng",
+    "paymentMethod": "Phương thức thanh toán",
+    "orderSummary": "Tóm tắt đơn hàng",
+    "slotsSelected": "Khung giờ đã chọn",
+    "payment": "Thanh toán",
+    "total": "Tổng cộng",
+    "pay": "Thanh toán ngay"
+  },
+  "paymentReturn": {
+    "verifying": "Đang xác minh thanh toán...",
+    "successTitle": "Thanh toán thành công!",
+    "successMessage": "Đăng ký của bạn đã được xác nhận. Bạn có thể truy cập khóa học ngay bây giờ.",
+    "cancelledTitle": "Thanh toán đã bị hủy",
+    "failedTitle": "Thanh toán thất bại",
+    "failedMessage": "Đã xảy ra lỗi trong quá trình thanh toán. Vui lòng thử lại.",
+    "errorTitle": "Lỗi xác minh",
+    "errorMessage": "Chúng tôi không thể xác minh thanh toán của bạn. Vui lòng liên hệ hỗ trợ nếu bạn đã bị trừ tiền.",
+    "orderCode": "Mã đơn hàng",
+    "status": "Trạng thái",
+    "goToMyCourses": "Đi tới Khóa học của tôi",
+    "browseCourses": "Duyệt khóa học",
+    "goHome": "Về trang chủ"
   },
   "helpSupport": {
     "title": "Trợ giúp & Hỗ trợ",
@@ -1939,6 +2057,35 @@
         "Resolved": "Đã giải quyết",
         "Closed": "Đã đóng"
       }
+    }
+  },
+  "videoCall": {
+    "title": "Cuộc gọi video",
+    "readyToJoin": "Kiểm tra camera và micro, sau đó tham gia cuộc họp",
+    "joinMeeting": "Tham gia",
+    "backToSchedule": "Quay lại lịch học",
+    "meetingEnded": "Cuộc họp đã kết thúc",
+    "meetingEndedDesc": "Cuộc họp này đã kết thúc. Cảm ơn bạn!",
+    "waitingForOther": "Đang chờ người tham gia khác...",
+    "connecting": "Đang kết nối...",
+    "participants": "người tham gia",
+    "chat": "Trò chuyện",
+    "noMessages": "Chưa có tin nhắn. Hãy gửi lời chào!",
+    "typeMessage": "Nhập tin nhắn...",
+    "muteMic": "Tắt micro",
+    "unmuteMic": "Bật micro",
+    "hideVideo": "Tắt camera",
+    "showVideo": "Bật camera",
+    "endMeeting": "Kết thúc",
+    "leave": "Rời đi",
+    "you": "Bạn",
+    "roleTutor": "Gia sư",
+    "roleStudent": "Học viên",
+    "connection": {
+      "connected": "Đã kết nối",
+      "connecting": "Đang kết nối",
+      "reconnecting": "Đang kết nối lại",
+      "disconnected": "Mất kết nối"
     }
   }
 }

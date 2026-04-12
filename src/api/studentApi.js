@@ -108,4 +108,34 @@ export const studentApi = {
     );
     return response.data;
   },
+
+  // Checkout (enroll in course)
+  checkout: async (data) => {
+    const response = await axiosInstance.post("/checkout", data);
+    return response.data;
+  },
+
+  // Get student's enrolled courses
+  getMyCoursesStudent: async (params = {}) => {
+    const response = await axiosInstance.get("/courses/my-course/student", { params });
+    return response.data;
+  },
+
+  // Get lessons
+  getLessons: async (params = {}) => {
+    const response = await axiosInstance.get("/lessons", { params });
+    return response.data;
+  },
+
+  // Get lesson by ID
+  getLessonById: async (id) => {
+    const response = await axiosInstance.get(`/lessons/${id}`);
+    return response.data;
+  },
+
+  // Verify PayOS payment return
+  verifyPayosReturn: async (params) => {
+    const response = await axiosInstance.get("/payments/v1/payos/return", { params });
+    return response.data;
+  },
 };

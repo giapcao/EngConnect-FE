@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { selectUser } from "../../store";
 import { useTranslation } from "react-i18next";
 import { Button, Card, CardBody, Chip, Divider, Avatar } from "@heroui/react";
 import * as MotionLib from "framer-motion";
@@ -51,6 +53,7 @@ const CourseDetail = () => {
   const { t } = useTranslation();
   const colors = useThemeColors();
   const { theme } = useTheme();
+  const user = useSelector(selectUser);
 
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -746,14 +749,29 @@ const CourseDetail = () => {
                     </div>
 
                     {/* Enroll Button */}
-                    <Button
-                      color="primary"
-                      size="lg"
-                      className="w-full font-semibold text-base"
-                      onPress={() => navigate("/register")}
-                    >
-                      {t("courses.detail.enrollNow")}
-                    </Button>
+                    {user?.tutorId && user.tutorId === course.tutorId ? (
+                      <Button
+                        size="lg"
+                        className="w-full font-semibold text-base"
+                        variant="flat"
+                        style={{
+                          backgroundColor: colors.background.primaryLight,
+                          color: colors.primary.main,
+                        }}
+                        onPress={() => navigate("/tutor/my-courses")}
+                      >
+                        {t("courses.detail.viewMyCourse")}
+                      </Button>
+                    ) : (
+                      <Button
+                        color="primary"
+                        size="lg"
+                        className="w-full font-semibold text-base"
+                        onPress={() => navigate(`/checkout/${course.id}`)}
+                      >
+                        {t("courses.detail.enrollNow")}
+                      </Button>
+                    )}
 
                     <Divider />
 

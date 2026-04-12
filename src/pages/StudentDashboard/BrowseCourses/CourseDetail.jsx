@@ -695,6 +695,7 @@ const StudentCourseDetail = () => {
                     backgroundColor: colors.primary.main,
                     color: colors.text.white,
                   }}
+                  onPress={() => navigate(`/checkout/${course.id}`)}
                 >
                   {t("courses.detail.enrollNow")}
                 </Button>

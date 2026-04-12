@@ -1,4 +1,12 @@
 ﻿{
+  "common": {
+    "cancel": "Cancel",
+    "save": "Save",
+    "remove": "Remove",
+    "confirm": "Confirm",
+    "delete": "Delete",
+    "close": "Close"
+  },
   "brand": {
     "name": "EngConnect"
   },
@@ -583,9 +591,13 @@
     "myCourses": {
       "title": "My Courses",
       "subtitle": "Track your progress and continue learning",
-      "inProgress": "In Progress",
+      "all": "All",
+      "active": "Active",
       "completed": "Completed",
-      "wishlist": "Wishlist",
+      "pending": "Pending",
+      "searchPlaceholder": "Search courses...",
+      "emptyTitle": "No courses yet",
+      "emptySubtitle": "Browse our course catalog and enroll in a course to get started.",
       "lessons": "lessons",
       "continue": "Continue",
       "nextLesson": "Next",
@@ -593,19 +605,36 @@
       "viewCertificate": "Certificate",
       "reviewCourse": "Review",
       "students": "students",
-      "enrollNow": "Enroll Now"
+      "enrollNow": "Enroll Now",
+      "inProgress": "In Progress",
+      "wishlist": "Wishlist",
+      "backToMyCourses": "Back to My Courses",
+      "enrolled": "Enrolled",
+      "lessonSchedule": "Lesson Schedule",
+      "noLessonsYet": "No lessons scheduled for this course yet.",
+      "pastLessons": "Past Lessons",
+      "totalLessons": "Total Lessons"
     },
     "schedule": {
       "title": "My Schedule",
       "subtitle": "Manage your lessons and upcoming classes",
-      "bookLesson": "Book Lesson",
       "today": "Today",
       "todayLessons": "Today's Lessons",
       "upcomingLessons": "Upcoming Lessons",
+      "joinNow": "Join Now",
+      "lesson": "Lesson",
+      "filterStatus": "Status",
+      "all": "All",
+      "scheduled": "Scheduled",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "inProgress": "In Progress",
+      "noLessons": "No lessons yet",
+      "noLessonsDesc": "Your scheduled lessons will appear here after enrollment.",
       "videoCall": "Video Call",
       "reschedule": "Reschedule",
       "cancel": "Cancel",
-      "joinNow": "Join Now"
+      "bookLesson": "Book Lesson"
     },
     "homework": {
       "title": "Homework",
@@ -957,16 +986,61 @@
     "schedule": {
       "title": "My Schedule",
       "subtitle": "Manage your availability and lessons",
+      "addSchedule": "Add Schedule",
+      "editSchedule": "Edit Schedule",
       "setAvailability": "Set Availability",
       "confirmed": "Confirmed",
       "pending": "Pending",
       "available": "Available",
       "todayLessons": "Today's Lessons",
+      "todaySchedule": "Today's Schedule",
       "noLessonsToday": "No lessons scheduled for today",
+      "noScheduleToday": "No schedule for today",
       "setWeeklyAvailability": "Set Weekly Availability",
       "cancel": "Cancel",
       "save": "Save Changes",
-      "addSlot": "Add slot"
+      "addSlot": "Add slot",
+      "today": "Today",
+      "slots": "slots",
+      "noSlots": "No schedule slots",
+      "overview": "Overview",
+      "weekday": "Weekday",
+      "startTime": "Start Time",
+      "endTime": "End Time",
+      "edit": "Edit",
+      "delete": "Delete",
+      "confirmDelete": "Confirm Delete",
+      "deleteMessage": "Are you sure you want to delete this schedule slot? This action cannot be undone.",
+      "errorConflict": "This time slot conflicts with an existing schedule.",
+      "scheduleSlots": "Schedule Slots",
+      "myLessons": "Lessons",
+      "noLessons": "No lessons yet",
+      "noLessonsDesc": "Lessons will appear here when students enroll in your courses.",
+      "upcomingLessons": "Upcoming Lessons",
+      "joinLesson": "Join",
+      "lessonLabel": "Lesson",
+      "lessonStatus": {
+        "scheduled": "Scheduled",
+        "completed": "Completed",
+        "cancelled": "Cancelled",
+        "inProgress": "In Progress"
+      },
+      "days": {
+        "monday": "Monday",
+        "tuesday": "Tuesday",
+        "wednesday": "Wednesday",
+        "thursday": "Thursday",
+        "friday": "Friday",
+        "saturday": "Saturday",
+        "sunday": "Sunday"
+      },
+      "status": {
+        "open": "Open",
+        "booked": "Booked",
+        "pending": "Pending",
+        "inactive": "Inactive"
+      },
+      "studentLabel": "Student"
     },
     "students": {
       "title": "My Students",
@@ -1293,7 +1367,7 @@
       "reviews": "reviews",
       "off": "OFF",
       "enrollNow": "Enroll Now",
-      "backToCourses": "Back to Courses",
+      "viewMyCourse": "View My CoursesnumsSessionInWeek",
       "notFound": "Course not found",
       "courseCurriculum": "Course Curriculum",
       "modules": "modules",
@@ -1316,8 +1390,51 @@
       "incompleteNoSessions": "This course has modules but no sessions yet. Continue creating to add sessions and resources.",
       "continueCourse": "Continue Creating",
       "pendingEditLocked": "This course is under review and cannot be edited. Please wait for the admin to approve or reject it.",
-      "publishedEditLocked": "Published courses cannot be edited. Please contact admin if changes are required."
+      "publishedEditLocked": "Published courses cannot be edited. Please contact admin if changes are required.",
+      "resources": {
+        "label": "Resources",
+        "loading": "Loading resources...",
+        "empty": "No resources for this session",
+        "open": "Open resource",
+        "edit": "Edit resource",
+        "remove": "Remove from session",
+        "editTitle": "Edit Resource",
+        "fieldTitle": "Title",
+        "fieldType": "Resource Type",
+        "fieldUrl": "URL",
+        "removeTitle": "Remove Resource",
+        "removeMessage": "Are you sure you want to remove this resource from the session?"
+      }
     }
+  },
+  "checkout": {
+    "title": "Checkout",
+    "backToCourse": "Back to course",
+    "selectSlots": "Select Schedule Slots",
+    "selectSlotsDesc": "You need to select exactly {{count}} slot(s) per week for this course.",
+    "notEnoughSlots": "Not enough available slots. This course requires {{required}} slot(s) but only {{available}} are available.",
+    "noSlots": "No available schedule slots",
+    "paymentMethod": "Payment Method",
+    "orderSummary": "Order Summary",
+    "slotsSelected": "Slots selected",
+    "payment": "Payment",
+    "total": "Total",
+    "pay": "Pay Now"
+  },
+  "paymentReturn": {
+    "verifying": "Verifying your payment...",
+    "successTitle": "Payment Successful!",
+    "successMessage": "Your enrollment has been confirmed. You can now access your course.",
+    "cancelledTitle": "Payment Cancelled",
+    "failedTitle": "Payment Failed",
+    "failedMessage": "Something went wrong with your payment. Please try again.",
+    "errorTitle": "Verification Error",
+    "errorMessage": "We could not verify your payment. Please contact support if you were charged.",
+    "orderCode": "Order Code",
+    "status": "Status",
+    "goToMyCourses": "Go to My Courses",
+    "browseCourses": "Browse Courses",
+    "goHome": "Back to Home"
   },
   "helpSupport": {
     "title": "Help & Support",
@@ -1942,6 +2059,35 @@
         "Resolved": "Resolved",
         "Closed": "Closed"
       }
+    }
+  },
+  "videoCall": {
+    "title": "Video Call",
+    "readyToJoin": "Check your camera and microphone, then join the meeting",
+    "joinMeeting": "Join Meeting",
+    "backToSchedule": "Back to schedule",
+    "meetingEnded": "Meeting Ended",
+    "meetingEndedDesc": "This meeting has ended. Thank you for your time!",
+    "waitingForOther": "Waiting for the other participant to join...",
+    "connecting": "Connecting...",
+    "participants": "participants",
+    "chat": "Chat",
+    "noMessages": "No messages yet. Say hello!",
+    "typeMessage": "Type a message...",
+    "muteMic": "Mute microphone",
+    "unmuteMic": "Unmute microphone",
+    "hideVideo": "Turn off camera",
+    "showVideo": "Turn on camera",
+    "endMeeting": "End Meeting",
+    "leave": "Leave",
+    "you": "You",
+    "roleTutor": "Tutor",
+    "roleStudent": "Student",
+    "connection": {
+      "connected": "Connected",
+      "connecting": "Connecting",
+      "reconnecting": "Reconnecting",
+      "disconnected": "Disconnected"
     }
   }
 }

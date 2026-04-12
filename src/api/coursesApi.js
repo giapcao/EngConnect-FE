@@ -49,7 +49,7 @@ export const coursesApi = {
 
   // Get my courses (tutor)
   getMyCourses: async (params = {}) => {
-    const response = await axiosInstance.get("/courses/my-course", { params });
+    const response = await axiosInstance.get("/courses/my-course/tutor", { params });
     return response.data;
   },
 
@@ -244,6 +244,12 @@ export const coursesApi = {
   // Delete course resource
   deleteCourseResource: async (resourceId) => {
     const response = await axiosInstance.delete(`/course-resources/${resourceId}`);
+    return response.data;
+  },
+
+  // Remove a resource from a session (using the join-table id from sessionsResources)
+  removeSessionResource: async (sessionResourceId) => {
+    const response = await axiosInstance.delete(`/sessions-resources/${sessionResourceId}`);
     return response.data;
   },
 
