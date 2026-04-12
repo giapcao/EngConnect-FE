@@ -5,7 +5,8 @@
     "remove": "Remove",
     "confirm": "Confirm",
     "delete": "Delete",
-    "close": "Close"
+    "close": "Close",
+    "back": "Back"
   },
   "brand": {
     "name": "EngConnect"
@@ -1679,7 +1680,9 @@
       "noData": "No tutors found",
       "editTutor": "Edit Tutor",
       "headline": "Headline",
-      "nA": "N/A"
+      "nA": "N/A",
+      "tutorCourses": "Tutor's Courses",
+      "noCourses": "This tutor has no courses yet."
     },
     "verification": {
       "title": "Tutor Verification Requests",
@@ -2089,5 +2092,12 @@
       "reconnecting": "Reconnecting",
       "disconnected": "Disconnected"
     }
+  },
+  "tutorProfile": {
+    "courses": "courses",
+    "coursesBy": "Courses by {{name}}",
+    "noCourses": "This tutor has no published courses yet.",
+    "notFound": "Tutor profile not found.",
+    "viewProfile": "View Profile"
   }
 }

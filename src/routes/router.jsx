@@ -18,6 +18,7 @@ import LoginFailed from "../pages/Authentication/LoginFailed/LoginFailed";
 import About from "../pages/AboutUs/About";
 import Courses from "../pages/Courses/Courses";
 import CourseDetail from "../pages/Courses/CourseDetail";
+import TutorProfilePage from "../pages/Courses/TutorProfile";
 import Checkout from "../pages/Courses/Checkout";
 import PaymentReturn from "../pages/Courses/PaymentReturn";
 import SearchResults from "../pages/Courses/SearchResults";
@@ -150,6 +151,10 @@ export const router = createBrowserRouter([
       {
         path: "courses/:id",
         element: <CourseDetail />,
+      },
+      {
+        path: "tutor-profile/:tutorId",
+        element: <TutorProfilePage />,
       },
       {
         path: "checkout/:id",

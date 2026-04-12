@@ -9,6 +9,7 @@ import Header from "../../components/Header/Header";
 import Footer from "../../components/Footer/Footer";
 import CourseCard from "../../components/CourseCard/CourseCard";
 import CourseCardSkeleton from "../../components/CourseCardSkeleton/CourseCardSkeleton";
+import useInputStyles from "../../hooks/useInputStyles";
 import {
   MagnifyingGlass,
   ArrowLeft,
@@ -22,6 +23,7 @@ const SearchResults = () => {
   const colors = useThemeColors();
   const { theme } = useTheme();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { selectClassNames } = useInputStyles();
 
   const queryFromUrl = searchParams.get("q") || "";
   const categoryFromUrl = searchParams.get("category") || "all";
@@ -148,16 +150,6 @@ const SearchResults = () => {
         }}
       >
         <div className="max-w-7xl mx-auto space-y-4">
-          <Button
-            variant="light"
-            startContent={<ArrowLeft className="w-4 h-4" />}
-            onPress={() => navigate("/courses")}
-            size="sm"
-            style={{ color: colors.text.secondary }}
-          >
-            {t("courses.search.backToCourses")}
-          </Button>
-
           <div>
             <h1
               className="text-2xl sm:text-3xl font-bold mb-1"
@@ -228,7 +220,7 @@ const SearchResults = () => {
                       onSelectionChange={(keys) =>
                         handleCategoryChange([...keys][0] ?? "all")
                       }
-                      classNames={{ trigger: "shadow-none" }}
+                      classNames={selectClassNames}
                     >
                       <SelectItem key="all">
                         {t("courses.categories.all")}
@@ -248,7 +240,7 @@ const SearchResults = () => {
                     onSelectionChange={(keys) =>
                       handleLevelChange([...keys][0] ?? "")
                     }
-                    classNames={{ trigger: "shadow-none" }}
+                    classNames={selectClassNames}
                   >
                     <SelectItem key="">
                       {t("courses.categories.allLevels")}
@@ -283,11 +275,11 @@ const SearchResults = () => {
               ))}
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center py-16 text-center">
+            <div className="flex flex-col items-center justify-center text-center">
               <img
                 src={searchImage}
                 alt="No results"
-                className="w-64 h-auto mb-6 opacity-80"
+                className="w-74 h-auto mb-6 opacity-80"
               />
               <h3
                 className="text-xl font-semibold mb-2"

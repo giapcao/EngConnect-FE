@@ -17,6 +17,7 @@ import {
   BookOpen,
   Check,
   ArrowLeft,
+  ArrowRight,
   CaretDown,
   CaretUp,
   Play,
@@ -616,7 +617,17 @@ const CourseDetail = () => {
                       >
                         {t("courses.detail.aboutInstructor")}
                       </h2>
-                      <div className="flex items-center gap-4 mb-4">
+                      <button
+                        type="button"
+                        className="flex items-center gap-4 mb-4 w-full text-left group cursor-pointer"
+                        onClick={() => {
+                          if (user?.tutorId === course?.tutorId) {
+                            navigate("/tutor/profile");
+                          } else {
+                            navigate(`/tutor-profile/${course?.tutorId}`);
+                          }
+                        }}
+                      >
                         <Avatar
                           src={tutorInfo.avatar}
                           name={`${tutorInfo.user?.firstName} ${tutorInfo.user?.lastName}`}
@@ -625,11 +636,15 @@ const CourseDetail = () => {
                         />
                         <div className="flex-1 min-w-0">
                           <p
-                            className="font-semibold text-lg"
-                            style={{ color: colors.text.primary }}
+                            className="font-semibold text-lg group-hover:underline"
+                            style={{ color: colors.primary.main }}
                           >
                             {tutorInfo.user?.firstName}{" "}
                             {tutorInfo.user?.lastName}
+                            <ArrowRight
+                              size={16}
+                              className="inline-block ml-1.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                            />
                           </p>
                           {tutorInfo.headline && (
                             <p
@@ -640,7 +655,7 @@ const CourseDetail = () => {
                             </p>
                           )}
                         </div>
-                      </div>
+                      </button>
                       <div className="flex items-center gap-4 mb-4">
                         <div className="flex items-center gap-1">
                           <Star

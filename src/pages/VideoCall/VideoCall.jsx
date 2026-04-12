@@ -20,6 +20,7 @@ import {
   X,
   UserCircle,
 } from "@phosphor-icons/react";
+import conversationIllustration from "../../assets/illustrations/conversation.avif";
 
 const VideoCall = () => {
   const { lessonId } = useParams();
@@ -303,16 +304,18 @@ const VideoCall = () => {
 
             {/* Local video (PIP) */}
             <div className="absolute bottom-4 right-4 w-48 h-36 rounded-xl overflow-hidden bg-gray-900 shadow-2xl border-2 border-gray-700">
-              {localStream && isVideoEnabled ? (
-                <video
-                  ref={localVideoRef}
-                  autoPlay
-                  playsInline
-                  muted
-                  className="w-full h-full object-cover mirror"
-                  style={{ transform: "scaleX(-1)" }}
-                />
-              ) : (
+              <video
+                ref={localVideoRef}
+                autoPlay
+                playsInline
+                muted
+                className="w-full h-full object-cover mirror"
+                style={{
+                  transform: "scaleX(-1)",
+                  display: localStream && isVideoEnabled ? "block" : "none",
+                }}
+              />
+              {!(localStream && isVideoEnabled) && (
                 <div className="w-full h-full flex items-center justify-center bg-gray-800">
                   <UserCircle
                     weight="fill"
@@ -346,30 +349,59 @@ const VideoCall = () => {
                 </button>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-3 space-y-2">
+              <div className="flex-1 overflow-y-auto p-3 space-y-3">
                 {chatMessages.length === 0 ? (
-                  <p className="text-gray-500 text-xs text-center mt-8">
-                    {t("videoCall.noMessages")}
-                  </p>
+                  <div className="flex flex-col items-center justify-center h-full opacity-60">
+                    <img
+                      src={conversationIllustration}
+                      alt="No messages"
+                      className="w-28 h-28 object-contain mb-3"
+                    />
+                    <p className="text-gray-400 text-xs text-center">
+                      {t("videoCall.noMessages")}
+                    </p>
+                  </div>
                 ) : (
                   chatMessages.map((msg, idx) => {
                     const isMe =
                       msg.userId === user?.id || msg.userId === user?.sub;
+                    const prevMsg = chatMessages[idx - 1];
+                    const prevIsMe =
+                      prevMsg &&
+                      (prevMsg.userId === user?.id ||
+                        prevMsg.userId === user?.sub);
+                    const showAvatar =
+                      !isMe &&
+                      prevIsMe !== false &&
+                      (idx === 0 || prevIsMe !== !isMe ? true : prevIsMe);
+                    const isFirst = idx === 0 || prevIsMe !== isMe;
                     return (
                       <div
                         key={idx}
-                        className={`flex ${isMe ? "justify-end" : "justify-start"}`}
+                        className={`flex items-end gap-2 ${isMe ? "flex-row-reverse" : "flex-row"} ${!isFirst ? "!mt-0.5" : ""}`}
                       >
+                        {!isMe ? (
+                          isFirst ? (
+                            <div className="w-7 h-7 rounded-full bg-gray-600 flex items-center justify-center flex-shrink-0">
+                              <UserCircle
+                                weight="fill"
+                                className="w-7 h-7 text-gray-400"
+                              />
+                            </div>
+                          ) : (
+                            <div className="w-7 flex-shrink-0" />
+                          )
+                        ) : null}
                         <div
-                          className={`max-w-[80%] px-3 py-2 rounded-xl text-sm ${
+                          className={`max-w-[75%] px-3 py-1.5 text-sm ${
                             isMe
-                              ? "bg-emerald-500 text-white"
-                              : "bg-gray-700 text-gray-200"
+                              ? `bg-emerald-500 text-white ${isFirst ? "rounded-2xl rounded-br-md" : "rounded-2xl rounded-br-md"}`
+                              : `bg-gray-700 text-gray-200 ${isFirst ? "rounded-2xl rounded-bl-md" : "rounded-2xl rounded-bl-md"}`
                           }`}
                         >
                           <p className="break-words">{msg.message}</p>
                           <p
-                            className={`text-[10px] mt-1 ${isMe ? "text-emerald-200" : "text-gray-500"}`}
+                            className={`text-[10px] mt-0.5 ${isMe ? "text-emerald-200 text-right" : "text-gray-500"}`}
                           >
                             {new Date(msg.sentAt).toLocaleTimeString(
                               dateLocale,

@@ -4,8 +4,16 @@ import { Card, CardBody, Button, Avatar, Chip, Spinner } from "@heroui/react";
 import { useTranslation } from "react-i18next";
 import { useThemeColors } from "../../../hooks/useThemeColors";
 import { motion } from "framer-motion";
-import { adminApi } from "../../../api";
-import { ArrowLeft, Star, CheckCircle } from "@phosphor-icons/react";
+import { adminApi, coursesApi } from "../../../api";
+import CourseCard from "../../../components/CourseCard/CourseCard";
+import CourseCardSkeleton from "../../../components/CourseCardSkeleton/CourseCardSkeleton";
+import {
+  ArrowLeft,
+  Star,
+  CheckCircle,
+  GraduationCap,
+} from "@phosphor-icons/react";
+import searchIllustration from "../../../assets/illustrations/search.avif";
 
 const AdminTutorDetail = () => {
   const { id } = useParams();
@@ -15,6 +23,8 @@ const AdminTutorDetail = () => {
 
   const [tutor, setTutor] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [courses, setCourses] = useState([]);
+  const [loadingCourses, setLoadingCourses] = useState(true);
 
   useEffect(() => {
     const fetchDetail = async () => {
@@ -28,7 +38,22 @@ const AdminTutorDetail = () => {
         setLoading(false);
       }
     };
+    const fetchCourses = async () => {
+      try {
+        setLoadingCourses(true);
+        const res = await coursesApi.getAllCourses({
+          TutorId: id,
+          "page-size": 50,
+        });
+        setCourses(res.data?.items || []);
+      } catch (err) {
+        console.error("Failed to fetch tutor courses:", err);
+      } finally {
+        setLoadingCourses(false);
+      }
+    };
     fetchDetail();
+    fetchCourses();
   }, [id]);
 
   const getVerifiedColor = (status) => {
@@ -276,6 +301,69 @@ const AdminTutorDetail = () => {
             ) : null}
           </CardBody>
         </Card>
+      </motion.div>
+
+      {/* Tutor Courses */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.15, delay: 0.1 }}
+      >
+        <h2
+          className="text-xl font-bold mb-4 flex items-center gap-2"
+          style={{ color: colors.text.primary }}
+        >
+          <GraduationCap
+            size={22}
+            weight="duotone"
+            style={{ color: colors.primary.main }}
+          />
+          {t("adminDashboard.tutors.tutorCourses")}
+          {!loadingCourses && (
+            <span
+              className="text-sm font-normal"
+              style={{ color: colors.text.tertiary }}
+            >
+              ({courses.length})
+            </span>
+          )}
+        </h2>
+        {loadingCourses ? (
+          <CourseCardSkeleton
+            count={3}
+            gridClassName="grid sm:grid-cols-2 lg:grid-cols-3 gap-6"
+            cardBgColor={colors.background.light}
+          />
+        ) : courses.length > 0 ? (
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {courses.map((course) => (
+              <CourseCard
+                key={course.id}
+                course={course}
+                showCategory
+                basePath="/admin/courses"
+                style={{ backgroundColor: colors.background.light }}
+              />
+            ))}
+          </div>
+        ) : (
+          <Card
+            shadow="none"
+            className="border-none"
+            style={{ backgroundColor: colors.background.light }}
+          >
+            <CardBody className="flex flex-col items-center justify-center py-12">
+              <img
+                src={searchIllustration}
+                alt="No courses"
+                className="w-32 h-32 object-contain mb-4 opacity-80"
+              />
+              <p className="text-sm" style={{ color: colors.text.secondary }}>
+                {t("adminDashboard.tutors.noCourses")}
+              </p>
+            </CardBody>
+          </Card>
+        )}
       </motion.div>
     </div>
   );

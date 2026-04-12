@@ -5,7 +5,8 @@
     "remove": "Xóa",
     "confirm": "Xác nhận",
     "delete": "Xóa",
-    "close": "Đóng"
+    "close": "Đóng",
+    "back": "Quay lại"
   },
   "brand": {
     "name": "EngConnect"
@@ -1678,7 +1679,9 @@
       "noData": "Không tìm thấy gia sư",
       "editTutor": "Sửa gia sư",
       "headline": "Tiêu đề",
-      "nA": "N/A"
+      "nA": "N/A",
+      "tutorCourses": "Khóa học của gia sư",
+      "noCourses": "Gia sư này chưa có khóa học nào."
     },
     "verification": {
       "title": "Yêu cầu xác minh gia sư",
@@ -2087,5 +2090,12 @@
       "reconnecting": "Đang kết nối lại",
       "disconnected": "Mất kết nối"
     }
+  },
+  "tutorProfile": {
+    "courses": "khóa học",
+    "coursesBy": "Khóa học của {{name}}",
+    "noCourses": "Gia sư này chưa có khóa học nào.",
+    "notFound": "Không tìm thấy hồ sơ gia sư.",
+    "viewProfile": "Xem hồ sơ"
   }
 }
