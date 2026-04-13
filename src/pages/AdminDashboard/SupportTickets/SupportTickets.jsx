@@ -26,16 +26,20 @@ import {
   ModalHeader,
   ModalBody,
   ModalFooter,
+  Avatar,
   addToast,
 } from "@heroui/react";
 import { useTranslation } from "react-i18next";
 import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import { useThemeColors } from "../../../hooks/useThemeColors";
 import useInputStyles from "../../../hooks/useInputStyles";
 import useTableStyles from "../../../hooks/useTableStyles";
 import useDropdownStyles from "../../../hooks/useDropdownStyles";
 import { selectUser } from "../../../store";
 import { supportApi } from "../../../api/supportApi";
+import { tutorApi } from "../../../api/tutorApi";
+import { studentApi } from "../../../api/studentApi";
 // eslint-disable-next-line no-unused-vars
 import { motion } from "framer-motion";
 import {
@@ -48,6 +52,7 @@ import {
   Trash,
   UserCircle,
   ShieldCheck,
+  EnvelopeSimple,
 } from "@phosphor-icons/react";
 
 const TICKET_TYPES = [
@@ -83,6 +88,7 @@ const SupportTickets = () => {
   const { tableCardStyle, tableClassNames } = useTableStyles();
   const { dropdownClassNames } = useDropdownStyles();
   const user = useSelector(selectUser);
+  const navigate = useNavigate();
   const messagesEndRef = useRef(null);
 
   const [view, setView] = useState("list");
@@ -99,6 +105,8 @@ const SupportTickets = () => {
 
   // Detail
   const [detailLoading, setDetailLoading] = useState(false);
+  const [senderInfo, setSenderInfo] = useState(null);
+  const [senderLoading, setSenderLoading] = useState(false);
   const [messageText, setMessageText] = useState("");
   const [sending, setSending] = useState(false);
 
@@ -136,6 +144,44 @@ const SupportTickets = () => {
     fetchTickets();
   };
 
+  const resolveSender = async (userId) => {
+    if (!userId) return;
+    setSenderLoading(true);
+    setSenderInfo(null);
+    try {
+      // Check if user is a tutor
+      const tutorRes = await tutorApi.getAllTutors({ UserId: userId });
+      if (tutorRes.isSuccess && tutorRes.data?.items?.length > 0) {
+        const tutor = tutorRes.data.items[0];
+        setSenderInfo({
+          role: "Tutor",
+          id: tutor.id,
+          avatar: tutor.avatar,
+          name: `${tutor.user?.firstName || ""} ${tutor.user?.lastName || ""}`.trim(),
+          email: tutor.user?.email || "",
+        });
+        return;
+      }
+      // Check if user is a student
+      const studentRes = await studentApi.getAllStudents({ UserId: userId });
+      if (studentRes.isSuccess && studentRes.data?.items?.length > 0) {
+        const student = studentRes.data.items[0];
+        setSenderInfo({
+          role: "Student",
+          id: student.id,
+          avatar: student.avatar,
+          name: `${student.user?.firstName || ""} ${student.user?.lastName || ""}`.trim(),
+          email: student.user?.email || "",
+        });
+        return;
+      }
+    } catch {
+      // Silently fail
+    } finally {
+      setSenderLoading(false);
+    }
+  };
+
   const openDetail = async (ticket) => {
     setView("detail");
     setDetailLoading(true);
@@ -143,6 +189,11 @@ const SupportTickets = () => {
       const res = await supportApi.getTicketById(ticket.id);
       if (res.isSuccess) {
         setSelectedTicket(res.data);
+        const messages = res.data.supportTicketMessages || [];
+        // The ticket creator is the sender who is not the current admin
+        const creatorMsg =
+          messages.find((m) => m.senderId !== user?.userId) || messages[0];
+        resolveSender(creatorMsg?.senderId);
       }
     } catch {
       addToast({ title: "Failed to load ticket", color: "danger" });
@@ -348,6 +399,99 @@ const SupportTickets = () => {
                       {selectedTicket.description}
                     </p>
                   </div>
+                </CardBody>
+              </Card>
+            </motion.div>
+
+            {/* Sender Info */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.15 }}
+            >
+              <Card
+                shadow="none"
+                className="border-none"
+                style={{ backgroundColor: colors.background.light }}
+              >
+                <CardBody className="p-6">
+                  <h3
+                    className="text-base font-semibold mb-4"
+                    style={{ color: colors.text.primary }}
+                  >
+                    {t("adminDashboard.supportTickets.detail.sentBy")}
+                  </h3>
+                  {senderLoading ? (
+                    <div className="flex items-center gap-4">
+                      <Skeleton className="w-12 h-12 rounded-full" />
+                      <div className="flex-1">
+                        <Skeleton className="w-32 h-4 mb-2 rounded" />
+                        <Skeleton className="w-48 h-3 rounded" />
+                      </div>
+                    </div>
+                  ) : senderInfo ? (
+                    <div
+                      className={`flex items-center gap-4 p-3 rounded-xl transition-colors ${senderInfo.role === "Tutor" ? "cursor-pointer hover:opacity-80" : ""}`}
+                      style={{ backgroundColor: colors.background.gray }}
+                      onClick={() => {
+                        if (senderInfo.role === "Tutor") {
+                          navigate(`/admin/tutors/${senderInfo.id}`);
+                        }
+                      }}
+                    >
+                      <Avatar
+                        src={senderInfo.avatar}
+                        name={senderInfo.name}
+                        size="lg"
+                        className="shrink-0"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p
+                          className="font-semibold truncate"
+                          style={{ color: colors.text.primary }}
+                        >
+                          {senderInfo.name ||
+                            t(
+                              "adminDashboard.supportTickets.detail.unknownUser",
+                            )}
+                        </p>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          <EnvelopeSimple
+                            weight="duotone"
+                            className="w-3.5 h-3.5 shrink-0"
+                            style={{ color: colors.text.tertiary }}
+                          />
+                          <span
+                            className="text-sm truncate"
+                            style={{ color: colors.text.tertiary }}
+                          >
+                            {senderInfo.email}
+                          </span>
+                        </div>
+                        <Chip
+                          size="sm"
+                          variant="flat"
+                          color={
+                            senderInfo.role === "Tutor"
+                              ? "secondary"
+                              : "primary"
+                          }
+                          className="mt-1.5"
+                        >
+                          {t(
+                            `adminDashboard.supportTickets.detail.role${senderInfo.role}`,
+                          )}
+                        </Chip>
+                      </div>
+                    </div>
+                  ) : (
+                    <p
+                      className="text-sm"
+                      style={{ color: colors.text.tertiary }}
+                    >
+                      {t("adminDashboard.supportTickets.detail.unknownUser")}
+                    </p>
+                  )}
                 </CardBody>
               </Card>
             </motion.div>

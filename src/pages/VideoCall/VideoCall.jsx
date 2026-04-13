@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { selectUser } from "../../store";
 import { useTranslation } from "react-i18next";
-import { meetingApi } from "../../api";
+import { meetingApi, authApi } from "../../api";
 import useWebRTC from "../../hooks/useWebRTC";
 import {
   Microphone,
@@ -55,10 +55,42 @@ const VideoCall = () => {
   const [showChat, setShowChat] = useState(false);
   const [chatInput, setChatInput] = useState("");
   const [joined, setJoined] = useState(false);
+  const [userNames, setUserNames] = useState({});
 
   const localVideoRef = useRef(null);
   const remoteVideoRef = useRef(null);
   const chatEndRef = useRef(null);
+  const fetchingNamesRef = useRef(new Set());
+
+  // Fetch display name for a userId and cache it
+  const fetchUserName = useCallback(
+    async (userId) => {
+      if (!userId || userNames[userId] || fetchingNamesRef.current.has(userId))
+        return;
+      fetchingNamesRef.current.add(userId);
+      try {
+        const res = await authApi.getUserById(userId);
+        const u = res.data;
+        const name =
+          `${u.firstName || ""} ${u.lastName || ""}`.trim() || u.userName;
+        setUserNames((prev) => ({ ...prev, [userId]: name }));
+      } catch {
+        // fallback
+        setUserNames((prev) => ({ ...prev, [userId]: "User" }));
+      } finally {
+        fetchingNamesRef.current.delete(userId);
+      }
+    },
+    [userNames],
+  );
+
+  // Resolve names for incoming chat messages
+  useEffect(() => {
+    chatMessages.forEach((msg) => {
+      const isMe = msg.userId === user?.userId || msg.userId === user?.sub;
+      if (!isMe) fetchUserName(msg.userId);
+    });
+  }, [chatMessages, user, fetchUserName]);
 
   // Fetch meeting info
   useEffect(() => {
@@ -355,7 +387,7 @@ const VideoCall = () => {
                     <img
                       src={conversationIllustration}
                       alt="No messages"
-                      className="w-28 h-28 object-contain mb-3"
+                      className="w-48 h-48 object-contain mb-3"
                     />
                     <p className="text-gray-400 text-xs text-center">
                       {t("videoCall.noMessages")}
@@ -364,39 +396,31 @@ const VideoCall = () => {
                 ) : (
                   chatMessages.map((msg, idx) => {
                     const isMe =
-                      msg.userId === user?.id || msg.userId === user?.sub;
+                      msg.userId === user?.userId || msg.userId === user?.sub;
                     const prevMsg = chatMessages[idx - 1];
-                    const prevIsMe =
-                      prevMsg &&
-                      (prevMsg.userId === user?.id ||
-                        prevMsg.userId === user?.sub);
-                    const showAvatar =
-                      !isMe &&
-                      prevIsMe !== false &&
-                      (idx === 0 || prevIsMe !== !isMe ? true : prevIsMe);
-                    const isFirst = idx === 0 || prevIsMe !== isMe;
+                    const sameSenderAsPrev =
+                      prevMsg && prevMsg.userId === msg.userId;
+                    const isFirst = idx === 0 || !sameSenderAsPrev;
+                    const senderName = isMe
+                      ? t("videoCall.you")
+                      : userNames[msg.userId] || "...";
                     return (
                       <div
                         key={idx}
-                        className={`flex items-end gap-2 ${isMe ? "flex-row-reverse" : "flex-row"} ${!isFirst ? "!mt-0.5" : ""}`}
+                        className={`flex flex-col ${isMe ? "items-end" : "items-start"} ${!isFirst ? "!mt-0.5" : ""}`}
                       >
-                        {!isMe ? (
-                          isFirst ? (
-                            <div className="w-7 h-7 rounded-full bg-gray-600 flex items-center justify-center flex-shrink-0">
-                              <UserCircle
-                                weight="fill"
-                                className="w-7 h-7 text-gray-400"
-                              />
-                            </div>
-                          ) : (
-                            <div className="w-7 flex-shrink-0" />
-                          )
-                        ) : null}
+                        {isFirst && (
+                          <p
+                            className={`text-[11px] font-medium mb-1 px-1 ${isMe ? "text-emerald-300" : "text-gray-400"}`}
+                          >
+                            {senderName}
+                          </p>
+                        )}
                         <div
-                          className={`max-w-[75%] px-3 py-1.5 text-sm ${
+                          className={`max-w-[80%] px-3 py-1.5 text-sm ${
                             isMe
-                              ? `bg-emerald-500 text-white ${isFirst ? "rounded-2xl rounded-br-md" : "rounded-2xl rounded-br-md"}`
-                              : `bg-gray-700 text-gray-200 ${isFirst ? "rounded-2xl rounded-bl-md" : "rounded-2xl rounded-bl-md"}`
+                              ? "bg-emerald-500 text-white rounded-2xl rounded-br-md"
+                              : "bg-gray-700 text-gray-200 rounded-2xl rounded-bl-md"
                           }`}
                         >
                           <p className="break-words">{msg.message}</p>

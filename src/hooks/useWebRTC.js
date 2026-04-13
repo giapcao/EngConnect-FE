@@ -4,21 +4,7 @@ import { meetingApi } from "../api";
 
 const HUB_URL = "https://engconnect-qa.gdev.id.vn/hubs/video-call";
 
-const ICE_SERVERS = [
-  { urls: "stun:stun.l.google.com:19302" },
-  {
-    urls: [
-      "turn:global.relay.metered.ca:80",
-      "turn:global.relay.metered.ca:443",
-      "turn:global.relay.metered.ca:443?transport=tcp",
-      "turns:global.relay.metered.ca:443?transport=tcp",
-    ],
-    username: "101e032b557e1c806a71044e",
-    credential: "uihC1eC+am1XOK6s",
-  },
-];
-
-const FORCE_TURN_RELAY = true;
+const DEFAULT_ICE_SERVERS = [{ urls: "stun:stun.l.google.com:19302" }];
 
 const CHUNK_INTERVAL = 30000; // 30s
 
@@ -40,8 +26,49 @@ export default function useWebRTC(lessonId, userRole) {
   const recorderRef = useRef(null);
   const chunkCountRef = useRef(0);
   const chunkIntervalRef = useRef(null);
+  const chunkTimestampRef = useRef(0);
+  const pendingUploadsRef = useRef([]);
   const remoteConnectionIdRef = useRef(null);
   const pendingIceCandidatesRef = useRef([]);
+  const iceServersRef = useRef(DEFAULT_ICE_SERVERS);
+
+  const loadIceServers = useCallback(async () => {
+    try {
+      const data = await meetingApi.getIceServers();
+      const servers = Array.isArray(data?.iceServers)
+        ? data.iceServers
+        : Array.isArray(data?.data?.iceServers)
+          ? data.data.iceServers
+          : [];
+
+      const normalizedServers = servers
+        .filter((server) => {
+          if (!server) return false;
+          const urls = server.urls;
+          return (
+            (Array.isArray(urls) && urls.length > 0) ||
+            (typeof urls === "string" && urls.trim().length > 0)
+          );
+        })
+        .map((server) => ({
+          urls: server.urls,
+          ...(server.username ? { username: server.username } : {}),
+          ...(server.credential ? { credential: server.credential } : {}),
+        }));
+
+      if (normalizedServers.length > 0) {
+        iceServersRef.current = normalizedServers;
+      } else {
+        iceServersRef.current = DEFAULT_ICE_SERVERS;
+        console.warn(
+          "ICE server API returned empty config. Falling back to default STUN.",
+        );
+      }
+    } catch (err) {
+      iceServersRef.current = DEFAULT_ICE_SERVERS;
+      console.error("Failed to load ICE servers. Using default STUN.", err);
+    }
+  }, []);
 
   const flushPendingIceCandidates = useCallback(async (pc) => {
     if (
@@ -91,8 +118,7 @@ export default function useWebRTC(lessonId, userRole) {
       pendingIceCandidatesRef.current = [];
 
       const pc = new RTCPeerConnection({
-        iceServers: ICE_SERVERS,
-        iceTransportPolicy: FORCE_TURN_RELAY ? "relay" : "all",
+        iceServers: iceServersRef.current,
       });
       peerRef.current = pc;
       remoteConnectionIdRef.current = remoteConnectionId;
@@ -185,40 +211,45 @@ export default function useWebRTC(lessonId, userRole) {
     }
   }, []);
 
-  // Start recording
+  // Start recording (tutor only)
   const startRecording = useCallback(
     (stream) => {
-      if (!stream || !MediaRecorder.isTypeSupported("video/webm")) return;
+      if (!stream || userRole !== "Tutor") return;
+      if (!MediaRecorder.isTypeSupported("video/webm")) return;
       try {
         const recorder = new MediaRecorder(stream, {
           mimeType: "video/webm",
         });
         recorderRef.current = recorder;
         chunkCountRef.current = 0;
+        chunkTimestampRef.current = 0;
+        pendingUploadsRef.current = [];
 
         recorder.ondataavailable = async (event) => {
           if (event.data.size > 0) {
-            const timestamp = Date.now();
+            // Monotonic timestamp: always greater than previous
+            const now = Date.now();
+            const ts = Math.max(now, chunkTimestampRef.current + 1);
+            chunkTimestampRef.current = ts;
             chunkCountRef.current += 1;
-            try {
-              await meetingApi.uploadRecordingChunk(
-                lessonId,
-                timestamp,
-                event.data,
-              );
-            } catch (err) {
-              console.error("Chunk upload failed, retrying...", err);
-              // Retry once
-              try {
-                await meetingApi.uploadRecordingChunk(
-                  lessonId,
-                  timestamp,
-                  event.data,
-                );
-              } catch (retryErr) {
-                console.error("Chunk upload retry failed:", retryErr);
-              }
-            }
+
+            const uploadPromise = meetingApi
+              .uploadRecordingChunk(lessonId, ts, event.data)
+              .catch((err) => {
+                console.error("Chunk upload failed, retrying once:", err);
+                return meetingApi
+                  .uploadRecordingChunk(lessonId, ts, event.data)
+                  .catch((retryErr) => {
+                    console.error("Chunk upload retry failed:", retryErr);
+                  });
+              });
+
+            pendingUploadsRef.current.push(uploadPromise);
+            // Cleanup settled promises
+            uploadPromise.finally(() => {
+              pendingUploadsRef.current =
+                pendingUploadsRef.current.filter((p) => p !== uploadPromise);
+            });
           }
         };
 
@@ -233,19 +264,29 @@ export default function useWebRTC(lessonId, userRole) {
         console.error("Recording not supported:", err);
       }
     },
-    [lessonId],
+    [lessonId, userRole],
   );
 
-  // Stop recording
+  // Stop recording and wait for pending uploads to flush
   const stopRecording = useCallback(() => {
     if (chunkIntervalRef.current) {
       clearInterval(chunkIntervalRef.current);
       chunkIntervalRef.current = null;
     }
-    if (recorderRef.current && recorderRef.current.state !== "inactive") {
-      recorderRef.current.stop();
-      recorderRef.current = null;
-    }
+    return new Promise((resolve) => {
+      if (recorderRef.current && recorderRef.current.state !== "inactive") {
+        recorderRef.current.onstop = () => {
+          recorderRef.current = null;
+          // Wait for all pending chunk uploads to flush
+          Promise.allSettled(pendingUploadsRef.current).then(() => resolve());
+        };
+        recorderRef.current.requestData(); // trigger final chunk
+        recorderRef.current.stop();
+      } else {
+        recorderRef.current = null;
+        Promise.allSettled(pendingUploadsRef.current).then(() => resolve());
+      }
+    });
   }, []);
 
   // Connect SignalR and set up all event handlers
@@ -254,6 +295,8 @@ export default function useWebRTC(lessonId, userRole) {
 
     const stream = await startMedia();
     if (!stream) return;
+
+    await loadIceServers();
 
     const connection = buildConnection();
     if (!connection) return;
@@ -396,6 +439,7 @@ export default function useWebRTC(lessonId, userRole) {
     });
 
     connection.on("ReceiveChatMessage", (data) => {
+      console.log(`[Chat] userId=${data.userId} | message="${data.message}" | sentAt=${data.sentAt}`);
       setChatMessages((prev) => [...prev, data]);
     });
 
@@ -430,6 +474,7 @@ export default function useWebRTC(lessonId, userRole) {
     userRole,
     buildConnection,
     startMedia,
+    loadIceServers,
     createPeerConnection,
     flushPendingIceCandidates,
     startRecording,
@@ -489,9 +534,9 @@ export default function useWebRTC(lessonId, userRole) {
     [lessonId],
   );
 
-  // End meeting (tutor only)
+  // End meeting (tutor only) — flush recording before signaling
   const endMeeting = useCallback(async () => {
-    stopRecording();
+    await stopRecording();
     if (hubRef.current) {
       try {
         await hubRef.current.invoke(

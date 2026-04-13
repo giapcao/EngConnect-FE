@@ -90,4 +90,10 @@ export const authApi = {
     const response = await axiosInstance.patch(`/users/${userId}`, data);
     return response.data;
   },
+
+  // Get user by ID
+  getUserById: async (userId) => {
+    const response = await axiosInstance.get(`/users/${userId}`);
+    return response.data;
+  },
 };

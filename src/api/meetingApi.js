@@ -27,4 +27,8 @@ export const meetingApi = {
     );
     return response.data;
   },
+  getIceServers: async () => {
+    const response = await axiosInstance.get("/meetings/ice-servers");
+    return response.data;
+  },
 };

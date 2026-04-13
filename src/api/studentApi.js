@@ -1,6 +1,12 @@
 import axiosInstance from "./axiosConfig";
 
 export const studentApi = {
+  // Get all students (with optional query params)
+  getAllStudents: async (params = {}) => {
+    const response = await axiosInstance.get("/students", { params });
+    return response.data;
+  },
+
   // Get student profile
   getStudentProfile: async () => {
     const response = await axiosInstance.get("/students/profile");

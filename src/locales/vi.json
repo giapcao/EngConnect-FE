@@ -2045,7 +2045,11 @@
         "changeStatus": "Đổi trạng thái",
         "you": "Bạn",
         "admin": "Admin",
-        "user": "Người dùng"
+        "user": "Người dùng",
+        "sentBy": "Gửi bởi",
+        "unknownUser": "Người dùng không xác định",
+        "roleTutor": "Gia sư",
+        "roleStudent": "Học viên"
       },
       "types": {
         "Error": "Lỗi",

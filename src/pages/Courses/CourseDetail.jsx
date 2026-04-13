@@ -782,7 +782,11 @@ const CourseDetail = () => {
                         color="primary"
                         size="lg"
                         className="w-full font-semibold text-base"
-                        onPress={() => navigate(`/checkout/${course.id}`)}
+                        onPress={() =>
+                          user
+                            ? navigate(`/checkout/${course.id}`)
+                            : navigate("/login")
+                        }
                       >
                         {t("courses.detail.enrollNow")}
                       </Button>
