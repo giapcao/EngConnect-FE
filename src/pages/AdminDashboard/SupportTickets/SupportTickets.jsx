@@ -84,7 +84,7 @@ const STATUSES = ["Open", "Resolved", "Closed"];
 const SupportTickets = () => {
   const { t } = useTranslation();
   const colors = useThemeColors();
-  const { inputClassNames } = useInputStyles();
+  const { inputClassNames, selectClassNames } = useInputStyles();
   const { tableCardStyle, tableClassNames } = useTableStyles();
   const { dropdownClassNames } = useDropdownStyles();
   const user = useSelector(selectUser);
@@ -372,7 +372,7 @@ const SupportTickets = () => {
                         }}
                         className="w-40"
                         size="sm"
-                        classNames={inputClassNames}
+                        classNames={selectClassNames}
                         aria-label={t(
                           "adminDashboard.supportTickets.detail.changeStatus",
                         )}
@@ -752,7 +752,7 @@ const SupportTickets = () => {
                 }}
                 placeholder={t("adminDashboard.supportTickets.allStatuses")}
                 className="w-full md:w-44"
-                classNames={inputClassNames}
+                classNames={selectClassNames}
               >
                 {STATUSES.map((s) => (
                   <SelectItem key={s}>
@@ -769,7 +769,7 @@ const SupportTickets = () => {
                 }}
                 placeholder={t("adminDashboard.supportTickets.allTypes")}
                 className="w-full md:w-44"
-                classNames={inputClassNames}
+                classNames={selectClassNames}
               >
                 {TICKET_TYPES.map((tp) => (
                   <SelectItem key={tp}>

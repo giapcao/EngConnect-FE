@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Input, Chip, Select, SelectItem } from "@heroui/react";
 import { useTranslation } from "react-i18next";
 import { useThemeColors } from "../../../hooks/useThemeColors";
+import useInputStyles from "../../../hooks/useInputStyles";
 import { motion } from "framer-motion";
 import { MagnifyingGlass } from "@phosphor-icons/react";
 import CourseCard from "../../../components/CourseCard/CourseCard";
@@ -11,6 +12,7 @@ import { coursesApi } from "../../../api";
 const BrowseCourses = () => {
   const { t } = useTranslation();
   const colors = useThemeColors();
+  const { selectClassNames } = useInputStyles();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedLevel, setSelectedLevel] = useState("all");
@@ -123,9 +125,7 @@ const BrowseCourses = () => {
             selectedKeys={[selectedCategory]}
             onSelectionChange={(keys) => setSelectedCategory([...keys][0])}
             className="w-40"
-            classNames={{
-              trigger: "bg-white dark:bg-slate-900",
-            }}
+            classNames={selectClassNames}
           >
             {categories.map((cat) => (
               <SelectItem key={cat.key}>{cat.label}</SelectItem>
@@ -137,9 +137,7 @@ const BrowseCourses = () => {
             selectedKeys={[selectedLevel]}
             onSelectionChange={(keys) => setSelectedLevel([...keys][0])}
             className="w-40"
-            classNames={{
-              trigger: "bg-white dark:bg-slate-800",
-            }}
+            classNames={selectClassNames}
           >
             {levels.map((level) => (
               <SelectItem key={level.key}>{level.label}</SelectItem>

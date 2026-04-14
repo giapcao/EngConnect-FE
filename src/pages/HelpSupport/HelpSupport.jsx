@@ -82,7 +82,8 @@ const HelpSupport = () => {
   const { t } = useTranslation();
   const colors = useThemeColors();
   const { theme } = useTheme();
-  const { inputClassNames, textareaClassNames } = useInputStyles();
+  const { inputClassNames, textareaClassNames, selectClassNames } =
+    useInputStyles();
   const user = useSelector(selectUser);
   const isAuthenticated = useSelector(selectIsAuthenticated);
   const messagesEndRef = useRef(null);
@@ -838,7 +839,7 @@ const HelpSupport = () => {
                           }}
                           placeholder={t("helpSupport.allStatuses")}
                           className="w-full md:w-44"
-                          classNames={inputClassNames}
+                          classNames={selectClassNames}
                         >
                           {["Open", "Resolved", "Closed"].map((s) => (
                             <SelectItem key={s}>
@@ -855,7 +856,7 @@ const HelpSupport = () => {
                           }}
                           placeholder={t("helpSupport.allTypes")}
                           className="w-full md:w-44"
-                          classNames={inputClassNames}
+                          classNames={selectClassNames}
                         >
                           {TICKET_TYPES.map((tp) => (
                             <SelectItem key={tp}>
@@ -1056,7 +1057,7 @@ const HelpSupport = () => {
                       type: [...keys][0] || "",
                     }))
                   }
-                  classNames={inputClassNames}
+                  classNames={selectClassNames}
                 >
                   {TICKET_TYPES.map((tp) => (
                     <SelectItem key={tp}>
