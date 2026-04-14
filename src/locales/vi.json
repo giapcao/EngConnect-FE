@@ -633,7 +633,17 @@
       "videoCall": "Video Call",
       "reschedule": "Đổi lịch",
       "cancel": "Hủy",
-      "bookLesson": "Đặt buổi học"
+      "bookLesson": "Đặt buổi học",
+      "tutor": "Gia sư",
+      "totalLessons": "Tổng cộng",
+      "upcomingTab": "Sắp tới",
+      "pastTab": "Đã qua",
+      "noUpcoming": "Không có buổi học sắp tới",
+      "noPast": "Không có buổi học đã qua",
+      "meetingWaiting": "Đang chờ",
+      "meetingEnded": "Đã kết thúc",
+      "watchRecording": "Xem bản ghi",
+      "recordingAvailable": "Có bản ghi"
     },
     "homework": {
       "title": "Bài tập",
@@ -1039,7 +1049,16 @@
         "pending": "Chờ xử lý",
         "inactive": "Không hoạt động"
       },
-      "studentLabel": "Học viên"
+      "studentLabel": "Học viên",
+      "meetingWaiting": "Đang chờ",
+      "meetingEnded": "Đã kết thúc",
+      "watchRecording": "Xem bản ghi",
+      "recordingAvailable": "Có bản ghi",
+      "upcomingSidebarTab": "Sắp tới",
+      "noUpcoming": "Không có buổi học sắp tới",
+      "dateLabel": "Ngày",
+      "timeLabel": "Thời gian",
+      "viewDetail": "Xem"
     },
     "students": {
       "title": "Học viên của tôi",

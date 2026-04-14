@@ -635,7 +635,17 @@
       "videoCall": "Video Call",
       "reschedule": "Reschedule",
       "cancel": "Cancel",
-      "bookLesson": "Book Lesson"
+      "bookLesson": "Book Lesson",
+      "tutor": "Tutor",
+      "totalLessons": "Total",
+      "upcomingTab": "Upcoming",
+      "pastTab": "Past",
+      "noUpcoming": "No upcoming lessons",
+      "noPast": "No past lessons",
+      "meetingWaiting": "Waiting",
+      "meetingEnded": "Ended",
+      "watchRecording": "Watch Recording",
+      "recordingAvailable": "Recording available"
     },
     "homework": {
       "title": "Homework",
@@ -1041,7 +1051,16 @@
         "pending": "Pending",
         "inactive": "Inactive"
       },
-      "studentLabel": "Student"
+      "studentLabel": "Student",
+      "meetingWaiting": "Waiting",
+      "meetingEnded": "Ended",
+      "watchRecording": "Watch Recording",
+      "recordingAvailable": "Recording available",
+      "upcomingSidebarTab": "Upcoming",
+      "noUpcoming": "No upcoming lessons",
+      "dateLabel": "Date",
+      "timeLabel": "Time",
+      "viewDetail": "View"
     },
     "students": {
       "title": "My Students",
@@ -1368,7 +1387,7 @@
       "reviews": "reviews",
       "off": "OFF",
       "enrollNow": "Enroll Now",
-      "viewMyCourse": "View My CoursesnumsSessionInWeek",
+      "viewMyCourse": "View My Courses",
       "backToCourses": "Back to Courses",
       "notFound": "Course not found",
       "courseCurriculum": "Course Curriculum",

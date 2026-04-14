@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { selectUser } from "../../../store";
 import { tutorApi, studentApi } from "../../../api";
 import {
@@ -20,6 +20,7 @@ import {
   Tooltip,
   Tabs,
   Tab,
+  Avatar,
 } from "@heroui/react";
 import { useTranslation } from "react-i18next";
 import { useThemeColors } from "../../../hooks/useThemeColors";
@@ -37,6 +38,10 @@ import {
   CaretLeft,
   CaretRight,
   User,
+  Record,
+  Play,
+  Circle,
+  Eye,
 } from "@phosphor-icons/react";
 import calendarIllustration from "../../../assets/illustrations/calendar.avif";
 
@@ -49,6 +54,13 @@ const WEEKDAYS = [
   "Saturday",
   "Sunday",
 ];
+
+const CDN_BASE = "https://d20854st1o56hw.cloudfront.net/";
+const withCDN = (url) => {
+  if (!url) return undefined;
+  if (url.startsWith("http")) return url;
+  return CDN_BASE + url;
+};
 
 const Schedule = () => {
   const { t, i18n } = useTranslation();
@@ -64,7 +76,7 @@ const Schedule = () => {
   // Lessons
   const [lessons, setLessons] = useState([]);
   const [lessonsLoading, setLessonsLoading] = useState(true);
-  const [activeView, setActiveView] = useState("schedules");
+  const [activeView, setActiveView] = useState("lessons");
 
   // Calendar week navigation
   const [calendarWeekStart, setCalendarWeekStart] = useState(() => {
@@ -94,6 +106,15 @@ const Schedule = () => {
   } = useDisclosure();
   const [deletingSchedule, setDeletingSchedule] = useState(null);
   const [deleting, setDeleting] = useState(false);
+
+  // Lesson detail modal
+  const {
+    isOpen: isLessonDetailOpen,
+    onOpen: onLessonDetailOpen,
+    onClose: onLessonDetailClose,
+  } = useDisclosure();
+  const [selectedLesson, setSelectedLesson] = useState(null);
+  const [sidebarView, setSidebarView] = useState("today");
 
   const allTimeOptions = [];
   for (let h = 6; h <= 22; h++) {
@@ -287,13 +308,60 @@ const Schedule = () => {
   };
 
   // TODO: restore date filter after testing
-  const todayLessons = [...lessons].sort(
-    (a, b) => new Date(a.startTime) - new Date(b.startTime),
+  const now = new Date();
+  const todayStr = now.toDateString();
+
+  const todayLessons = useMemo(
+    () =>
+      lessons
+        .filter((l) => new Date(l.startTime).toDateString() === todayStr)
+        .sort((a, b) => new Date(a.startTime) - new Date(b.startTime)),
+    [lessons, todayStr],
   );
 
-  const upcomingLessons = lessons
-    .filter((l) => new Date(l.startTime) > new Date())
-    .sort((a, b) => new Date(a.startTime) - new Date(b.startTime));
+  const upcomingLessons = useMemo(
+    () =>
+      lessons
+        .filter(
+          (l) =>
+            new Date(l.startTime) > now &&
+            new Date(l.startTime).toDateString() !== todayStr,
+        )
+        .sort((a, b) => new Date(a.startTime) - new Date(b.startTime)),
+    [lessons, todayStr],
+  );
+
+  const studentFullName = (lesson) =>
+    [lesson.studentFirstName, lesson.studentLastName].filter(Boolean).join(" ");
+
+  const canJoinLesson = (lesson) =>
+    lesson.status === "Scheduled" || lesson.status === "InProgress";
+
+  const handleOpenLessonDetail = (lesson) => {
+    setSelectedLesson(lesson);
+    onLessonDetailOpen();
+  };
+
+  const getMeetingStatusInfo = (lesson) => {
+    if (lesson.meetingStatus === "waiting")
+      return {
+        label: t("tutorDashboard.schedule.meetingWaiting"),
+        color: colors.state.warning,
+      };
+    if (lesson.meetingStatus === "Ended")
+      return {
+        label: t("tutorDashboard.schedule.meetingEnded"),
+        color: colors.state.success,
+      };
+    return null;
+  };
+
+  const formatRecordDuration = (seconds) => {
+    if (!seconds) return "";
+    const mins = Math.floor(seconds / 60);
+    if (mins >= 60) return `${Math.floor(mins / 60)}h ${mins % 60}m`;
+    return `${mins}m ${seconds % 60}s`;
+  };
 
   // Calendar helpers
   const calendarDays = Array.from({ length: 7 }, (_, i) => {
@@ -327,9 +395,18 @@ const Schedule = () => {
     setCalendarWeekStart(monday);
   };
 
-  const CALENDAR_START_HOUR = 6;
+  const CALENDAR_START_HOUR = 7;
   const CALENDAR_END_HOUR = 22;
-  const HOUR_HEIGHT = 60; // px per hour
+  const HOUR_HEIGHT = 48; // px per hour — compact
+
+  // Current time indicator position
+  const currentTimeTop = useMemo(() => {
+    const h = new Date().getHours();
+    const m = new Date().getMinutes();
+    if (h < CALENDAR_START_HOUR || h >= CALENDAR_END_HOUR) return null;
+    return (((h - CALENDAR_START_HOUR) * 60 + m) / 60) * HOUR_HEIGHT;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const getLessonsForDay = (dayDate) => {
     return lessons.filter((l) => {
@@ -434,25 +511,20 @@ const Schedule = () => {
           classNames={{ tabList: "gap-2", tab: "px-4" }}
         >
           <Tab
-            key="schedules"
-            title={
-              <div className="flex items-center gap-2">
-                <CalendarDots weight="duotone" className="w-5 h-5" />
-                <span>{t("tutorDashboard.schedule.scheduleSlots")}</span>
-              </div>
-            }
-          />
-          <Tab
             key="lessons"
             title={
               <div className="flex items-center gap-2">
                 <BookOpen weight="duotone" className="w-5 h-5" />
                 <span>{t("tutorDashboard.schedule.myLessons")}</span>
-                {lessons.length > 0 && (
-                  <Chip size="sm" variant="flat">
-                    {lessons.length}
-                  </Chip>
-                )}
+              </div>
+            }
+          />
+          <Tab
+            key="schedules"
+            title={
+              <div className="flex items-center gap-2">
+                <CalendarDots weight="duotone" className="w-5 h-5" />
+                <span>{t("tutorDashboard.schedule.scheduleSlots")}</span>
               </div>
             }
           />
@@ -462,7 +534,6 @@ const Schedule = () => {
       {activeView === "schedules" ? (
         <>
           <div className="grid lg:grid-cols-3 gap-6">
-            {/* Weekly Schedule View */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -595,6 +666,7 @@ const Schedule = () => {
                                             }
                                           >
                                             <PencilSimple
+                                              weight="duotone"
                                               className="w-4 h-4"
                                               style={{
                                                 color: colors.primary.main,
@@ -616,6 +688,7 @@ const Schedule = () => {
                                             }
                                           >
                                             <Trash
+                                              weight="duotone"
                                               className="w-4 h-4"
                                               style={{
                                                 color: colors.state.error,
@@ -820,424 +893,461 @@ const Schedule = () => {
               </p>
             </div>
           ) : (
-            <div className="grid lg:grid-cols-4 gap-6">
-              {/* Calendar Grid */}
-              <div className="lg:col-span-3">
-                <Card
-                  shadow="none"
-                  className="border-none"
-                  style={{ backgroundColor: colors.background.light }}
-                >
-                  <CardBody className="p-4">
-                    {/* Week Navigation */}
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-2">
-                        <Button
-                          size="sm"
-                          isIconOnly
-                          variant="light"
-                          onPress={goToPrevWeek}
-                        >
-                          <CaretLeft
-                            weight="bold"
-                            className="w-4 h-4"
-                            style={{ color: colors.text.secondary }}
-                          />
-                        </Button>
-                        <h2
-                          className="text-lg font-semibold min-w-[200px] text-center"
-                          style={{ color: colors.text.primary }}
-                        >
-                          {formatWeekRange()}
-                        </h2>
-                        <Button
-                          size="sm"
-                          isIconOnly
-                          variant="light"
-                          onPress={goToNextWeek}
-                        >
-                          <CaretRight
-                            weight="bold"
-                            className="w-4 h-4"
-                            style={{ color: colors.text.secondary }}
-                          />
-                        </Button>
-                      </div>
+            <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
+              <Card
+                shadow="none"
+                className="border-none"
+                style={{ backgroundColor: colors.background.light }}
+              >
+                <CardBody className="p-4">
+                  {/* Week Navigation */}
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
                       <Button
                         size="sm"
-                        variant="flat"
-                        color="primary"
-                        onPress={goToCurrentWeek}
+                        isIconOnly
+                        variant="light"
+                        onPress={goToPrevWeek}
                       >
-                        {t("tutorDashboard.schedule.today")}
+                        <CaretLeft
+                          weight="bold"
+                          className="w-4 h-4"
+                          style={{ color: colors.text.secondary }}
+                        />
+                      </Button>
+                      <h2
+                        className="text-base font-semibold min-w-[180px] text-center"
+                        style={{ color: colors.text.primary }}
+                      >
+                        {formatWeekRange()}
+                      </h2>
+                      <Button
+                        size="sm"
+                        isIconOnly
+                        variant="light"
+                        onPress={goToNextWeek}
+                      >
+                        <CaretRight
+                          weight="bold"
+                          className="w-4 h-4"
+                          style={{ color: colors.text.secondary }}
+                        />
                       </Button>
                     </div>
+                    <Button
+                      size="sm"
+                      variant="flat"
+                      color="primary"
+                      onPress={goToCurrentWeek}
+                    >
+                      {t("tutorDashboard.schedule.today")}
+                    </Button>
+                  </div>
 
-                    {/* Calendar */}
-                    <div className="overflow-x-auto">
-                      <div style={{ minWidth: "700px" }}>
-                        {/* Day headers */}
-                        <div
-                          className="grid border-b"
-                          style={{
-                            gridTemplateColumns: "56px repeat(7, 1fr)",
-                            borderColor: colors.border.light,
-                          }}
-                        >
-                          <div className="p-2" />
-                          {calendarDays.map((day, idx) => {
-                            const dayIsToday = isToday(day);
-                            return (
-                              <div
-                                key={idx}
-                                className="p-2 text-center"
+                  {/* Calendar */}
+                  <div className="overflow-x-auto">
+                    <div style={{ minWidth: "640px" }}>
+                      {/* Day headers */}
+                      <div
+                        className="grid border-b"
+                        style={{
+                          gridTemplateColumns: "44px repeat(7, 1fr)",
+                          borderColor: colors.border.light,
+                        }}
+                      >
+                        <div className="p-1" />
+                        {calendarDays.map((day, idx) => {
+                          const dayIsToday = isToday(day);
+                          return (
+                            <div
+                              key={idx}
+                              className="py-2 px-1 text-center"
+                              style={{
+                                backgroundColor: dayIsToday
+                                  ? `${colors.primary.main}10`
+                                  : "transparent",
+                              }}
+                            >
+                              <p
+                                className="text-[11px] font-medium"
                                 style={{
+                                  color: dayIsToday
+                                    ? colors.primary.main
+                                    : colors.text.tertiary,
+                                }}
+                              >
+                                {t(
+                                  `tutorDashboard.schedule.days.${WEEKDAYS[idx].toLowerCase()}`,
+                                ).slice(0, 3)}
+                              </p>
+                              <p
+                                className={`text-base font-bold mt-0.5 ${
+                                  dayIsToday
+                                    ? "w-7 h-7 rounded-full flex items-center justify-center mx-auto text-sm"
+                                    : ""
+                                }`}
+                                style={{
+                                  color: dayIsToday
+                                    ? "#fff"
+                                    : colors.text.primary,
                                   backgroundColor: dayIsToday
-                                    ? `${colors.primary.main}10`
+                                    ? colors.primary.main
                                     : "transparent",
                                 }}
                               >
-                                <p
-                                  className="text-xs font-medium"
-                                  style={{
-                                    color: dayIsToday
-                                      ? colors.primary.main
-                                      : colors.text.tertiary,
-                                  }}
-                                >
-                                  {t(
-                                    `tutorDashboard.schedule.days.${WEEKDAYS[idx].toLowerCase()}`,
-                                  ).slice(0, 3)}
-                                </p>
-                                <p
-                                  className={`text-lg font-bold mt-0.5 ${
-                                    dayIsToday
-                                      ? "w-8 h-8 rounded-full flex items-center justify-center mx-auto"
-                                      : ""
-                                  }`}
-                                  style={{
-                                    color: dayIsToday
-                                      ? "#fff"
-                                      : colors.text.primary,
-                                    backgroundColor: dayIsToday
-                                      ? colors.primary.main
-                                      : "transparent",
-                                  }}
-                                >
-                                  {day.getDate()}
-                                </p>
-                              </div>
-                            );
-                          })}
-                        </div>
+                                {day.getDate()}
+                              </p>
+                            </div>
+                          );
+                        })}
+                      </div>
 
-                        {/* Time grid */}
+                      {/* Time grid */}
+                      <div
+                        className="relative overflow-y-auto"
+                        style={{ maxHeight: "520px" }}
+                      >
                         <div
-                          className="relative overflow-y-auto"
+                          className="grid"
                           style={{
-                            maxHeight: "600px",
+                            gridTemplateColumns: "44px repeat(7, 1fr)",
+                            height: `${(CALENDAR_END_HOUR - CALENDAR_START_HOUR) * HOUR_HEIGHT}px`,
                           }}
                         >
-                          <div
-                            className="grid"
-                            style={{
-                              gridTemplateColumns: "56px repeat(7, 1fr)",
-                              height: `${(CALENDAR_END_HOUR - CALENDAR_START_HOUR) * HOUR_HEIGHT}px`,
-                            }}
-                          >
-                            {/* Time labels column */}
-                            <div className="relative">
-                              {Array.from(
-                                {
-                                  length:
-                                    CALENDAR_END_HOUR - CALENDAR_START_HOUR,
-                                },
-                                (_, i) => CALENDAR_START_HOUR + i,
-                              ).map((hour) => (
-                                <div
-                                  key={hour}
-                                  className="absolute right-2 text-right"
-                                  style={{
-                                    top: `${(hour - CALENDAR_START_HOUR) * HOUR_HEIGHT - 8}px`,
-                                    color: colors.text.tertiary,
-                                    fontSize: "11px",
-                                  }}
-                                >
-                                  {`${String(hour).padStart(2, "0")}:00`}
-                                </div>
-                              ))}
-                            </div>
+                          {/* Time labels column */}
+                          <div className="relative">
+                            {Array.from(
+                              {
+                                length: CALENDAR_END_HOUR - CALENDAR_START_HOUR,
+                              },
+                              (_, i) => CALENDAR_START_HOUR + i,
+                            ).map((hour) => (
+                              <div
+                                key={hour}
+                                className="absolute right-1.5 text-right"
+                                style={{
+                                  top: `${(hour - CALENDAR_START_HOUR) * HOUR_HEIGHT - 6}px`,
+                                  color: colors.text.tertiary,
+                                  fontSize: "10px",
+                                }}
+                              >
+                                {`${String(hour).padStart(2, "0")}:00`}
+                              </div>
+                            ))}
+                          </div>
 
-                            {/* Day columns */}
-                            {calendarDays.map((day, dayIdx) => {
-                              const dayLessons = getLessonsForDay(day);
-                              const dayIsToday = isToday(day);
-                              return (
-                                <div
-                                  key={dayIdx}
-                                  className="relative border-l"
-                                  style={{
-                                    borderColor: colors.border.light,
-                                    backgroundColor: dayIsToday
-                                      ? `${colors.primary.main}05`
-                                      : "transparent",
-                                  }}
-                                >
-                                  {/* Hour grid lines */}
-                                  {Array.from(
-                                    {
-                                      length:
-                                        CALENDAR_END_HOUR - CALENDAR_START_HOUR,
-                                    },
-                                    (_, i) => i,
-                                  ).map((i) => (
+                          {/* Day columns */}
+                          {calendarDays.map((day, dayIdx) => {
+                            const dayLessons = getLessonsForDay(day);
+                            const dayIsToday = isToday(day);
+                            return (
+                              <div
+                                key={dayIdx}
+                                className="relative border-l"
+                                style={{
+                                  borderColor: colors.border.light,
+                                  backgroundColor: dayIsToday
+                                    ? `${colors.primary.main}05`
+                                    : "transparent",
+                                }}
+                              >
+                                {/* Hour grid lines + half-hour lines */}
+                                {Array.from(
+                                  {
+                                    length:
+                                      CALENDAR_END_HOUR - CALENDAR_START_HOUR,
+                                  },
+                                  (_, i) => i,
+                                ).map((i) => (
+                                  <div key={i}>
                                     <div
-                                      key={i}
                                       className="absolute w-full border-t"
                                       style={{
                                         top: `${i * HOUR_HEIGHT}px`,
                                         borderColor: colors.border.light,
                                       }}
                                     />
-                                  ))}
+                                    <div
+                                      className="absolute w-full border-t border-dashed"
+                                      style={{
+                                        top: `${i * HOUR_HEIGHT + HOUR_HEIGHT / 2}px`,
+                                        borderColor: `${colors.border.light}80`,
+                                      }}
+                                    />
+                                  </div>
+                                ))}
 
-                                  {/* Lesson blocks */}
-                                  {dayLessons.map((lesson) => {
-                                    const pos = getLessonPosition(lesson);
-                                    const blockColor = getLessonBlockColor(
-                                      lesson.status,
-                                    );
-                                    return (
-                                      <Tooltip
-                                        key={lesson.id}
-                                        content={
-                                          <div className="p-1 text-xs">
-                                            <p className="font-semibold">
-                                              {lesson.courseName}
-                                            </p>
-                                            <p>{lesson.sessionTitle}</p>
-                                            {lesson.studentName && (
-                                              <p>
-                                                {t(
-                                                  "tutorDashboard.schedule.studentLabel",
-                                                )}
-                                                : {lesson.studentName}
-                                              </p>
-                                            )}
-                                            <p>
-                                              {formatLessonTime(
-                                                lesson.startTime,
-                                              )}{" "}
-                                              —{" "}
-                                              {formatLessonTime(lesson.endTime)}
-                                            </p>
-                                            <p>
-                                              {getLessonStatusLabel(
-                                                lesson.status,
-                                              )}
-                                            </p>
-                                          </div>
-                                        }
+                                {/* Lesson blocks */}
+                                {dayLessons.map((lesson) => {
+                                  const pos = getLessonPosition(lesson);
+                                  const blockColor = getLessonBlockColor(
+                                    lesson.status,
+                                  );
+                                  return (
+                                    <div
+                                      key={lesson.id}
+                                      className="absolute left-0.5 right-0.5 rounded-md px-1.5 py-0.5 overflow-hidden cursor-pointer transition-all hover:opacity-80 hover:shadow-md"
+                                      style={{
+                                        top: `${pos.top}px`,
+                                        height: `${Math.max(pos.height, 22)}px`,
+                                        backgroundColor: blockColor.bg,
+                                        borderLeft: `3px solid ${blockColor.border}`,
+                                        zIndex: 2,
+                                      }}
+                                      onClick={() =>
+                                        handleOpenLessonDetail(lesson)
+                                      }
+                                    >
+                                      <p
+                                        className="text-[11px] font-semibold truncate leading-tight"
+                                        style={{ color: blockColor.text }}
                                       >
-                                        <div
-                                          className="absolute left-0.5 right-0.5 rounded-md px-1.5 py-1 overflow-hidden cursor-pointer transition-opacity hover:opacity-90"
+                                        {lesson.courseTitle ||
+                                          t(
+                                            "tutorDashboard.schedule.lessonLabel",
+                                          )}
+                                      </p>
+                                      {pos.height > 30 && (
+                                        <p
+                                          className="text-[10px] truncate leading-tight mt-0.5"
                                           style={{
-                                            top: `${pos.top}px`,
-                                            height: `${pos.height}px`,
-                                            backgroundColor: blockColor.bg,
-                                            borderLeft: `3px solid ${blockColor.border}`,
-                                            zIndex: 1,
+                                            color: blockColor.text,
+                                            opacity: 0.8,
                                           }}
                                         >
-                                          <p
-                                            className="text-xs font-semibold truncate leading-tight"
-                                            style={{ color: blockColor.text }}
-                                          >
-                                            {lesson.courseName ||
-                                              t(
-                                                "tutorDashboard.schedule.lessonLabel",
-                                              )}
-                                          </p>
-                                          {pos.height > 36 && (
-                                            <p
-                                              className="text-xs truncate leading-tight mt-0.5"
-                                              style={{
-                                                color: blockColor.text,
-                                                opacity: 0.8,
-                                              }}
-                                            >
-                                              {lesson.studentName ||
-                                                lesson.sessionTitle}
-                                            </p>
-                                          )}
-                                          {pos.height > 52 && (
-                                            <p
-                                              className="text-xs truncate leading-tight mt-0.5"
-                                              style={{
-                                                color: blockColor.text,
-                                                opacity: 0.7,
-                                              }}
-                                            >
-                                              {formatLessonTime(
-                                                lesson.startTime,
-                                              )}{" "}
-                                              —{" "}
-                                              {formatLessonTime(lesson.endTime)}
-                                            </p>
-                                          )}
-                                        </div>
-                                      </Tooltip>
-                                    );
-                                  })}
-                                </div>
-                              );
-                            })}
-                          </div>
+                                          {studentFullName(lesson) ||
+                                            lesson.sessionTitle}
+                                        </p>
+                                      )}
+                                      {pos.height > 44 && (
+                                        <p
+                                          className="text-[10px] truncate leading-tight mt-0.5"
+                                          style={{
+                                            color: blockColor.text,
+                                            opacity: 0.7,
+                                          }}
+                                        >
+                                          {formatLessonTime(lesson.startTime)} —{" "}
+                                          {formatLessonTime(lesson.endTime)}
+                                        </p>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+
+                                {/* Current time indicator */}
+                                {dayIsToday && currentTimeTop !== null && (
+                                  <div
+                                    className="absolute left-0 right-0 pointer-events-none"
+                                    style={{
+                                      top: `${currentTimeTop}px`,
+                                      zIndex: 3,
+                                    }}
+                                  >
+                                    <div className="flex items-center">
+                                      <div
+                                        className="w-2 h-2 rounded-full flex-shrink-0"
+                                        style={{
+                                          backgroundColor: colors.state.error,
+                                          marginLeft: "-4px",
+                                        }}
+                                      />
+                                      <div
+                                        className="flex-1 h-[1.5px]"
+                                        style={{
+                                          backgroundColor: colors.state.error,
+                                        }}
+                                      />
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
                         </div>
                       </div>
                     </div>
+                  </div>
 
-                    {/* Legend */}
-                    <div
-                      className="flex flex-wrap items-center gap-4 mt-4 pt-4 border-t"
-                      style={{ borderColor: colors.border.light }}
-                    >
-                      {[
-                        "Scheduled",
-                        "InProgress",
-                        "Completed",
-                        "Cancelled",
-                      ].map((status) => (
-                        <div key={status} className="flex items-center gap-2">
+                  {/* Legend */}
+                  <div
+                    className="flex flex-wrap items-center gap-4 mt-3 pt-3 border-t"
+                    style={{ borderColor: colors.border.light }}
+                  >
+                    {["Scheduled", "InProgress", "Completed", "Cancelled"].map(
+                      (status) => (
+                        <div key={status} className="flex items-center gap-1.5">
                           <div
-                            className="w-3 h-3 rounded"
+                            className="w-2.5 h-2.5 rounded"
                             style={{
                               backgroundColor:
                                 getLessonBlockColor(status).border,
                             }}
                           />
                           <span
-                            className="text-xs"
+                            className="text-[11px]"
                             style={{ color: colors.text.secondary }}
                           >
                             {getLessonStatusLabel(status)}
                           </span>
                         </div>
-                      ))}
-                    </div>
-                  </CardBody>
-                </Card>
-              </div>
+                      ),
+                    )}
+                  </div>
+                </CardBody>
+              </Card>
 
-              {/* Today's Lessons Sidebar */}
-              <div className="lg:col-span-1">
-                <Card
-                  shadow="none"
-                  className="border-none lg:sticky lg:top-40"
-                  style={{ backgroundColor: colors.background.light }}
-                >
-                  <CardBody className="p-4">
-                    <h3
-                      className="text-base font-semibold mb-4 flex items-center gap-2"
-                      style={{ color: colors.text.primary }}
-                    >
-                      <CalendarDots
-                        weight="duotone"
-                        className="w-5 h-5"
-                        style={{ color: colors.primary.main }}
-                      />
-                      {t("tutorDashboard.schedule.todayLessons")}
-                      {todayLessons.length > 0 && (
-                        <Chip size="sm" variant="flat" color="primary">
-                          {todayLessons.length}
-                        </Chip>
-                      )}
-                    </h3>
+              {/* Sidebar — Today / Upcoming toggle */}
+              <Card
+                shadow="none"
+                className="border-none hidden lg:block lg:sticky lg:top-40 self-start"
+                style={{ backgroundColor: colors.background.light }}
+              >
+                <CardBody className="p-4">
+                  {/* Sidebar tabs */}
+                  <Tabs
+                    selectedKey={sidebarView}
+                    onSelectionChange={setSidebarView}
+                    variant="solid"
+                    fullWidth
+                    className="mb-4"
+                  >
+                    <Tab
+                      key="today"
+                      title={
+                        <div className="flex items-center gap-1.5 text-xs">
+                          <CalendarDots
+                            weight="duotone"
+                            className="w-3.5 h-3.5"
+                          />
+                          <span>{t("tutorDashboard.schedule.today")}</span>
+                          {todayLessons.length > 0 && (
+                            <Chip
+                              size="sm"
+                              variant="flat"
+                              className="h-4 min-w-4 text-[10px]"
+                            >
+                              {todayLessons.length}
+                            </Chip>
+                          )}
+                        </div>
+                      }
+                    />
+                    <Tab
+                      key="upcoming"
+                      title={
+                        <div className="flex items-center gap-1.5 text-xs">
+                          <Clock weight="duotone" className="w-3.5 h-3.5" />
+                          <span>
+                            {t("tutorDashboard.schedule.upcomingSidebarTab")}
+                          </span>
+                          {upcomingLessons.length > 0 && (
+                            <Chip
+                              size="sm"
+                              variant="flat"
+                              className="h-4 min-w-4 text-[10px]"
+                            >
+                              {upcomingLessons.length}
+                            </Chip>
+                          )}
+                        </div>
+                      }
+                    />
+                  </Tabs>
 
-                    {todayLessons.length === 0 ? (
-                      <div className="text-center py-6">
-                        <img
-                          src={calendarIllustration}
-                          alt="No lessons today"
-                          className="w-32 h-32 mx-auto object-contain mb-2"
-                        />
-                        <p
-                          className="text-sm"
-                          style={{ color: colors.text.tertiary }}
-                        >
-                          {t("tutorDashboard.schedule.noLessonsToday")}
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="space-y-3">
-                        {todayLessons.map((lesson) => {
+                  {/* Sidebar content */}
+                  {(() => {
+                    const sidebarLessons =
+                      sidebarView === "today" ? todayLessons : upcomingLessons;
+                    const emptyMessage =
+                      sidebarView === "today"
+                        ? t("tutorDashboard.schedule.noLessonsToday")
+                        : t("tutorDashboard.schedule.noUpcoming");
+
+                    if (sidebarLessons.length === 0) {
+                      return (
+                        <div className="text-center py-6">
+                          <img
+                            src={calendarIllustration}
+                            alt="No lessons"
+                            className="w-28 h-28 mx-auto object-contain mb-2"
+                          />
+                          <p
+                            className="text-sm"
+                            style={{ color: colors.text.tertiary }}
+                          >
+                            {emptyMessage}
+                          </p>
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <div className="space-y-3 max-h-[480px] overflow-y-auto">
+                        {sidebarLessons.map((lesson) => {
                           const blockColor = getLessonBlockColor(lesson.status);
                           const startDate = new Date(lesson.startTime);
                           const endDate = new Date(lesson.endTime);
                           const durationMin = Math.round(
                             (endDate - startDate) / 60000,
                           );
+                          const meetingInfo = getMeetingStatusInfo(lesson);
+                          const hasRecording = lesson.lessonRecord?.recordUrl;
                           return (
                             <div
                               key={lesson.id}
                               className="p-3 rounded-xl"
                               style={{
                                 backgroundColor: colors.background.gray,
-                                borderLeft: `3px solid ${blockColor.border}`,
                               }}
                             >
-                              <div className="flex items-start gap-3">
-                                <div
-                                  className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
-                                  style={{
-                                    backgroundColor: blockColor.bg,
-                                  }}
-                                >
-                                  <User
-                                    weight="fill"
-                                    className="w-4 h-4"
-                                    style={{ color: blockColor.border }}
-                                  />
-                                </div>
+                              <div className="flex items-start gap-2.5">
+                                <Avatar
+                                  src={withCDN(lesson.studentAvatar)}
+                                  name={studentFullName(lesson)}
+                                  size="sm"
+                                  className="w-8 h-8 flex-shrink-0"
+                                />
                                 <div className="flex-1 min-w-0">
                                   <p
                                     className="font-semibold text-sm truncate"
                                     style={{ color: colors.text.primary }}
                                   >
-                                    {lesson.studentName ||
-                                      lesson.courseName ||
+                                    {studentFullName(lesson) ||
                                       t("tutorDashboard.schedule.lessonLabel")}
                                   </p>
                                   <p
                                     className="text-xs truncate mt-0.5"
-                                    style={{ color: colors.text.secondary }}
+                                    style={{
+                                      color: colors.text.secondary,
+                                    }}
                                   >
-                                    {lesson.courseName}
+                                    {lesson.courseTitle}
                                   </p>
                                   <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                                     <span
-                                      className="text-xs flex items-center gap-1"
-                                      style={{ color: colors.text.tertiary }}
+                                      className="text-[11px] flex items-center gap-1"
+                                      style={{
+                                        color: colors.text.tertiary,
+                                      }}
                                     >
                                       <Clock
                                         weight="duotone"
                                         className="w-3 h-3"
                                       />
-                                      {new Date(
-                                        lesson.startTime,
-                                      ).toLocaleDateString(dateLocale, {
-                                        weekday: "short",
-                                        day: "numeric",
-                                        month: "short",
-                                      })}
-                                      {" · "}
-                                      {formatLessonTime(
-                                        lesson.startTime,
-                                      )} — {formatLessonTime(lesson.endTime)}
+                                      {sidebarView === "upcoming" &&
+                                        new Date(
+                                          lesson.startTime,
+                                        ).toLocaleDateString(dateLocale, {
+                                          day: "numeric",
+                                          month: "short",
+                                        }) + " · "}
+                                      {formatLessonTime(lesson.startTime)} —{" "}
+                                      {formatLessonTime(lesson.endTime)}
                                     </span>
                                     <Chip
                                       size="sm"
-                                      className="h-5"
+                                      className="h-4"
                                       style={{
                                         backgroundColor: `${blockColor.border}20`,
                                         color: blockColor.border,
@@ -1247,55 +1357,64 @@ const Schedule = () => {
                                       {durationMin}m
                                     </Chip>
                                   </div>
+                                  {meetingInfo && (
+                                    <span
+                                      className="text-[11px] flex items-center gap-1 mt-1"
+                                      style={{ color: meetingInfo.color }}
+                                    >
+                                      <Circle
+                                        weight="fill"
+                                        className="w-2 h-2"
+                                      />
+                                      {meetingInfo.label}
+                                    </span>
+                                  )}
                                 </div>
                               </div>
-                              <Button
-                                size="sm"
-                                className="mt-2 w-full"
-                                style={{
-                                  backgroundColor: colors.primary.main,
-                                  color: colors.text.white,
-                                }}
-                                startContent={
-                                  <VideoCamera
-                                    weight="fill"
-                                    className="w-3.5 h-3.5"
-                                  />
-                                }
-                                onPress={() =>
-                                  navigate(`/meeting/${lesson.id}`)
-                                }
-                              >
-                                {t("tutorDashboard.schedule.joinLesson")}
-                              </Button>
+                              <div className="flex items-center gap-2 mt-2">
+                                <Button
+                                  size="sm"
+                                  variant="flat"
+                                  className="flex-1"
+                                  startContent={<Eye className="w-3.5 h-3.5" />}
+                                  onPress={(e) => {
+                                    e.stopPropagation?.();
+                                    handleOpenLessonDetail(lesson);
+                                  }}
+                                >
+                                  {t("tutorDashboard.schedule.viewDetail")}
+                                </Button>
+                                {canJoinLesson(lesson) && (
+                                  <Button
+                                    size="sm"
+                                    className="flex-1"
+                                    style={{
+                                      backgroundColor: colors.primary.main,
+                                      color: colors.text.white,
+                                    }}
+                                    startContent={
+                                      <VideoCamera
+                                        weight="fill"
+                                        className="w-3.5 h-3.5"
+                                      />
+                                    }
+                                    onPress={(e) => {
+                                      e.stopPropagation?.();
+                                      navigate(`/meeting/${lesson.id}`);
+                                    }}
+                                  >
+                                    {t("tutorDashboard.schedule.joinLesson")}
+                                  </Button>
+                                )}
+                              </div>
                             </div>
                           );
                         })}
                       </div>
-                    )}
-
-                    {/* Upcoming count */}
-                    {upcomingLessons.length > 0 && (
-                      <div
-                        className="mt-4 pt-4 border-t"
-                        style={{ borderColor: colors.border.light }}
-                      >
-                        <div className="flex items-center justify-between">
-                          <span
-                            className="text-sm"
-                            style={{ color: colors.text.secondary }}
-                          >
-                            {t("tutorDashboard.schedule.upcomingLessons")}
-                          </span>
-                          <Chip size="sm" variant="flat">
-                            {upcomingLessons.length}
-                          </Chip>
-                        </div>
-                      </div>
-                    )}
-                  </CardBody>
-                </Card>
-              </div>
+                    );
+                  })()}
+                </CardBody>
+              </Card>
             </div>
           )}
         </motion.div>
@@ -1426,6 +1545,295 @@ const Schedule = () => {
               {t("tutorDashboard.schedule.delete")}
             </Button>
           </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      {/* Lesson Detail Modal */}
+      <Modal
+        isOpen={isLessonDetailOpen}
+        onClose={onLessonDetailClose}
+        size="lg"
+      >
+        <ModalContent style={{ backgroundColor: colors.background.light }}>
+          {selectedLesson &&
+            (() => {
+              const lesson = selectedLesson;
+              const blockColor = getLessonBlockColor(lesson.status);
+              const startDate = new Date(lesson.startTime);
+              const endDate = new Date(lesson.endTime);
+              const durationMin = Math.round((endDate - startDate) / 60000);
+              const meetingInfo = getMeetingStatusInfo(lesson);
+              const hasRecording = lesson.lessonRecord?.recordUrl;
+              const recordDuration = lesson.lessonRecord?.durationSeconds;
+
+              return (
+                <>
+                  <ModalHeader
+                    className="flex items-center gap-3 pb-2"
+                    style={{ color: colors.text.primary }}
+                  >
+                    <div
+                      className="w-1.5 h-8 rounded-full flex-shrink-0"
+                      style={{ backgroundColor: blockColor.border }}
+                    />
+                    <div className="min-w-0 flex-1">
+                      {lesson.courseId ? (
+                        <Link
+                          to={`/tutor/courses/${lesson.courseId}`}
+                          className="text-lg font-bold truncate hover:underline block"
+                          style={{ color: colors.primary.main }}
+                          onClick={onLessonDetailClose}
+                        >
+                          {lesson.courseTitle ||
+                            t("tutorDashboard.schedule.lessonLabel")}
+                        </Link>
+                      ) : (
+                        <p className="text-lg font-bold truncate">
+                          {lesson.courseTitle ||
+                            t("tutorDashboard.schedule.lessonLabel")}
+                        </p>
+                      )}
+                      {lesson.sessionTitle && (
+                        <p
+                          className="text-sm font-normal truncate mt-0.5"
+                          style={{ color: colors.text.secondary }}
+                        >
+                          {lesson.sessionTitle}
+                        </p>
+                      )}
+                    </div>
+                    <Chip
+                      size="sm"
+                      style={{
+                        backgroundColor: `${blockColor.border}20`,
+                        color: blockColor.border,
+                      }}
+                    >
+                      {getLessonStatusLabel(lesson.status)}
+                    </Chip>
+                  </ModalHeader>
+                  <ModalBody className="space-y-4 pt-0">
+                    {/* Student info */}
+                    <div
+                      className="flex items-center gap-3 p-3 rounded-xl"
+                      style={{ backgroundColor: colors.background.gray }}
+                    >
+                      <Avatar
+                        src={withCDN(lesson.studentAvatar)}
+                        name={studentFullName(lesson)}
+                        size="md"
+                        className="w-10 h-10"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p
+                          className="text-sm font-semibold"
+                          style={{ color: colors.text.primary }}
+                        >
+                          {studentFullName(lesson)}
+                        </p>
+                        <p
+                          className="text-xs"
+                          style={{ color: colors.text.tertiary }}
+                        >
+                          {t("tutorDashboard.schedule.studentLabel")}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Date & Time */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div
+                        className="p-3 rounded-xl"
+                        style={{ backgroundColor: colors.background.gray }}
+                      >
+                        <p
+                          className="text-[11px] font-medium mb-1"
+                          style={{ color: colors.text.tertiary }}
+                        >
+                          {t("tutorDashboard.schedule.dateLabel")}
+                        </p>
+                        <p
+                          className="text-sm font-semibold flex items-center gap-1.5"
+                          style={{ color: colors.text.primary }}
+                        >
+                          <CalendarDots
+                            weight="duotone"
+                            className="w-4 h-4"
+                            style={{ color: colors.primary.main }}
+                          />
+                          {startDate.toLocaleDateString(dateLocale, {
+                            weekday: "short",
+                            day: "numeric",
+                            month: "long",
+                            year: "numeric",
+                          })}
+                        </p>
+                      </div>
+                      <div
+                        className="p-3 rounded-xl"
+                        style={{ backgroundColor: colors.background.gray }}
+                      >
+                        <p
+                          className="text-[11px] font-medium mb-1"
+                          style={{ color: colors.text.tertiary }}
+                        >
+                          {t("tutorDashboard.schedule.timeLabel")}
+                        </p>
+                        <p
+                          className="text-sm font-semibold flex items-center gap-1.5"
+                          style={{ color: colors.text.primary }}
+                        >
+                          <Clock
+                            weight="duotone"
+                            className="w-4 h-4"
+                            style={{ color: colors.primary.main }}
+                          />
+                          {formatLessonTime(lesson.startTime)} —{" "}
+                          {formatLessonTime(lesson.endTime)}
+                          <Chip
+                            size="sm"
+                            className="h-5 ml-1"
+                            style={{
+                              backgroundColor: `${colors.primary.main}15`,
+                              color: colors.primary.main,
+                              fontSize: "10px",
+                            }}
+                          >
+                            {durationMin}m
+                          </Chip>
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Meeting status */}
+                    {meetingInfo && (
+                      <div
+                        className="flex items-center gap-2 p-3 rounded-xl"
+                        style={{
+                          backgroundColor: `${meetingInfo.color}10`,
+                          border: `1px solid ${meetingInfo.color}30`,
+                        }}
+                      >
+                        <Circle
+                          weight="fill"
+                          className="w-2.5 h-2.5"
+                          style={{ color: meetingInfo.color }}
+                        />
+                        <span
+                          className="text-sm font-medium"
+                          style={{ color: meetingInfo.color }}
+                        >
+                          {meetingInfo.label}
+                        </span>
+                        {lesson.meetingStartedAt && (
+                          <span
+                            className="text-xs ml-auto"
+                            style={{ color: colors.text.tertiary }}
+                          >
+                            {new Date(
+                              lesson.meetingStartedAt,
+                            ).toLocaleTimeString(dateLocale, {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                            {lesson.meetingEndedAt && (
+                              <>
+                                {" "}
+                                —{" "}
+                                {new Date(
+                                  lesson.meetingEndedAt,
+                                ).toLocaleTimeString(dateLocale, {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })}
+                              </>
+                            )}
+                          </span>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Recording */}
+                    {hasRecording && (
+                      <div
+                        className="flex items-center gap-3 p-3 rounded-xl"
+                        style={{
+                          backgroundColor: `${colors.state.success}10`,
+                          border: `1px solid ${colors.state.success}25`,
+                        }}
+                      >
+                        <div
+                          className="w-9 h-9 rounded-lg flex items-center justify-center"
+                          style={{
+                            backgroundColor: `${colors.state.success}20`,
+                          }}
+                        >
+                          <Record
+                            weight="fill"
+                            className="w-4 h-4"
+                            style={{ color: colors.state.success }}
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <p
+                            className="text-sm font-semibold"
+                            style={{ color: colors.text.primary }}
+                          >
+                            {t("tutorDashboard.schedule.recordingAvailable")}
+                          </p>
+                          {recordDuration && (
+                            <p
+                              className="text-xs"
+                              style={{ color: colors.text.tertiary }}
+                            >
+                              {Math.floor(recordDuration / 60)}:
+                              {String(recordDuration % 60).padStart(2, "0")} min
+                            </p>
+                          )}
+                        </div>
+                        <Button
+                          size="sm"
+                          style={{
+                            backgroundColor: colors.state.success,
+                            color: "#fff",
+                          }}
+                          startContent={
+                            <Play weight="fill" className="w-3.5 h-3.5" />
+                          }
+                          onPress={() =>
+                            window.open(lesson.lessonRecord.recordUrl, "_blank")
+                          }
+                        >
+                          {t("tutorDashboard.schedule.watchRecording")}
+                        </Button>
+                      </div>
+                    )}
+                  </ModalBody>
+                  <ModalFooter>
+                    <Button variant="light" onPress={onLessonDetailClose}>
+                      {t("tutorDashboard.schedule.cancel")}
+                    </Button>
+                    {canJoinLesson(lesson) && (
+                      <Button
+                        style={{
+                          backgroundColor: colors.primary.main,
+                          color: colors.text.white,
+                        }}
+                        startContent={
+                          <VideoCamera weight="fill" className="w-4 h-4" />
+                        }
+                        onPress={() => {
+                          onLessonDetailClose();
+                          navigate(`/meeting/${lesson.id}`);
+                        }}
+                      >
+                        {t("tutorDashboard.schedule.joinLesson")}
+                      </Button>
+                    )}
+                  </ModalFooter>
+                </>
+              );
+            })()}
         </ModalContent>
       </Modal>
     </div>
