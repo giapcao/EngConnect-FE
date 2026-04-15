@@ -454,6 +454,9 @@ const Notification = () => {
                     src={ChillImage}
                     alt="No notifications"
                     className="w-64 h-64 mx-auto object-contain"
+                    draggable={false}
+                    onDragStart={(e) => e.preventDefault()}
+                    onContextMenu={(e) => e.preventDefault()}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ duration: 0.15 }}

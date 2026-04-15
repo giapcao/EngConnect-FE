@@ -49,6 +49,7 @@ const DashboardLayout = () => {
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [logoutModalOpen, setLogoutModalOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const user = useSelector(selectUser);
 
   const navItems = [
@@ -93,7 +94,14 @@ const DashboardLayout = () => {
             to="/"
             className="flex items-center gap-2 no-underline flex-shrink-0"
           >
-            <img src={logoImage} alt="EngConnect" className="h-10 w-auto" />
+            <img
+              src={logoImage}
+              alt="EngConnect"
+              draggable={false}
+              onDragStart={(e) => e.preventDefault()}
+              onContextMenu={(e) => e.preventDefault()}
+              className="h-10 w-auto"
+            />
           </Link>
 
           {/* Search Bar - Desktop */}
@@ -109,6 +117,15 @@ const DashboardLayout = () => {
               }
               classNames={inputClassNames}
               radius="lg"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && searchQuery.trim()) {
+                  navigate(
+                    `/courses/search?q=${encodeURIComponent(searchQuery.trim())}`,
+                  );
+                }
+              }}
             />
           </div>
 

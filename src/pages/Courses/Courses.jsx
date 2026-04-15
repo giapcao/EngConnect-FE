@@ -231,6 +231,9 @@ const Courses = () => {
               <img
                 src={readingImage}
                 alt="Learning courses"
+                draggable={false}
+                onDragStart={(e) => e.preventDefault()}
+                onContextMenu={(e) => e.preventDefault()}
                 className="w-full max-w-md h-auto"
               />
             </motion.div>

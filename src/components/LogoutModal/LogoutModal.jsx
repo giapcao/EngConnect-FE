@@ -52,6 +52,9 @@ const LogoutModal = ({ isOpen, onClose }) => {
                 <Image
                   src={ExitImage}
                   alt="Logout"
+                  draggable={false}
+                  onDragStart={(e) => e.preventDefault()}
+                  onContextMenu={(e) => e.preventDefault()}
                   className="w-68 h-68 object-contain"
                 />
               </motion.div>

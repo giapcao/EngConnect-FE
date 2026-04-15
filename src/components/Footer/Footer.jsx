@@ -99,7 +99,14 @@ const Footer = () => {
             <div className="lg:col-span-4 space-y-6">
               {/* Logo */}
               <Link href="/" className="inline-flex items-center gap-2.5">
-                <img src={logoImage} alt="EngConnect" className="h-12 w-auto" />
+                <img
+                  src={logoImage}
+                  alt="EngConnect"
+                  draggable={false}
+                  onDragStart={(e) => e.preventDefault()}
+                  onContextMenu={(e) => e.preventDefault()}
+                  className="h-12 w-auto"
+                />
               </Link>
 
               <p

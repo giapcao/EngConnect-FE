@@ -803,6 +803,9 @@ const Schedule = () => {
                         <img
                           src={calendarIllustration}
                           alt="No schedule"
+                          draggable={false}
+                          onDragStart={(e) => e.preventDefault()}
+                          onContextMenu={(e) => e.preventDefault()}
                           className="w-44 h-44 mx-auto object-contain"
                         />
                         <p>{t("tutorDashboard.schedule.noScheduleToday")}</p>
@@ -877,6 +880,9 @@ const Schedule = () => {
               <img
                 src={calendarIllustration}
                 alt="No lessons"
+                draggable={false}
+                onDragStart={(e) => e.preventDefault()}
+                onContextMenu={(e) => e.preventDefault()}
                 className="w-52 h-52 object-contain"
               />
               <h3
@@ -1270,6 +1276,9 @@ const Schedule = () => {
                           <img
                             src={calendarIllustration}
                             alt="No lessons"
+                            draggable={false}
+                            onDragStart={(e) => e.preventDefault()}
+                            onContextMenu={(e) => e.preventDefault()}
                             className="w-28 h-28 mx-auto object-contain mb-2"
                           />
                           <p

@@ -26,6 +26,9 @@ const NotFound = () => {
           <Image
             src={NotFoundImage}
             alt="Page not found"
+            draggable={false}
+            onDragStart={(e) => e.preventDefault()}
+            onContextMenu={(e) => e.preventDefault()}
             className="w-full max-w-md"
           />
         </motion.div>

@@ -544,7 +544,7 @@
       "logout": "Logout"
     },
     "search": {
-      "placeholder": "Search courses, tutors..."
+      "placeholder": "Search courses by name or description..."
     },
     "dashboard": {
       "welcome": "Welcome back",

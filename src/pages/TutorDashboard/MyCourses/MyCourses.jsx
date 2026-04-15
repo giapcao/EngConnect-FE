@@ -185,6 +185,9 @@ const MyCourses = () => {
           <img
             src={IconsDrawingImage}
             alt="No courses"
+            draggable={false}
+            onDragStart={(e) => e.preventDefault()}
+            onContextMenu={(e) => e.preventDefault()}
             className="w-68 h-68 object-contain"
           />
           <h3

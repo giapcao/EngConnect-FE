@@ -356,6 +356,9 @@ const AdminTutorDetail = () => {
               <img
                 src={searchIllustration}
                 alt="No courses"
+                draggable={false}
+                onDragStart={(e) => e.preventDefault()}
+                onContextMenu={(e) => e.preventDefault()}
                 className="w-32 h-32 object-contain mb-4 opacity-80"
               />
               <p className="text-sm" style={{ color: colors.text.secondary }}>

@@ -262,6 +262,9 @@ const TutorProfile = () => {
                 <img
                   src={searchIllustration}
                   alt="No courses"
+                  draggable={false}
+                  onDragStart={(e) => e.preventDefault()}
+                  onContextMenu={(e) => e.preventDefault()}
                   className="w-36 h-36 object-contain mb-4 opacity-80"
                 />
                 <p className="text-sm" style={{ color: colors.text.secondary }}>

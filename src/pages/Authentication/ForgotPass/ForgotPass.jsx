@@ -77,7 +77,13 @@ const ForgotPass = () => {
               theme === "dark" ? colors.background.gray : "#F0F9FF",
           }}
         >
-          <Image src={illustrationImage} alt="Forgot password illustration" />
+          <Image
+            src={illustrationImage}
+            alt="Forgot password illustration"
+            draggable={false}
+            onDragStart={(e) => e.preventDefault()}
+            onContextMenu={(e) => e.preventDefault()}
+          />
         </motion.div>
 
         <motion.div

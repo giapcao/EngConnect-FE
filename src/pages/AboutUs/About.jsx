@@ -17,9 +17,6 @@ import {
   Rocket,
   Handshake,
   Trophy,
-  Student,
-  ChalkboardTeacher,
-  Certificate,
 } from "@phosphor-icons/react";
 
 // eslint-disable-next-line no-unused-vars
@@ -55,37 +52,6 @@ const About = () => {
   const { t } = useTranslation();
   const colors = useThemeColors();
   const { theme } = useTheme();
-
-  const stats = [
-    {
-      icon: (props) => <Student weight="duotone" {...props} />,
-      value: "50,000+",
-      label: t("about.stats.students"),
-      color: "#3B82F6",
-      bgColor: "rgba(59, 130, 246, 0.1)",
-    },
-    {
-      icon: (props) => <ChalkboardTeacher weight="duotone" {...props} />,
-      value: "500+",
-      label: t("about.stats.tutors"),
-      color: "#10B981",
-      bgColor: "rgba(16, 185, 129, 0.1)",
-    },
-    {
-      icon: (props) => <GlobeHemisphereWest weight="duotone" {...props} />,
-      value: "120+",
-      label: t("about.stats.countries"),
-      color: "#F59E0B",
-      bgColor: "rgba(245, 158, 11, 0.1)",
-    },
-    {
-      icon: (props) => <Certificate weight="duotone" {...props} />,
-      value: "1M+",
-      label: t("about.stats.lessons"),
-      color: "#8B5CF6",
-      bgColor: "rgba(139, 92, 246, 0.1)",
-    },
-  ];
 
   const values = [
     {
@@ -190,6 +156,9 @@ const About = () => {
               <img
                 src={hybridWorkImage}
                 alt="Team collaboration"
+                draggable={false}
+                onDragStart={(e) => e.preventDefault()}
+                onContextMenu={(e) => e.preventDefault()}
                 className="w-full max-w-md h-auto"
               />
             </motion.div>
@@ -197,54 +166,10 @@ const About = () => {
         </div>
       </section>
 
-      {/* Stats Section */}
-      <section
-        className="py-16 px-6 md:px-12"
-        style={{ backgroundColor: colors.background.light }}
-      >
-        <div className="max-w-7xl mx-auto">
-          <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            className="grid grid-cols-2 md:grid-cols-4 gap-6"
-          >
-            {stats.map((stat, index) => (
-              <motion.div key={index} variants={itemVariants}>
-                <Card
-                  className="h-full shadow-none"
-                  style={{ backgroundColor: colors.background.gray }}
-                >
-                  <CardBody className="p-6 text-center">
-                    <div
-                      className="w-14 h-14 rounded-xl flex items-center justify-center mx-auto mb-4"
-                      style={{ backgroundColor: stat.bgColor }}
-                    >
-                      <stat.icon
-                        className="w-7 h-7"
-                        style={{ color: stat.color }}
-                      />
-                    </div>
-                    <h3
-                      className="text-3xl font-bold mb-1"
-                      style={{ color: colors.text.primary }}
-                    >
-                      {stat.value}
-                    </h3>
-                    <p style={{ color: colors.text.secondary }}>{stat.label}</p>
-                  </CardBody>
-                </Card>
-              </motion.div>
-            ))}
-          </motion.div>
-        </div>
-      </section>
-
       {/* Mission & Vision Section */}
       <section
         className="py-20 px-6 md:px-12"
-        style={{ backgroundColor: colors.background.gray }}
+        style={{ backgroundColor: colors.background.light }}
       >
         <div className="max-w-7xl mx-auto">
           <motion.div
@@ -258,7 +183,7 @@ const About = () => {
             <motion.div variants={itemVariants}>
               <Card
                 className="h-full shadow-none"
-                style={{ backgroundColor: colors.background.light }}
+                style={{ backgroundColor: colors.background.gray }}
               >
                 <CardBody className="p-8">
                   <div
@@ -291,7 +216,7 @@ const About = () => {
             <motion.div variants={itemVariants}>
               <Card
                 className="h-full shadow-none"
-                style={{ backgroundColor: colors.background.light }}
+                style={{ backgroundColor: colors.background.gray }}
               >
                 <CardBody className="p-8">
                   <div
@@ -326,7 +251,7 @@ const About = () => {
       {/* Our Story Section */}
       <section
         className="py-20 px-6 md:px-12"
-        style={{ backgroundColor: colors.background.light }}
+        style={{ backgroundColor: colors.background.gray }}
       >
         <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
@@ -341,6 +266,9 @@ const About = () => {
               <img
                 src={projectImage}
                 alt="Remote learning"
+                draggable={false}
+                onDragStart={(e) => e.preventDefault()}
+                onContextMenu={(e) => e.preventDefault()}
                 className="w-full max-w-md h-auto"
               />
             </motion.div>
@@ -427,7 +355,7 @@ const About = () => {
               <motion.div key={index} variants={itemVariants}>
                 <Card
                   className="shadow-none h-full"
-                  style={{ backgroundColor: colors.background.gray }}
+                  style={{ backgroundColor: colors.background.light }}
                 >
                   <CardBody className="p-5">
                     <div
@@ -462,7 +390,7 @@ const About = () => {
       {/* Values Section */}
       <section
         className="py-20 px-6 md:px-12"
-        style={{ backgroundColor: colors.background.gray }}
+        style={{ backgroundColor: colors.background.light }}
       >
         <div className="max-w-7xl mx-auto">
           <motion.div
@@ -500,7 +428,7 @@ const About = () => {
               <motion.div key={index} variants={itemVariants}>
                 <Card
                   className="h-full shadow-none"
-                  style={{ backgroundColor: colors.background.light }}
+                  style={{ backgroundColor: colors.background.gray }}
                 >
                   <CardBody className="p-6 text-center">
                     <div
@@ -532,7 +460,7 @@ const About = () => {
       {/* Team Section */}
       <section
         className="py-20 px-6 md:px-12"
-        style={{ backgroundColor: colors.background.light }}
+        style={{ backgroundColor: colors.background.gray }}
       >
         <div className="max-w-7xl mx-auto">
           <motion.div
@@ -570,7 +498,7 @@ const About = () => {
               <motion.div key={member.name} variants={itemVariants}>
                 <Card
                   className="h-full shadow-none"
-                  style={{ backgroundColor: colors.background.gray }}
+                  style={{ backgroundColor: colors.background.light }}
                 >
                   <CardBody className="p-6 text-center">
                     <img

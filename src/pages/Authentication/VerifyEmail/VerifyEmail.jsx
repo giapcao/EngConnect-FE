@@ -230,6 +230,9 @@ const VerifyEmail = () => {
           <Image
             src={illustrationImage}
             alt="Email verification illustration"
+            draggable={false}
+            onDragStart={(e) => e.preventDefault()}
+            onContextMenu={(e) => e.preventDefault()}
           />
         </motion.div>
 

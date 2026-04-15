@@ -156,7 +156,13 @@ const Register = () => {
               theme === "dark" ? colors.background.gray : "#F0F9FF",
           }}
         >
-          <Image src={illustrationImage} alt="Student illustration" />
+          <Image
+            src={illustrationImage}
+            alt="Student illustration"
+            draggable={false}
+            onDragStart={(e) => e.preventDefault()}
+            onContextMenu={(e) => e.preventDefault()}
+          />
         </motion.div>
 
         <motion.div

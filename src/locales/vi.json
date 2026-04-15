@@ -544,7 +544,7 @@
       "logout": "Đăng xuất"
     },
     "search": {
-      "placeholder": "Tìm kiếm khóa học, gia sư..."
+      "placeholder": "Tìm kiếm khóa học theo tên hoặc mô tả..."
     },
     "dashboard": {
       "welcome": "Chào mừng trở lại",

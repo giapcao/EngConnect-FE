@@ -647,6 +647,9 @@ const HelpSupport = () => {
                   <img
                     src={hybridWorkImage}
                     alt="Help & Support"
+                    draggable={false}
+                    onDragStart={(e) => e.preventDefault()}
+                    onContextMenu={(e) => e.preventDefault()}
                     className="w-full max-w-md h-auto"
                   />
                 </motion.div>

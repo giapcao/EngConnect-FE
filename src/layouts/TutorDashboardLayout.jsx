@@ -138,7 +138,14 @@ const TutorDashboardLayout = () => {
             to="/"
             className="flex items-center gap-2 no-underline flex-shrink-0"
           >
-            <img src={logoImage} alt="EngConnect" className="h-10 w-auto" />
+            <img
+              src={logoImage}
+              alt="EngConnect"
+              draggable={false}
+              onDragStart={(e) => e.preventDefault()}
+              onContextMenu={(e) => e.preventDefault()}
+              className="h-10 w-auto"
+            />
           </Link>
 
           {/* Search Bar - Desktop */}

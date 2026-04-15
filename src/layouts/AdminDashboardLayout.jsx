@@ -166,6 +166,9 @@ const AdminDashboardLayout = () => {
             <img
               src={sidebarCollapsed ? logoNoTextImage : logoImage}
               alt="EngConnect"
+              draggable={false}
+              onDragStart={(e) => e.preventDefault()}
+              onContextMenu={(e) => e.preventDefault()}
               className={`${sidebarCollapsed ? "h-8" : "h-9"} w-auto transition-all duration-300`}
             />
           </Link>
@@ -406,6 +409,9 @@ const AdminDashboardLayout = () => {
                   <img
                     src={logoImage}
                     alt="EngConnect"
+                    draggable={false}
+                    onDragStart={(e) => e.preventDefault()}
+                    onContextMenu={(e) => e.preventDefault()}
                     className="h-9 w-auto"
                   />
                 </Link>

@@ -121,6 +121,9 @@ const Header = () => {
               <img
                 src={logoImage}
                 alt="EngConnect"
+                draggable={false}
+                onDragStart={(e) => e.preventDefault()}
+                onContextMenu={(e) => e.preventDefault()}
                 className="h-10 w-auto transition-all duration-300 group-hover:scale-105"
               />
             </Link>

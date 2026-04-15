@@ -17,11 +17,13 @@ import {
 import IllustrationImage from "../../../assets/illustrations/wait.avif";
 import { useSelector } from "react-redux";
 import { selectUser } from "../../../store";
+import { useNavigate } from "react-router-dom";
 
 const Dashboard = () => {
   const { t } = useTranslation();
   const colors = useThemeColors();
   const user = useSelector(selectUser);
+  const navigate = useNavigate();
 
   const stats = [
     {
@@ -166,6 +168,7 @@ const Dashboard = () => {
                     backgroundColor: colors.primary.main,
                     color: colors.text.white,
                   }}
+                  onPress={() => navigate("/tutor/schedule")}
                 >
                   {t("tutorDashboard.dashboard.startLesson")}
                 </Button>
@@ -174,6 +177,9 @@ const Dashboard = () => {
                 <Image
                   src={IllustrationImage}
                   alt="Welcome illustration"
+                  draggable={false}
+                  onDragStart={(e) => e.preventDefault()}
+                  onContextMenu={(e) => e.preventDefault()}
                   className="w-full h-full object-contain"
                 />
               </div>

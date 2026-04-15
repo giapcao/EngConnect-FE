@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Button, Card, CardBody, Image, Chip } from "@heroui/react";
+import { Button, Card, CardBody, Image } from "@heroui/react";
 import CourseCardSkeleton from "../../components/CourseCardSkeleton/CourseCardSkeleton";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -61,9 +61,6 @@ import avatarEira from "../../assets/images/avatar-eira.png";
 import avatarZane from "../../assets/images/avatar-zane.png";
 import avatarSelene from "../../assets/images/avatar-selene.png";
 import avatarTalon from "../../assets/images/avatar-talon.png";
-import tutorProfile1 from "../../assets/images/tutor-profile-1.png";
-import tutorProfile2 from "../../assets/images/tutor-profile-2.png";
-import tutorProfile3 from "../../assets/images/tutor-profile-3.png";
 import aiImage from "../../assets/illustrations/ai.avif";
 import videoImage from "../../assets/illustrations/video.avif";
 
@@ -260,6 +257,9 @@ const Home = () => {
               <Image
                 isBlurred
                 src={heroImage}
+                draggable={false}
+                onDragStart={(e) => e.preventDefault()}
+                onContextMenu={(e) => e.preventDefault()}
                 alt="Online learning interface"
                 className="w-full h-auto rounded-2xl m-3"
               />
@@ -418,6 +418,9 @@ const Home = () => {
             >
               <img
                 src={videoImage}
+                draggable={false}
+                onDragStart={(e) => e.preventDefault()}
+                onContextMenu={(e) => e.preventDefault()}
                 alt="1-on-1 video learning"
                 className="w-full max-w-md h-auto"
               />
@@ -443,6 +446,9 @@ const Home = () => {
               <img
                 src={aiImage}
                 alt="AI-powered learning"
+                draggable={false}
+                onDragStart={(e) => e.preventDefault()}
+                onContextMenu={(e) => e.preventDefault()}
                 className="w-full max-w-md h-auto"
               />
             </motion.div>
@@ -567,149 +573,10 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Featured Tutors Section */}
-      <section
-        className="py-20 px-6 md:px-12"
-        style={{ backgroundColor: colors.background.light }}
-      >
-        <div className="max-w-7xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7 }}
-            className="text-center mb-16"
-          >
-            <h2
-              className="text-3xl sm:text-4xl font-bold mb-4"
-              style={{ color: colors.text.primary }}
-            >
-              {t("home.tutors.title")}{" "}
-              <span style={{ color: colors.primary.main }}>
-                {t("home.tutors.titleHighlight")}
-              </span>
-            </h2>
-            <p
-              className="text-lg max-w-2xl mx-auto"
-              style={{ color: colors.text.secondary }}
-            >
-              {t("home.tutors.description")}
-            </p>
-          </motion.div>
-
-          <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6"
-          >
-            {[
-              {
-                name: "Sarah Chen",
-                specialty: "Business English",
-                rating: 5,
-                lessons: 1200,
-                image: tutorProfile1,
-              },
-              {
-                name: "James Wilson",
-                specialty: "IELTS Preparation",
-                rating: 4.9,
-                lessons: 980,
-                image: tutorProfile2,
-              },
-              {
-                name: "Emma Taylor",
-                specialty: "Conversational English",
-                rating: 5,
-                lessons: 1500,
-                image: tutorProfile3,
-              },
-              {
-                name: "Michael Brown",
-                specialty: "Academic Writing",
-                rating: 4.9,
-                lessons: 850,
-                image: tutorProfile1,
-              },
-              {
-                name: "Lisa Anderson",
-                specialty: "Pronunciation Coach",
-                rating: 5,
-                lessons: 1100,
-                image: tutorProfile3,
-              },
-            ].map((tutor) => (
-              <motion.div key={tutor.name} variants={itemVariants}>
-                <Card
-                  className="shadow-none"
-                  style={{
-                    backgroundColor: colors.background.gray,
-                  }}
-                >
-                  <CardBody className="p-0">
-                    <div className="relative p-3">
-                      <div className="relative aspect-square overflow-hidden rounded-xl">
-                        <img
-                          src={tutor.image}
-                          alt={tutor.name}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                    </div>
-                    <div className="p-4 pt-0 text-center">
-                      <h3
-                        className="text-lg font-bold mb-1"
-                        style={{ color: colors.text.primary }}
-                      >
-                        {tutor.name}
-                      </h3>
-                      <Chip
-                        size="sm"
-                        variant="flat"
-                        className="mb-6 text-xs"
-                        style={{
-                          backgroundColor: colors.background.primaryLight,
-                          color: colors.primary.main,
-                        }}
-                      >
-                        {tutor.specialty}
-                      </Chip>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-1">
-                          <Star
-                            className="w-4 h-4"
-                            fill={colors.state.warning}
-                            color={colors.state.warning}
-                          />
-                          <span
-                            className="font-semibold text-sm"
-                            style={{ color: colors.text.primary }}
-                          >
-                            {tutor.rating}
-                          </span>
-                        </div>
-                        <span
-                          style={{ color: colors.text.secondary }}
-                          className="text-sm"
-                        >
-                          {tutor.lessons}+ {t("home.tutors.lessons")}
-                        </span>
-                      </div>
-                    </div>
-                  </CardBody>
-                </Card>
-              </motion.div>
-            ))}
-          </motion.div>
-        </div>
-      </section>
-
       {/* Testimonials Section */}
       <section
         className="py-20 px-6 md:px-12 overflow-hidden"
-        style={{ backgroundColor: colors.background.gray }}
+        style={{ backgroundColor: colors.background.light }}
       >
         <div className="max-w-7xl mx-auto">
           <motion.div
@@ -751,7 +618,7 @@ const Home = () => {
                   <Card
                     className="h-full shadow-none"
                     style={{
-                      backgroundColor: colors.background.light,
+                      backgroundColor: colors.background.gray,
                       borderColor: colors.border.light,
                     }}
                   >

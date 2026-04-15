@@ -114,7 +114,13 @@ const ResetPassword = () => {
               theme === "dark" ? colors.background.gray : "#F0F9FF",
           }}
         >
-          <Image src={illustrationImage} alt="Reset password illustration" />
+          <Image
+            src={illustrationImage}
+            alt="Reset password illustration"
+            draggable={false}
+            onDragStart={(e) => e.preventDefault()}
+            onContextMenu={(e) => e.preventDefault()}
+          />
         </motion.div>
 
         <motion.div

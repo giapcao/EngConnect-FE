@@ -253,7 +253,14 @@ const TutorOnboarding = () => {
         }}
       >
         <Link to="/" className="flex items-center gap-2">
-          <img src={logoImage} alt="EngConnect" className="h-9 w-auto" />
+          <img
+            src={logoImage}
+            alt="EngConnect"
+            draggable={false}
+            onDragStart={(e) => e.preventDefault()}
+            onContextMenu={(e) => e.preventDefault()}
+            className="h-9 w-auto"
+          />
         </Link>
       </header>
 

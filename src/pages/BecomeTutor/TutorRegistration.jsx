@@ -143,7 +143,13 @@ const TutorRegistration = () => {
               theme === "dark" ? colors.background.gray : "#F0F9FF",
           }}
         >
-          <Image src={illustrationImage} alt="Tutor registration" />
+          <Image
+            src={illustrationImage}
+            alt="Tutor registration"
+            draggable={false}
+            onDragStart={(e) => e.preventDefault()}
+            onContextMenu={(e) => e.preventDefault()}
+          />
         </motion.div>
 
         <motion.div

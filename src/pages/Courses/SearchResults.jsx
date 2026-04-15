@@ -279,6 +279,9 @@ const SearchResults = () => {
               <img
                 src={searchImage}
                 alt="No results"
+                draggable={false}
+                onDragStart={(e) => e.preventDefault()}
+                onContextMenu={(e) => e.preventDefault()}
                 className="w-74 h-auto mb-6 opacity-80"
               />
               <h3

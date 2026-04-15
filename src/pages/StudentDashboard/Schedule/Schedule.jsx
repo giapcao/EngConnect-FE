@@ -694,6 +694,9 @@ const Schedule = () => {
           <img
             src={calendarIllustration}
             alt="No lessons"
+            draggable={false}
+            onDragStart={(e) => e.preventDefault()}
+            onContextMenu={(e) => e.preventDefault()}
             className="w-52 h-52 object-contain"
           />
           <h3
@@ -811,6 +814,9 @@ const Schedule = () => {
                   <img
                     src={calendarIllustration}
                     alt="No upcoming"
+                    draggable={false}
+                    onDragStart={(e) => e.preventDefault()}
+                    onContextMenu={(e) => e.preventDefault()}
                     className="w-40 h-40 object-contain"
                   />
                   <p style={{ color: colors.text.tertiary }}>
@@ -837,6 +843,9 @@ const Schedule = () => {
                   <img
                     src={calendarIllustration}
                     alt="No past"
+                    draggable={false}
+                    onDragStart={(e) => e.preventDefault()}
+                    onContextMenu={(e) => e.preventDefault()}
                     className="w-40 h-40 object-contain"
                   />
                   <p style={{ color: colors.text.tertiary }}>
