@@ -44,6 +44,7 @@ import {
   Eye,
 } from "@phosphor-icons/react";
 import calendarIllustration from "../../../assets/illustrations/calendar.avif";
+import VideoModal from "../../../components/VideoModal/VideoModal";
 
 const WEEKDAYS = [
   "Monday",
@@ -116,6 +117,14 @@ const Schedule = () => {
   } = useDisclosure();
   const [selectedLesson, setSelectedLesson] = useState(null);
   const [sidebarView, setSidebarView] = useState("today");
+
+  // Video recording modal
+  const {
+    isOpen: isVideoOpen,
+    onOpen: onVideoOpen,
+    onOpenChange: onVideoOpenChange,
+  } = useDisclosure();
+  const [videoUrl, setVideoUrl] = useState("");
 
   const allTimeOptions = [];
   for (let h = 6; h <= 22; h++) {
@@ -1690,9 +1699,10 @@ const Schedule = () => {
                           startContent={
                             <Play weight="fill" className="w-3.5 h-3.5" />
                           }
-                          onPress={() =>
-                            window.open(lesson.lessonRecord.recordUrl, "_blank")
-                          }
+                          onPress={() => {
+                            setVideoUrl(lesson.lessonRecord.recordUrl);
+                            onVideoOpen();
+                          }}
                         >
                           {t("tutorDashboard.schedule.watchRecording")}
                         </Button>
@@ -1726,6 +1736,12 @@ const Schedule = () => {
             })()}
         </ModalContent>
       </Modal>
+
+      <VideoModal
+        isOpen={isVideoOpen}
+        onOpenChange={onVideoOpenChange}
+        videoUrl={videoUrl}
+      />
     </div>
   );
 };

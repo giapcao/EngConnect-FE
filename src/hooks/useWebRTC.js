@@ -16,6 +16,8 @@ export default function useWebRTC(lessonId, userRole) {
   const [remoteStream, setRemoteStream] = useState(null);
   const [isAudioEnabled, setIsAudioEnabled] = useState(true);
   const [isVideoEnabled, setIsVideoEnabled] = useState(true);
+  const [isScreenSharing, setIsScreenSharing] = useState(false);
+  const [screenStream, setScreenStream] = useState(null);
   const [chatMessages, setChatMessages] = useState([]);
   const [error, setError] = useState(null);
 
@@ -23,7 +25,16 @@ export default function useWebRTC(lessonId, userRole) {
   const peerRef = useRef(null);
   const localStreamRef = useRef(null);
   const remoteStreamRef = useRef(null);
+  const screenStreamRef = useRef(null);
+  const screenAudioSenderRef = useRef(null);
+  const audioCtxRef = useRef(null);
+  const audioDestRef = useRef(null);
+  const audioNodesRef = useRef({ mic: null, remote: null, screenAudio: null });
+  const canvasRef = useRef(null);
+  const canvasVideoElRef = useRef(null);
+  const drawTimerRef = useRef(null);
   const recorderRef = useRef(null);
+  const recordingStreamRef = useRef(null);
   const chunkCountRef = useRef(0);
   const chunkIntervalRef = useRef(null);
   const chunkTimestampRef = useRef(0);
@@ -140,6 +151,24 @@ export default function useWebRTC(lessonId, userRole) {
           remote.addTrack(track);
         });
         setRemoteStream(new MediaStream(remote.getTracks()));
+        // Connect remote audio to recording AudioContext mix (no recorder restart)
+        if (userRole === "Tutor") {
+          const remoteAudioTracks = event.streams[0]?.getAudioTracks();
+          if (
+            remoteAudioTracks?.length &&
+            audioCtxRef.current?.state !== "closed" &&
+            audioDestRef.current
+          ) {
+            try { audioNodesRef.current.remote?.disconnect(); } catch { /* ignore */ }
+            try {
+              const src = audioCtxRef.current.createMediaStreamSource(
+                new MediaStream(remoteAudioTracks),
+              );
+              src.connect(audioDestRef.current);
+              audioNodesRef.current.remote = src;
+            } catch { /* ignore */ }
+          }
+        }
       };
 
       pc.onicecandidate = (event) => {
@@ -179,7 +208,7 @@ export default function useWebRTC(lessonId, userRole) {
 
       return pc;
     },
-    [lessonId],
+    [lessonId, userRole],
   );
 
   // Start media
@@ -211,13 +240,69 @@ export default function useWebRTC(lessonId, userRole) {
     }
   }, []);
 
-  // Start recording (tutor only)
+  // Start recording (tutor only) — canvas for video + AudioContext for audio
+  // The MediaRecorder NEVER restarts. We swap what's drawn / mixed instead.
   const startRecording = useCallback(
     (stream) => {
       if (!stream || userRole !== "Tutor") return;
       if (!MediaRecorder.isTypeSupported("video/webm")) return;
       try {
-        const recorder = new MediaRecorder(stream, {
+        // --- Canvas for stable video track ---
+        const vTrack = stream.getVideoTracks()[0];
+        const settings = vTrack?.getSettings?.() || {};
+        const canvas = document.createElement("canvas");
+        canvas.width = settings.width || 1280;
+        canvas.height = settings.height || 720;
+        canvasRef.current = canvas;
+        const ctx2d = canvas.getContext("2d");
+
+        const videoEl = document.createElement("video");
+        videoEl.srcObject = stream;
+        videoEl.muted = true;
+        videoEl.playsInline = true;
+        videoEl.play().catch(() => {});
+        canvasVideoElRef.current = videoEl;
+
+        // Draw loop (setInterval keeps running in background tabs, throttled to ~1 fps)
+        const draw = () => {
+          if (videoEl.readyState >= videoEl.HAVE_CURRENT_DATA) {
+            const vw = videoEl.videoWidth;
+            const vh = videoEl.videoHeight;
+            if (vw && vh && (canvas.width !== vw || canvas.height !== vh)) {
+              canvas.width = vw;
+              canvas.height = vh;
+            }
+            ctx2d.drawImage(videoEl, 0, 0, canvas.width, canvas.height);
+          }
+        };
+        drawTimerRef.current = setInterval(draw, 33); // ~30 fps
+
+        // --- AudioContext for stable audio track ---
+        const audioCtx = new AudioContext();
+        audioCtxRef.current = audioCtx;
+        const dest = audioCtx.createMediaStreamDestination();
+        audioDestRef.current = dest;
+
+        const micTrack = stream.getAudioTracks()[0];
+        if (micTrack) {
+          const micSrc = audioCtx.createMediaStreamSource(
+            new MediaStream([micTrack]),
+          );
+          micSrc.connect(dest);
+          audioNodesRef.current.mic = micSrc;
+        }
+
+        // --- Combine canvas video + AudioContext audio ---
+        const canvasStream = canvas.captureStream(30);
+        const recVideo = canvasStream.getVideoTracks()[0];
+        const recAudio = dest.stream.getAudioTracks()[0];
+        const recTracks = [];
+        if (recVideo) recTracks.push(recVideo);
+        if (recAudio) recTracks.push(recAudio);
+        const recordStream = new MediaStream(recTracks);
+        recordingStreamRef.current = recordStream;
+
+        const recorder = new MediaRecorder(recordStream, {
           mimeType: "video/webm",
         });
         recorderRef.current = recorder;
@@ -227,7 +312,6 @@ export default function useWebRTC(lessonId, userRole) {
 
         recorder.ondataavailable = async (event) => {
           if (event.data.size > 0) {
-            // Monotonic timestamp: always greater than previous
             const now = Date.now();
             const ts = Math.max(now, chunkTimestampRef.current + 1);
             chunkTimestampRef.current = ts;
@@ -245,7 +329,6 @@ export default function useWebRTC(lessonId, userRole) {
               });
 
             pendingUploadsRef.current.push(uploadPromise);
-            // Cleanup settled promises
             uploadPromise.finally(() => {
               pendingUploadsRef.current =
                 pendingUploadsRef.current.filter((p) => p !== uploadPromise);
@@ -254,7 +337,6 @@ export default function useWebRTC(lessonId, userRole) {
         };
 
         recorder.start();
-        // Trigger dataavailable every CHUNK_INTERVAL
         chunkIntervalRef.current = setInterval(() => {
           if (recorder.state === "recording") {
             recorder.requestData();
@@ -267,24 +349,45 @@ export default function useWebRTC(lessonId, userRole) {
     [lessonId, userRole],
   );
 
-  // Stop recording and wait for pending uploads to flush
+  // Stop recording and clean up canvas / AudioContext resources
   const stopRecording = useCallback(() => {
     if (chunkIntervalRef.current) {
       clearInterval(chunkIntervalRef.current);
       chunkIntervalRef.current = null;
     }
     return new Promise((resolve) => {
+      const cleanup = () => {
+        recorderRef.current = null;
+        recordingStreamRef.current = null;
+        // Stop draw loop
+        if (drawTimerRef.current) {
+          clearInterval(drawTimerRef.current);
+          drawTimerRef.current = null;
+        }
+        if (canvasVideoElRef.current) {
+          canvasVideoElRef.current.srcObject = null;
+          canvasVideoElRef.current = null;
+        }
+        canvasRef.current = null;
+        // Disconnect audio nodes
+        try { audioNodesRef.current.mic?.disconnect(); } catch { /* ignore */ }
+        try { audioNodesRef.current.remote?.disconnect(); } catch { /* ignore */ }
+        try { audioNodesRef.current.screenAudio?.disconnect(); } catch { /* ignore */ }
+        audioNodesRef.current = { mic: null, remote: null, screenAudio: null };
+        audioDestRef.current = null;
+        if (audioCtxRef.current && audioCtxRef.current.state !== "closed") {
+          try { audioCtxRef.current.close(); } catch { /* ignore */ }
+          audioCtxRef.current = null;
+        }
+        Promise.allSettled(pendingUploadsRef.current).then(() => resolve());
+      };
+
       if (recorderRef.current && recorderRef.current.state !== "inactive") {
-        recorderRef.current.onstop = () => {
-          recorderRef.current = null;
-          // Wait for all pending chunk uploads to flush
-          Promise.allSettled(pendingUploadsRef.current).then(() => resolve());
-        };
-        recorderRef.current.requestData(); // trigger final chunk
+        recorderRef.current.onstop = cleanup;
+        recorderRef.current.requestData();
         recorderRef.current.stop();
       } else {
-        recorderRef.current = null;
-        Promise.allSettled(pendingUploadsRef.current).then(() => resolve());
+        cleanup();
       }
     });
   }, []);
@@ -508,6 +611,124 @@ export default function useWebRTC(lessonId, userRole) {
     stopRecording,
   ]);
 
+  // Toggle screen share (tutor only)
+  // No recorder restart — just swap the canvas video source + audio nodes
+  const toggleScreenShare = useCallback(async () => {
+    if (userRole !== "Tutor") return;
+    const pc = peerRef.current;
+    if (!pc) return;
+
+    if (screenStreamRef.current) {
+      // --- Stop screen share — switch back to camera ---
+      const oldScreen = screenStreamRef.current;
+      screenStreamRef.current = null;
+      setScreenStream(null);
+      setIsScreenSharing(false);
+
+      // 1. Swap canvas drawing source back to camera
+      if (canvasVideoElRef.current) {
+        canvasVideoElRef.current.srcObject = localStreamRef.current;
+        canvasVideoElRef.current.play().catch(() => {});
+      }
+
+      // 2. Disconnect screen audio from recording mix
+      try { audioNodesRef.current.screenAudio?.disconnect(); } catch { /* ignore */ }
+      audioNodesRef.current.screenAudio = null;
+
+      // 3. Remove screen audio sender from peer connection
+      if (screenAudioSenderRef.current && pc) {
+        try { pc.removeTrack(screenAudioSenderRef.current); } catch { /* ignore */ }
+        screenAudioSenderRef.current = null;
+      }
+
+      // 4. Swap peer video back to camera
+      const cameraTrack = localStreamRef.current?.getVideoTracks()[0];
+      if (cameraTrack) {
+        const sender = pc.getSenders().find((s) => s.track?.kind === "video");
+        if (sender) await sender.replaceTrack(cameraTrack);
+      }
+
+      // 5. Stop old screen tracks
+      oldScreen.getTracks().forEach((t) => t.stop());
+      return;
+    }
+
+    // --- Start screen share ---
+    try {
+      const screenStr = await navigator.mediaDevices.getDisplayMedia({
+        video: true,
+        audio: true,
+      });
+      screenStreamRef.current = screenStr;
+      setScreenStream(screenStr);
+      setIsScreenSharing(true);
+
+      // 1. Swap canvas drawing source to screen
+      if (canvasVideoElRef.current) {
+        canvasVideoElRef.current.srcObject = screenStr;
+        canvasVideoElRef.current.play().catch(() => {});
+      }
+
+      // 2. Connect screen audio to recording mix
+      const screenAudioTrack = screenStr.getAudioTracks()[0];
+      if (
+        screenAudioTrack &&
+        audioCtxRef.current?.state !== "closed" &&
+        audioDestRef.current
+      ) {
+        try {
+          const src = audioCtxRef.current.createMediaStreamSource(
+            new MediaStream([screenAudioTrack]),
+          );
+          src.connect(audioDestRef.current);
+          audioNodesRef.current.screenAudio = src;
+        } catch { /* ignore */ }
+      }
+
+      // 3. Replace video track on peer connection
+      const screenTrack = screenStr.getVideoTracks()[0];
+      const videoSender = pc.getSenders().find((s) => s.track?.kind === "video");
+      if (videoSender) await videoSender.replaceTrack(screenTrack);
+
+      // 4. Add screen audio to peer connection (so student hears it)
+      if (screenAudioTrack && pc) {
+        screenAudioSenderRef.current = pc.addTrack(screenAudioTrack, screenStr);
+      }
+
+      // When user stops sharing via browser UI
+      screenTrack.onended = async () => {
+        const oldScr = screenStreamRef.current;
+        screenStreamRef.current = null;
+        setScreenStream(null);
+        setIsScreenSharing(false);
+
+        // Swap canvas back to camera
+        if (canvasVideoElRef.current) {
+          canvasVideoElRef.current.srcObject = localStreamRef.current;
+          canvasVideoElRef.current.play().catch(() => {});
+        }
+        // Disconnect screen audio from recording
+        try { audioNodesRef.current.screenAudio?.disconnect(); } catch { /* ignore */ }
+        audioNodesRef.current.screenAudio = null;
+
+        // Remove screen audio sender from peer
+        if (screenAudioSenderRef.current && peerRef.current) {
+          try { peerRef.current.removeTrack(screenAudioSenderRef.current); } catch { /* ignore */ }
+          screenAudioSenderRef.current = null;
+        }
+        // Swap peer video back to camera
+        const camTrack = localStreamRef.current?.getVideoTracks()[0];
+        if (camTrack) {
+          const s = peerRef.current?.getSenders().find((s) => s.track?.kind === "video");
+          if (s) await s.replaceTrack(camTrack);
+        }
+        if (oldScr) oldScr.getTracks().forEach((t) => t.stop());
+      };
+    } catch (err) {
+      console.error("Screen share failed:", err);
+    }
+  }, [userRole]);
+
   // Toggle audio
   const toggleAudio = useCallback(() => {
     if (localStreamRef.current) {
@@ -598,6 +819,14 @@ export default function useWebRTC(lessonId, userRole) {
   const disconnect = useCallback(async () => {
     stopRecording();
 
+    if (screenStreamRef.current) {
+      screenStreamRef.current.getTracks().forEach((t) => t.stop());
+      screenStreamRef.current = null;
+      setScreenStream(null);
+      setIsScreenSharing(false);
+      screenAudioSenderRef.current = null;
+    }
+
     if (peerRef.current) {
       peerRef.current.close();
       peerRef.current = null;
@@ -628,6 +857,11 @@ export default function useWebRTC(lessonId, userRole) {
   useEffect(() => {
     return () => {
       stopRecording();
+      if (screenStreamRef.current) {
+        screenStreamRef.current.getTracks().forEach((t) => t.stop());
+        screenStreamRef.current = null;
+      }
+      screenAudioSenderRef.current = null;
       if (peerRef.current) {
         peerRef.current.close();
         peerRef.current = null;
@@ -652,12 +886,15 @@ export default function useWebRTC(lessonId, userRole) {
     remoteStream,
     isAudioEnabled,
     isVideoEnabled,
+    isScreenSharing,
+    screenStream,
     chatMessages,
     error,
     connect,
     disconnect,
     toggleAudio,
     toggleVideo,
+    toggleScreenShare,
     sendMessage,
     endMeeting,
     leaveRoom,

@@ -19,6 +19,7 @@ import {
   ArrowLeft,
   X,
   UserCircle,
+  MonitorArrowUp,
 } from "@phosphor-icons/react";
 import conversationIllustration from "../../assets/illustrations/conversation.avif";
 
@@ -39,12 +40,15 @@ const VideoCall = () => {
     remoteStream,
     isAudioEnabled,
     isVideoEnabled,
+    isScreenSharing,
+    screenStream,
     chatMessages,
     error,
     connect,
     disconnect,
     toggleAudio,
     toggleVideo,
+    toggleScreenShare,
     sendMessage,
     endMeeting,
     leaveRoom,
@@ -59,6 +63,7 @@ const VideoCall = () => {
 
   const localVideoRef = useRef(null);
   const remoteVideoRef = useRef(null);
+  const screenVideoRef = useRef(null);
   const chatEndRef = useRef(null);
   const fetchingNamesRef = useRef(new Set());
 
@@ -120,6 +125,13 @@ const VideoCall = () => {
       remoteVideoRef.current.srcObject = remoteStream;
     }
   }, [remoteStream]);
+
+  // Attach screen share stream to preview element
+  useEffect(() => {
+    if (screenVideoRef.current && screenStream) {
+      screenVideoRef.current.srcObject = screenStream;
+    }
+  }, [screenStream]);
 
   // Auto-scroll chat
   useEffect(() => {
@@ -334,7 +346,25 @@ const VideoCall = () => {
               </div>
             )}
 
-            {/* Local video (PIP) */}
+            {/* Screen share preview (shown when sharing) */}
+            {isScreenSharing && screenStream && (
+              <div className="absolute bottom-4 left-4 w-64 h-40 rounded-xl overflow-hidden bg-black shadow-2xl border-2 border-emerald-500/50">
+                <video
+                  ref={screenVideoRef}
+                  autoPlay
+                  playsInline
+                  muted
+                  className="w-full h-full object-contain"
+                />
+                <div className="absolute top-2 left-2 bg-emerald-500 rounded-full px-2 py-0.5">
+                  <span className="text-[10px] text-white font-medium">
+                    {t("videoCall.sharing")}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* Local camera (PIP) */}
             <div className="absolute bottom-4 right-4 w-48 h-36 rounded-xl overflow-hidden bg-gray-900 shadow-2xl border-2 border-gray-700">
               <video
                 ref={localVideoRef}
@@ -508,6 +538,25 @@ const VideoCall = () => {
             <VideoCameraSlash weight="bold" className="w-5 h-5" />
           )}
         </button>
+
+        {/* Screen share (tutor only) */}
+        {userRole === "Tutor" && (
+          <button
+            onClick={toggleScreenShare}
+            className={`p-3.5 rounded-full transition-colors ${
+              isScreenSharing
+                ? "bg-emerald-500 text-white hover:bg-emerald-600"
+                : "bg-gray-700 text-white hover:bg-gray-600"
+            }`}
+            title={
+              isScreenSharing
+                ? t("videoCall.stopSharing")
+                : t("videoCall.shareScreen")
+            }
+          >
+            <MonitorArrowUp weight="bold" className="w-5 h-5" />
+          </button>
+        )}
 
         {/* Leave / End */}
         {userRole === "Tutor" ? (
