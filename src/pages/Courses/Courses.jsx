@@ -221,21 +221,6 @@ const Courses = () => {
               <span className="text-sm font-medium">
                 {t("courses.categories.all")}
               </span>
-              <span
-                className="text-xs px-2 py-0.5 rounded-full"
-                style={{
-                  backgroundColor:
-                    selectedCategory === "all"
-                      ? `${colors.primary.main}20`
-                      : `${colors.text.tertiary}20`,
-                  color:
-                    selectedCategory === "all"
-                      ? colors.primary.main
-                      : colors.text.tertiary,
-                }}
-              >
-                {allCourses.length}
-              </span>
             </button>
             {categories.map((cat) => (
               <button
@@ -254,21 +239,6 @@ const Courses = () => {
                 onClick={() => setSelectedCategory(cat.id)}
               >
                 <span className="text-sm font-medium">{cat.name}</span>
-                <span
-                  className="text-xs px-2 py-0.5 rounded-full"
-                  style={{
-                    backgroundColor:
-                      selectedCategory === cat.id
-                        ? `${colors.primary.main}20`
-                        : `${colors.text.tertiary}20`,
-                    color:
-                      selectedCategory === cat.id
-                        ? colors.primary.main
-                        : colors.text.tertiary,
-                  }}
-                >
-                  {categoryCounts[cat.id] || 0}
-                </span>
               </button>
             ))}
           </div>
@@ -313,19 +283,6 @@ const Courses = () => {
               <span className="text-sm font-medium">
                 {t("courses.categories.allLevels")}
               </span>
-              <span
-                className="text-xs px-2 py-0.5 rounded-full"
-                style={{
-                  backgroundColor: !selectedLevel
-                    ? `${colors.primary.main}20`
-                    : `${colors.text.tertiary}20`,
-                  color: !selectedLevel
-                    ? colors.primary.main
-                    : colors.text.tertiary,
-                }}
-              >
-                {allCourses.length}
-              </span>
             </button>
             {LEVELS.map((level) => (
               <button
@@ -344,21 +301,6 @@ const Courses = () => {
                 onClick={() => setSelectedLevel(level)}
               >
                 <span className="text-sm font-medium">{level}</span>
-                <span
-                  className="text-xs px-2 py-0.5 rounded-full"
-                  style={{
-                    backgroundColor:
-                      selectedLevel === level
-                        ? `${colors.primary.main}20`
-                        : `${colors.text.tertiary}20`,
-                    color:
-                      selectedLevel === level
-                        ? colors.primary.main
-                        : colors.text.tertiary,
-                  }}
-                >
-                  {levelCounts[level] || 0}
-                </span>
               </button>
             ))}
           </div>
