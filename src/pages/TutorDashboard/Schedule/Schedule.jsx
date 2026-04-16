@@ -97,6 +97,7 @@ const Schedule = () => {
   const [formEndTime, setFormEndTime] = useState("10:00");
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState(null);
+  const [weekdayLocked, setWeekdayLocked] = useState(false);
 
   // Delete modal
   const {
@@ -174,9 +175,10 @@ const Schedule = () => {
     .sort((a, b) => a.startTime.localeCompare(b.startTime));
 
   // Handlers
-  const handleOpenCreate = () => {
+  const handleOpenCreate = (weekday = "Monday") => {
     setEditingSchedule(null);
-    setFormWeekday("Monday");
+    setFormWeekday(weekday);
+    setWeekdayLocked(true);
     setFormStartTime("09:00");
     setFormEndTime("10:00");
     setSaveError(null);
@@ -186,6 +188,7 @@ const Schedule = () => {
   const handleOpenEdit = (schedule) => {
     setEditingSchedule(schedule);
     setFormWeekday(schedule.weekday);
+    setWeekdayLocked(false);
     setFormStartTime(schedule.startTime.slice(0, 5));
     setFormEndTime(schedule.endTime.slice(0, 5));
     setSaveError(null);
@@ -483,19 +486,6 @@ const Schedule = () => {
             {t("tutorDashboard.schedule.subtitle")}
           </p>
         </div>
-        {activeView === "schedules" && (
-          <Button
-            color="primary"
-            startContent={<Plus weight="bold" className="w-5 h-5" />}
-            style={{
-              backgroundColor: colors.primary.main,
-              color: colors.text.white,
-            }}
-            onPress={handleOpenCreate}
-          >
-            {t("tutorDashboard.schedule.addSchedule")}
-          </Button>
-        )}
       </motion.div>
 
       {/* Tabs: Schedules / Lessons */}
@@ -533,12 +523,11 @@ const Schedule = () => {
 
       {activeView === "schedules" ? (
         <>
-          <div className="grid lg:grid-cols-3 gap-6">
+          <div className="grid gap-6">
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.15 }}
-              className="lg:col-span-2"
             >
               <Card
                 shadow="none"
@@ -593,13 +582,33 @@ const Schedule = () => {
                                   </Chip>
                                 )}
                               </div>
-                              <span
-                                className="text-sm"
-                                style={{ color: colors.text.tertiary }}
-                              >
-                                {daySchedules.length}{" "}
-                                {t("tutorDashboard.schedule.slots")}
-                              </span>
+                              <div className="flex items-center gap-2">
+                                <span
+                                  className="text-sm"
+                                  style={{ color: colors.text.tertiary }}
+                                >
+                                  {daySchedules.length}{" "}
+                                  {t("tutorDashboard.schedule.slots")}
+                                </span>
+                                <Tooltip
+                                  content={t(
+                                    "tutorDashboard.schedule.addSchedule",
+                                  )}
+                                >
+                                  <Button
+                                    size="sm"
+                                    color="primary"
+                                    startContent={<Plus />}
+                                    style={{
+                                      backgroundColor: colors.primary.main,
+                                      color: colors.text.white,
+                                    }}
+                                    onPress={() => handleOpenCreate(day)}
+                                  >
+                                    {t("tutorDashboard.schedule.addSchedule")}
+                                  </Button>
+                                </Tooltip>
+                              </div>
                             </div>
 
                             {daySchedules.length === 0 ? (
@@ -733,135 +742,6 @@ const Schedule = () => {
                 </CardBody>
               </Card>
             </motion.div>
-
-            {/* Today's Schedule Sidebar */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.15 }}
-            >
-              <Card
-                shadow="none"
-                className="border-none"
-                style={{ backgroundColor: colors.background.light }}
-              >
-                <CardBody className="p-6">
-                  <h2
-                    className="text-lg font-semibold mb-4"
-                    style={{ color: colors.text.primary }}
-                  >
-                    <CalendarDots
-                      weight="duotone"
-                      className="w-5 h-5 inline-block mr-2"
-                      style={{ color: colors.primary.main }}
-                    />
-                    {t("tutorDashboard.schedule.todaySchedule")}
-                  </h2>
-
-                  <div className="space-y-3">
-                    {todaySchedules.length > 0 ? (
-                      todaySchedules.map((schedule) => (
-                        <div
-                          key={schedule.id}
-                          className="p-3 rounded-xl"
-                          style={{ backgroundColor: colors.background.gray }}
-                        >
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <Clock
-                                weight="duotone"
-                                className="w-4 h-4"
-                                style={{ color: colors.text.tertiary }}
-                              />
-                              <span
-                                className="font-medium text-sm"
-                                style={{ color: colors.text.primary }}
-                              >
-                                {formatTime(schedule.startTime)} —{" "}
-                                {formatTime(schedule.endTime)}
-                              </span>
-                            </div>
-                            <Chip
-                              size="sm"
-                              style={{
-                                backgroundColor: `${getStatusColor(schedule.status)}20`,
-                                color: getStatusColor(schedule.status),
-                              }}
-                            >
-                              {t(
-                                `tutorDashboard.schedule.status.${schedule.status.toLowerCase()}`,
-                              )}
-                            </Chip>
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      <div
-                        className="text-center"
-                        style={{ color: colors.text.tertiary }}
-                      >
-                        <img
-                          src={calendarIllustration}
-                          alt="No schedule"
-                          draggable={false}
-                          onDragStart={(e) => e.preventDefault()}
-                          onContextMenu={(e) => e.preventDefault()}
-                          className="w-44 h-44 mx-auto object-contain"
-                        />
-                        <p>{t("tutorDashboard.schedule.noScheduleToday")}</p>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Stats */}
-                  <div
-                    className="mt-6 pt-4 border-t space-y-3"
-                    style={{ borderColor: colors.border.light }}
-                  >
-                    <h3
-                      className="text-sm font-semibold"
-                      style={{ color: colors.text.primary }}
-                    >
-                      {t("tutorDashboard.schedule.overview")}
-                    </h3>
-                    {["Open", "Booked", "Pending", "Inactive"].map((status) => {
-                      const count = schedules.filter(
-                        (s) => s.status === status,
-                      ).length;
-                      return (
-                        <div
-                          key={status}
-                          className="flex items-center justify-between"
-                        >
-                          <div className="flex items-center gap-2">
-                            <div
-                              className="w-2 h-2 rounded-full"
-                              style={{
-                                backgroundColor: getStatusColor(status),
-                              }}
-                            />
-                            <span
-                              className="text-sm"
-                              style={{ color: colors.text.secondary }}
-                            >
-                              {t(
-                                `tutorDashboard.schedule.status.${status.toLowerCase()}`,
-                              )}
-                            </span>
-                          </div>
-                          <span
-                            className="text-sm font-medium"
-                            style={{ color: colors.text.primary }}
-                          >
-                            {count}
-                          </span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </CardBody>
-              </Card>
-            </motion.div>
           </div>
         </>
       ) : (
@@ -883,7 +763,7 @@ const Schedule = () => {
                 draggable={false}
                 onDragStart={(e) => e.preventDefault()}
                 onContextMenu={(e) => e.preventDefault()}
-                className="w-52 h-52 object-contain"
+                className="w-92 h-92 object-contain"
               />
               <h3
                 className="text-xl font-semibold"
@@ -899,7 +779,7 @@ const Schedule = () => {
               </p>
             </div>
           ) : (
-            <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
+            <div className="grid gap-6 lg:grid-cols-[1fr_440px]">
               <Card
                 shadow="none"
                 className="border-none"
@@ -1279,7 +1159,7 @@ const Schedule = () => {
                             draggable={false}
                             onDragStart={(e) => e.preventDefault()}
                             onContextMenu={(e) => e.preventDefault()}
-                            className="w-28 h-28 mx-auto object-contain mb-2"
+                            className="w-48 h-48 mx-auto object-contain"
                           />
                           <p
                             className="text-sm"
@@ -1292,7 +1172,7 @@ const Schedule = () => {
                     }
 
                     return (
-                      <div className="space-y-3 max-h-[480px] overflow-y-auto">
+                      <div className="space-y-3 max-h-[600px] overflow-y-auto">
                         {sidebarLessons.map((lesson) => {
                           const blockColor = getLessonBlockColor(lesson.status);
                           const startDate = new Date(lesson.startTime);
@@ -1456,6 +1336,7 @@ const Schedule = () => {
                 label={t("tutorDashboard.schedule.weekday")}
                 selectedKeys={[formWeekday]}
                 classNames={selectClassNames}
+                isDisabled={weekdayLocked}
                 onSelectionChange={(keys) => {
                   const val = Array.from(keys)[0];
                   if (val) setFormWeekday(val);

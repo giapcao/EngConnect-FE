@@ -443,8 +443,35 @@ export default function useWebRTC(lessonId, userRole) {
       setChatMessages((prev) => [...prev, data]);
     });
 
-    connection.onreconnecting(() => setConnectionState("reconnecting"));
-    connection.onreconnected(() => setConnectionState("connected"));
+    connection.onreconnecting(() => {
+      setConnectionState("reconnecting");
+      // Clear stale peer so fresh negotiation happens after reconnect
+      if (peerRef.current) {
+        peerRef.current.close();
+        peerRef.current = null;
+      }
+      pendingIceCandidatesRef.current = [];
+      remoteConnectionIdRef.current = null;
+      setRemoteStream(null);
+    });
+
+    connection.onreconnected(async () => {
+      setConnectionState("connected");
+      // Re-join the room — new connectionId after reconnect, need fresh UserJoined
+      if (userRole === "Tutor") {
+        try {
+          await connection.invoke("CreateRoom", lessonId);
+        } catch {
+          // Room already exists — fine
+        }
+      }
+      try {
+        await connection.invoke("JoinRoom", lessonId);
+      } catch (err) {
+        console.error("Failed to re-join room after reconnect:", err);
+      }
+    });
+
     connection.onclose(() => setConnectionState("disconnected"));
 
     // ---- Start connection ----
