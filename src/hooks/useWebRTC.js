@@ -119,6 +119,21 @@ export default function useWebRTC(lessonId, userRole) {
     return connection;
   }, []);
 
+  // Renegotiate peer connection (new offer/answer) after addTrack/removeTrack
+  const renegotiate = useCallback(async () => {
+    const pc = peerRef.current;
+    const hub = hubRef.current;
+    const remoteId = remoteConnectionIdRef.current;
+    if (!pc || !hub || !remoteId) return;
+    try {
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+      await hub.invoke("SendOffer", lessonId, remoteId, offer);
+    } catch (err) {
+      console.error("Renegotiation failed:", err);
+    }
+  }, [lessonId]);
+
   // Create peer connection for a remote user
   const createPeerConnection = useCallback(
     (remoteConnectionId) => {
@@ -648,7 +663,10 @@ export default function useWebRTC(lessonId, userRole) {
         if (sender) await sender.replaceTrack(cameraTrack);
       }
 
-      // 5. Stop old screen tracks
+      // 5. Renegotiate so remote side drops the screen audio track
+      await renegotiate();
+
+      // 6. Stop old screen tracks
       oldScreen.getTracks().forEach((t) => t.stop());
       return;
     }
@@ -695,6 +713,9 @@ export default function useWebRTC(lessonId, userRole) {
         screenAudioSenderRef.current = pc.addTrack(screenAudioTrack, screenStr);
       }
 
+      // 5. Renegotiate so remote side receives the new screen audio track
+      await renegotiate();
+
       // When user stops sharing via browser UI
       screenTrack.onended = async () => {
         const oldScr = screenStreamRef.current;
@@ -722,12 +743,14 @@ export default function useWebRTC(lessonId, userRole) {
           const s = peerRef.current?.getSenders().find((s) => s.track?.kind === "video");
           if (s) await s.replaceTrack(camTrack);
         }
+        // Renegotiate so remote side drops screen audio
+        await renegotiate();
         if (oldScr) oldScr.getTracks().forEach((t) => t.stop());
       };
     } catch (err) {
       console.error("Screen share failed:", err);
     }
-  }, [userRole]);
+  }, [userRole, renegotiate]);
 
   // Toggle audio
   const toggleAudio = useCallback(() => {

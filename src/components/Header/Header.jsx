@@ -201,7 +201,7 @@ const Header = () => {
                       if (e.key === "Enter" && searchQuery.trim()) {
                         setSearchOpen(false);
                         navigate(
-                          `/courses/search?q=${encodeURIComponent(searchQuery.trim())}`,
+                          `/courses?q=${encodeURIComponent(searchQuery.trim())}`,
                         );
                         setSearchQuery("");
                       }
