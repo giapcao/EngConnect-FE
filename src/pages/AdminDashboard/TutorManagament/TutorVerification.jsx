@@ -49,7 +49,7 @@ import {
 } from "@phosphor-icons/react";
 
 const TutorVerification = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const colors = useThemeColors();
   const { inputClassNames, textareaClassNames } = useInputStyles();
   const { tableCardStyle, tableClassNames } = useTableStyles();
@@ -244,13 +244,16 @@ const TutorVerification = () => {
 
   const formatDate = (dateStr) => {
     if (!dateStr) return t("adminDashboard.verification.nA");
-    return new Date(dateStr).toLocaleDateString(undefined, {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+    return new Date(dateStr).toLocaleDateString(
+      i18n.language === "vi" ? "vi-VN" : "en-US",
+      {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      },
+    );
   };
 
   const getTutorName = (tutorId) => {
@@ -904,7 +907,16 @@ const TutorVerification = () => {
                                 {detailTutor.createdAt
                                   ? new Date(
                                       detailTutor.createdAt,
-                                    ).toLocaleDateString()
+                                    ).toLocaleDateString(
+                                      i18n.language === "vi"
+                                        ? "vi-VN"
+                                        : "en-US",
+                                      {
+                                        year: "numeric",
+                                        month: "short",
+                                        day: "numeric",
+                                      },
+                                    )
                                   : t("adminDashboard.verification.nA")}
                               </p>
                             </div>

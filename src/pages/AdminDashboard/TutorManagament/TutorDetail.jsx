@@ -18,7 +18,7 @@ import searchIllustration from "../../../assets/illustrations/search.avif";
 const AdminTutorDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const colors = useThemeColors();
 
   const [tutor, setTutor] = useState(null);
@@ -257,7 +257,14 @@ const AdminTutorDetail = () => {
                       </p>
                       <p style={{ color: colors.text.primary }}>
                         {tutor.createdAt
-                          ? new Date(tutor.createdAt).toLocaleDateString()
+                          ? new Date(tutor.createdAt).toLocaleDateString(
+                              i18n.language === "vi" ? "vi-VN" : "en-US",
+                              {
+                                year: "numeric",
+                                month: "short",
+                                day: "numeric",
+                              },
+                            )
                           : t("adminDashboard.tutors.nA")}
                       </p>
                     </div>

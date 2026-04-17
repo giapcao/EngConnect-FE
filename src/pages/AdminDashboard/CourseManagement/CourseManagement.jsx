@@ -48,7 +48,7 @@ import {
 } from "@phosphor-icons/react";
 
 const CourseManagement = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const colors = useThemeColors();
   const navigate = useNavigate();
   const { inputClassNames } = useInputStyles();
@@ -232,11 +232,10 @@ const CourseManagement = () => {
 
   const formatDate = (dateStr) => {
     if (!dateStr) return "N/A";
-    return new Date(dateStr).toLocaleDateString(undefined, {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
+    return new Date(dateStr).toLocaleDateString(
+      i18n.language === "vi" ? "vi-VN" : "en-US",
+      { year: "numeric", month: "short", day: "numeric" },
+    );
   };
 
   const formatPrice = (price) => {
@@ -445,8 +444,15 @@ const CourseManagement = () => {
                       {t("adminDashboard.courses.all")}
                     </DropdownItem>
                     <DropdownItem key="Beginner">Beginner</DropdownItem>
+                    <DropdownItem key="Elementary">Elementary</DropdownItem>
                     <DropdownItem key="Intermediate">Intermediate</DropdownItem>
+                    <DropdownItem key="Upper-Intermediate">
+                      Upper-Intermediate
+                    </DropdownItem>
                     <DropdownItem key="Advanced">Advanced</DropdownItem>
+                    <DropdownItem key="Beginner to Advanced">
+                      Beginner to Advanced
+                    </DropdownItem>
                   </DropdownMenu>
                 </Dropdown>
                 <Dropdown>

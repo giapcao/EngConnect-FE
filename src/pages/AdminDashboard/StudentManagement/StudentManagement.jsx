@@ -44,7 +44,7 @@ import {
 } from "@phosphor-icons/react";
 
 const StudentManagement = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const colors = useThemeColors();
   const { inputClassNames } = useInputStyles();
   const { tableCardStyle, tableClassNames } = useTableStyles();
@@ -525,7 +525,14 @@ const StudentManagement = () => {
                     <TableCell>
                       <span style={{ color: colors.text.secondary }}>
                         {student.createdAt
-                          ? new Date(student.createdAt).toLocaleDateString()
+                          ? new Date(student.createdAt).toLocaleDateString(
+                              i18n.language === "vi" ? "vi-VN" : "en-US",
+                              {
+                                year: "numeric",
+                                month: "short",
+                                day: "numeric",
+                              },
+                            )
                           : t("adminDashboard.students.nA")}
                       </span>
                     </TableCell>
@@ -694,7 +701,14 @@ const StudentManagement = () => {
                             selectedStudent.createdAt !== "0001-01-01T00:00:00"
                               ? new Date(
                                   selectedStudent.createdAt,
-                                ).toLocaleDateString()
+                                ).toLocaleDateString(
+                                  i18n.language === "vi" ? "vi-VN" : "en-US",
+                                  {
+                                    year: "numeric",
+                                    month: "short",
+                                    day: "numeric",
+                                  },
+                                )
                               : t("adminDashboard.students.nA")}
                           </p>
                         </div>
@@ -709,7 +723,14 @@ const StudentManagement = () => {
                             {selectedStudent.updatedAt
                               ? new Date(
                                   selectedStudent.updatedAt,
-                                ).toLocaleDateString()
+                                ).toLocaleDateString(
+                                  i18n.language === "vi" ? "vi-VN" : "en-US",
+                                  {
+                                    year: "numeric",
+                                    month: "short",
+                                    day: "numeric",
+                                  },
+                                )
                               : t("adminDashboard.students.nA")}
                           </p>
                         </div>

@@ -30,12 +30,14 @@ import {
   FilePdf,
   Link,
   ArrowSquareOut,
+  ArrowRightIcon,
+  ArrowBendDownRightIcon,
 } from "@phosphor-icons/react";
 
 const AdminCourseDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const colors = useThemeColors();
 
   const [course, setCourse] = useState(null);
@@ -148,11 +150,10 @@ const AdminCourseDetail = () => {
 
   const formatDate = (dateStr) => {
     if (!dateStr) return "N/A";
-    return new Date(dateStr).toLocaleDateString(undefined, {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
+    return new Date(dateStr).toLocaleDateString(
+      i18n.language === "vi" ? "vi-VN" : "en-US",
+      { year: "numeric", month: "short", day: "numeric" },
+    );
   };
 
   const formatPrice = (price) => {
@@ -796,6 +797,43 @@ const AdminCourseDetail = () => {
                                         {mod.moduleDescription}
                                       </p>
                                     )}
+                                    {mod.moduleOutcomes && (
+                                      <div className="mb-2">
+                                        <p
+                                          className="text-xs font-medium mb-1"
+                                          style={{ color: colors.text.primary }}
+                                        ></p>
+                                        <div className="flex flex-col gap-1">
+                                          {mod.moduleOutcomes
+                                            .split(";")
+                                            .filter((o) => o.trim())
+                                            .map((outcome, i) => (
+                                              <div
+                                                key={i}
+                                                className="flex items-start gap-1"
+                                              >
+                                                <ArrowRightIcon
+                                                  size={11}
+                                                  weight="fill"
+                                                  className="flex-shrink-0 mt-0.5"
+                                                  style={{
+                                                    color: colors.state.success,
+                                                  }}
+                                                />
+                                                <span
+                                                  className="text-xs"
+                                                  style={{
+                                                    color:
+                                                      colors.text.secondary,
+                                                  }}
+                                                >
+                                                  {outcome.trim()}
+                                                </span>
+                                              </div>
+                                            ))}
+                                        </div>
+                                      </div>
+                                    )}
                                     {sessions.length === 0 ? (
                                       <p
                                         className="text-xs text-center py-2"
@@ -868,6 +906,51 @@ const AdminCourseDetail = () => {
                                                     >
                                                       {sess.sessionDescription}
                                                     </p>
+                                                  )}
+                                                  {sess.sessionOutcomes && (
+                                                    <div className="mt-1.5">
+                                                      <p
+                                                        className="text-xs font-medium mb-1"
+                                                        style={{
+                                                          color:
+                                                            colors.text.primary,
+                                                        }}
+                                                      ></p>
+                                                      <div className="flex flex-col gap-0.5">
+                                                        {sess.sessionOutcomes
+                                                          .split(";")
+                                                          .filter((o) =>
+                                                            o.trim(),
+                                                          )
+                                                          .map((outcome, i) => (
+                                                            <div
+                                                              key={i}
+                                                              className="flex items-start gap-1"
+                                                            >
+                                                              <ArrowRightIcon
+                                                                size={10}
+                                                                weight="fill"
+                                                                className="flex-shrink-0 mt-0.5"
+                                                                style={{
+                                                                  color:
+                                                                    colors.state
+                                                                      .success,
+                                                                }}
+                                                              />
+                                                              <span
+                                                                className="text-xs"
+                                                                style={{
+                                                                  color:
+                                                                    colors.text
+                                                                      .secondary,
+                                                                }}
+                                                              >
+                                                                {outcome.trim()}
+                                                              </span>
+                                                            </div>
+                                                          ))}
+                                                      </div>
+                                                    </div>
                                                   )}
                                                   {/* Resources toggle */}
                                                   {sessId && (

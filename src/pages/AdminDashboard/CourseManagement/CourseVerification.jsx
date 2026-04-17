@@ -50,7 +50,7 @@ import {
 } from "@phosphor-icons/react";
 
 const CourseVerification = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const colors = useThemeColors();
   const navigate = useNavigate();
   const { inputClassNames, textareaClassNames } = useInputStyles();
@@ -243,13 +243,16 @@ const CourseVerification = () => {
 
   const formatDate = (dateStr) => {
     if (!dateStr) return t("adminDashboard.courseVerification.nA");
-    return new Date(dateStr).toLocaleDateString(undefined, {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+    return new Date(dateStr).toLocaleDateString(
+      i18n.language === "vi" ? "vi-VN" : "en-US",
+      {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      },
+    );
   };
 
   const getCourseName = (courseId) => {

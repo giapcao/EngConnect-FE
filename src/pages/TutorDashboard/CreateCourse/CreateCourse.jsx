@@ -52,7 +52,7 @@ const LEVELS = [
   "Intermediate",
   "Upper-Intermediate",
   "Advanced",
-  "All Levels",
+  "Beginner to Advanced",
 ];
 
 const CreateCourse = () => {

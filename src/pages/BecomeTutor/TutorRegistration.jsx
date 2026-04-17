@@ -290,18 +290,12 @@ const TutorRegistration = () => {
                   className="block text-sm font-medium mb-2"
                   style={{ color: colors.text.primary }}
                 >
-                  {t("tutorRegistration.cvFile")}{" "}
-                  <span
-                    className="text-xs font-normal"
-                    style={{ color: colors.text.tertiary }}
-                  >
-                    ({t("tutorRegistration.optional")})
-                  </span>
+                  {t("tutorRegistration.cvFile")}
                 </label>
                 <div
                   className="flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-colors"
                   style={{
-                    borderColor: colors.border.main,
+                    borderColor: colors.border.light,
                     backgroundColor: colors.background.gray,
                   }}
                   onClick={() => cvInputRef.current?.click()}
@@ -360,18 +354,12 @@ const TutorRegistration = () => {
                   className="block text-sm font-medium mb-2"
                   style={{ color: colors.text.primary }}
                 >
-                  {t("tutorRegistration.introVideo")}{" "}
-                  <span
-                    className="text-xs font-normal"
-                    style={{ color: colors.text.tertiary }}
-                  >
-                    ({t("tutorRegistration.optional")})
-                  </span>
+                  {t("tutorRegistration.introVideo")}
                 </label>
                 <div
                   className="flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-colors"
                   style={{
-                    borderColor: colors.border.main,
+                    borderColor: colors.border.light,
                     backgroundColor: colors.background.gray,
                   }}
                   onClick={() => videoInputRef.current?.click()}

@@ -417,6 +417,9 @@ const VideoCall = () => {
                     <img
                       src={conversationIllustration}
                       alt="No messages"
+                      draggable={false}
+                      onDragStart={(e) => e.preventDefault()}
+                      onContextMenu={(e) => e.preventDefault()}
                       className="w-48 h-48 object-contain mb-3"
                     />
                     <p className="text-gray-400 text-xs text-center">

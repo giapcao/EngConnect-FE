@@ -14,6 +14,7 @@ import {
   ModalBody,
   ModalFooter,
   addToast,
+  Spinner,
 } from "@heroui/react";
 import { useTranslation } from "react-i18next";
 import { useThemeColors } from "../../../hooks/useThemeColors";
@@ -33,12 +34,17 @@ import {
   Clock,
   CalendarBlank,
   Target,
+  FileText,
+  FilePdf,
+  Link,
+  ArrowSquareOut,
+  ArrowRightIcon,
 } from "@phosphor-icons/react";
 
 const AdminCourseVerificationDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const colors = useThemeColors();
   const { textareaClassNames } = useInputStyles();
 
@@ -47,6 +53,9 @@ const AdminCourseVerificationDetail = () => {
   const [course, setCourse] = useState(null);
   const [tutorInfo, setTutorInfo] = useState(null);
   const [expandedModules, setExpandedModules] = useState({});
+  const [expandedSessions, setExpandedSessions] = useState({});
+  const [sessionResources, setSessionResources] = useState({});
+  const [loadingResources, setLoadingResources] = useState({});
 
   // Review modal
   const [isReviewOpen, setIsReviewOpen] = useState(false);
@@ -56,6 +65,52 @@ const AdminCourseVerificationDetail = () => {
 
   const toggleModule = (moduleId) =>
     setExpandedModules((prev) => ({ ...prev, [moduleId]: !prev[moduleId] }));
+
+  const toggleSessionResources = async (sessId) => {
+    if (expandedSessions[sessId]) {
+      setExpandedSessions((prev) => ({ ...prev, [sessId]: false }));
+      return;
+    }
+    setExpandedSessions((prev) => ({ ...prev, [sessId]: true }));
+    if (!sessionResources[sessId]) {
+      setLoadingResources((prev) => ({ ...prev, [sessId]: true }));
+      try {
+        const res = await coursesApi.getAllCourseResources({
+          CourseSessionId: sessId,
+          "page-size": 100,
+        });
+        if (res.isSuccess) {
+          setSessionResources((prev) => ({
+            ...prev,
+            [sessId]: res.data.items || [],
+          }));
+        }
+      } catch {
+        setSessionResources((prev) => ({ ...prev, [sessId]: [] }));
+      } finally {
+        setLoadingResources((prev) => ({ ...prev, [sessId]: false }));
+      }
+    }
+  };
+
+  const getResourceIcon = (type) => {
+    const lo = (type || "").toLowerCase();
+    if (lo === "pdf")
+      return <FilePdf size={13} weight="fill" style={{ color: "#ef4444" }} />;
+    if (lo === "video")
+      return (
+        <VideoCamera size={13} weight="fill" style={{ color: "#8b5cf6" }} />
+      );
+    if (lo === "link")
+      return <Link size={13} weight="bold" style={{ color: "#3b82f6" }} />;
+    return (
+      <FileText
+        size={13}
+        weight="fill"
+        style={{ color: colors.text.secondary }}
+      />
+    );
+  };
 
   useEffect(() => {
     const fetchDetail = async () => {
@@ -119,13 +174,16 @@ const AdminCourseVerificationDetail = () => {
 
   const formatDate = (dateStr) => {
     if (!dateStr) return t("adminDashboard.courseVerification.nA");
-    return new Date(dateStr).toLocaleDateString(undefined, {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+    return new Date(dateStr).toLocaleDateString(
+      i18n.language === "vi" ? "vi-VN" : "en-US",
+      {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      },
+    );
   };
 
   const handleReviewClick = (action) => {
@@ -821,6 +879,46 @@ const AdminCourseVerificationDetail = () => {
                                             {mod.moduleDescription}
                                           </p>
                                         )}
+                                        {mod.moduleOutcomes && (
+                                          <div className="mb-2">
+                                            <p
+                                              className="text-xs font-medium mb-1"
+                                              style={{
+                                                color: colors.text.primary,
+                                              }}
+                                            ></p>
+                                            <div className="flex flex-col gap-1">
+                                              {mod.moduleOutcomes
+                                                .split(";")
+                                                .filter((o) => o.trim())
+                                                .map((outcome, i) => (
+                                                  <div
+                                                    key={i}
+                                                    className="flex items-start gap-1"
+                                                  >
+                                                    <ArrowRightIcon
+                                                      size={11}
+                                                      weight="fill"
+                                                      className="flex-shrink-0 mt-0.5"
+                                                      style={{
+                                                        color:
+                                                          colors.state.success,
+                                                      }}
+                                                    />
+                                                    <span
+                                                      className="text-xs"
+                                                      style={{
+                                                        color:
+                                                          colors.text.secondary,
+                                                      }}
+                                                    >
+                                                      {outcome.trim()}
+                                                    </span>
+                                                  </div>
+                                                ))}
+                                            </div>
+                                          </div>
+                                        )}
                                         {sessions.length === 0 ? (
                                           <p
                                             className="text-xs text-center py-2"
@@ -834,67 +932,271 @@ const AdminCourseVerificationDetail = () => {
                                           </p>
                                         ) : (
                                           <div className="space-y-1.5">
-                                            {sessions.map((sess) => (
-                                              <div
-                                                key={
-                                                  sess.courseSessionId ??
-                                                  sess.id
-                                                }
-                                                className="rounded-lg p-2.5"
-                                                style={{
-                                                  backgroundColor:
-                                                    colors.background.gray,
-                                                }}
-                                              >
-                                                <div className="flex items-start gap-2">
-                                                  <div
-                                                    className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
-                                                    style={{
-                                                      backgroundColor:
-                                                        colors.background
-                                                          .primaryLight,
-                                                    }}
-                                                  >
-                                                    <Play
-                                                      size={10}
-                                                      weight="fill"
+                                            {sessions.map((sess) => {
+                                              const sessId =
+                                                sess.courseSessionId ?? sess.id;
+                                              const isResExp =
+                                                expandedSessions[sessId];
+                                              const resources =
+                                                sessionResources[sessId] || [];
+                                              const isResLoading =
+                                                loadingResources[sessId];
+                                              return (
+                                                <div
+                                                  key={sessId}
+                                                  className="rounded-lg p-2.5"
+                                                  style={{
+                                                    backgroundColor:
+                                                      colors.background.gray,
+                                                  }}
+                                                >
+                                                  <div className="flex items-start gap-2">
+                                                    <div
+                                                      className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
                                                       style={{
-                                                        color:
-                                                          colors.primary.main,
-                                                      }}
-                                                    />
-                                                  </div>
-                                                  <div className="flex-1 min-w-0">
-                                                    <p
-                                                      className="font-medium text-xs"
-                                                      style={{
-                                                        color:
-                                                          colors.text.primary,
+                                                        backgroundColor:
+                                                          colors.background
+                                                            .primaryLight,
                                                       }}
                                                     >
-                                                      {sess.sessionNumber
-                                                        ? `${sess.sessionNumber}. `
-                                                        : ""}
-                                                      {sess.sessionTitle}
-                                                    </p>
-                                                    {sess.sessionDescription && (
-                                                      <p
-                                                        className="text-xs mt-0.5 leading-relaxed"
+                                                      <Play
+                                                        size={10}
+                                                        weight="fill"
                                                         style={{
                                                           color:
-                                                            colors.text
-                                                              .secondary,
+                                                            colors.primary.main,
+                                                        }}
+                                                      />
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                      <p
+                                                        className="font-medium text-xs"
+                                                        style={{
+                                                          color:
+                                                            colors.text.primary,
                                                         }}
                                                       >
-                                                        {
-                                                          sess.sessionDescription
-                                                        }
+                                                        {sess.sessionNumber
+                                                          ? `${sess.sessionNumber}. `
+                                                          : ""}
+                                                        {sess.sessionTitle}
                                                       </p>
-                                                    )}
+                                                      {sess.sessionDescription && (
+                                                        <p
+                                                          className="text-xs mt-0.5 leading-relaxed"
+                                                          style={{
+                                                            color:
+                                                              colors.text
+                                                                .secondary,
+                                                          }}
+                                                        >
+                                                          {
+                                                            sess.sessionDescription
+                                                          }
+                                                        </p>
+                                                      )}
+                                                      {sess.sessionOutcomes && (
+                                                        <div className="mt-1.5">
+                                                          <p
+                                                            className="text-xs font-medium mb-1"
+                                                            style={{
+                                                              color:
+                                                                colors.text
+                                                                  .primary,
+                                                            }}
+                                                          ></p>
+                                                          <div className="flex flex-col gap-0.5">
+                                                            {sess.sessionOutcomes
+                                                              .split(";")
+                                                              .filter((o) =>
+                                                                o.trim(),
+                                                              )
+                                                              .map(
+                                                                (
+                                                                  outcome,
+                                                                  i,
+                                                                ) => (
+                                                                  <div
+                                                                    key={i}
+                                                                    className="flex items-start gap-1"
+                                                                  >
+                                                                    <ArrowRightIcon
+                                                                      size={10}
+                                                                      weight="fill"
+                                                                      className="flex-shrink-0 mt-0.5"
+                                                                      style={{
+                                                                        color:
+                                                                          colors
+                                                                            .state
+                                                                            .success,
+                                                                      }}
+                                                                    />
+                                                                    <span
+                                                                      className="text-xs"
+                                                                      style={{
+                                                                        color:
+                                                                          colors
+                                                                            .text
+                                                                            .secondary,
+                                                                      }}
+                                                                    >
+                                                                      {outcome.trim()}
+                                                                    </span>
+                                                                  </div>
+                                                                ),
+                                                              )}
+                                                          </div>
+                                                        </div>
+                                                      )}
+                                                      {/* Resources toggle */}
+                                                      <div className="mt-1.5">
+                                                        <button
+                                                          type="button"
+                                                          className="flex items-center gap-1 text-xs px-1.5 py-0.5 rounded-md"
+                                                          style={{
+                                                            color:
+                                                              colors.primary
+                                                                .main,
+                                                            backgroundColor:
+                                                              colors.background
+                                                                .primaryLight,
+                                                          }}
+                                                          onClick={() =>
+                                                            toggleSessionResources(
+                                                              sessId,
+                                                            )
+                                                          }
+                                                        >
+                                                          <FileText
+                                                            size={12}
+                                                            weight="fill"
+                                                          />
+                                                          {t(
+                                                            "adminDashboard.courses.sessionResources",
+                                                          )}
+                                                          {isResExp ? (
+                                                            <CaretUp
+                                                              size={10}
+                                                              weight="bold"
+                                                            />
+                                                          ) : (
+                                                            <CaretDown
+                                                              size={10}
+                                                              weight="bold"
+                                                            />
+                                                          )}
+                                                        </button>
+                                                        {isResExp && (
+                                                          <div className="mt-1.5 space-y-1">
+                                                            {isResLoading ? (
+                                                              <div className="flex items-center gap-1.5 py-1">
+                                                                <Spinner size="sm" />
+                                                                <span
+                                                                  className="text-xs"
+                                                                  style={{
+                                                                    color:
+                                                                      colors
+                                                                        .text
+                                                                        .tertiary,
+                                                                  }}
+                                                                >
+                                                                  {t(
+                                                                    "adminDashboard.courses.loadingResources",
+                                                                  )}
+                                                                </span>
+                                                              </div>
+                                                            ) : resources.length ===
+                                                              0 ? (
+                                                              <p
+                                                                className="text-xs py-1"
+                                                                style={{
+                                                                  color:
+                                                                    colors.text
+                                                                      .tertiary,
+                                                                }}
+                                                              >
+                                                                {t(
+                                                                  "adminDashboard.courses.noResources",
+                                                                )}
+                                                              </p>
+                                                            ) : (
+                                                              resources.map(
+                                                                (res) => (
+                                                                  <div
+                                                                    key={res.id}
+                                                                    className="flex items-center gap-1.5 px-2 py-1 rounded-md"
+                                                                    style={{
+                                                                      backgroundColor:
+                                                                        colors
+                                                                          .background
+                                                                          .light,
+                                                                    }}
+                                                                  >
+                                                                    <span className="flex-shrink-0">
+                                                                      {getResourceIcon(
+                                                                        res.resourceType,
+                                                                      )}
+                                                                    </span>
+                                                                    <span
+                                                                      className="flex-1 text-xs font-medium truncate"
+                                                                      style={{
+                                                                        color:
+                                                                          colors
+                                                                            .text
+                                                                            .primary,
+                                                                      }}
+                                                                    >
+                                                                      {
+                                                                        res.title
+                                                                      }
+                                                                    </span>
+                                                                    <Chip
+                                                                      size="sm"
+                                                                      variant="flat"
+                                                                      className="h-4"
+                                                                      style={{
+                                                                        fontSize:
+                                                                          "10px",
+                                                                      }}
+                                                                    >
+                                                                      {
+                                                                        res.resourceType
+                                                                      }
+                                                                    </Chip>
+                                                                    <a
+                                                                      href={
+                                                                        res.url
+                                                                      }
+                                                                      target="_blank"
+                                                                      rel="noreferrer"
+                                                                      title={t(
+                                                                        "adminDashboard.courses.sessionResources",
+                                                                      )}
+                                                                    >
+                                                                      <ArrowSquareOut
+                                                                        size={
+                                                                          13
+                                                                        }
+                                                                        style={{
+                                                                          color:
+                                                                            colors
+                                                                              .primary
+                                                                              .main,
+                                                                        }}
+                                                                      />
+                                                                    </a>
+                                                                  </div>
+                                                                ),
+                                                              )
+                                                            )}
+                                                          </div>
+                                                        )}
+                                                      </div>
+                                                    </div>
                                                   </div>
                                                 </div>
-                                              </div>
-                                            ))}
+                                              );
+                                            })}
                                           </div>
                                         )}
                                       </div>

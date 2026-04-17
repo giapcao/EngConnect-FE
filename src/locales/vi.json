@@ -183,10 +183,14 @@
     "videoUploadFailed": "Tải lên video thất bại",
     "submitVerification": "Gửi yêu cầu xác minh",
     "submitHint": "Còn {{count}} bước để hoàn thành hồ sơ",
-    "submitSuccess": "Đã gửi yêu cầu xác minh! Chúng tôi sẽ xem xét hồ sơ của bạn sớm.",
+    "submitSuccess": "Đã gửi yêu cầu xác minh hồ sơ! ",
     "submitFailed": "Gửi yêu cầu xác minh thất bại",
     "avatarUploaded": "Cập nhật avatar thành công",
     "avatarUploadFailed": "Cập nhật avatar thất bại",
+    "firstName": "Tên",
+    "firstNamePlaceholder": "Tên",
+    "lastName": "Họ",
+    "lastNamePlaceholder": "Họ",
     "avatarHint": "Nhấn để thay đổi ảnh đại diện"
   },
   "home": {
@@ -578,7 +582,7 @@
         "grammar": "Ngữ pháp"
       },
       "levels": {
-        "all": "Tất cả trình độ",
+        "all": "Beginner to Advanced",
         "beginner": "Người mới",
         "intermediate": "Trung cấp",
         "advanced": "Nâng cao"
@@ -1292,7 +1296,7 @@
     "categories": {
       "title": "Duyệt theo danh mục",
       "subtitle": "Tìm khóa học phù hợp với mục tiêu học tập của bạn",
-      "all": "Tất cả khóa học",
+      "all": "Tất cả danh mục",
       "allLevels": "Tất cả cấp độ",
       "category": "Danh mục",
       "level": "Cấp độ",
@@ -1402,6 +1406,8 @@
       "module": "Chương",
       "session": "Buổi học",
       "outcomes": "Kết quả đạt được",
+      "moduleOutcomes": "Kết quả module",
+      "sessionOutcomes": "Kết quả buổi học",
       "noModules": "Chưa có chương nào",
       "noSessions": "Chưa có buổi học trong chương này",
       "sessionsPerWeek": "Buổi/Tuần",
@@ -1838,7 +1844,12 @@
       "confirmDelete": "Xác nhận xóa",
       "confirmDeleteMsg": "Bạn có chắc chắn muốn xóa khóa học này? Hành động này không thể hoàn tác.",
       "deleteSuccess": "Xóa khóa học thành công",
-      "deleteFailed": "Xóa khóa học thất bại"
+      "deleteFailed": "Xóa khóa học thất bại",
+      "moduleOutcomes": "Kết quả module",
+      "sessionOutcomes": "Kết quả buổi học",
+      "sessionResources": "Tài liệu",
+      "loadingResources": "Đang tải tài liệu...",
+      "noResources": "Không có tài liệu cho buổi học này"
     },
     "courseVerification": {
       "title": "Yêu cầu xác minh khóa học",
@@ -1906,8 +1917,11 @@
       },
       "form": {
         "name": "Tên",
+        "namePlaceholder": "Nhập tên danh mục",
         "description": "Mô tả",
-        "type": "Loại"
+        "descriptionPlaceholder": "Nhập mô tả danh mục",
+        "type": "Loại",
+        "typePlaceholder": "VD: Ngôn ngữ, Kỹ năng, Kỳ thi"
       },
       "cancel": "Hủy",
       "save": "Lưu",

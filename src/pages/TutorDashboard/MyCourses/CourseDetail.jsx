@@ -45,6 +45,8 @@ import {
   Link,
   Trash,
   ArrowSquareOut,
+  Target,
+  ArrowRightIcon,
 } from "@phosphor-icons/react";
 import { coursesApi, tutorApi } from "../../../api";
 import useInputStyles from "../../../hooks/useInputStyles";
@@ -798,6 +800,48 @@ const TutorCourseDetail = () => {
                                                 {sess.sessionDescription}
                                               </p>
                                             )}
+                                            {sess.sessionOutcomes && (
+                                              <div className="mt-1.5">
+                                                <p
+                                                  className="text-xs font-medium mb-1"
+                                                  style={{
+                                                    color: colors.text.primary,
+                                                  }}
+                                                ></p>
+                                                <div className="flex flex-col gap-0.5">
+                                                  {sess.sessionOutcomes
+                                                    .split(";")
+                                                    .filter((o) => o.trim())
+                                                    .map((outcome, i) => (
+                                                      <div
+                                                        key={i}
+                                                        className="flex items-start gap-1"
+                                                      >
+                                                        <ArrowRightIcon
+                                                          size={10}
+                                                          weight="fill"
+                                                          className="flex-shrink-0 mt-0.5"
+                                                          style={{
+                                                            color:
+                                                              colors.state
+                                                                .success,
+                                                          }}
+                                                        />
+                                                        <span
+                                                          className="text-xs"
+                                                          style={{
+                                                            color:
+                                                              colors.text
+                                                                .secondary,
+                                                          }}
+                                                        >
+                                                          {outcome.trim()}
+                                                        </span>
+                                                      </div>
+                                                    ))}
+                                                </div>
+                                              </div>
+                                            )}
                                             {/* Resources toggle */}
                                             {sessId && (
                                               <div className="mt-2">
@@ -921,45 +965,6 @@ const TutorCourseDetail = () => {
                                                               }}
                                                             />
                                                           </a>
-                                                          <button
-                                                            type="button"
-                                                            title={t(
-                                                              "courses.detail.resources.edit",
-                                                            )}
-                                                            onClick={() =>
-                                                              openEditResource(
-                                                                res,
-                                                              )
-                                                            }
-                                                          >
-                                                            <PencilSimple
-                                                              size={14}
-                                                              style={{
-                                                                color:
-                                                                  colors.text
-                                                                    .secondary,
-                                                              }}
-                                                            />
-                                                          </button>
-                                                          <button
-                                                            type="button"
-                                                            title={t(
-                                                              "courses.detail.resources.remove",
-                                                            )}
-                                                            onClick={() =>
-                                                              setRemoveResourceId(
-                                                                res.id,
-                                                              )
-                                                            }
-                                                          >
-                                                            <Trash
-                                                              size={14}
-                                                              style={{
-                                                                color:
-                                                                  "#ef4444",
-                                                              }}
-                                                            />
-                                                          </button>
                                                         </div>
                                                       ))
                                                     )}

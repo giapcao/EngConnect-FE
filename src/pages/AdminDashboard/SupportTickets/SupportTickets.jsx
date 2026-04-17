@@ -82,7 +82,7 @@ const TYPE_COLORS = {
 const STATUSES = ["Open", "Resolved", "Closed"];
 
 const SupportTickets = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const colors = useThemeColors();
   const { inputClassNames, selectClassNames } = useInputStyles();
   const { tableCardStyle, tableClassNames } = useTableStyles();
@@ -279,13 +279,16 @@ const SupportTickets = () => {
 
   const formatDate = (dateStr) => {
     if (!dateStr) return "";
-    return new Date(dateStr).toLocaleDateString(undefined, {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+    return new Date(dateStr).toLocaleDateString(
+      i18n.language === "vi" ? "vi-VN" : "en-US",
+      {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      },
+    );
   };
 
   // DETAIL VIEW

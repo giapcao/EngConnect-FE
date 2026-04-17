@@ -41,7 +41,6 @@ const Register = () => {
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
-    userName: "",
     email: "",
     password: "",
     confirmPassword: "",
@@ -56,12 +55,6 @@ const Register = () => {
 
     if (!formData.lastName.trim()) {
       errors.lastName = t("auth.register.validation.lastNameRequired");
-    }
-
-    if (!formData.userName.trim()) {
-      errors.userName = t("auth.register.validation.userNameRequired");
-    } else if (formData.userName.length < 3) {
-      errors.userName = t("auth.register.validation.userNameMinLength");
     }
 
     if (!formData.email.trim()) {
@@ -108,7 +101,7 @@ const Register = () => {
     const registerData = {
       firstName: formData.firstName.trim(),
       lastName: formData.lastName.trim(),
-      userName: formData.userName.trim(),
+      userName: formData.email.trim(),
       email: formData.email.trim(),
       password: formData.password,
     };
@@ -239,28 +232,7 @@ const Register = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label
-                    className="block text-sm font-medium mb-2"
-                    style={{ color: colors.text.primary }}
-                  >
-                    {t("auth.register.userName")}
-                  </label>
-                  <Input
-                    type="text"
-                    name="userName"
-                    placeholder={t("auth.register.userNamePlaceholder")}
-                    value={formData.userName}
-                    onChange={handleChange}
-                    variant="flat"
-                    size="lg"
-                    isInvalid={!!validationErrors.userName}
-                    errorMessage={validationErrors.userName}
-                    classNames={inputClassNames}
-                  />
-                </div>
-
+              <div className="grid grid-cols-1 gap-4">
                 <div>
                   <label
                     className="block text-sm font-medium mb-2"

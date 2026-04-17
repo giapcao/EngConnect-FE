@@ -41,6 +41,7 @@ const LEVELS = [
   "Intermediate",
   "Upper-Intermediate",
   "Advanced",
+  "Beginner to Advanced",
 ];
 
 const Courses = () => {

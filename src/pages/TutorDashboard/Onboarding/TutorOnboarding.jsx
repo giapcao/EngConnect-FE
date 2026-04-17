@@ -1,4 +1,5 @@
 ﻿import { useState, useEffect, useRef } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, Link } from "react-router-dom";
 import {
   Button,
@@ -15,6 +16,8 @@ const { motion } = MotionLib;
 import { useThemeColors } from "../../../hooks/useThemeColors";
 import useInputStyles from "../../../hooks/useInputStyles";
 import { tutorApi } from "../../../api/tutorApi";
+import { authApi } from "../../../api/authApi";
+import { selectUser, updateUserInfo } from "../../../store";
 import logoImage from "../../../assets/images/logo.png";
 import {
   CheckCircle,
@@ -30,6 +33,8 @@ const TutorOnboarding = () => {
   const { t } = useTranslation();
   const colors = useThemeColors();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const currentUser = useSelector(selectUser);
   const { inputClassNames, textareaClassNames } = useInputStyles();
 
   const [tutorProfile, setTutorProfile] = useState(null);
@@ -41,6 +46,8 @@ const TutorOnboarding = () => {
   const [avatarUploading, setAvatarUploading] = useState(false);
 
   const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
     headline: "",
     bio: "",
     monthExperience: "",
@@ -61,6 +68,8 @@ const TutorOnboarding = () => {
           return;
         }
         setFormData({
+          firstName: p.user?.firstName || "",
+          lastName: p.user?.lastName || "",
           headline: p.headline || "",
           bio: p.bio || "",
           monthExperience:
@@ -101,12 +110,24 @@ const TutorOnboarding = () => {
     if (!tutorProfile?.id) return;
     setSaving(true);
     try {
-      const data = await tutorApi.updateTutorById(tutorProfile.id, {
-        headline: formData.headline.trim(),
-        bio: formData.bio.trim(),
-        monthExperience: Number(formData.monthExperience),
-      });
-      if (data.isSuccess) {
+      const [tutorData] = await Promise.all([
+        tutorApi.updateTutorById(tutorProfile.id, {
+          headline: formData.headline.trim(),
+          bio: formData.bio.trim(),
+          monthExperience: Number(formData.monthExperience),
+        }),
+        authApi.updateUser(currentUser.userId, {
+          firstName: formData.firstName.trim(),
+          lastName: formData.lastName.trim(),
+        }),
+      ]);
+      if (tutorData.isSuccess) {
+        dispatch(
+          updateUserInfo({
+            firstName: formData.firstName.trim(),
+            lastName: formData.lastName.trim(),
+          }),
+        );
         await fetchProfile();
         addToast({
           title: t("tutorOnboarding.profileSaved"),
@@ -199,7 +220,7 @@ const TutorOnboarding = () => {
           title: t("tutorOnboarding.submitSuccess"),
           color: "success",
         });
-        navigate("/tutor/dashboard");
+        navigate("/courses");
       }
     } catch (err) {
       console.error(err);
@@ -408,15 +429,41 @@ const TutorOnboarding = () => {
                   className="hidden"
                   onChange={handleAvatarUpload}
                 />
-                <div>
+                <div className="flex-1 flex flex-col gap-2">
+                  <div className="flex gap-2">
+                    <Input
+                      variant="flat"
+                      size="md"
+                      label={t("tutorOnboarding.firstName")}
+                      value={formData.firstName}
+                      onChange={(e) =>
+                        setFormData((p) => ({
+                          ...p,
+                          firstName: e.target.value,
+                        }))
+                      }
+                      placeholder={t("tutorOnboarding.firstNamePlaceholder")}
+                      aria-label={t("tutorOnboarding.firstName")}
+                      classNames={inputClassNames}
+                    />
+                    <Input
+                      variant="flat"
+                      size="md"
+                      label={t("tutorOnboarding.lastName")}
+                      value={formData.lastName}
+                      onChange={(e) =>
+                        setFormData((p) => ({
+                          ...p,
+                          lastName: e.target.value,
+                        }))
+                      }
+                      placeholder={t("tutorOnboarding.lastNamePlaceholder")}
+                      aria-label={t("tutorOnboarding.lastName")}
+                      classNames={inputClassNames}
+                    />
+                  </div>
                   <p
-                    className="font-medium text-sm"
-                    style={{ color: colors.text.primary }}
-                  >
-                    {tutorProfile.user?.firstName} {tutorProfile.user?.lastName}
-                  </p>
-                  <p
-                    className="text-xs mt-0.5"
+                    className="text-xs"
                     style={{ color: colors.text.tertiary }}
                   >
                     {t("tutorOnboarding.avatarHint")}

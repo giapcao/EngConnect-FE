@@ -599,24 +599,18 @@ const Schedule = () => {
                                   {daySchedules.length}{" "}
                                   {t("tutorDashboard.schedule.slots")}
                                 </span>
-                                <Tooltip
-                                  content={t(
-                                    "tutorDashboard.schedule.addSchedule",
-                                  )}
+                                <Button
+                                  size="sm"
+                                  color="primary"
+                                  startContent={<Plus />}
+                                  style={{
+                                    backgroundColor: colors.primary.main,
+                                    color: colors.text.white,
+                                  }}
+                                  onPress={() => handleOpenCreate(day)}
                                 >
-                                  <Button
-                                    size="sm"
-                                    color="primary"
-                                    startContent={<Plus />}
-                                    style={{
-                                      backgroundColor: colors.primary.main,
-                                      color: colors.text.white,
-                                    }}
-                                    onPress={() => handleOpenCreate(day)}
-                                  >
-                                    {t("tutorDashboard.schedule.addSchedule")}
-                                  </Button>
-                                </Tooltip>
+                                  {t("tutorDashboard.schedule.addSchedule")}
+                                </Button>
                               </div>
                             </div>
 
@@ -772,7 +766,7 @@ const Schedule = () => {
                 draggable={false}
                 onDragStart={(e) => e.preventDefault()}
                 onContextMenu={(e) => e.preventDefault()}
-                className="w-92 h-92 object-contain"
+                className="w-68 h-68 object-contain"
               />
               <h3
                 className="text-xl font-semibold"

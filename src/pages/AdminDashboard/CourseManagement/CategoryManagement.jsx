@@ -37,7 +37,7 @@ import {
 } from "@phosphor-icons/react";
 
 const CategoryManagement = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const colors = useThemeColors();
   const { inputClassNames } = useInputStyles();
   const { tableCardStyle, tableClassNames } = useTableStyles();
@@ -103,11 +103,10 @@ const CategoryManagement = () => {
 
   const formatDate = (dateStr) => {
     if (!dateStr) return "N/A";
-    return new Date(dateStr).toLocaleDateString(undefined, {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
+    return new Date(dateStr).toLocaleDateString(
+      i18n.language === "vi" ? "vi-VN" : "en-US",
+      { year: "numeric", month: "short", day: "numeric" },
+    );
   };
 
   // Open create modal
