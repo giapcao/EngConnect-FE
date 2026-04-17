@@ -87,15 +87,12 @@ const PaymentReturn = () => {
                     <img
                       src={failedIllustration}
                       alt=""
-                      className="w-40 h-40 object-contain"
+                      draggable={false}
+                      onDragStart={(e) => e.preventDefault()}
+                      onContextMenu={(e) => e.preventDefault()}
+                      className="w-50 h-50 object-contain"
                     />
                   </div>
-                  <XCircle
-                    size={56}
-                    weight="fill"
-                    className="mx-auto"
-                    style={{ color: "#ef4444" }}
-                  />
                   <h2
                     className="text-xl font-bold"
                     style={{ color: colors.text.primary }}
@@ -123,15 +120,12 @@ const PaymentReturn = () => {
                     <img
                       src={successIllustration}
                       alt=""
+                      draggable={false}
+                      onDragStart={(e) => e.preventDefault()}
+                      onContextMenu={(e) => e.preventDefault()}
                       className="w-40 h-40 object-contain"
                     />
                   </div>
-                  <CheckCircle
-                    size={56}
-                    weight="fill"
-                    className="mx-auto"
-                    style={{ color: "#22c55e" }}
-                  />
                   <h2
                     className="text-xl font-bold"
                     style={{ color: colors.text.primary }}
@@ -197,15 +191,12 @@ const PaymentReturn = () => {
                     <img
                       src={failedIllustration}
                       alt=""
-                      className="w-40 h-40 object-contain"
+                      draggable={false}
+                      onDragStart={(e) => e.preventDefault()}
+                      onContextMenu={(e) => e.preventDefault()}
+                      className="w-50 h-50 object-contain"
                     />
                   </div>
-                  <XCircle
-                    size={56}
-                    weight="fill"
-                    className="mx-auto"
-                    style={{ color: "#ef4444" }}
-                  />
                   <h2
                     className="text-xl font-bold"
                     style={{ color: colors.text.primary }}

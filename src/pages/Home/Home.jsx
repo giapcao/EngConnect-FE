@@ -11,7 +11,6 @@ import {
   Star,
   ArrowRight,
   Globe,
-  // Clock,
   TrendingUp,
   Sparkles,
   User,

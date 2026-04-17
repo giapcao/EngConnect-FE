@@ -110,9 +110,7 @@ const TutorRegistration = () => {
         timeout: 5000,
       });
 
-      setTimeout(() => {
-        navigate("/tutor/onboarding");
-      }, 2000);
+      navigate("/tutor/onboarding");
     } catch (err) {
       console.error("Tutor registration error:", err);
     }

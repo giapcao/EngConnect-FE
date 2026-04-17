@@ -244,8 +244,6 @@ a:focus-visible {
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
 }
-  top: 0;
-}
 
 .profile-avatar {
   width: 70px;
