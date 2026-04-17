@@ -24,6 +24,7 @@ import { useThemeColors } from "../../../hooks/useThemeColors";
 import { useTheme } from "../../../contexts/ThemeContext";
 import CourseDetailSkeleton from "../../../components/CourseDetailSkeleton/CourseDetailSkeleton";
 import VideoModal from "../../../components/VideoModal/VideoModal";
+import LessonDetailModal from "../../../components/LessonDetailModal/LessonDetailModal";
 import {
   Star,
   Clock,
@@ -48,7 +49,7 @@ import {
   Target,
   ArrowRightIcon,
 } from "@phosphor-icons/react";
-import { coursesApi, tutorApi } from "../../../api";
+import { coursesApi, tutorApi, studentApi } from "../../../api";
 import useInputStyles from "../../../hooks/useInputStyles";
 
 const formatDuration = (timeStr) => {
@@ -73,8 +74,9 @@ const formatPrice = (price, currency) => {
 const TutorCourseDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const colors = useThemeColors();
+  const dateLocale = i18n.language === "vi" ? "vi-VN" : "en-US";
   const { theme } = useTheme();
   const { inputClassNames, selectClassNames } = useInputStyles();
 
@@ -94,6 +96,11 @@ const TutorCourseDetail = () => {
   const [savingResource, setSavingResource] = useState(false);
   const [removeResourceId, setRemoveResourceId] = useState(null);
   const [removingResource, setRemovingResource] = useState(false);
+
+  // Schedule state
+  const [courseLessons, setCourseLessons] = useState([]);
+  const [lessonsLoading, setLessonsLoading] = useState(true);
+  const [selectedLesson, setSelectedLesson] = useState(null);
 
   useEffect(() => {
     const fetchCourse = async () => {
@@ -117,6 +124,24 @@ const TutorCourseDetail = () => {
       }
     };
     fetchCourse();
+  }, [id]);
+
+  useEffect(() => {
+    const fetchCourseLessons = async () => {
+      try {
+        setLessonsLoading(true);
+        const res = await studentApi.getLessons({
+          CourseId: id,
+          "page-size": 200,
+        });
+        setCourseLessons(res?.data?.items || []);
+      } catch {
+        setCourseLessons([]);
+      } finally {
+        setLessonsLoading(false);
+      }
+    };
+    if (id) fetchCourseLessons();
   }, [id]);
 
   const toggleModule = (moduleId) => {
@@ -282,6 +307,58 @@ const TutorCourseDetail = () => {
 
   // Only Draft and Inactive courses can be edited
   const canEdit = statusLower === "draft" || statusLower === "inactive";
+
+  // Schedule helpers
+  const now = new Date();
+  const todayStr = now.toDateString();
+  const todayLessons = courseLessons
+    .filter((l) => new Date(l.startTime).toDateString() === todayStr)
+    .sort((a, b) => new Date(a.startTime) - new Date(b.startTime));
+  const upcomingLessons = courseLessons
+    .filter(
+      (l) =>
+        new Date(l.startTime) > now &&
+        new Date(l.startTime).toDateString() !== todayStr,
+    )
+    .sort((a, b) => new Date(a.startTime) - new Date(b.startTime))
+    .slice(0, 10);
+
+  const formatLessonTime = (dateStr) => {
+    if (!dateStr) return "";
+    const d = new Date(dateStr);
+    return d.toLocaleTimeString(dateLocale, {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  const formatLessonDate = (dateStr) => {
+    if (!dateStr) return "";
+    const d = new Date(dateStr);
+    return d.toLocaleDateString(dateLocale, {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+    });
+  };
+
+  const getLessonStatusStyle = (status) => {
+    switch (status) {
+      case "Scheduled":
+        return {
+          bg: colors.background.primaryLight,
+          color: colors.primary.main,
+        };
+      case "InProgress":
+        return { bg: "#FEF3C7", color: "#D97706" };
+      case "Completed":
+        return { bg: "#D1FAE5", color: "#059669" };
+      case "Cancelled":
+        return { bg: "#FEE2E2", color: "#DC2626" };
+      default:
+        return { bg: colors.background.gray, color: colors.text.secondary };
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -990,6 +1067,219 @@ const TutorCourseDetail = () => {
             </Card>
           </motion.div>
 
+          {/* Course Schedule */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.15 }}
+          >
+            <Card
+              className="shadow-none"
+              style={{ backgroundColor: colors.background.light }}
+            >
+              <CardBody className="p-6">
+                <div className="flex items-center justify-between mb-5">
+                  <h2
+                    className="font-semibold text-xl"
+                    style={{ color: colors.text.primary }}
+                  >
+                    {t("courses.detail.courseSchedule")}
+                  </h2>
+                  <Button
+                    size="sm"
+                    variant="light"
+                    style={{ color: colors.primary.main }}
+                    endContent={<ArrowRight size={16} />}
+                    onPress={() => navigate("/tutor/schedule")}
+                  >
+                    {t("courses.detail.viewAllSchedule")}
+                  </Button>
+                </div>
+
+                {lessonsLoading ? (
+                  <div className="flex justify-center py-8">
+                    <Spinner size="md" />
+                  </div>
+                ) : todayLessons.length === 0 &&
+                  upcomingLessons.length === 0 ? (
+                  <p
+                    className="text-sm text-center py-8"
+                    style={{ color: colors.text.tertiary }}
+                  >
+                    {t("courses.detail.noScheduledLessons")}
+                  </p>
+                ) : (
+                  <div className="space-y-5">
+                    {/* Today */}
+                    {todayLessons.length > 0 && (
+                      <div>
+                        <p
+                          className="text-xs font-semibold uppercase tracking-wider mb-3"
+                          style={{ color: colors.primary.main }}
+                        >
+                          {t("courses.detail.scheduleToday")}
+                        </p>
+                        <div className="space-y-2">
+                          {todayLessons.map((lesson) => {
+                            const statusStyle = getLessonStatusStyle(
+                              lesson.status,
+                            );
+                            return (
+                              <div
+                                key={lesson.id}
+                                className="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:opacity-80 transition-opacity"
+                                style={{
+                                  backgroundColor: colors.background.gray,
+                                }}
+                                onClick={() => setSelectedLesson(lesson)}
+                              >
+                                <div
+                                  className="w-10 h-10 rounded-lg flex flex-col items-center justify-center flex-shrink-0"
+                                  style={{
+                                    backgroundColor:
+                                      colors.background.primaryLight,
+                                  }}
+                                >
+                                  <Clock
+                                    size={18}
+                                    weight="duotone"
+                                    style={{ color: colors.primary.main }}
+                                  />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p
+                                    className="text-sm font-medium truncate"
+                                    style={{ color: colors.text.primary }}
+                                  >
+                                    {lesson.sessionTitle || lesson.courseTitle}
+                                  </p>
+                                  <p
+                                    className="text-xs mt-0.5"
+                                    style={{ color: colors.text.tertiary }}
+                                  >
+                                    {formatLessonTime(lesson.startTime)} —{" "}
+                                    {formatLessonTime(lesson.endTime)}
+                                    {lesson.studentFirstName && (
+                                      <span>
+                                        {" · "}
+                                        {lesson.studentFirstName}{" "}
+                                        {lesson.studentLastName}
+                                      </span>
+                                    )}
+                                  </p>
+                                </div>
+                                <Chip
+                                  size="sm"
+                                  className="text-xs"
+                                  style={{
+                                    backgroundColor: statusStyle.bg,
+                                    color: statusStyle.color,
+                                  }}
+                                >
+                                  {lesson.status}
+                                </Chip>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Upcoming */}
+                    {upcomingLessons.length > 0 && (
+                      <div>
+                        <p
+                          className="text-xs font-semibold uppercase tracking-wider mb-3"
+                          style={{ color: colors.text.secondary }}
+                        >
+                          {t("courses.detail.scheduleUpcoming")}
+                        </p>
+                        <div className="space-y-2">
+                          {upcomingLessons.map((lesson) => {
+                            const statusStyle = getLessonStatusStyle(
+                              lesson.status,
+                            );
+                            return (
+                              <div
+                                key={lesson.id}
+                                className="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:opacity-80 transition-opacity"
+                                style={{
+                                  backgroundColor: colors.background.gray,
+                                }}
+                                onClick={() => setSelectedLesson(lesson)}
+                              >
+                                <div
+                                  className="w-12 h-12 rounded-lg flex flex-col items-center justify-center flex-shrink-0"
+                                  style={{
+                                    backgroundColor:
+                                      colors.background.primaryLight,
+                                  }}
+                                >
+                                  <span
+                                    className="text-sm font-bold"
+                                    style={{ color: colors.primary.main }}
+                                  >
+                                    {new Date(lesson.startTime).getDate()}
+                                  </span>
+                                  <span
+                                    className="text-sm"
+                                    style={{
+                                      color: colors.primary.main,
+                                      fontSize: "10px",
+                                    }}
+                                  >
+                                    {new Date(
+                                      lesson.startTime,
+                                    ).toLocaleDateString(dateLocale, {
+                                      month: "short",
+                                    })}
+                                  </span>
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p
+                                    className="text-sm font-medium truncate"
+                                    style={{ color: colors.text.primary }}
+                                  >
+                                    {lesson.sessionTitle || lesson.courseTitle}
+                                  </p>
+                                  <p
+                                    className="text-xs mt-0.5"
+                                    style={{ color: colors.text.tertiary }}
+                                  >
+                                    {formatLessonDate(lesson.startTime)} ·{" "}
+                                    {formatLessonTime(lesson.startTime)} —{" "}
+                                    {formatLessonTime(lesson.endTime)}
+                                    {lesson.studentFirstName && (
+                                      <span>
+                                        {" · "}
+                                        {lesson.studentFirstName}{" "}
+                                        {lesson.studentLastName}
+                                      </span>
+                                    )}
+                                  </p>
+                                </div>
+                                <Chip
+                                  size="sm"
+                                  className="text-xs"
+                                  style={{
+                                    backgroundColor: statusStyle.bg,
+                                    color: statusStyle.color,
+                                  }}
+                                >
+                                  {lesson.status}
+                                </Chip>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </CardBody>
+            </Card>
+          </motion.div>
+
           {/* About the Instructor */}
           {tutorInfo && (
             <motion.div
@@ -1242,6 +1532,12 @@ const TutorCourseDetail = () => {
         isOpen={videoOpen}
         onOpenChange={setVideoOpen}
         videoUrl={course?.demoVideoUrl}
+      />
+
+      <LessonDetailModal
+        isOpen={!!selectedLesson}
+        onClose={() => setSelectedLesson(null)}
+        lesson={selectedLesson}
       />
 
       {/* Edit Resource Modal */}

@@ -1062,7 +1062,13 @@
       "noUpcoming": "Không có buổi học sắp tới",
       "dateLabel": "Ngày",
       "timeLabel": "Thời gian",
-      "viewDetail": "Xem"
+      "viewDetail": "Xem",
+      "loadingDetails": "Đang tải thông tin buổi học...",
+      "sessionDescription": "Mô tả buổi học",
+      "sessionOutcomes": "Mục tiêu buổi học",
+      "resources": "Tài liệu",
+      "moduleLabel": "Module",
+      "sessionLabel": "Buổi học"
     },
     "students": {
       "title": "Học viên của tôi",
@@ -1437,7 +1443,12 @@
         "fieldUrl": "URL",
         "removeTitle": "Xóa tài liệu",
         "removeMessage": "Bạn có chắc muốn xóa tài liệu này khỏi buổi học không?"
-      }
+      },
+      "courseSchedule": "Lịch học",
+      "noScheduledLessons": "Chưa có buổi học nào được lên lịch",
+      "scheduleToday": "Hôm nay",
+      "scheduleUpcoming": "Sắp tới",
+      "viewAllSchedule": "Xem tất cả lịch học"
     }
   },
   "checkout": {

@@ -1064,7 +1064,13 @@
       "noUpcoming": "No upcoming lessons",
       "dateLabel": "Date",
       "timeLabel": "Time",
-      "viewDetail": "View"
+      "viewDetail": "View",
+      "loadingDetails": "Loading session details...",
+      "sessionDescription": "Session Description",
+      "sessionOutcomes": "Session Outcomes",
+      "resources": "Resources",
+      "moduleLabel": "Module",
+      "sessionLabel": "Session"
     },
     "students": {
       "title": "My Students",
@@ -1439,7 +1445,12 @@
         "fieldUrl": "URL",
         "removeTitle": "Remove Resource",
         "removeMessage": "Are you sure you want to remove this resource from the session?"
-      }
+      },
+      "courseSchedule": "Course Schedule",
+      "noScheduledLessons": "No scheduled lessons for this course",
+      "scheduleToday": "Today",
+      "scheduleUpcoming": "Upcoming",
+      "viewAllSchedule": "View All Schedule"
     }
   },
   "checkout": {

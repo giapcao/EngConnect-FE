@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate, Link } from "react-router-dom";
 import { selectUser } from "../../../store";
-import { tutorApi, studentApi } from "../../../api";
+import { tutorApi, studentApi, coursesApi } from "../../../api";
 import {
   Card,
   CardBody,
@@ -42,9 +42,13 @@ import {
   Play,
   Circle,
   Eye,
+  FileText,
+  LinkSimple,
+  SpinnerGap,
 } from "@phosphor-icons/react";
 import calendarIllustration from "../../../assets/illustrations/calendar.avif";
 import VideoModal from "../../../components/VideoModal/VideoModal";
+import LessonDetailModal from "../../../components/LessonDetailModal/LessonDetailModal";
 
 const WEEKDAYS = [
   "Monday",
@@ -782,7 +786,7 @@ const Schedule = () => {
               </p>
             </div>
           ) : (
-            <div className="grid gap-6 lg:grid-cols-[1fr_440px]">
+            <div className="grid gap-6 lg:grid-cols-[1fr_460px]">
               <Card
                 shadow="none"
                 className="border-none"
@@ -1442,294 +1446,11 @@ const Schedule = () => {
       </Modal>
 
       {/* Lesson Detail Modal */}
-      <Modal
+      <LessonDetailModal
         isOpen={isLessonDetailOpen}
         onClose={onLessonDetailClose}
-        size="lg"
-      >
-        <ModalContent style={{ backgroundColor: colors.background.light }}>
-          {selectedLesson &&
-            (() => {
-              const lesson = selectedLesson;
-              const blockColor = getLessonBlockColor(lesson.status);
-              const startDate = new Date(lesson.startTime);
-              const endDate = new Date(lesson.endTime);
-              const durationMin = Math.round((endDate - startDate) / 60000);
-              const meetingInfo = getMeetingStatusInfo(lesson);
-              const hasRecording = lesson.lessonRecord?.recordUrl;
-              const recordDuration = lesson.lessonRecord?.durationSeconds;
-
-              return (
-                <>
-                  <ModalHeader
-                    className="flex items-center gap-3 pb-2"
-                    style={{ color: colors.text.primary }}
-                  >
-                    <div
-                      className="w-1.5 h-8 rounded-full flex-shrink-0"
-                      style={{ backgroundColor: blockColor.border }}
-                    />
-                    <div className="min-w-0 flex-1">
-                      {lesson.courseId ? (
-                        <Link
-                          to={`/tutor/courses/${lesson.courseId}`}
-                          className="text-lg font-bold truncate hover:underline block"
-                          style={{ color: colors.primary.main }}
-                          onClick={onLessonDetailClose}
-                        >
-                          {lesson.courseTitle ||
-                            t("tutorDashboard.schedule.lessonLabel")}
-                        </Link>
-                      ) : (
-                        <p className="text-lg font-bold truncate">
-                          {lesson.courseTitle ||
-                            t("tutorDashboard.schedule.lessonLabel")}
-                        </p>
-                      )}
-                      {lesson.sessionTitle && (
-                        <p
-                          className="text-sm font-normal truncate mt-0.5"
-                          style={{ color: colors.text.secondary }}
-                        >
-                          {lesson.sessionTitle}
-                        </p>
-                      )}
-                    </div>
-                    <Chip
-                      size="sm"
-                      style={{
-                        backgroundColor: `${blockColor.border}20`,
-                        color: blockColor.border,
-                      }}
-                    >
-                      {getLessonStatusLabel(lesson.status)}
-                    </Chip>
-                  </ModalHeader>
-                  <ModalBody className="space-y-4 pt-0">
-                    {/* Student info */}
-                    <div
-                      className="flex items-center gap-3 p-3 rounded-xl"
-                      style={{ backgroundColor: colors.background.gray }}
-                    >
-                      <Avatar
-                        src={withCDN(lesson.studentAvatar)}
-                        name={studentFullName(lesson)}
-                        size="md"
-                        className="w-10 h-10"
-                      />
-                      <div className="flex-1 min-w-0">
-                        <p
-                          className="text-sm font-semibold"
-                          style={{ color: colors.text.primary }}
-                        >
-                          {studentFullName(lesson)}
-                        </p>
-                        <p
-                          className="text-xs"
-                          style={{ color: colors.text.tertiary }}
-                        >
-                          {t("tutorDashboard.schedule.studentLabel")}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Date & Time */}
-                    <div className="grid grid-cols-2 gap-3">
-                      <div
-                        className="p-3 rounded-xl"
-                        style={{ backgroundColor: colors.background.gray }}
-                      >
-                        <p
-                          className="text-[11px] font-medium mb-1"
-                          style={{ color: colors.text.tertiary }}
-                        >
-                          {t("tutorDashboard.schedule.dateLabel")}
-                        </p>
-                        <p
-                          className="text-sm font-semibold flex items-center gap-1.5"
-                          style={{ color: colors.text.primary }}
-                        >
-                          <CalendarDots
-                            weight="duotone"
-                            className="w-4 h-4"
-                            style={{ color: colors.primary.main }}
-                          />
-                          {startDate.toLocaleDateString(dateLocale, {
-                            weekday: "short",
-                            day: "numeric",
-                            month: "long",
-                            year: "numeric",
-                          })}
-                        </p>
-                      </div>
-                      <div
-                        className="p-3 rounded-xl"
-                        style={{ backgroundColor: colors.background.gray }}
-                      >
-                        <p
-                          className="text-[11px] font-medium mb-1"
-                          style={{ color: colors.text.tertiary }}
-                        >
-                          {t("tutorDashboard.schedule.timeLabel")}
-                        </p>
-                        <p
-                          className="text-sm font-semibold flex items-center gap-1.5"
-                          style={{ color: colors.text.primary }}
-                        >
-                          <Clock
-                            weight="duotone"
-                            className="w-4 h-4"
-                            style={{ color: colors.primary.main }}
-                          />
-                          {formatLessonTime(lesson.startTime)} —{" "}
-                          {formatLessonTime(lesson.endTime)}
-                          <Chip
-                            size="sm"
-                            className="h-5 ml-1"
-                            style={{
-                              backgroundColor: `${colors.primary.main}15`,
-                              color: colors.primary.main,
-                              fontSize: "10px",
-                            }}
-                          >
-                            {durationMin}m
-                          </Chip>
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Meeting status */}
-                    {meetingInfo && (
-                      <div
-                        className="flex items-center gap-2 p-3 rounded-xl"
-                        style={{
-                          backgroundColor: `${meetingInfo.color}10`,
-                          border: `1px solid ${meetingInfo.color}30`,
-                        }}
-                      >
-                        <Circle
-                          weight="fill"
-                          className="w-2.5 h-2.5"
-                          style={{ color: meetingInfo.color }}
-                        />
-                        <span
-                          className="text-sm font-medium"
-                          style={{ color: meetingInfo.color }}
-                        >
-                          {meetingInfo.label}
-                        </span>
-                        {lesson.meetingStartedAt && (
-                          <span
-                            className="text-xs ml-auto"
-                            style={{ color: colors.text.tertiary }}
-                          >
-                            {new Date(
-                              lesson.meetingStartedAt,
-                            ).toLocaleTimeString(dateLocale, {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}
-                            {lesson.meetingEndedAt && (
-                              <>
-                                {" "}
-                                —{" "}
-                                {new Date(
-                                  lesson.meetingEndedAt,
-                                ).toLocaleTimeString(dateLocale, {
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                })}
-                              </>
-                            )}
-                          </span>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Recording */}
-                    {hasRecording && (
-                      <div
-                        className="flex items-center gap-3 p-3 rounded-xl"
-                        style={{
-                          backgroundColor: `${colors.state.success}10`,
-                          border: `1px solid ${colors.state.success}25`,
-                        }}
-                      >
-                        <div
-                          className="w-9 h-9 rounded-lg flex items-center justify-center"
-                          style={{
-                            backgroundColor: `${colors.state.success}20`,
-                          }}
-                        >
-                          <Record
-                            weight="fill"
-                            className="w-4 h-4"
-                            style={{ color: colors.state.success }}
-                          />
-                        </div>
-                        <div className="flex-1">
-                          <p
-                            className="text-sm font-semibold"
-                            style={{ color: colors.text.primary }}
-                          >
-                            {t("tutorDashboard.schedule.recordingAvailable")}
-                          </p>
-                          {recordDuration && (
-                            <p
-                              className="text-xs"
-                              style={{ color: colors.text.tertiary }}
-                            >
-                              {Math.floor(recordDuration / 60)}:
-                              {String(recordDuration % 60).padStart(2, "0")} min
-                            </p>
-                          )}
-                        </div>
-                        <Button
-                          size="sm"
-                          style={{
-                            backgroundColor: colors.state.success,
-                            color: "#fff",
-                          }}
-                          startContent={
-                            <Play weight="fill" className="w-3.5 h-3.5" />
-                          }
-                          onPress={() => {
-                            setVideoUrl(lesson.lessonRecord.recordUrl);
-                            onVideoOpen();
-                          }}
-                        >
-                          {t("tutorDashboard.schedule.watchRecording")}
-                        </Button>
-                      </div>
-                    )}
-                  </ModalBody>
-                  <ModalFooter>
-                    <Button variant="light" onPress={onLessonDetailClose}>
-                      {t("tutorDashboard.schedule.cancel")}
-                    </Button>
-                    {canJoinLesson(lesson) && (
-                      <Button
-                        style={{
-                          backgroundColor: colors.primary.main,
-                          color: colors.text.white,
-                        }}
-                        startContent={
-                          <VideoCamera weight="fill" className="w-4 h-4" />
-                        }
-                        onPress={() => {
-                          onLessonDetailClose();
-                          navigate(`/meeting/${lesson.id}`);
-                        }}
-                      >
-                        {t("tutorDashboard.schedule.joinLesson")}
-                      </Button>
-                    )}
-                  </ModalFooter>
-                </>
-              );
-            })()}
-        </ModalContent>
-      </Modal>
+        lesson={selectedLesson}
+      />
 
       <VideoModal
         isOpen={isVideoOpen}

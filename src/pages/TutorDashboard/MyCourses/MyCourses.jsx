@@ -1,26 +1,10 @@
 import { useState, useEffect } from "react";
-import {
-  Button,
-  Input,
-  Tabs,
-  Tab,
-  Dropdown,
-  DropdownTrigger,
-  DropdownMenu,
-  DropdownItem,
-} from "@heroui/react";
+import { Button, Input, Tabs, Tab } from "@heroui/react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { useThemeColors } from "../../../hooks/useThemeColors";
 import { motion } from "framer-motion";
-import {
-  Plus,
-  MagnifyingGlass,
-  DotsThree,
-  PencilSimple,
-  Trash,
-  Eye,
-} from "@phosphor-icons/react";
+import { Plus, MagnifyingGlass } from "@phosphor-icons/react";
 import CourseCard from "../../../components/CourseCard/CourseCard";
 import CourseCardSkeleton from "../../../components/CourseCardSkeleton/CourseCardSkeleton";
 import { coursesApi } from "../../../api";
@@ -242,41 +226,6 @@ const MyCourses = () => {
                   label: getStatusLabel(course.status),
                   color: getStatusColor(course.status),
                 }}
-                topRightAction={
-                  <Dropdown>
-                    <DropdownTrigger>
-                      <Button
-                        isIconOnly
-                        size="sm"
-                        variant="flat"
-                        style={{ backgroundColor: "rgba(255,255,255,0.9)" }}
-                      >
-                        <DotsThree weight="bold" className="w-5 h-5" />
-                      </Button>
-                    </DropdownTrigger>
-                    <DropdownMenu>
-                      <DropdownItem
-                        key="view"
-                        startContent={<Eye className="w-4 h-4" />}
-                      >
-                        {t("tutorDashboard.myCourses.viewCourse")}
-                      </DropdownItem>
-                      <DropdownItem
-                        key="edit"
-                        startContent={<PencilSimple className="w-4 h-4" />}
-                      >
-                        {t("tutorDashboard.myCourses.editCourse")}
-                      </DropdownItem>
-                      <DropdownItem
-                        key="delete"
-                        className="text-danger"
-                        startContent={<Trash className="w-4 h-4" />}
-                      >
-                        {t("tutorDashboard.myCourses.deleteCourse")}
-                      </DropdownItem>
-                    </DropdownMenu>
-                  </Dropdown>
-                }
               />
             </motion.div>
           ))}

@@ -924,23 +924,23 @@ const StudentMyCourseDetail = () => {
                             >
                               <div className="flex items-center gap-3 flex-1 min-w-0">
                                 <div
-                                  className="w-10 h-10 rounded-lg flex flex-col items-center justify-center flex-shrink-0"
+                                  className="w-12 h-12 rounded-lg flex flex-col items-center justify-center flex-shrink-0"
                                   style={{
                                     backgroundColor:
                                       colors.background.primaryLight,
                                   }}
                                 >
                                   <span
-                                    className="text-xs font-bold"
+                                    className="text-sm font-bold"
                                     style={{ color: colors.primary.main }}
                                   >
                                     {new Date(lesson.startTime).getDate()}
                                   </span>
                                   <span
-                                    className="text-xs"
+                                    className="text-sm"
                                     style={{
                                       color: colors.primary.main,
-                                      fontSize: "9px",
+                                      fontSize: "10px",
                                     }}
                                   >
                                     {new Date(
