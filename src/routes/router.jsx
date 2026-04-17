@@ -21,7 +21,6 @@ import CourseDetail from "../pages/Courses/CourseDetail";
 import TutorProfilePage from "../pages/Courses/TutorProfile";
 import Checkout from "../pages/Courses/Checkout";
 import PaymentReturn from "../pages/Courses/PaymentReturn";
-import SearchResults from "../pages/Courses/SearchResults";
 import BecomeTutor from "../pages/BecomeTutor/BecomeTutor";
 import TutorRegistration from "../pages/BecomeTutor/TutorRegistration";
 import TutorOnboarding from "../pages/TutorDashboard/Onboarding/TutorOnboarding";
@@ -55,7 +54,6 @@ import AdminCourseVerification from "../pages/AdminDashboard/CourseManagement/Co
 import AdminCategories from "../pages/AdminDashboard/CourseManagement/CategoryManagement";
 import AdminAnalytics from "../pages/AdminDashboard/AnalyticsReports/AnalyticsReports";
 import AdminFinance from "../pages/AdminDashboard/FinancialManagement/FinancialManagement";
-import AdminSettings from "../pages/AdminDashboard/Settings/Settings";
 import AdminSupportTickets from "../pages/AdminDashboard/SupportTickets/SupportTickets";
 import AdminCourseDetail from "../pages/AdminDashboard/CourseManagement/CourseDetail";
 import AdminCourseVerificationDetail from "../pages/AdminDashboard/CourseManagement/CourseVerificationDetail";
@@ -143,10 +141,6 @@ export const router = createBrowserRouter([
       {
         path: "courses",
         element: <Courses />,
-      },
-      {
-        path: "courses/search",
-        element: <SearchResults />,
       },
       {
         path: "courses/:id",
@@ -325,10 +319,6 @@ export const router = createBrowserRouter([
       {
         path: "finance",
         element: <AdminFinance />,
-      },
-      {
-        path: "settings",
-        element: <AdminSettings />,
       },
       {
         path: "support-tickets",

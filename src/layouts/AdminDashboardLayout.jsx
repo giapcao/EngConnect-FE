@@ -29,7 +29,6 @@ import {
   House,
   MagnifyingGlass,
   BookOpen,
-  UserCircle,
   SignOut,
   List,
   X,
@@ -39,7 +38,6 @@ import {
   CurrencyDollar,
   GraduationCap,
   ChalkboardTeacher,
-  Gear,
   CaretLeft,
   CaretRight,
   ShieldCheck,
@@ -122,11 +120,6 @@ const AdminDashboardLayout = () => {
       path: "/admin/finance",
       label: t("adminDashboard.nav.finance"),
       icon: CurrencyDollar,
-    },
-    {
-      path: "/admin/settings",
-      label: t("adminDashboard.nav.settings"),
-      icon: Gear,
     },
     {
       path: "/admin/support-tickets",
@@ -687,13 +680,6 @@ const AdminDashboardLayout = () => {
                 </Button>
               </DropdownTrigger>
               <DropdownMenu aria-label="Admin actions">
-                <DropdownItem
-                  key="profile"
-                  startContent={<UserCircle className="w-4 h-4" />}
-                  onPress={() => navigate("/admin/settings")}
-                >
-                  {t("adminDashboard.nav.settings")}
-                </DropdownItem>
                 <DropdownItem
                   key="logout"
                   color="danger"

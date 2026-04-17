@@ -122,7 +122,7 @@ const DashboardLayout = () => {
               onKeyDown={(e) => {
                 if (e.key === "Enter" && searchQuery.trim()) {
                   navigate(
-                    `/courses/search?q=${encodeURIComponent(searchQuery.trim())}`,
+                    `/courses?q=${encodeURIComponent(searchQuery.trim())}`,
                   );
                 }
               }}
