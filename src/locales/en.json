@@ -649,7 +649,9 @@
       "meetingWaiting": "Waiting",
       "meetingEnded": "Ended",
       "watchRecording": "Watch Recording",
-      "recordingAvailable": "Recording available"
+      "recordingAvailable": "Recording available",
+      "viewDetail": "View Details",
+      "noLessonsToday": "No lessons today"
     },
     "homework": {
       "title": "Homework",

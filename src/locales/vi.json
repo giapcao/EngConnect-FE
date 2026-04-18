@@ -647,7 +647,9 @@
       "meetingWaiting": "Đang chờ",
       "meetingEnded": "Đã kết thúc",
       "watchRecording": "Xem bản ghi",
-      "recordingAvailable": "Có bản ghi"
+      "recordingAvailable": "Có bản ghi",
+      "viewDetail": "Xem chi tiết",
+      "noLessonsToday": "Hôm nay không có buổi học"
     },
     "homework": {
       "title": "Bài tập",

@@ -11,12 +11,14 @@ import {
   Avatar,
   Divider,
   Spinner,
+  useDisclosure,
 } from "@heroui/react";
 import { motion } from "framer-motion";
 import { useThemeColors } from "../../../hooks/useThemeColors";
 import { useTheme } from "../../../contexts/ThemeContext";
 import CourseDetailSkeleton from "../../../components/CourseDetailSkeleton/CourseDetailSkeleton";
 import VideoModal from "../../../components/VideoModal/VideoModal";
+import LessonDetailModal from "../../../components/LessonDetailModal/LessonDetailModal";
 import {
   Star,
   Clock,
@@ -89,6 +91,12 @@ const StudentMyCourseDetail = () => {
   // Lessons state
   const [lessons, setLessons] = useState([]);
   const [lessonsLoading, setLessonsLoading] = useState(true);
+  const [selectedLesson, setSelectedLesson] = useState(null);
+  const {
+    isOpen: isLessonDetailOpen,
+    onOpen: onLessonDetailOpen,
+    onClose: onLessonDetailClose,
+  } = useDisclosure();
 
   const toggleModule = (moduleId) => {
     setExpandedModules((prev) => ({ ...prev, [moduleId]: !prev[moduleId] }));
@@ -917,9 +925,13 @@ const StudentMyCourseDetail = () => {
                           {upcomingLessons.map((lesson) => (
                             <div
                               key={lesson.id}
-                              className="flex items-center justify-between p-3 rounded-lg"
+                              className="flex items-center justify-between p-3 rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
                               style={{
                                 backgroundColor: colors.background.gray,
+                              }}
+                              onClick={() => {
+                                setSelectedLesson(lesson);
+                                onLessonDetailOpen();
                               }}
                             >
                               <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -1020,10 +1032,14 @@ const StudentMyCourseDetail = () => {
                           {pastLessons.slice(0, 5).map((lesson) => (
                             <div
                               key={lesson.id}
-                              className="flex items-center gap-3 p-3 rounded-lg"
+                              className="flex items-center gap-3 p-3 rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
                               style={{
                                 backgroundColor: colors.background.gray,
                                 opacity: 0.7,
+                              }}
+                              onClick={() => {
+                                setSelectedLesson(lesson);
+                                onLessonDetailOpen();
                               }}
                             >
                               <div
@@ -1345,6 +1361,13 @@ const StudentMyCourseDetail = () => {
         isOpen={videoOpen}
         onOpenChange={setVideoOpen}
         videoUrl={course?.demoVideoUrl}
+      />
+
+      <LessonDetailModal
+        isOpen={isLessonDetailOpen}
+        onClose={onLessonDetailClose}
+        lesson={selectedLesson}
+        role="student"
       />
     </div>
   );

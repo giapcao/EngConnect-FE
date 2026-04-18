@@ -49,11 +49,12 @@ const getLessonBlockColor = (status) => {
   }
 };
 
-const LessonDetailModal = ({ isOpen, onClose, lesson }) => {
+const LessonDetailModal = ({ isOpen, onClose, lesson, role = "tutor" }) => {
   const { t, i18n } = useTranslation();
   const colors = useThemeColors();
   const navigate = useNavigate();
   const dateLocale = i18n.language === "vi" ? "vi-VN" : "en-US";
+  const isStudentView = role === "student";
 
   const [lessonExtra, setLessonExtra] = useState(null);
   const [lessonExtraLoading, setLessonExtraLoading] = useState(false);
@@ -140,6 +141,22 @@ const LessonDetailModal = ({ isOpen, onClose, lesson }) => {
   const studentFullName = (l) =>
     [l.studentFirstName, l.studentLastName].filter(Boolean).join(" ");
 
+  const tutorFullName = (l) =>
+    [l.tutorFirstName, l.tutorLastName].filter(Boolean).join(" ");
+
+  const personName = isStudentView
+    ? tutorFullName(lesson || {})
+    : studentFullName(lesson || {});
+  const personAvatar = isStudentView
+    ? lesson?.tutorAvatar
+    : lesson?.studentAvatar;
+  const personLabel = isStudentView
+    ? t("studentDashboard.schedule.tutor")
+    : t("tutorDashboard.schedule.studentLabel");
+  const courseLink = isStudentView
+    ? `/student/courses/${lesson?.courseId}`
+    : `/tutor/courses/${lesson?.courseId}`;
+
   if (!lesson) return null;
 
   const blockColor = getLessonBlockColor(lesson.status);
@@ -166,7 +183,7 @@ const LessonDetailModal = ({ isOpen, onClose, lesson }) => {
               <div className="min-w-0 flex-1">
                 {lesson.courseId ? (
                   <Link
-                    to={`/tutor/courses/${lesson.courseId}`}
+                    to={courseLink}
                     className="text-lg font-bold truncate hover:underline block"
                     style={{ color: colors.primary.main }}
                     onClick={onClose}
@@ -214,14 +231,14 @@ const LessonDetailModal = ({ isOpen, onClose, lesson }) => {
               </Chip>
             </ModalHeader>
             <ModalBody className="space-y-4 pt-0">
-              {/* Student info */}
+              {/* Person info */}
               <div
                 className="flex items-center gap-3 p-3 rounded-xl"
                 style={{ backgroundColor: colors.background.gray }}
               >
                 <Avatar
-                  src={withCDN(lesson.studentAvatar)}
-                  name={studentFullName(lesson)}
+                  src={withCDN(personAvatar)}
+                  name={personName}
                   size="md"
                   className="w-10 h-10"
                 />
@@ -230,13 +247,13 @@ const LessonDetailModal = ({ isOpen, onClose, lesson }) => {
                     className="text-sm font-semibold"
                     style={{ color: colors.text.primary }}
                   >
-                    {studentFullName(lesson)}
+                    {personName}
                   </p>
                   <p
                     className="text-xs"
                     style={{ color: colors.text.tertiary }}
                   >
-                    {t("tutorDashboard.schedule.studentLabel")}
+                    {personLabel}
                   </p>
                 </div>
               </div>

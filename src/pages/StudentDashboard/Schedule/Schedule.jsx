@@ -12,9 +12,9 @@ import {
   Select,
   SelectItem,
   Avatar,
-  Tooltip,
   Tabs,
   Tab,
+  useDisclosure,
 } from "@heroui/react";
 import { useTranslation } from "react-i18next";
 import { useThemeColors } from "../../../hooks/useThemeColors";
@@ -26,14 +26,22 @@ import {
   VideoCamera,
   CaretLeft,
   CaretRight,
-  Record,
-  Play,
-  ChalkboardTeacher,
   BookOpen,
-  Timer,
   Circle,
+  Eye,
 } from "@phosphor-icons/react";
 import calendarIllustration from "../../../assets/illustrations/calendar.avif";
+import LessonDetailModal from "../../../components/LessonDetailModal/LessonDetailModal";
+
+const WEEKDAYS = [
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+  "Sunday",
+];
 
 const CDN_BASE = "https://d20854st1o56hw.cloudfront.net/";
 const withCDN = (url) => {
@@ -52,9 +60,27 @@ const Schedule = () => {
 
   const [lessons, setLessons] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [currentDate, setCurrentDate] = useState(new Date());
   const [statusFilter, setStatusFilter] = useState("all");
-  const [viewMode, setViewMode] = useState("upcoming");
+  const [sidebarView, setSidebarView] = useState("today");
+
+  // Calendar week navigation
+  const [calendarWeekStart, setCalendarWeekStart] = useState(() => {
+    const now = new Date();
+    const day = now.getDay();
+    const diff = day === 0 ? -6 : 1 - day;
+    const monday = new Date(now);
+    monday.setHours(0, 0, 0, 0);
+    monday.setDate(now.getDate() + diff);
+    return monday;
+  });
+
+  // Lesson detail modal
+  const {
+    isOpen: isLessonDetailOpen,
+    onOpen: onLessonDetailOpen,
+    onClose: onLessonDetailClose,
+  } = useDisclosure();
+  const [selectedLesson, setSelectedLesson] = useState(null);
 
   const fetchLessons = useCallback(async () => {
     if (!user?.studentId) return;
@@ -77,57 +103,6 @@ const Schedule = () => {
   useEffect(() => {
     fetchLessons();
   }, [fetchLessons]);
-
-  const getWeekDays = () => {
-    const startOfWeek = new Date(currentDate);
-    const day = startOfWeek.getDay();
-    const diff = day === 0 ? -6 : 1 - day;
-    startOfWeek.setDate(startOfWeek.getDate() + diff);
-    return Array.from({ length: 7 }, (_, i) => {
-      const d = new Date(startOfWeek);
-      d.setDate(startOfWeek.getDate() + i);
-      return d;
-    });
-  };
-
-  const weekDays = getWeekDays();
-
-  const navigateWeek = (direction) => {
-    const newDate = new Date(currentDate);
-    newDate.setDate(currentDate.getDate() + direction * 7);
-    setCurrentDate(newDate);
-  };
-
-  const isToday = (date) => date.toDateString() === new Date().toDateString();
-
-  const hasLessonsOnDay = (date) =>
-    lessons.some(
-      (l) => new Date(l.startTime).toDateString() === date.toDateString(),
-    );
-
-  const formatTime = (dateStr) => {
-    if (!dateStr) return "";
-    const d = new Date(dateStr);
-    return d.toLocaleTimeString(dateLocale, {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
-
-  const formatDuration = (start, end) => {
-    if (!start || !end) return "";
-    const ms = new Date(end) - new Date(start);
-    const mins = Math.round(ms / 60000);
-    if (mins >= 60) return `${Math.floor(mins / 60)}h ${mins % 60}m`;
-    return `${mins}m`;
-  };
-
-  const formatRecordDuration = (seconds) => {
-    if (!seconds) return "";
-    const mins = Math.floor(seconds / 60);
-    if (mins >= 60) return `${Math.floor(mins / 60)}h ${mins % 60}m`;
-    return `${mins}m ${seconds % 60}s`;
-  };
 
   const now = new Date();
   const todayStr = now.toDateString();
@@ -152,34 +127,26 @@ const Schedule = () => {
     [lessons, todayStr],
   );
 
-  const pastLessons = useMemo(
-    () =>
-      lessons
-        .filter(
-          (l) =>
-            new Date(l.endTime) < now &&
-            new Date(l.startTime).toDateString() !== todayStr,
-        )
-        .sort((a, b) => new Date(b.startTime) - new Date(a.startTime)),
-    [lessons, todayStr],
-  );
+  const tutorFullName = (lesson) =>
+    [lesson.tutorFirstName, lesson.tutorLastName].filter(Boolean).join(" ");
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "Scheduled":
-        return colors.primary.main;
-      case "Completed":
-        return colors.state.success;
-      case "Cancelled":
-        return colors.state.error;
-      case "InProgress":
-        return colors.state.warning;
-      default:
-        return colors.text.secondary;
-    }
+  const canJoinLesson = (lesson) =>
+    lesson.status === "Scheduled" || lesson.status === "InProgress";
+
+  const handleOpenLessonDetail = (lesson) => {
+    setSelectedLesson(lesson);
+    onLessonDetailOpen();
   };
 
-  const getStatusLabel = (status) => {
+  const formatLessonTime = (dateStr) => {
+    if (!dateStr) return "";
+    return new Date(dateStr).toLocaleTimeString(dateLocale, {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  const getLessonStatusLabel = (status) => {
     switch (status) {
       case "Scheduled":
         return t("studentDashboard.schedule.scheduled");
@@ -208,236 +175,101 @@ const Schedule = () => {
     return null;
   };
 
-  const canJoin = (lesson) =>
-    lesson.status === "Scheduled" || lesson.status === "InProgress";
+  // Calendar helpers
+  const calendarDays = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(calendarWeekStart);
+    d.setDate(calendarWeekStart.getDate() + i);
+    return d;
+  });
 
-  const tutorFullName = (lesson) =>
-    [lesson.tutorFirstName, lesson.tutorLastName].filter(Boolean).join(" ");
+  const calendarWeekEnd = new Date(calendarWeekStart);
+  calendarWeekEnd.setDate(calendarWeekStart.getDate() + 6);
 
-  // Stats
-  const stats = useMemo(
-    () => ({
-      today: todayLessons.length,
-      upcoming: upcomingLessons.length,
-      completed: lessons.filter((l) => l.status === "Completed").length,
-      total: lessons.length,
-    }),
-    [lessons, todayLessons, upcomingLessons],
-  );
+  const goToPrevWeek = () => {
+    const prev = new Date(calendarWeekStart);
+    prev.setDate(prev.getDate() - 7);
+    setCalendarWeekStart(prev);
+  };
 
-  const renderLessonCard = (lesson, highlight = false) => {
-    const meetingInfo = getMeetingStatusInfo(lesson);
-    const hasRecording = lesson.lessonRecord?.recordUrl;
+  const goToNextWeek = () => {
+    const next = new Date(calendarWeekStart);
+    next.setDate(next.getDate() + 7);
+    setCalendarWeekStart(next);
+  };
 
-    return (
-      <motion.div
-        key={lesson.id}
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.15 }}
-      >
-        <Card
-          shadow="none"
-          className="border-none"
-          style={{ backgroundColor: colors.background.light }}
-        >
-          <CardBody className="p-4">
-            <div className="flex flex-col gap-3">
-              {/* Top row: date block + course info + status */}
-              <div className="flex items-start gap-4">
-                {/* Date block */}
-                <div
-                  className="w-14 h-14 rounded-xl flex flex-col items-center justify-center flex-shrink-0"
-                  style={{
-                    backgroundColor: highlight
-                      ? colors.background.primaryLight
-                      : colors.background.gray,
-                  }}
-                >
-                  <span
-                    className="text-[10px] font-medium uppercase"
-                    style={{
-                      color: highlight
-                        ? colors.primary.main
-                        : colors.text.secondary,
-                    }}
-                  >
-                    {new Date(lesson.startTime).toLocaleDateString(dateLocale, {
-                      weekday: "short",
-                    })}
-                  </span>
-                  <span
-                    className="text-lg font-bold leading-tight"
-                    style={{
-                      color: highlight
-                        ? colors.primary.main
-                        : colors.text.primary,
-                    }}
-                  >
-                    {new Date(lesson.startTime).getDate()}
-                  </span>
-                </div>
+  const goToCurrentWeek = () => {
+    const d = new Date();
+    const day = d.getDay();
+    const diff = day === 0 ? -6 : 1 - day;
+    const monday = new Date(d);
+    monday.setHours(0, 0, 0, 0);
+    monday.setDate(d.getDate() + diff);
+    setCalendarWeekStart(monday);
+  };
 
-                {/* Course info */}
-                <div className="flex-1 min-w-0">
-                  <h3
-                    className="font-semibold text-[15px] mb-0.5 truncate"
-                    style={{ color: colors.text.primary }}
-                  >
-                    {lesson.courseTitle ||
-                      t("studentDashboard.schedule.lesson")}
-                  </h3>
-                  {lesson.sessionTitle && (
-                    <p
-                      className="text-sm truncate mb-1.5"
-                      style={{ color: colors.text.secondary }}
-                    >
-                      {lesson.sessionTitle}
-                    </p>
-                  )}
+  const CALENDAR_START_HOUR = 7;
+  const CALENDAR_END_HOUR = 22;
+  const HOUR_HEIGHT = 48;
 
-                  {/* Tutor info row */}
-                  <div className="flex items-center gap-2">
-                    <Avatar
-                      src={withCDN(lesson.tutorAvatar)}
-                      name={tutorFullName(lesson)}
-                      size="sm"
-                      className="w-6 h-6 text-[10px]"
-                    />
-                    <span
-                      className="text-sm"
-                      style={{ color: colors.text.secondary }}
-                    >
-                      {tutorFullName(lesson) ||
-                        t("studentDashboard.schedule.tutor")}
-                    </span>
-                  </div>
-                </div>
+  const currentTimeTop = useMemo(() => {
+    const h = new Date().getHours();
+    const m = new Date().getMinutes();
+    if (h < CALENDAR_START_HOUR || h >= CALENDAR_END_HOUR) return null;
+    return (((h - CALENDAR_START_HOUR) * 60 + m) / 60) * HOUR_HEIGHT;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-                {/* Status */}
-                <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
-                  <Chip
-                    size="sm"
-                    variant="flat"
-                    style={{
-                      backgroundColor: `${getStatusColor(lesson.status)}20`,
-                      color: getStatusColor(lesson.status),
-                    }}
-                  >
-                    {getStatusLabel(lesson.status)}
-                  </Chip>
-                  {meetingInfo && (
-                    <span
-                      className="text-[11px] flex items-center gap-1"
-                      style={{ color: meetingInfo.color }}
-                    >
-                      <Circle weight="fill" className="w-2 h-2" />
-                      {meetingInfo.label}
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              {/* Bottom row: time + actions */}
-              <div
-                className="flex items-center justify-between pt-2 border-t"
-                style={{ borderColor: colors.border.light }}
-              >
-                <div className="flex items-center gap-3 flex-wrap">
-                  <Chip
-                    size="sm"
-                    variant="flat"
-                    startContent={
-                      <Clock weight="duotone" className="w-3 h-3" />
-                    }
-                    style={{
-                      backgroundColor: colors.background.gray,
-                      color: colors.text.secondary,
-                    }}
-                  >
-                    {formatTime(lesson.startTime)} —{" "}
-                    {formatTime(lesson.endTime)}
-                  </Chip>
-                  <Chip
-                    size="sm"
-                    variant="flat"
-                    startContent={
-                      <Timer weight="duotone" className="w-3 h-3" />
-                    }
-                    style={{
-                      backgroundColor: colors.background.gray,
-                      color: colors.text.secondary,
-                    }}
-                  >
-                    {formatDuration(lesson.startTime, lesson.endTime)}
-                  </Chip>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  {hasRecording && (
-                    <Tooltip
-                      content={t("studentDashboard.schedule.watchRecording")}
-                    >
-                      <Button
-                        size="sm"
-                        variant="flat"
-                        isIconOnly
-                        style={{
-                          backgroundColor: `${colors.state.success}15`,
-                          color: colors.state.success,
-                        }}
-                        onPress={() =>
-                          window.open(lesson.lessonRecord.recordUrl, "_blank")
-                        }
-                      >
-                        <Play weight="fill" className="w-4 h-4" />
-                      </Button>
-                    </Tooltip>
-                  )}
-                  {canJoin(lesson) && (
-                    <Button
-                      size="sm"
-                      style={{
-                        backgroundColor: colors.primary.main,
-                        color: colors.text.white,
-                      }}
-                      startContent={
-                        <VideoCamera weight="fill" className="w-4 h-4" />
-                      }
-                      onPress={() => navigate(`/meeting/${lesson.id}`)}
-                    >
-                      {t("studentDashboard.schedule.joinNow")}
-                    </Button>
-                  )}
-                </div>
-              </div>
-
-              {/* Recording info bar */}
-              {hasRecording && (
-                <div
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg"
-                  style={{ backgroundColor: `${colors.state.success}10` }}
-                >
-                  <Record
-                    weight="fill"
-                    className="w-3.5 h-3.5 flex-shrink-0"
-                    style={{ color: colors.state.success }}
-                  />
-                  <span
-                    className="text-xs"
-                    style={{ color: colors.state.success }}
-                  >
-                    {t("studentDashboard.schedule.recordingAvailable")}
-                    {lesson.lessonRecord.durationSeconds > 0 &&
-                      ` · ${formatRecordDuration(lesson.lessonRecord.durationSeconds)}`}
-                  </span>
-                </div>
-              )}
-            </div>
-          </CardBody>
-        </Card>
-      </motion.div>
+  const getLessonsForDay = (dayDate) =>
+    lessons.filter(
+      (l) => new Date(l.startTime).toDateString() === dayDate.toDateString(),
     );
+
+  const getLessonPosition = (lesson) => {
+    const start = new Date(lesson.startTime);
+    const end = new Date(lesson.endTime);
+    const startMinutes =
+      (start.getHours() - CALENDAR_START_HOUR) * 60 + start.getMinutes();
+    const endMinutes =
+      (end.getHours() - CALENDAR_START_HOUR) * 60 + end.getMinutes();
+    const top = (startMinutes / 60) * HOUR_HEIGHT;
+    const height = Math.max(
+      ((endMinutes - startMinutes) / 60) * HOUR_HEIGHT,
+      28,
+    );
+    return { top, height };
+  };
+
+  const getLessonBlockColor = (status) => {
+    switch (status) {
+      case "Scheduled":
+        return { bg: "#DCFCE7", border: "#22C55E", text: "#166534" };
+      case "InProgress":
+        return { bg: "#FEF3C7", border: "#F59E0B", text: "#92400E" };
+      case "Completed":
+        return { bg: "#DBEAFE", border: "#3B82F6", text: "#1E40AF" };
+      case "Cancelled":
+        return { bg: "#FEE2E2", border: "#EF4444", text: "#991B1B" };
+      default:
+        return { bg: "#F3F4F6", border: "#9CA3AF", text: "#374151" };
+    }
+  };
+
+  const isToday = (date) => date.toDateString() === new Date().toDateString();
+
+  const formatWeekRange = () => {
+    const startMonth = calendarWeekStart.toLocaleDateString(dateLocale, {
+      month: "short",
+    });
+    const endMonth = calendarWeekEnd.toLocaleDateString(dateLocale, {
+      month: "short",
+    });
+    const startDay = calendarWeekStart.getDate();
+    const endDay = calendarWeekEnd.getDate();
+    const year = calendarWeekEnd.getFullYear();
+    if (startMonth === endMonth) {
+      return `${startMonth} ${startDay} - ${endDay}, ${year}`;
+    }
+    return `${startMonth} ${startDay} - ${endMonth} ${endDay}, ${year}`;
   };
 
   return (
@@ -447,11 +279,11 @@ const Schedule = () => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.15 }}
-        className="flex flex-col md:flex-row md:items-center justify-between gap-4"
+        className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
       >
         <div>
           <h1
-            className="text-2xl lg:text-3xl font-bold mb-2"
+            className="text-2xl font-bold"
             style={{ color: colors.text.primary }}
           >
             {t("studentDashboard.schedule.title")}
@@ -485,378 +317,562 @@ const Schedule = () => {
         </Select>
       </motion.div>
 
-      {/* Stats Cards */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.15 }}
-        className="grid grid-cols-2 md:grid-cols-4 gap-3"
-      >
-        {[
-          {
-            label: t("studentDashboard.schedule.todayLessons"),
-            value: stats.today,
-            color: colors.primary.main,
-            icon: CalendarDots,
-          },
-          {
-            label: t("studentDashboard.schedule.upcomingLessons"),
-            value: stats.upcoming,
-            color: colors.state.warning,
-            icon: Clock,
-          },
-          {
-            label: t("studentDashboard.schedule.completed"),
-            value: stats.completed,
-            color: colors.state.success,
-            icon: BookOpen,
-          },
-          {
-            label: t("studentDashboard.schedule.totalLessons"),
-            value: stats.total,
-            color: colors.text.secondary,
-            icon: ChalkboardTeacher,
-          },
-        ].map((stat, idx) => (
-          <Card
-            key={idx}
-            shadow="none"
-            className="border-none"
-            style={{ backgroundColor: colors.background.light }}
-          >
-            <CardBody className="p-4">
-              <div className="flex items-center gap-3">
-                <div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                  style={{ backgroundColor: `${stat.color}15` }}
-                >
-                  <stat.icon
-                    weight="duotone"
-                    className="w-5 h-5"
-                    style={{ color: stat.color }}
-                  />
-                </div>
-                <div>
-                  <p
-                    className="text-xl font-bold"
-                    style={{ color: colors.text.primary }}
-                  >
-                    {stat.value}
-                  </p>
-                  <p
-                    className="text-xs"
-                    style={{ color: colors.text.secondary }}
-                  >
-                    {stat.label}
-                  </p>
-                </div>
-              </div>
-            </CardBody>
-          </Card>
-        ))}
-      </motion.div>
-
-      {/* Calendar Navigation */}
+      {/* Calendar + Sidebar */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.15 }}
       >
-        <Card
-          shadow="none"
-          className="border-none"
-          style={{ backgroundColor: colors.background.light }}
-        >
-          <CardBody className="p-4">
-            <div className="flex items-center justify-between mb-4">
-              <h2
-                className="text-lg font-semibold"
-                style={{ color: colors.text.primary }}
-              >
-                {currentDate.toLocaleDateString(dateLocale, {
-                  month: "long",
-                  year: "numeric",
-                })}
-              </h2>
-              <div className="flex items-center gap-2">
-                <Button
-                  isIconOnly
-                  variant="light"
-                  size="sm"
-                  onPress={() => navigateWeek(-1)}
-                >
-                  <CaretLeft
-                    weight="bold"
-                    className="w-5 h-5"
-                    style={{ color: colors.text.secondary }}
-                  />
-                </Button>
-                <Button
-                  variant="flat"
-                  size="sm"
-                  onPress={() => setCurrentDate(new Date())}
-                >
-                  {t("studentDashboard.schedule.today")}
-                </Button>
-                <Button
-                  isIconOnly
-                  variant="light"
-                  size="sm"
-                  onPress={() => navigateWeek(1)}
-                >
-                  <CaretRight
-                    weight="bold"
-                    className="w-5 h-5"
-                    style={{ color: colors.text.secondary }}
-                  />
-                </Button>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-7 gap-2">
-              {weekDays.map((day, index) => {
-                const dayIsToday = isToday(day);
-                const dayHasLessons = hasLessonsOnDay(day);
-                const dayLessonCount = lessons.filter(
-                  (l) =>
-                    new Date(l.startTime).toDateString() === day.toDateString(),
-                ).length;
-
-                return (
-                  <button
-                    key={index}
-                    className="p-3 rounded-xl text-center transition-all"
-                    style={{
-                      backgroundColor: dayIsToday
-                        ? colors.background.primaryLight
-                        : dayHasLessons
-                          ? colors.background.gray
-                          : "transparent",
-                      boxShadow: dayIsToday
-                        ? `inset 0 0 0 2px ${colors.primary.main}`
-                        : "none",
-                    }}
-                    onClick={() => setCurrentDate(day)}
-                  >
-                    <p
-                      className="text-xs font-medium mb-1"
-                      style={{ color: colors.text.secondary }}
+        {loading ? (
+          <div className="flex justify-center py-12">
+            <Spinner size="lg" />
+          </div>
+        ) : lessons.length === 0 ? (
+          <div className="flex flex-col items-center justify-center gap-4 py-8">
+            <img
+              src={calendarIllustration}
+              alt="No lessons"
+              draggable={false}
+              onDragStart={(e) => e.preventDefault()}
+              onContextMenu={(e) => e.preventDefault()}
+              className="w-68 h-68 object-contain"
+            />
+            <h3
+              className="text-xl font-semibold"
+              style={{ color: colors.text.primary }}
+            >
+              {t("studentDashboard.schedule.noLessons")}
+            </h3>
+            <p
+              className="text-center max-w-sm"
+              style={{ color: colors.text.secondary }}
+            >
+              {t("studentDashboard.schedule.noLessonsDesc")}
+            </p>
+          </div>
+        ) : (
+          <div className="grid gap-6 lg:grid-cols-[1fr_460px]">
+            {/* Weekly Calendar */}
+            <Card
+              shadow="none"
+              className="border-none"
+              style={{ backgroundColor: colors.background.light }}
+            >
+              <CardBody className="p-4">
+                {/* Week Navigation */}
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      isIconOnly
+                      variant="light"
+                      onPress={goToPrevWeek}
                     >
-                      {day.toLocaleDateString(dateLocale, {
-                        weekday: "short",
-                      })}
-                    </p>
-                    <p
-                      className="text-lg font-semibold"
+                      <CaretLeft
+                        weight="bold"
+                        className="w-4 h-4"
+                        style={{ color: colors.text.secondary }}
+                      />
+                    </Button>
+                    <h2
+                      className="text-base font-semibold min-w-[180px] text-center"
+                      style={{ color: colors.text.primary }}
+                    >
+                      {formatWeekRange()}
+                    </h2>
+                    <Button
+                      size="sm"
+                      isIconOnly
+                      variant="light"
+                      onPress={goToNextWeek}
+                    >
+                      <CaretRight
+                        weight="bold"
+                        className="w-4 h-4"
+                        style={{ color: colors.text.secondary }}
+                      />
+                    </Button>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="flat"
+                    color="primary"
+                    onPress={goToCurrentWeek}
+                  >
+                    {t("studentDashboard.schedule.today")}
+                  </Button>
+                </div>
+
+                {/* Calendar Grid */}
+                <div className="overflow-x-auto">
+                  <div style={{ minWidth: "640px" }}>
+                    {/* Day headers */}
+                    <div
+                      className="grid border-b"
                       style={{
-                        color: dayIsToday
-                          ? colors.primary.main
-                          : colors.text.primary,
+                        gridTemplateColumns: "44px repeat(7, 1fr)",
+                        borderColor: colors.border.light,
                       }}
                     >
-                      {day.getDate()}
-                    </p>
-                    {dayHasLessons && (
-                      <div className="flex items-center justify-center gap-0.5 mt-1">
-                        {Array.from(
-                          { length: Math.min(dayLessonCount, 3) },
-                          (_, i) => (
-                            <div
-                              key={i}
-                              className="w-1.5 h-1.5 rounded-full"
+                      <div className="p-1" />
+                      {calendarDays.map((day, idx) => {
+                        const dayIsToday = isToday(day);
+                        return (
+                          <div
+                            key={idx}
+                            className="py-2 px-1 text-center"
+                            style={{
+                              backgroundColor: dayIsToday
+                                ? `${colors.primary.main}10`
+                                : "transparent",
+                            }}
+                          >
+                            <p
+                              className="text-[11px] font-medium"
                               style={{
-                                backgroundColor: colors.primary.main,
+                                color: dayIsToday
+                                  ? colors.primary.main
+                                  : colors.text.tertiary,
                               }}
-                            />
-                          ),
+                            >
+                              {day.toLocaleDateString(dateLocale, {
+                                weekday: "short",
+                              })}
+                            </p>
+                            <p
+                              className={`text-base font-bold mt-0.5 ${
+                                dayIsToday
+                                  ? "w-7 h-7 rounded-full flex items-center justify-center mx-auto text-sm"
+                                  : ""
+                              }`}
+                              style={{
+                                color: dayIsToday
+                                  ? "#fff"
+                                  : colors.text.primary,
+                                backgroundColor: dayIsToday
+                                  ? colors.primary.main
+                                  : "transparent",
+                              }}
+                            >
+                              {day.getDate()}
+                            </p>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Time grid */}
+                    <div
+                      className="relative overflow-y-auto"
+                      style={{ maxHeight: "520px" }}
+                    >
+                      <div
+                        className="grid"
+                        style={{
+                          gridTemplateColumns: "44px repeat(7, 1fr)",
+                          height: `${(CALENDAR_END_HOUR - CALENDAR_START_HOUR) * HOUR_HEIGHT}px`,
+                        }}
+                      >
+                        {/* Time labels */}
+                        <div className="relative">
+                          {Array.from(
+                            {
+                              length: CALENDAR_END_HOUR - CALENDAR_START_HOUR,
+                            },
+                            (_, i) => CALENDAR_START_HOUR + i,
+                          ).map((hour) => (
+                            <div
+                              key={hour}
+                              className="absolute right-1.5 text-right"
+                              style={{
+                                top: `${(hour - CALENDAR_START_HOUR) * HOUR_HEIGHT - 6}px`,
+                                color: colors.text.tertiary,
+                                fontSize: "10px",
+                              }}
+                            >
+                              {`${String(hour).padStart(2, "0")}:00`}
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Day columns */}
+                        {calendarDays.map((day, dayIdx) => {
+                          const dayLessons = getLessonsForDay(day);
+                          const dayIsToday = isToday(day);
+                          return (
+                            <div
+                              key={dayIdx}
+                              className="relative border-l"
+                              style={{
+                                borderColor: colors.border.light,
+                                backgroundColor: dayIsToday
+                                  ? `${colors.primary.main}05`
+                                  : "transparent",
+                              }}
+                            >
+                              {/* Hour grid lines + half-hour lines */}
+                              {Array.from(
+                                {
+                                  length:
+                                    CALENDAR_END_HOUR - CALENDAR_START_HOUR,
+                                },
+                                (_, i) => i,
+                              ).map((i) => (
+                                <div key={i}>
+                                  <div
+                                    className="absolute w-full border-t"
+                                    style={{
+                                      top: `${i * HOUR_HEIGHT}px`,
+                                      borderColor: colors.border.light,
+                                    }}
+                                  />
+                                  <div
+                                    className="absolute w-full border-t border-dashed"
+                                    style={{
+                                      top: `${i * HOUR_HEIGHT + HOUR_HEIGHT / 2}px`,
+                                      borderColor: `${colors.border.light}80`,
+                                    }}
+                                  />
+                                </div>
+                              ))}
+
+                              {/* Lesson blocks */}
+                              {dayLessons.map((lesson) => {
+                                const pos = getLessonPosition(lesson);
+                                const blockColor = getLessonBlockColor(
+                                  lesson.status,
+                                );
+                                return (
+                                  <div
+                                    key={lesson.id}
+                                    className="absolute left-0.5 right-0.5 rounded-md px-1.5 py-0.5 overflow-hidden cursor-pointer transition-all hover:opacity-80 hover:shadow-md"
+                                    style={{
+                                      top: `${pos.top}px`,
+                                      height: `${Math.max(pos.height, 22)}px`,
+                                      backgroundColor: blockColor.bg,
+                                      borderLeft: `3px solid ${blockColor.border}`,
+                                      zIndex: 2,
+                                    }}
+                                    onClick={() =>
+                                      handleOpenLessonDetail(lesson)
+                                    }
+                                  >
+                                    <p
+                                      className="text-[11px] font-semibold truncate leading-tight"
+                                      style={{ color: blockColor.text }}
+                                    >
+                                      {lesson.courseTitle ||
+                                        t("studentDashboard.schedule.lesson")}
+                                    </p>
+                                    {pos.height > 30 && (
+                                      <p
+                                        className="text-[10px] truncate leading-tight mt-0.5"
+                                        style={{
+                                          color: blockColor.text,
+                                          opacity: 0.8,
+                                        }}
+                                      >
+                                        {tutorFullName(lesson) ||
+                                          lesson.sessionTitle}
+                                      </p>
+                                    )}
+                                    {pos.height > 44 && (
+                                      <p
+                                        className="text-[10px] truncate leading-tight mt-0.5"
+                                        style={{
+                                          color: blockColor.text,
+                                          opacity: 0.7,
+                                        }}
+                                      >
+                                        {formatLessonTime(lesson.startTime)} —{" "}
+                                        {formatLessonTime(lesson.endTime)}
+                                      </p>
+                                    )}
+                                  </div>
+                                );
+                              })}
+
+                              {/* Current time indicator */}
+                              {dayIsToday && currentTimeTop !== null && (
+                                <div
+                                  className="absolute left-0 right-0 pointer-events-none"
+                                  style={{
+                                    top: `${currentTimeTop}px`,
+                                    zIndex: 3,
+                                  }}
+                                >
+                                  <div className="flex items-center">
+                                    <div
+                                      className="w-2 h-2 rounded-full flex-shrink-0"
+                                      style={{
+                                        backgroundColor: colors.state.error,
+                                        marginLeft: "-4px",
+                                      }}
+                                    />
+                                    <div
+                                      className="flex-1 h-[1.5px]"
+                                      style={{
+                                        backgroundColor: colors.state.error,
+                                      }}
+                                    />
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Legend */}
+                <div
+                  className="flex flex-wrap items-center gap-4 mt-3 pt-3 border-t"
+                  style={{ borderColor: colors.border.light }}
+                >
+                  {["Scheduled", "InProgress", "Completed", "Cancelled"].map(
+                    (status) => (
+                      <div key={status} className="flex items-center gap-1.5">
+                        <div
+                          className="w-2.5 h-2.5 rounded"
+                          style={{
+                            backgroundColor: getLessonBlockColor(status).border,
+                          }}
+                        />
+                        <span
+                          className="text-[11px]"
+                          style={{ color: colors.text.secondary }}
+                        >
+                          {getLessonStatusLabel(status)}
+                        </span>
+                      </div>
+                    ),
+                  )}
+                </div>
+              </CardBody>
+            </Card>
+
+            {/* Sidebar — Today / Upcoming */}
+            <Card
+              shadow="none"
+              className="border-none hidden lg:block lg:sticky lg:top-40 self-start"
+              style={{ backgroundColor: colors.background.light }}
+            >
+              <CardBody className="p-4">
+                <Tabs
+                  selectedKey={sidebarView}
+                  onSelectionChange={setSidebarView}
+                  variant="solid"
+                  fullWidth
+                  className="mb-4"
+                >
+                  <Tab
+                    key="today"
+                    title={
+                      <div className="flex items-center gap-1.5 text-xs">
+                        <CalendarDots
+                          weight="duotone"
+                          className="w-3.5 h-3.5"
+                        />
+                        <span>{t("studentDashboard.schedule.today")}</span>
+                        {todayLessons.length > 0 && (
+                          <Chip
+                            size="sm"
+                            variant="flat"
+                            className="h-4 min-w-4 text-[10px]"
+                          >
+                            {todayLessons.length}
+                          </Chip>
                         )}
                       </div>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          </CardBody>
-        </Card>
+                    }
+                  />
+                  <Tab
+                    key="upcoming"
+                    title={
+                      <div className="flex items-center gap-1.5 text-xs">
+                        <Clock weight="duotone" className="w-3.5 h-3.5" />
+                        <span>
+                          {t("studentDashboard.schedule.upcomingTab")}
+                        </span>
+                        {upcomingLessons.length > 0 && (
+                          <Chip
+                            size="sm"
+                            variant="flat"
+                            className="h-4 min-w-4 text-[10px]"
+                          >
+                            {upcomingLessons.length}
+                          </Chip>
+                        )}
+                      </div>
+                    }
+                  />
+                </Tabs>
+
+                {(() => {
+                  const sidebarLessons =
+                    sidebarView === "today" ? todayLessons : upcomingLessons;
+                  const emptyMessage =
+                    sidebarView === "today"
+                      ? t("studentDashboard.schedule.noLessonsToday")
+                      : t("studentDashboard.schedule.noUpcoming");
+
+                  if (sidebarLessons.length === 0) {
+                    return (
+                      <div className="text-center py-6">
+                        <img
+                          src={calendarIllustration}
+                          alt="No lessons"
+                          draggable={false}
+                          onDragStart={(e) => e.preventDefault()}
+                          onContextMenu={(e) => e.preventDefault()}
+                          className="w-48 h-48 mx-auto object-contain"
+                        />
+                        <p
+                          className="text-sm"
+                          style={{ color: colors.text.tertiary }}
+                        >
+                          {emptyMessage}
+                        </p>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div className="space-y-3 max-h-[600px] overflow-y-auto">
+                      {sidebarLessons.map((lesson) => {
+                        const blockColor = getLessonBlockColor(lesson.status);
+                        const startDate = new Date(lesson.startTime);
+                        const endDate = new Date(lesson.endTime);
+                        const durationMin = Math.round(
+                          (endDate - startDate) / 60000,
+                        );
+                        const meetingInfo = getMeetingStatusInfo(lesson);
+                        return (
+                          <div
+                            key={lesson.id}
+                            className="p-3 rounded-xl"
+                            style={{
+                              backgroundColor: colors.background.gray,
+                            }}
+                          >
+                            <div className="flex items-start gap-2.5">
+                              <Avatar
+                                src={withCDN(lesson.tutorAvatar)}
+                                name={tutorFullName(lesson)}
+                                size="sm"
+                                className="w-8 h-8 flex-shrink-0"
+                              />
+                              <div className="flex-1 min-w-0">
+                                <p
+                                  className="font-semibold text-sm truncate"
+                                  style={{ color: colors.text.primary }}
+                                >
+                                  {tutorFullName(lesson) ||
+                                    t("studentDashboard.schedule.tutor")}
+                                </p>
+                                <p
+                                  className="text-xs truncate mt-0.5"
+                                  style={{
+                                    color: colors.text.secondary,
+                                  }}
+                                >
+                                  {lesson.courseTitle}
+                                </p>
+                                <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                                  <span
+                                    className="text-[11px] flex items-center gap-1"
+                                    style={{
+                                      color: colors.text.tertiary,
+                                    }}
+                                  >
+                                    <Clock
+                                      weight="duotone"
+                                      className="w-3 h-3"
+                                    />
+                                    {sidebarView === "upcoming" &&
+                                      startDate.toLocaleDateString(dateLocale, {
+                                        day: "numeric",
+                                        month: "short",
+                                      }) + " · "}
+                                    {formatLessonTime(lesson.startTime)} —{" "}
+                                    {formatLessonTime(lesson.endTime)}
+                                  </span>
+                                  <Chip
+                                    size="sm"
+                                    className="h-4"
+                                    style={{
+                                      backgroundColor: `${blockColor.border}20`,
+                                      color: blockColor.border,
+                                      fontSize: "10px",
+                                    }}
+                                  >
+                                    {durationMin}m
+                                  </Chip>
+                                </div>
+                                {meetingInfo && (
+                                  <span
+                                    className="text-[11px] flex items-center gap-1 mt-1"
+                                    style={{ color: meetingInfo.color }}
+                                  >
+                                    <Circle weight="fill" className="w-2 h-2" />
+                                    {meetingInfo.label}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2 mt-2">
+                              <Button
+                                size="sm"
+                                variant="flat"
+                                className="flex-1"
+                                startContent={<Eye className="w-3.5 h-3.5" />}
+                                onPress={() => handleOpenLessonDetail(lesson)}
+                              >
+                                {t("studentDashboard.schedule.viewDetail")}
+                              </Button>
+                              {canJoinLesson(lesson) && (
+                                <Button
+                                  size="sm"
+                                  className="flex-1"
+                                  style={{
+                                    backgroundColor: colors.primary.main,
+                                    color: colors.text.white,
+                                  }}
+                                  startContent={
+                                    <VideoCamera
+                                      weight="fill"
+                                      className="w-3.5 h-3.5"
+                                    />
+                                  }
+                                  onPress={() =>
+                                    navigate(`/meeting/${lesson.id}`)
+                                  }
+                                >
+                                  {t("studentDashboard.schedule.joinNow")}
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })()}
+              </CardBody>
+            </Card>
+          </div>
+        )}
       </motion.div>
 
-      {loading ? (
-        <div className="flex justify-center py-12">
-          <Spinner size="lg" />
-        </div>
-      ) : lessons.length === 0 ? (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.15 }}
-          className="flex flex-col items-center justify-center gap-4 py-8"
-        >
-          <img
-            src={calendarIllustration}
-            alt="No lessons"
-            draggable={false}
-            onDragStart={(e) => e.preventDefault()}
-            onContextMenu={(e) => e.preventDefault()}
-            className="w-52 h-52 object-contain"
-          />
-          <h3
-            className="text-xl font-semibold"
-            style={{ color: colors.text.primary }}
-          >
-            {t("studentDashboard.schedule.noLessons")}
-          </h3>
-          <p
-            className="text-center max-w-sm"
-            style={{ color: colors.text.secondary }}
-          >
-            {t("studentDashboard.schedule.noLessonsDesc")}
-          </p>
-        </motion.div>
-      ) : (
-        <>
-          {/* View mode tabs */}
-          <Tabs
-            selectedKey={viewMode}
-            onSelectionChange={setViewMode}
-            color="primary"
-            classNames={{ tabList: "gap-2", tab: "px-4" }}
-          >
-            <Tab
-              key="upcoming"
-              title={
-                <div className="flex items-center gap-2">
-                  <Clock weight="duotone" className="w-4 h-4" />
-                  <span>{t("studentDashboard.schedule.upcomingTab")}</span>
-                  {todayLessons.length + upcomingLessons.length > 0 && (
-                    <Chip size="sm" variant="flat">
-                      {todayLessons.length + upcomingLessons.length}
-                    </Chip>
-                  )}
-                </div>
-              }
-            />
-            <Tab
-              key="past"
-              title={
-                <div className="flex items-center gap-2">
-                  <BookOpen weight="duotone" className="w-4 h-4" />
-                  <span>{t("studentDashboard.schedule.pastTab")}</span>
-                  {pastLessons.length > 0 && (
-                    <Chip size="sm" variant="flat">
-                      {pastLessons.length}
-                    </Chip>
-                  )}
-                </div>
-              }
-            />
-          </Tabs>
-
-          {viewMode === "upcoming" ? (
-            <>
-              {/* Today's Lessons */}
-              {todayLessons.length > 0 && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.15 }}
-                >
-                  <h2
-                    className="text-lg font-semibold mb-4 flex items-center gap-2"
-                    style={{ color: colors.text.primary }}
-                  >
-                    <CalendarDots
-                      weight="duotone"
-                      className="w-5 h-5"
-                      style={{ color: colors.primary.main }}
-                    />
-                    {t("studentDashboard.schedule.todayLessons")}
-                    <Chip size="sm" variant="flat" color="primary">
-                      {todayLessons.length}
-                    </Chip>
-                  </h2>
-                  <div className="space-y-3">
-                    {todayLessons.map((lesson) =>
-                      renderLessonCard(lesson, true),
-                    )}
-                  </div>
-                </motion.div>
-              )}
-
-              {/* Upcoming Lessons */}
-              {upcomingLessons.length > 0 && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.15 }}
-                >
-                  <h2
-                    className="text-lg font-semibold mb-4 flex items-center gap-2"
-                    style={{ color: colors.text.primary }}
-                  >
-                    <Clock
-                      weight="duotone"
-                      className="w-5 h-5"
-                      style={{ color: colors.state.warning }}
-                    />
-                    {t("studentDashboard.schedule.upcomingLessons")}
-                    <Chip size="sm" variant="flat">
-                      {upcomingLessons.length}
-                    </Chip>
-                  </h2>
-                  <div className="space-y-3">
-                    {upcomingLessons.map((lesson) => renderLessonCard(lesson))}
-                  </div>
-                </motion.div>
-              )}
-
-              {todayLessons.length === 0 && upcomingLessons.length === 0 && (
-                <div className="flex flex-col items-center py-8 gap-3">
-                  <img
-                    src={calendarIllustration}
-                    alt="No upcoming"
-                    draggable={false}
-                    onDragStart={(e) => e.preventDefault()}
-                    onContextMenu={(e) => e.preventDefault()}
-                    className="w-40 h-40 object-contain"
-                  />
-                  <p style={{ color: colors.text.tertiary }}>
-                    {t("studentDashboard.schedule.noUpcoming")}
-                  </p>
-                </div>
-              )}
-            </>
-          ) : (
-            <>
-              {/* Past Lessons */}
-              {pastLessons.length > 0 ? (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.15 }}
-                >
-                  <div className="space-y-3">
-                    {pastLessons.map((lesson) => renderLessonCard(lesson))}
-                  </div>
-                </motion.div>
-              ) : (
-                <div className="flex flex-col items-center py-8 gap-3">
-                  <img
-                    src={calendarIllustration}
-                    alt="No past"
-                    draggable={false}
-                    onDragStart={(e) => e.preventDefault()}
-                    onContextMenu={(e) => e.preventDefault()}
-                    className="w-40 h-40 object-contain"
-                  />
-                  <p style={{ color: colors.text.tertiary }}>
-                    {t("studentDashboard.schedule.noPast")}
-                  </p>
-                </div>
-              )}
-            </>
-          )}
-        </>
-      )}
+      {/* Lesson Detail Modal */}
+      <LessonDetailModal
+        isOpen={isLessonDetailOpen}
+        onClose={onLessonDetailClose}
+        lesson={selectedLesson}
+        role="student"
+      />
     </div>
   );
 };
