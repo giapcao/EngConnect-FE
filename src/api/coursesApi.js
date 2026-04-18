@@ -354,9 +354,13 @@ export const coursesApi = {
   },
 
   // ==================== LESSON SCRIPT ====================
-  // Generate quiz from lesson script
+  // Generate quiz from lesson script (AI — can take up to ~30s)
   generateQuiz: async (lessonScriptId) => {
-    const response = await axiosInstance.post(`/lesson-scripts/${lessonScriptId}/generate-quiz`);
+    const response = await axiosInstance.post(
+      `/lesson-scripts/${lessonScriptId}/generate-quiz`,
+      {},
+      { timeout: 60000 },
+    );
     return response.data;
   },
 };

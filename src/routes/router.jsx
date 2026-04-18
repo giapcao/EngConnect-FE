@@ -68,6 +68,7 @@ import VideoCall from "../pages/VideoCall/VideoCall";
 // Not Found Page
 import NotFound from "../pages/NotFound/NotFound";
 import Test from "../pages/Test/test";
+import Homework from "../pages/TutorDashboard/Homework/Homework";
 
 export const router = createBrowserRouter([
   {
@@ -207,6 +208,10 @@ export const router = createBrowserRouter([
       {
         path: "profile",
         element: <Profile />,
+      },
+      {
+        path: "homework",
+        element: <Homework />,
       },
       {
         path: "notifications",
