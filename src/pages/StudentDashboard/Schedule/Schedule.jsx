@@ -292,7 +292,7 @@ const Schedule = () => {
             {t("studentDashboard.schedule.subtitle")}
           </p>
         </div>
-        <Select
+        {/* <Select
           label={t("studentDashboard.schedule.filterStatus")}
           selectedKeys={[statusFilter]}
           classNames={selectClassNames}
@@ -314,7 +314,7 @@ const Schedule = () => {
           <SelectItem key="Cancelled">
             {t("studentDashboard.schedule.cancelled")}
           </SelectItem>
-        </Select>
+        </Select> */}
       </motion.div>
 
       {/* Calendar + Sidebar */}

@@ -382,9 +382,9 @@ const LessonDetailModal = ({ isOpen, onClose, lesson, role = "tutor" }) => {
                               <a
                                 key={r.id}
                                 href={
-                                  r.resourceUrl?.startsWith("http")
-                                    ? r.resourceUrl
-                                    : `${CDN_BASE}${r.resourceUrl}`
+                                  r.url?.startsWith("http")
+                                    ? r.url
+                                    : `${CDN_BASE}${r.url}`
                                 }
                                 target="_blank"
                                 rel="noopener noreferrer"
