@@ -12,6 +12,7 @@ import {
   Divider,
   Spinner,
   useDisclosure,
+  Tooltip,
 } from "@heroui/react";
 import { motion } from "framer-motion";
 import { useThemeColors } from "../../../hooks/useThemeColors";
@@ -19,6 +20,8 @@ import { useTheme } from "../../../contexts/ThemeContext";
 import CourseDetailSkeleton from "../../../components/CourseDetailSkeleton/CourseDetailSkeleton";
 import VideoModal from "../../../components/VideoModal/VideoModal";
 import LessonDetailModal from "../../../components/LessonDetailModal/LessonDetailModal";
+import LessonSummaryModal from "../../../components/LessonSummaryModal/LessonSummaryModal";
+import LessonQuizModal from "../../../components/LessonQuizModal/LessonQuizModal";
 import {
   Star,
   Clock,
@@ -37,6 +40,7 @@ import {
   ArrowSquareOut,
   CalendarDots,
   ArrowRightIcon,
+  Exam,
 } from "@phosphor-icons/react";
 import { coursesApi, tutorApi, studentApi } from "../../../api";
 
@@ -96,6 +100,27 @@ const StudentMyCourseDetail = () => {
     isOpen: isLessonDetailOpen,
     onOpen: onLessonDetailOpen,
     onClose: onLessonDetailClose,
+  } = useDisclosure();
+
+  const [recordingLesson, setRecordingLesson] = useState(null);
+  const {
+    isOpen: isRecordingOpen,
+    onOpen: onRecordingOpen,
+    onClose: onRecordingClose,
+  } = useDisclosure();
+
+  const [summaryLesson, setSummaryLesson] = useState(null);
+  const {
+    isOpen: isSummaryOpen,
+    onOpen: onSummaryOpen,
+    onClose: onSummaryClose,
+  } = useDisclosure();
+
+  const [quizLesson, setQuizLesson] = useState(null);
+  const {
+    isOpen: isQuizOpen,
+    onOpen: onQuizOpen,
+    onClose: onQuizClose,
   } = useDisclosure();
 
   const toggleModule = (moduleId) => {
@@ -201,6 +226,10 @@ const StudentMyCourseDetail = () => {
         return colors.state.error;
       case "InProgress":
         return colors.state.warning;
+      case "NoStudent":
+        return colors.state.error;
+      case "NoTutor":
+        return colors.state.error;
       default:
         return colors.text.secondary;
     }
@@ -216,9 +245,30 @@ const StudentMyCourseDetail = () => {
         return t("studentDashboard.schedule.cancelled");
       case "InProgress":
         return t("studentDashboard.schedule.inProgress");
+      case "NoStudent":
+        return t("studentDashboard.schedule.noStudent");
+      case "NoTutor":
+        return t("studentDashboard.schedule.noTutor");
       default:
         return status || "";
     }
+  };
+
+  const getLessonDisplayInfo = (lesson) => {
+    if (lesson.meetingStatus === "Waiting")
+      return {
+        label: t("studentDashboard.schedule.roomOpen"),
+        color: colors.state.warning,
+      };
+    if (lesson.meetingStatus === "InProgress")
+      return {
+        label: t("studentDashboard.schedule.meetingInProgress"),
+        color: colors.state.warning,
+      };
+    return {
+      label: getLessonStatusLabel(lesson.status),
+      color: getLessonStatusColor(lesson.status),
+    };
   };
 
   if (loading) {
@@ -978,40 +1028,143 @@ const StudentMyCourseDetail = () => {
                                       {formatLessonTime(lesson.startTime)} —{" "}
                                       {formatLessonTime(lesson.endTime)}
                                     </span>
-                                    <Chip
-                                      size="sm"
-                                      className="h-4"
-                                      style={{
-                                        backgroundColor: `${getLessonStatusColor(lesson.status)}20`,
-                                        color: getLessonStatusColor(
-                                          lesson.status,
-                                        ),
-                                        fontSize: "10px",
-                                      }}
-                                    >
-                                      {getLessonStatusLabel(lesson.status)}
-                                    </Chip>
+                                    {(() => {
+                                      const info = getLessonDisplayInfo(lesson);
+                                      return (
+                                        <Chip
+                                          size="sm"
+                                          className="h-4"
+                                          style={{
+                                            backgroundColor: `${info.color}20`,
+                                            color: info.color,
+                                            fontSize: "10px",
+                                          }}
+                                        >
+                                          {info.label}
+                                        </Chip>
+                                      );
+                                    })()}
                                   </div>
                                 </div>
                               </div>
-                              <Button
-                                size="sm"
-                                style={{
-                                  backgroundColor: colors.primary.main,
-                                  color: colors.text.white,
-                                }}
-                                startContent={
-                                  <VideoCamera
-                                    weight="fill"
-                                    className="w-3.5 h-3.5"
-                                  />
-                                }
-                                onPress={() =>
-                                  navigate(`/meeting/${lesson.id}`)
-                                }
-                              >
-                                {t("studentDashboard.schedule.joinNow")}
-                              </Button>
+                              <div className="flex items-center gap-2 flex-shrink-0">
+                                {lesson.lessonRecord?.recordUrl && (
+                                  <Tooltip
+                                    content={t(
+                                      "tutorDashboard.schedule.watchRecording",
+                                    )}
+                                    size="sm"
+                                  >
+                                    <Button
+                                      isIconOnly
+                                      size="sm"
+                                      variant="flat"
+                                      style={{
+                                        backgroundColor: `${colors.state.success}20`,
+                                        color: colors.state.success,
+                                        minWidth: "32px",
+                                        height: "32px",
+                                      }}
+                                      onPress={(e) => {
+                                        e?.stopPropagation?.();
+                                        setRecordingLesson(lesson);
+                                        onRecordingOpen();
+                                      }}
+                                      onClick={(e) => e.stopPropagation()}
+                                    >
+                                      <Play
+                                        weight="fill"
+                                        className="w-3.5 h-3.5"
+                                      />
+                                    </Button>
+                                  </Tooltip>
+                                )}
+                                {lesson.lessonScript?.summarizeText && (
+                                  <Tooltip
+                                    content={t(
+                                      "tutorDashboard.schedule.lessonSummary",
+                                    )}
+                                    size="sm"
+                                  >
+                                    <Button
+                                      isIconOnly
+                                      size="sm"
+                                      variant="flat"
+                                      style={{
+                                        backgroundColor: `${colors.primary.main}20`,
+                                        color: colors.primary.main,
+                                        minWidth: "32px",
+                                        height: "32px",
+                                      }}
+                                      onPress={(e) => {
+                                        e?.stopPropagation?.();
+                                        setSummaryLesson(lesson);
+                                        onSummaryOpen();
+                                      }}
+                                      onClick={(e) => e.stopPropagation()}
+                                    >
+                                      <FileText
+                                        weight="duotone"
+                                        className="w-3.5 h-3.5"
+                                      />
+                                    </Button>
+                                  </Tooltip>
+                                )}
+                                {lesson.lessonScript?.id && (
+                                  <Tooltip
+                                    content={t(
+                                      "tutorDashboard.schedule.lessonQuiz",
+                                    )}
+                                    size="sm"
+                                  >
+                                    <Button
+                                      isIconOnly
+                                      size="sm"
+                                      variant="flat"
+                                      style={{
+                                        backgroundColor: `${colors.state.warning}20`,
+                                        color: colors.state.warning,
+                                        minWidth: "32px",
+                                        height: "32px",
+                                      }}
+                                      onPress={(e) => {
+                                        e?.stopPropagation?.();
+                                        setQuizLesson(lesson);
+                                        onQuizOpen();
+                                      }}
+                                      onClick={(e) => e.stopPropagation()}
+                                    >
+                                      <Exam
+                                        weight="duotone"
+                                        className="w-3.5 h-3.5"
+                                      />
+                                    </Button>
+                                  </Tooltip>
+                                )}
+                                {lesson.meetingStatus === "Waiting" &&
+                                  lesson.status !== "Completed" && (
+                                    <Button
+                                      size="sm"
+                                      style={{
+                                        backgroundColor: colors.primary.main,
+                                        color: colors.text.white,
+                                      }}
+                                      startContent={
+                                        <VideoCamera
+                                          weight="fill"
+                                          className="w-3.5 h-3.5"
+                                        />
+                                      }
+                                      onPress={(e) => {
+                                        e?.stopPropagation?.();
+                                        navigate(`/meeting/${lesson.id}`);
+                                      }}
+                                      onClick={(e) => e.stopPropagation()}
+                                    >
+                                      {t("studentDashboard.schedule.joinNow")}
+                                    </Button>
+                                  )}
+                              </div>
                             </div>
                           ))}
                         </div>
@@ -1032,7 +1185,7 @@ const StudentMyCourseDetail = () => {
                           {pastLessons.slice(0, 5).map((lesson) => (
                             <div
                               key={lesson.id}
-                              className="flex items-center gap-3 p-3 rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
+                              className="flex items-center justify-between gap-3 p-3 rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
                               style={{
                                 backgroundColor: colors.background.gray,
                                 opacity: 0.7,
@@ -1083,20 +1236,118 @@ const StudentMyCourseDetail = () => {
                                   >
                                     {formatLessonDate(lesson.startTime)}
                                   </span>
-                                  <Chip
-                                    size="sm"
-                                    className="h-4"
-                                    style={{
-                                      backgroundColor: `${getLessonStatusColor(lesson.status)}20`,
-                                      color: getLessonStatusColor(
-                                        lesson.status,
-                                      ),
-                                      fontSize: "10px",
-                                    }}
-                                  >
-                                    {getLessonStatusLabel(lesson.status)}
-                                  </Chip>
+                                  {(() => {
+                                    const info = getLessonDisplayInfo(lesson);
+                                    return (
+                                      <Chip
+                                        size="sm"
+                                        className="h-4"
+                                        style={{
+                                          backgroundColor: `${info.color}20`,
+                                          color: info.color,
+                                          fontSize: "10px",
+                                        }}
+                                      >
+                                        {info.label}
+                                      </Chip>
+                                    );
+                                  })()}
                                 </div>
+                              </div>
+                              <div className="flex items-center gap-2 flex-shrink-0">
+                                {lesson.lessonRecord?.recordUrl && (
+                                  <Tooltip
+                                    content={t(
+                                      "tutorDashboard.schedule.watchRecording",
+                                    )}
+                                    size="sm"
+                                  >
+                                    <Button
+                                      isIconOnly
+                                      size="sm"
+                                      variant="flat"
+                                      style={{
+                                        backgroundColor: `${colors.state.success}20`,
+                                        color: colors.state.success,
+                                        minWidth: "32px",
+                                        height: "32px",
+                                      }}
+                                      onPress={(e) => {
+                                        e?.stopPropagation?.();
+                                        setRecordingLesson(lesson);
+                                        onRecordingOpen();
+                                      }}
+                                      onClick={(e) => e.stopPropagation()}
+                                    >
+                                      <Play
+                                        weight="fill"
+                                        className="w-3.5 h-3.5"
+                                      />
+                                    </Button>
+                                  </Tooltip>
+                                )}
+                                {lesson.lessonScript?.summarizeText && (
+                                  <Tooltip
+                                    content={t(
+                                      "tutorDashboard.schedule.lessonSummary",
+                                    )}
+                                    size="sm"
+                                  >
+                                    <Button
+                                      isIconOnly
+                                      size="sm"
+                                      variant="flat"
+                                      style={{
+                                        backgroundColor: `${colors.primary.main}20`,
+                                        color: colors.primary.main,
+                                        minWidth: "32px",
+                                        height: "32px",
+                                      }}
+                                      onPress={(e) => {
+                                        e?.stopPropagation?.();
+                                        setSummaryLesson(lesson);
+                                        onSummaryOpen();
+                                      }}
+                                      onClick={(e) => e.stopPropagation()}
+                                    >
+                                      <FileText
+                                        weight="duotone"
+                                        className="w-3.5 h-3.5"
+                                      />
+                                    </Button>
+                                  </Tooltip>
+                                )}
+                                {lesson.lessonScript?.id && (
+                                  <Tooltip
+                                    content={t(
+                                      "tutorDashboard.schedule.lessonQuiz",
+                                    )}
+                                    size="sm"
+                                  >
+                                    <Button
+                                      isIconOnly
+                                      size="sm"
+                                      variant="flat"
+                                      style={{
+                                        backgroundColor: `${colors.state.warning}20`,
+                                        color: colors.state.warning,
+                                        minWidth: "32px",
+                                        height: "32px",
+                                      }}
+                                      onPress={(e) => {
+                                        e?.stopPropagation?.();
+                                        setQuizLesson(lesson);
+                                        onQuizOpen();
+                                      }}
+                                      onClick={(e) => e.stopPropagation()}
+                                    >
+                                      <Exam
+                                        weight="duotone"
+                                        className="w-3.5 h-3.5"
+                                      />
+                                    </Button>
+                                  </Tooltip>
+                                )}
                               </div>
                             </div>
                           ))}
@@ -1361,6 +1612,26 @@ const StudentMyCourseDetail = () => {
         isOpen={videoOpen}
         onOpenChange={setVideoOpen}
         videoUrl={course?.demoVideoUrl}
+      />
+
+      <VideoModal
+        isOpen={isRecordingOpen}
+        onOpenChange={(open) => {
+          if (!open) onRecordingClose();
+        }}
+        videoUrl={recordingLesson?.lessonRecord?.recordUrl}
+      />
+
+      <LessonSummaryModal
+        isOpen={isSummaryOpen}
+        onClose={onSummaryClose}
+        summarizeText={summaryLesson?.lessonScript?.summarizeText}
+      />
+
+      <LessonQuizModal
+        isOpen={isQuizOpen}
+        onClose={onQuizClose}
+        lessonScriptId={quizLesson?.lessonScript?.id}
       />
 
       <LessonDetailModal

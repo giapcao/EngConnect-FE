@@ -131,7 +131,7 @@ const Schedule = () => {
     [lesson.tutorFirstName, lesson.tutorLastName].filter(Boolean).join(" ");
 
   const canJoinLesson = (lesson) =>
-    lesson.status === "Scheduled" || lesson.status === "InProgress";
+    lesson.meetingStatus === "Waiting" && lesson.status !== "Completed";
 
   const handleOpenLessonDetail = (lesson) => {
     setSelectedLesson(lesson);
@@ -156,16 +156,25 @@ const Schedule = () => {
         return t("studentDashboard.schedule.cancelled");
       case "InProgress":
         return t("studentDashboard.schedule.inProgress");
+      case "NoStudent":
+        return t("studentDashboard.schedule.noStudent");
+      case "NoTutor":
+        return t("studentDashboard.schedule.noTutor");
       default:
         return status || "";
     }
   };
 
   const getMeetingStatusInfo = (lesson) => {
-    if (lesson.meetingStatus === "waiting")
+    if (lesson.meetingStatus === "Waiting")
       return {
-        label: t("studentDashboard.schedule.meetingWaiting"),
+        label: t("studentDashboard.schedule.roomOpen"),
         color: colors.state.warning,
+      };
+    if (lesson.meetingStatus === "InProgress")
+      return {
+        label: t("studentDashboard.schedule.meetingInProgress"),
+        color: colors.state.success,
       };
     if (lesson.meetingStatus === "Ended")
       return {
@@ -248,6 +257,10 @@ const Schedule = () => {
       case "Completed":
         return { bg: "#DBEAFE", border: "#3B82F6", text: "#1E40AF" };
       case "Cancelled":
+        return { bg: "#FEE2E2", border: "#EF4444", text: "#991B1B" };
+      case "NoStudent":
+        return { bg: "#FEE2E2", border: "#EF4444", text: "#991B1B" };
+      case "NoTutor":
         return { bg: "#FEE2E2", border: "#EF4444", text: "#991B1B" };
       default:
         return { bg: "#F3F4F6", border: "#9CA3AF", text: "#374151" };
@@ -631,24 +644,28 @@ const Schedule = () => {
                   className="flex flex-wrap items-center gap-4 mt-3 pt-3 border-t"
                   style={{ borderColor: colors.border.light }}
                 >
-                  {["Scheduled", "InProgress", "Completed", "Cancelled"].map(
-                    (status) => (
-                      <div key={status} className="flex items-center gap-1.5">
-                        <div
-                          className="w-2.5 h-2.5 rounded"
-                          style={{
-                            backgroundColor: getLessonBlockColor(status).border,
-                          }}
-                        />
-                        <span
-                          className="text-[11px]"
-                          style={{ color: colors.text.secondary }}
-                        >
-                          {getLessonStatusLabel(status)}
-                        </span>
-                      </div>
-                    ),
-                  )}
+                  {[
+                    "Scheduled",
+                    "InProgress",
+                    "Completed",
+                    "NoStudent",
+                    "NoTutor",
+                  ].map((status) => (
+                    <div key={status} className="flex items-center gap-1.5">
+                      <div
+                        className="w-2.5 h-2.5 rounded"
+                        style={{
+                          backgroundColor: getLessonBlockColor(status).border,
+                        }}
+                      />
+                      <span
+                        className="text-[11px]"
+                        style={{ color: colors.text.secondary }}
+                      >
+                        {getLessonStatusLabel(status)}
+                      </span>
+                    </div>
+                  ))}
                 </div>
               </CardBody>
             </Card>

@@ -15,6 +15,7 @@ import * as MotionLib from "framer-motion";
 const { motion } = MotionLib;
 import { useThemeColors } from "../../../hooks/useThemeColors";
 import useInputStyles from "../../../hooks/useInputStyles";
+import VideoModal from "../../../components/VideoModal/VideoModal";
 import { tutorApi } from "../../../api/tutorApi";
 import { authApi } from "../../../api/authApi";
 import { selectUser, updateUserInfo } from "../../../store";
@@ -44,6 +45,7 @@ const TutorOnboarding = () => {
   const [cvUploading, setCvUploading] = useState(false);
   const [videoUploading, setVideoUploading] = useState(false);
   const [avatarUploading, setAvatarUploading] = useState(false);
+  const [introVideoOpen, setIntroVideoOpen] = useState(false);
 
   const [formData, setFormData] = useState({
     firstName: "",
@@ -722,10 +724,7 @@ const TutorOnboarding = () => {
                     <Button
                       size="sm"
                       variant="light"
-                      as="a"
-                      href={tutorProfile.introVideoUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                      onPress={() => setIntroVideoOpen(true)}
                       style={{ color: colors.primary.main }}
                     >
                       <Eye weight="bold" className="w-4 h-4" />
@@ -834,6 +833,12 @@ const TutorOnboarding = () => {
           </div>
         </motion.div>
       </div>
+
+      <VideoModal
+        isOpen={introVideoOpen}
+        onOpenChange={setIntroVideoOpen}
+        videoUrl={tutorProfile?.introVideoUrl}
+      />
     </div>
   );
 };

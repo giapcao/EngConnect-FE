@@ -23,9 +23,12 @@ import {
   FileText,
   LinkSimple,
   SpinnerGap,
+  Exam,
 } from "@phosphor-icons/react";
 import { coursesApi } from "../../api";
 import VideoModal from "../VideoModal/VideoModal";
+import LessonSummaryModal from "../LessonSummaryModal/LessonSummaryModal";
+import LessonQuizModal from "../LessonQuizModal/LessonQuizModal";
 
 const CDN_BASE = "https://d20854st1o56hw.cloudfront.net/";
 const withCDN = (url) => {
@@ -65,6 +68,18 @@ const LessonDetailModal = ({ isOpen, onClose, lesson, role = "tutor" }) => {
     onOpenChange: onVideoOpenChange,
   } = useDisclosure();
   const [videoUrl, setVideoUrl] = useState("");
+
+  const {
+    isOpen: isSummaryOpen,
+    onOpen: onSummaryOpen,
+    onClose: onSummaryClose,
+  } = useDisclosure();
+
+  const {
+    isOpen: isQuizOpen,
+    onOpen: onQuizOpen,
+    onClose: onQuizClose,
+  } = useDisclosure();
 
   useEffect(() => {
     if (!lesson || !isOpen) {
@@ -122,10 +137,15 @@ const LessonDetailModal = ({ isOpen, onClose, lesson, role = "tutor" }) => {
   };
 
   const getMeetingStatusInfo = (l) => {
-    if (l.meetingStatus === "waiting")
+    if (l.meetingStatus === "Waiting")
       return {
         label: t("tutorDashboard.schedule.meetingWaiting"),
         color: colors.state.warning,
+      };
+    if (l.meetingStatus === "InProgress")
+      return {
+        label: t("tutorDashboard.schedule.meetingInProgress"),
+        color: colors.state.success,
       };
     if (l.meetingStatus === "Ended")
       return {
@@ -136,7 +156,7 @@ const LessonDetailModal = ({ isOpen, onClose, lesson, role = "tutor" }) => {
   };
 
   const canJoinLesson = (l) =>
-    l.status === "Scheduled" || l.status === "InProgress";
+    l.meetingStatus === "Waiting" && l.status !== "Completed";
 
   const studentFullName = (l) =>
     [l.studentFirstName, l.studentLastName].filter(Boolean).join(" ");
@@ -500,6 +520,74 @@ const LessonDetailModal = ({ isOpen, onClose, lesson, role = "tutor" }) => {
                   </Button>
                 </div>
               )}
+
+              {/* Lesson Summary + Quiz — side by side */}
+              {(lesson.lessonScript?.summarizeText ||
+                lesson.lessonScript?.id) && (
+                <div className="grid grid-cols-2 gap-3">
+                  {lesson.lessonScript?.summarizeText && (
+                    <div
+                      className="flex flex-col items-center gap-2 p-3 rounded-xl cursor-pointer hover:opacity-80 transition-opacity text-center"
+                      style={{
+                        backgroundColor: `${colors.primary.main}10`,
+                        border: `1px solid ${colors.primary.main}25`,
+                      }}
+                      role="button"
+                      tabIndex={0}
+                      onClick={onSummaryOpen}
+                      onKeyDown={(e) => e.key === "Enter" && onSummaryOpen()}
+                    >
+                      <div
+                        className="w-9 h-9 rounded-lg flex items-center justify-center"
+                        style={{ backgroundColor: `${colors.primary.main}20` }}
+                      >
+                        <FileText
+                          weight="duotone"
+                          className="w-4 h-4"
+                          style={{ color: colors.primary.main }}
+                        />
+                      </div>
+                      <p
+                        className="text-xs font-semibold"
+                        style={{ color: colors.text.primary }}
+                      >
+                        {t("tutorDashboard.schedule.lessonSummary")}
+                      </p>
+                    </div>
+                  )}
+
+                  {lesson.lessonScript?.id && (
+                    <div
+                      className="flex flex-col items-center gap-2 p-3 rounded-xl cursor-pointer hover:opacity-80 transition-opacity text-center"
+                      style={{
+                        backgroundColor: `${colors.state.warning}10`,
+                        border: `1px solid ${colors.state.warning}25`,
+                      }}
+                      role="button"
+                      tabIndex={0}
+                      onClick={onQuizOpen}
+                      onKeyDown={(e) => e.key === "Enter" && onQuizOpen()}
+                    >
+                      <div
+                        className="w-9 h-9 rounded-lg flex items-center justify-center"
+                        style={{ backgroundColor: `${colors.state.warning}20` }}
+                      >
+                        <Exam
+                          weight="duotone"
+                          className="w-4 h-4"
+                          style={{ color: colors.state.warning }}
+                        />
+                      </div>
+                      <p
+                        className="text-xs font-semibold"
+                        style={{ color: colors.text.primary }}
+                      >
+                        {t("tutorDashboard.schedule.lessonQuiz")}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
             </ModalBody>
             <ModalFooter>
               <Button variant="light" onPress={onClose}>
@@ -531,6 +619,18 @@ const LessonDetailModal = ({ isOpen, onClose, lesson, role = "tutor" }) => {
         isOpen={isVideoOpen}
         onOpenChange={onVideoOpenChange}
         videoUrl={videoUrl}
+      />
+
+      <LessonSummaryModal
+        isOpen={isSummaryOpen}
+        onClose={onSummaryClose}
+        summarizeText={lesson?.lessonScript?.summarizeText}
+      />
+
+      <LessonQuizModal
+        isOpen={isQuizOpen}
+        onClose={onQuizClose}
+        lessonScriptId={lesson?.lessonScript?.id}
       />
     </>
   );

@@ -352,4 +352,11 @@ export const coursesApi = {
     const response = await axiosInstance.delete(`/categories/${categoryId}`);
     return response.data;
   },
+
+  // ==================== LESSON SCRIPT ====================
+  // Generate quiz from lesson script
+  generateQuiz: async (lessonScriptId) => {
+    const response = await axiosInstance.post(`/lesson-scripts/${lessonScriptId}/generate-quiz`);
+    return response.data;
+  },
 };
