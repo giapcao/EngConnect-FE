@@ -136,7 +136,7 @@ const DashboardLayout = () => {
               <LanguageSwitcher />
             </div>
 
-            {/* Notifications */}
+            {/* Notifications
             <Badge content="3" color="danger" shape="circle" size="sm">
               <Button
                 isIconOnly
@@ -149,7 +149,7 @@ const DashboardLayout = () => {
                   style={{ color: colors.text.secondary }}
                 />
               </Button>
-            </Badge>
+            </Badge> */}
 
             {/* User Menu */}
             <Dropdown

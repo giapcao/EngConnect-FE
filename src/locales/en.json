@@ -6,7 +6,8 @@
     "confirm": "Confirm",
     "delete": "Delete",
     "close": "Close",
-    "back": "Back"
+    "back": "Back",
+    "add": "Add"
   },
   "brand": {
     "name": "EngConnect"
@@ -1479,7 +1480,11 @@
         "fieldType": "Resource Type",
         "fieldUrl": "URL",
         "removeTitle": "Remove Resource",
-        "removeMessage": "Are you sure you want to remove this resource from the session?"
+        "removeMessage": "Are you sure you want to remove this resource from the session?",
+        "add": "Add Resource",
+        "addTitle": "Add Resource",
+        "fieldFile": "File",
+        "noFileChosen": "No file chosen"
       },
       "courseSchedule": "Course Schedule",
       "noScheduledLessons": "No scheduled lessons for this course",

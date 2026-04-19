@@ -120,6 +120,13 @@ const CreateCourse = () => {
 
   // Step 4: Resources (per session)
   const [resources, setResources] = useState({});
+  const [existingResources, setExistingResources] = useState([]);
+  const [selectedExistingResources, setSelectedExistingResources] = useState(
+    {},
+  );
+  const [resourceSearch, setResourceSearch] = useState("");
+  const [loadingExistingResources, setLoadingExistingResources] =
+    useState(false);
   const [activeSessionForResources, setActiveSessionForResources] =
     useState(null);
 
@@ -1037,14 +1044,17 @@ const CreateCourse = () => {
 
   const loadExistingResources = async (sessionId) => {
     if (!sessionId) return;
+    setLoadingExistingResources(true);
     try {
       const res = await coursesApi.getCourseResourcesByTutor({
         CourseSessionId: sessionId,
         "page-size": 50,
       });
-      return res?.data?.items || [];
+      setExistingResources(res?.data?.items || []);
     } catch {
-      return [];
+      setExistingResources([]);
+    } finally {
+      setLoadingExistingResources(false);
     }
   };
 
@@ -1711,12 +1721,23 @@ const CreateCourse = () => {
               if (res.isSuccess) updatedForSession.push(res.data);
             }
           }
+          // Reuse selected existing resources
+          const selectedIds = selectedExistingResources[sess.id] || [];
+          for (const parentId of selectedIds) {
+            const payload = {
+              CourseSessionId: sess.id,
+              ParentResourceId: parentId,
+            };
+            const res = await coursesApi.createCourseResource(payload);
+            if (res.isSuccess) updatedForSession.push(res.data);
+          }
           if (updatedForSession.length > 0) {
             allCreatedResources[sess.id] = updatedForSession;
           }
         }
         setCreatedResources(allCreatedResources);
         setDeletedResourceIds([]);
+        setSelectedExistingResources({});
         setStep(5);
       } else {
         // CREATE mode (original flow)
@@ -1740,11 +1761,22 @@ const CreateCourse = () => {
             const res = await coursesApi.createCourseResource(payload);
             if (res.isSuccess) createdForSession.push(res.data);
           }
+          // Reuse selected existing resources
+          const selectedIds = selectedExistingResources[sess.id] || [];
+          for (const parentId of selectedIds) {
+            const payload = {
+              CourseSessionId: sess.id,
+              ParentResourceId: parentId,
+            };
+            const res = await coursesApi.createCourseResource(payload);
+            if (res.isSuccess) createdForSession.push(res.data);
+          }
           if (createdForSession.length > 0) {
             allCreatedResources[sess.id] = createdForSession;
           }
         }
         setCreatedResources(allCreatedResources);
+        setSelectedExistingResources({});
         setStep(5);
       }
     } catch (err) {
@@ -2879,7 +2911,7 @@ const CreateCourse = () => {
               <Button
                 color="success"
                 size="lg"
-                className="w-full"
+                className="w-full text-white"
                 onPress={handleSaveNewModules}
                 isLoading={savingNewModules}
                 isDisabled={savingNewModules}
@@ -3530,7 +3562,7 @@ const CreateCourse = () => {
                       <Button
                         color="success"
                         size="lg"
-                        className="w-full"
+                        className="w-full text-white"
                         onPress={handleSaveNewSessions}
                         isLoading={savingNewSessions}
                         isDisabled={savingNewSessions}
@@ -3642,6 +3674,7 @@ const CreateCourse = () => {
                               }}
                               onClick={() => {
                                 setActiveSessionForResources(sess.id);
+                                setResourceSearch("");
                                 loadExistingResources(sess.id);
                               }}
                             >
@@ -3668,6 +3701,38 @@ const CreateCourse = () => {
 
               {activeSessionForResources && (
                 <>
+                  {/* ===== REUSE EXISTING RESOURCES ===== */}
+                  <ExistingItemPicker
+                    title={t("tutorDashboard.createCourse.existingResources")}
+                    description={t(
+                      "tutorDashboard.createCourse.existingResourcesDesc",
+                    )}
+                    items={existingResources.map((r) => ({
+                      ...r,
+                      description: r.resourceType,
+                    }))}
+                    selectedIds={
+                      selectedExistingResources[activeSessionForResources] || []
+                    }
+                    onToggle={(id) =>
+                      setSelectedExistingResources((prev) => {
+                        const current = prev[activeSessionForResources] || [];
+                        return {
+                          ...prev,
+                          [activeSessionForResources]: current.includes(id)
+                            ? current.filter((x) => x !== id)
+                            : [...current, id],
+                        };
+                      })
+                    }
+                    searchValue={resourceSearch}
+                    onSearchChange={setResourceSearch}
+                    loadingItems={loadingExistingResources}
+                    searchPlaceholder={t(
+                      "tutorDashboard.createCourse.searchResources",
+                    )}
+                  />
+
                   {/* New resources for active session */}
                   {getResourcesForSession(activeSessionForResources).map(
                     (res, index) => (

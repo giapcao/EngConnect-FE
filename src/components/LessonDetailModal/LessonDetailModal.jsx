@@ -523,8 +523,10 @@ const LessonDetailModal = ({ isOpen, onClose, lesson, role = "tutor" }) => {
 
               {/* Lesson Summary + Quiz — side by side */}
               {(lesson.lessonScript?.summarizeText ||
-                lesson.lessonScript?.id) && (
-                <div className="grid grid-cols-2 gap-3">
+                (lesson.lessonScript?.id && role !== "tutor")) && (
+                <div
+                  className={`grid gap-3 ${lesson.lessonScript?.summarizeText && lesson.lessonScript?.id && role !== "tutor" ? "grid-cols-2" : "grid-cols-1"}`}
+                >
                   {lesson.lessonScript?.summarizeText && (
                     <div
                       className="flex flex-col items-center gap-2 p-3 rounded-xl cursor-pointer hover:opacity-80 transition-opacity text-center"
@@ -556,7 +558,7 @@ const LessonDetailModal = ({ isOpen, onClose, lesson, role = "tutor" }) => {
                     </div>
                   )}
 
-                  {lesson.lessonScript?.id && (
+                  {lesson.lessonScript?.id && role !== "tutor" && (
                     <div
                       className="flex flex-col items-center gap-2 p-3 rounded-xl cursor-pointer hover:opacity-80 transition-opacity text-center"
                       style={{

@@ -6,7 +6,8 @@
     "confirm": "Xác nhận",
     "delete": "Xóa",
     "close": "Đóng",
-    "back": "Quay lại"
+    "back": "Quay lại",
+    "add": "Thêm"
   },
   "brand": {
     "name": "EngConnect"
@@ -1477,7 +1478,11 @@
         "fieldType": "Loại tài liệu",
         "fieldUrl": "URL",
         "removeTitle": "Xóa tài liệu",
-        "removeMessage": "Bạn có chắc muốn xóa tài liệu này khỏi buổi học không?"
+        "removeMessage": "Bạn có chắc muốn xóa tài liệu này khỏi buổi học không?",
+        "add": "Thêm tài liệu",
+        "addTitle": "Thêm tài liệu",
+        "fieldFile": "Tệp",
+        "noFileChosen": "Chưa chọn tệp"
       },
       "courseSchedule": "Lịch học",
       "noScheduledLessons": "Chưa có buổi học nào được lên lịch",

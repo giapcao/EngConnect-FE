@@ -48,6 +48,7 @@ import {
   ArrowSquareOut,
   Target,
   ArrowRightIcon,
+  Plus,
 } from "@phosphor-icons/react";
 import { coursesApi, tutorApi, studentApi } from "../../../api";
 import useInputStyles from "../../../hooks/useInputStyles";
@@ -96,6 +97,14 @@ const TutorCourseDetail = () => {
   const [savingResource, setSavingResource] = useState(false);
   const [removeResourceId, setRemoveResourceId] = useState(null);
   const [removingResource, setRemovingResource] = useState(false);
+  const [addResourceModal, setAddResourceModal] = useState(false);
+  const [addResourceSessionId, setAddResourceSessionId] = useState(null);
+  const [addResourceData, setAddResourceData] = useState({
+    title: "",
+    resourceType: "",
+    file: null,
+  });
+  const [addingResource, setAddingResource] = useState(false);
 
   // Schedule state
   const [courseLessons, setCourseLessons] = useState([]);
@@ -232,6 +241,43 @@ const TutorCourseDetail = () => {
       // silent
     } finally {
       setRemovingResource(false);
+    }
+  };
+
+  const openAddResource = (sessionId) => {
+    setAddResourceSessionId(sessionId);
+    setAddResourceData({ title: "", resourceType: "", file: null });
+    setAddResourceModal(true);
+  };
+
+  const handleAddResource = async () => {
+    if (!addResourceSessionId || !addResourceData.title.trim()) return;
+    setAddingResource(true);
+    try {
+      const payload = {
+        CourseSessionId: addResourceSessionId,
+        Title: addResourceData.title,
+        ResourceType: addResourceData.resourceType,
+      };
+      if (addResourceData.file) {
+        payload.ResourceFile = addResourceData.file;
+        payload.ResourceFileName = addResourceData.file.name;
+      }
+      const res = await coursesApi.createCourseResource(payload);
+      if (res.isSuccess) {
+        setSessionResources((prev) => ({
+          ...prev,
+          [addResourceSessionId]: [
+            ...(prev[addResourceSessionId] || []),
+            res.data,
+          ],
+        }));
+        setAddResourceModal(false);
+      }
+    } catch {
+      // silent
+    } finally {
+      setAddingResource(false);
     }
   };
 
@@ -1042,9 +1088,51 @@ const TutorCourseDetail = () => {
                                                               }}
                                                             />
                                                           </a>
+                                                          <button
+                                                            type="button"
+                                                            className="flex-shrink-0 p-0.5 rounded hover:opacity-70 transition-opacity"
+                                                            title={t(
+                                                              "courses.detail.resources.remove",
+                                                            )}
+                                                            onClick={() =>
+                                                              setRemoveResourceId(
+                                                                res.id,
+                                                              )
+                                                            }
+                                                          >
+                                                            <Trash
+                                                              size={13}
+                                                              style={{
+                                                                color:
+                                                                  colors.state
+                                                                    .error,
+                                                              }}
+                                                            />
+                                                          </button>
                                                         </div>
                                                       ))
                                                     )}
+                                                    {/* Add Resource button */}
+                                                    <Button
+                                                      variant="light"
+                                                      size="sm"
+                                                      className="text-xs"
+                                                      style={{
+                                                        color:
+                                                          colors.primary.main,
+                                                      }}
+                                                      onClick={() =>
+                                                        openAddResource(sessId)
+                                                      }
+                                                    >
+                                                      <Plus
+                                                        size={12}
+                                                        weight="bold"
+                                                      />
+                                                      {t(
+                                                        "courses.detail.resources.add",
+                                                      )}
+                                                    </Button>
                                                   </div>
                                                 )}
                                               </div>
@@ -1641,6 +1729,107 @@ const TutorCourseDetail = () => {
                   onPress={handleRemoveResource}
                 >
                   {t("common.remove")}
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
+
+      {/* Add Resource Modal */}
+      <Modal
+        isOpen={addResourceModal}
+        onOpenChange={setAddResourceModal}
+        size="md"
+      >
+        <ModalContent style={{ backgroundColor: colors.background.light }}>
+          {(onClose) => (
+            <>
+              <ModalHeader style={{ color: colors.text.primary }}>
+                {t("courses.detail.resources.addTitle")}
+              </ModalHeader>
+              <ModalBody className="space-y-4">
+                <Input
+                  label={t("courses.detail.resources.fieldTitle")}
+                  value={addResourceData.title}
+                  onValueChange={(v) =>
+                    setAddResourceData((prev) => ({ ...prev, title: v }))
+                  }
+                  classNames={inputClassNames}
+                  isRequired
+                />
+                <Select
+                  label={t("courses.detail.resources.fieldType")}
+                  classNames={selectClassNames}
+                  selectedKeys={
+                    addResourceData.resourceType
+                      ? [addResourceData.resourceType]
+                      : []
+                  }
+                  onSelectionChange={(keys) =>
+                    setAddResourceData((prev) => ({
+                      ...prev,
+                      resourceType: [...keys][0] || "",
+                    }))
+                  }
+                >
+                  {["PDF", "Video", "Link", "Audio", "Image", "Document"].map(
+                    (type) => (
+                      <SelectItem key={type}>{type}</SelectItem>
+                    ),
+                  )}
+                </Select>
+                <div>
+                  <p
+                    className="text-sm font-medium mb-2"
+                    style={{ color: colors.text.primary }}
+                  >
+                    {t("courses.detail.resources.fieldFile")}
+                  </p>
+                  <label
+                    className="flex items-center gap-3 p-3 rounded-xl border-2 border-dashed cursor-pointer"
+                    style={{ borderColor: colors.border.light }}
+                  >
+                    <FileText
+                      className="w-5 h-5"
+                      style={{ color: colors.text.tertiary }}
+                    />
+                    <span
+                      className="text-sm"
+                      style={{ color: colors.text.secondary }}
+                    >
+                      {addResourceData.file
+                        ? addResourceData.file.name
+                        : t("courses.detail.resources.noFileChosen")}
+                    </span>
+                    <input
+                      type="file"
+                      className="hidden"
+                      onChange={(e) =>
+                        setAddResourceData((prev) => ({
+                          ...prev,
+                          file: e.target.files?.[0] || null,
+                        }))
+                      }
+                    />
+                  </label>
+                </div>
+              </ModalBody>
+              <ModalFooter>
+                <Button variant="flat" onPress={onClose}>
+                  {t("common.cancel")}
+                </Button>
+                <Button
+                  color="primary"
+                  isLoading={addingResource}
+                  isDisabled={!addResourceData.title.trim()}
+                  onPress={handleAddResource}
+                  style={{
+                    backgroundColor: colors.primary.main,
+                    color: colors.text.white,
+                  }}
+                >
+                  {t("common.add")}
                 </Button>
               </ModalFooter>
             </>
