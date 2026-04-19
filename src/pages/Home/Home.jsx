@@ -547,7 +547,11 @@ const Home = () => {
             >
               {featuredCourses.map((course) => (
                 <motion.div key={course.id} variants={itemVariants}>
-                  <CourseCard course={course} showTutorInfo={false} />
+                  <CourseCard
+                    course={course}
+                    showTutorInfo={true}
+                    showCategory={true}
+                  />
                 </motion.div>
               ))}
             </motion.div>

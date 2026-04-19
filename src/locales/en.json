@@ -561,6 +561,9 @@
         "streak": "Day Streak"
       },
       "upcomingLessons": "Upcoming Lessons",
+      "noUpcomingLessons": "No upcoming lessons",
+      "today": "Today",
+      "tomorrow": "Tomorrow",
       "coursesInProgress": "Courses In Progress",
       "weeklyGoal": "Weekly Goal",
       "recentAchievements": "Recent Achievements",
@@ -813,13 +816,16 @@
         "monthlyEarnings": "This Month"
       },
       "upcomingLessons": "Upcoming Lessons",
+      "noUpcomingLessons": "No upcoming lessons",
+      "today": "Today",
+      "tomorrow": "Tomorrow",
       "recentStudents": "Recent Students",
       "yourRating": "Your Rating",
       "basedOn": "based on",
       "reviews": "reviews",
       "recentReviews": "Recent Reviews",
       "viewAll": "View All",
-      "join": "Join"
+      "start": "Start"
     },
     "myCourses": {
       "title": "My Courses",
@@ -1433,6 +1439,7 @@
       "reviews": "reviews",
       "off": "OFF",
       "enrollNow": "Enroll Now",
+      "alreadyEnrolled": "View My Learning",
       "viewMyCourse": "View My Courses",
       "backToCourses": "Back to Courses",
       "notFound": "Course not found",

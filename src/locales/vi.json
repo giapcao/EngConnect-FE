@@ -559,6 +559,9 @@
         "streak": "Ngày liên tiếp"
       },
       "upcomingLessons": "Buổi học sắp tới",
+      "noUpcomingLessons": "Không có buổi học sắp tới",
+      "today": "Hôm nay",
+      "tomorrow": "Ngày mai",
       "coursesInProgress": "Khóa học đang học",
       "weeklyGoal": "Mục tiêu tuần",
       "recentAchievements": "Thành tích gần đây",
@@ -811,13 +814,16 @@
         "monthlyEarnings": "Tháng này"
       },
       "upcomingLessons": "Buổi học sắp tới",
+      "noUpcomingLessons": "Không có buổi học sắp tới",
+      "today": "Hôm nay",
+      "tomorrow": "Ngày mai",
       "recentStudents": "Học viên gần đây",
       "yourRating": "Đánh giá của bạn",
       "basedOn": "dựa trên",
       "reviews": "đánh giá",
       "recentReviews": "Đánh giá gần đây",
       "viewAll": "Xem tất cả",
-      "join": "Tham gia"
+      "start": "Bắt đầu"
     },
     "myCourses": {
       "title": "Khóa học của tôi",
@@ -1431,6 +1437,7 @@
       "reviews": "đánh giá",
       "off": "GIẢM",
       "enrollNow": "Đăng ký ngay",
+      "alreadyEnrolled": "Xem bài học của tôi",
       "viewMyCourse": "Xem khóa học của tôi",
       "backToCourses": "Quay lại khóa học",
       "notFound": "Không tìm thấy khóa học",

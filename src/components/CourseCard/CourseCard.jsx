@@ -1,4 +1,11 @@
-import { Card, CardBody, CardFooter, Chip, Button } from "@heroui/react";
+import {
+  Card,
+  CardBody,
+  CardFooter,
+  Chip,
+  Button,
+  Avatar,
+} from "@heroui/react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useThemeColors } from "../../hooks/useThemeColors";
@@ -101,20 +108,33 @@ const CourseCard = ({
           )}
         </div>
         <h3
-          className="font-semibold mb-2 line-clamp-2 min-h-[48px]"
+          className="font-semibold line-clamp-2 min-h-[40px]"
           style={{ color: colors.text.primary }}
         >
           {course.title}
         </h3>
-        {showTutorInfo && course.tutor && (
+        {showTutorInfo && (course.tutorFirstName || course.tutorLastName) && (
           <div className="flex items-center gap-2 mb-3">
-            <p className="text-sm" style={{ color: colors.text.secondary }}>
-              {course.tutor}
+            <Avatar
+              src={course.tutorAvatar}
+              name={[course.tutorFirstName, course.tutorLastName]
+                .filter(Boolean)
+                .join(" ")}
+              size="sm"
+              className="w-8 h-8 flex-shrink-0"
+            />
+            <p
+              className="text-sm truncate"
+              style={{ color: colors.text.secondary }}
+            >
+              {[course.tutorFirstName, course.tutorLastName]
+                .filter(Boolean)
+                .join(" ")}
             </p>
           </div>
         )}
         <div
-          className="flex items-center gap-3 text-sm mb-3"
+          className="flex items-center gap-3 text-sm"
           style={{ color: colors.text.secondary }}
         >
           <span className="flex items-center gap-1">

@@ -1,4 +1,6 @@
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardBody, Button, Avatar, Progress, Image } from "@heroui/react";
+import UpcomingLessonsSkeleton from "../../../components/UpcomingLessonsSkeleton/UpcomingLessonsSkeleton";
 import { useTranslation } from "react-i18next";
 import { useThemeColors } from "../../../hooks/useThemeColors";
 import { motion } from "framer-motion";
@@ -15,15 +17,68 @@ import {
   Star,
 } from "@phosphor-icons/react";
 import IllustrationImage from "../../../assets/illustrations/morning.avif";
+import calendarIllustration from "../../../assets/illustrations/calendar.avif";
 import { useSelector } from "react-redux";
 import { selectUser } from "../../../store";
 import { useNavigate } from "react-router-dom";
+import { studentApi } from "../../../api";
+
+const CDN_BASE = "https://d20854st1o56hw.cloudfront.net/";
+const withCDN = (url) => {
+  if (!url) return undefined;
+  if (url.startsWith("http")) return url;
+  return CDN_BASE + url;
+};
 
 const Dashboard = () => {
   const { t } = useTranslation();
   const colors = useThemeColors();
   const user = useSelector(selectUser);
   const navigate = useNavigate();
+
+  const [upcomingLessons, setUpcomingLessons] = useState([]);
+  const [lessonsLoading, setLessonsLoading] = useState(true);
+
+  const fetchUpcomingLessons = useCallback(async () => {
+    if (!user?.studentId) return;
+    try {
+      setLessonsLoading(true);
+      const res = await studentApi.getLessons({
+        StudentId: user.studentId,
+        Status: "Scheduled",
+        "page-size": 5,
+        "sort-params": "StartTime",
+      });
+      setUpcomingLessons(res?.data?.items || []);
+    } catch (err) {
+      console.error("Failed to fetch upcoming lessons:", err);
+    } finally {
+      setLessonsLoading(false);
+    }
+  }, [user?.studentId]);
+
+  useEffect(() => {
+    fetchUpcomingLessons();
+  }, [fetchUpcomingLessons]);
+
+  const formatLessonTime = (dateStr) => {
+    if (!dateStr) return "";
+    const d = new Date(dateStr);
+    return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  };
+
+  const formatLessonDate = (dateStr) => {
+    if (!dateStr) return "";
+    const d = new Date(dateStr);
+    const now = new Date();
+    const tomorrow = new Date(now);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    if (d.toDateString() === now.toDateString())
+      return t("studentDashboard.dashboard.today");
+    if (d.toDateString() === tomorrow.toDateString())
+      return t("studentDashboard.dashboard.tomorrow");
+    return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  };
 
   const stats = [
     {
@@ -53,36 +108,6 @@ const Dashboard = () => {
       value: "7",
       color: colors.state.error,
       bg: `${colors.state.error}20`,
-    },
-  ];
-
-  const upcomingLessons = [
-    {
-      id: 1,
-      title: "Business English - Meeting Skills",
-      tutor: "Sarah Johnson",
-      tutorAvatar: "https://i.pravatar.cc/150?u=tutor1",
-      time: "10:00 AM",
-      date: "Today",
-      duration: "45 min",
-    },
-    {
-      id: 2,
-      title: "IELTS Writing Task 2",
-      tutor: "Michael Chen",
-      tutorAvatar: "https://i.pravatar.cc/150?u=tutor2",
-      time: "2:00 PM",
-      date: "Today",
-      duration: "60 min",
-    },
-    {
-      id: 3,
-      title: "Conversational English",
-      tutor: "Emma Wilson",
-      tutorAvatar: "https://i.pravatar.cc/150?u=tutor3",
-      time: "9:00 AM",
-      date: "Tomorrow",
-      duration: "30 min",
     },
   ];
 
@@ -278,45 +303,74 @@ const Dashboard = () => {
                 </div>
 
                 <div className="space-y-3">
-                  {upcomingLessons.map((lesson) => (
-                    <div
-                      key={lesson.id}
-                      className="flex items-center justify-between p-3 rounded-xl"
-                      style={{ backgroundColor: colors.background.gray }}
-                    >
-                      <div className="flex items-center gap-3">
-                        <Avatar
-                          src={lesson.tutorAvatar}
-                          size="md"
-                          className="flex-shrink-0"
-                        />
-                        <div>
-                          <p
-                            className="font-medium"
-                            style={{ color: colors.text.primary }}
-                          >
-                            {lesson.title}
-                          </p>
-                          <p
-                            className="text-sm"
-                            style={{ color: colors.text.secondary }}
-                          >
-                            {lesson.tutor} • {lesson.date}, {lesson.time}
-                          </p>
-                        </div>
-                      </div>
-                      <Button
-                        isIconOnly
-                        radius="full"
-                        style={{
-                          backgroundColor: colors.primary.main,
-                          color: colors.text.white,
-                        }}
+                  {lessonsLoading ? (
+                    <UpcomingLessonsSkeleton />
+                  ) : upcomingLessons.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-6">
+                      <img
+                        src={calendarIllustration}
+                        alt="No lessons"
+                        draggable={false}
+                        className="w-48 h-38 object-contain"
+                      />
+                      <p
+                        className="text-sm"
+                        style={{ color: colors.text.secondary }}
                       >
-                        <Play weight="fill" className="w-4 h-4" />
-                      </Button>
+                        {t("studentDashboard.dashboard.noUpcomingLessons")}
+                      </p>
                     </div>
-                  ))}
+                  ) : (
+                    upcomingLessons.map((lesson) => (
+                      <div
+                        key={lesson.id}
+                        className="flex items-center justify-between p-3 rounded-xl"
+                        style={{ backgroundColor: colors.background.gray }}
+                      >
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                          <Avatar
+                            src={withCDN(lesson.tutorAvatar)}
+                            name={[lesson.tutorFirstName, lesson.tutorLastName]
+                              .filter(Boolean)
+                              .join(" ")}
+                            size="md"
+                            className="flex-shrink-0"
+                          />
+                          <div className="min-w-0">
+                            <p
+                              className="font-medium truncate"
+                              style={{ color: colors.text.primary }}
+                            >
+                              {lesson.courseTitle || lesson.sessionTitle}
+                            </p>
+                            <p
+                              className="text-sm truncate"
+                              style={{ color: colors.text.secondary }}
+                            >
+                              {[lesson.tutorFirstName, lesson.tutorLastName]
+                                .filter(Boolean)
+                                .join(" ")}{" "}
+                              • {formatLessonDate(lesson.startTime)},{" "}
+                              {formatLessonTime(lesson.startTime)}
+                            </p>
+                          </div>
+                        </div>
+                        {lesson.meetingStatus === "Waiting" && (
+                          <Button
+                            isIconOnly
+                            radius="full"
+                            style={{
+                              backgroundColor: colors.primary.main,
+                              color: colors.text.white,
+                            }}
+                            onPress={() => navigate(`/meeting/${lesson.id}`)}
+                          >
+                            <Play weight="fill" className="w-4 h-4" />
+                          </Button>
+                        )}
+                      </div>
+                    ))
+                  )}
                 </div>
               </CardBody>
             </Card>

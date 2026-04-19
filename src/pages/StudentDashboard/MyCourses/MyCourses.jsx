@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useSelector } from "react-redux";
 import { selectUser } from "../../../store";
-import { studentApi } from "../../../api";
+import { coursesApi } from "../../../api";
 import { Input, Spinner, Chip, Tabs, Tab } from "@heroui/react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -26,43 +26,48 @@ const MyCourses = () => {
   const fetchCourses = useCallback(async () => {
     try {
       setLoading(true);
-      const params = { "page-size": 50 };
+      const params = {
+        "page-size": 50,
+        StudentId: user?.studentId,
+        Status: selectedTab === "all" ? "InProgress, Completed" : selectedTab,
+      };
       if (searchQuery.trim()) params["search-term"] = searchQuery.trim();
-      if (selectedTab !== "all") params.Status = selectedTab;
-      const res = await studentApi.getMyCoursesStudent(params);
-      setCourses(res?.data?.items || []);
+      const res = await coursesApi.getAllCourseEnrollments(params);
+      const items = (res?.data?.items || []).map((enrollment) => ({
+        ...enrollment.course,
+        enrollmentStatus: enrollment.status,
+        enrolledAt: enrollment.enrolledAt,
+        expiredAt: enrollment.expiredAt,
+      }));
+      setCourses(items);
     } catch (err) {
       console.error("Failed to fetch courses:", err);
     } finally {
       setLoading(false);
     }
-  }, [searchQuery, selectedTab]);
+  }, [user?.studentId, searchQuery, selectedTab]);
 
   useEffect(() => {
     fetchCourses();
   }, [fetchCourses]);
 
   const getStatusColor = (status) => {
-    switch (status?.toLowerCase()) {
-      case "active":
+    switch (status) {
+      case "InProgress":
         return colors.state.success;
-      case "completed":
+      case "Completed":
         return colors.state.info;
-      case "pending":
-        return colors.state.warning;
       default:
         return colors.text.secondary;
     }
   };
 
   const getStatusLabel = (status) => {
-    switch (status?.toLowerCase()) {
-      case "active":
-        return t("studentDashboard.myCourses.active");
-      case "completed":
+    switch (status) {
+      case "InProgress":
+        return t("studentDashboard.myCourses.inProgress");
+      case "Completed":
         return t("studentDashboard.myCourses.completed");
-      case "pending":
-        return t("studentDashboard.myCourses.pending");
       default:
         return status || "";
     }
@@ -116,7 +121,10 @@ const MyCourses = () => {
           classNames={{ tabList: "gap-2", tab: "px-4" }}
         >
           <Tab key="all" title={t("studentDashboard.myCourses.all")} />
-          <Tab key="Active" title={t("studentDashboard.myCourses.active")} />
+          <Tab
+            key="InProgress"
+            title={t("studentDashboard.myCourses.inProgress")}
+          />
           <Tab
             key="Completed"
             title={t("studentDashboard.myCourses.completed")}
@@ -183,10 +191,10 @@ const MyCourses = () => {
                 variant="compact"
                 basePath="/student/courses"
                 statusBadge={
-                  course.status
+                  course.enrollmentStatus
                     ? {
-                        label: getStatusLabel(course.status),
-                        color: getStatusColor(course.status),
+                        label: getStatusLabel(course.enrollmentStatus),
+                        color: getStatusColor(course.enrollmentStatus),
                       }
                     : null
                 }

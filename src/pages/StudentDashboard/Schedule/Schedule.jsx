@@ -8,7 +8,6 @@ import {
   CardBody,
   Button,
   Chip,
-  Spinner,
   Select,
   SelectItem,
   Avatar,
@@ -16,6 +15,7 @@ import {
   Tab,
   useDisclosure,
 } from "@heroui/react";
+import ScheduleSkeleton from "../../../components/ScheduleSkeleton/ScheduleSkeleton";
 import { useTranslation } from "react-i18next";
 import { useThemeColors } from "../../../hooks/useThemeColors";
 import useInputStyles from "../../../hooks/useInputStyles";
@@ -337,9 +337,7 @@ const Schedule = () => {
         transition={{ duration: 0.15 }}
       >
         {loading ? (
-          <div className="flex justify-center py-12">
-            <Spinner size="lg" />
-          </div>
+          <ScheduleSkeleton />
         ) : lessons.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-4 py-8">
             <img

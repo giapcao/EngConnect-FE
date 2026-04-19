@@ -53,9 +53,9 @@ export const coursesApi = {
     return response.data;
   },
 
-  // Get course by ID
-  getCourseById: async (courseId) => {
-    const response = await axiosInstance.get(`/courses/${courseId}`);
+  // Get course by ID (pass studentId to check enrollment status)
+  getCourseById: async (courseId, params = {}) => {
+    const response = await axiosInstance.get(`/courses/${courseId}`, { params });
     return response.data;
   },
 

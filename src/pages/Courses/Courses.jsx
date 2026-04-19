@@ -648,7 +648,7 @@ const Courses = () => {
                       <CourseCard
                         course={course}
                         showCategory={true}
-                        showTutorInfo={false}
+                        showTutorInfo={true}
                         style={{ backgroundColor: colors.background.gray }}
                       />
                     </motion.div>

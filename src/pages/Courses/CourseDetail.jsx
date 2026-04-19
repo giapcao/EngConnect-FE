@@ -58,6 +58,7 @@ const CourseDetail = () => {
 
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isEnrolled, setIsEnrolled] = useState(false);
   const [expandedModules, setExpandedModules] = useState({});
   const [tutorInfo, setTutorInfo] = useState(null);
   const [videoOpen, setVideoOpen] = useState(false);
@@ -71,8 +72,10 @@ const CourseDetail = () => {
     const fetchCourse = async () => {
       try {
         setLoading(true);
-        const res = await coursesApi.getCourseById(id);
+        const params = user?.studentId ? { studentId: user.studentId } : {};
+        const res = await coursesApi.getCourseById(id, params);
         setCourse(res.data);
+        setIsEnrolled(res.data?.isEnrollment === true);
         if (res.data?.tutorId) {
           try {
             const tutorRes = await tutorApi.getTutorById(res.data.tutorId);
@@ -776,6 +779,21 @@ const CourseDetail = () => {
                         onPress={() => navigate("/tutor/my-courses")}
                       >
                         {t("courses.detail.viewMyCourse")}
+                      </Button>
+                    ) : isEnrolled ? (
+                      <Button
+                        size="lg"
+                        className="w-full font-semibold text-base"
+                        variant="flat"
+                        style={{
+                          backgroundColor: colors.background.primaryLight,
+                          color: colors.primary.main,
+                        }}
+                        onPress={() =>
+                          navigate(`/student/courses/${course.id}`)
+                        }
+                      >
+                        {t("courses.detail.alreadyEnrolled")}
                       </Button>
                     ) : (
                       <Button
