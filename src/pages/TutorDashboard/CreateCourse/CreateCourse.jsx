@@ -43,6 +43,7 @@ import {
   FloppyDisk,
   X,
   Eye,
+  ArrowSquareOut,
 } from "@phosphor-icons/react";
 import { coursesApi } from "../../../api";
 
@@ -167,6 +168,11 @@ const CreateCourse = () => {
     useState(null);
   const [createdSessionSnapshot, setCreatedSessionSnapshot] = useState(null);
 
+  // Inline edit for existing resources (step 4)
+  const [editingResourceKey, setEditingResourceKey] = useState(null); // "sessionId|index"
+  const [resourceSnapshot, setResourceSnapshot] = useState(null);
+  const [savingResource, setSavingResource] = useState(false);
+
   // Version history
   const [historyOpen, setHistoryOpen] = useState(false);
   const [historyData, setHistoryData] = useState(null);
@@ -178,6 +184,11 @@ const CreateCourse = () => {
   const [detailOpen, setDetailOpen] = useState(false);
   const [detailData, setDetailData] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
+
+  // Resource detail preview
+  const [resourceDetailOpen, setResourceDetailOpen] = useState(false);
+  const [resourceDetailData, setResourceDetailData] = useState(null);
+  const [resourceDetailLoading, setResourceDetailLoading] = useState(false);
 
   // Load categories on mount
   useEffect(() => {
@@ -299,14 +310,37 @@ const CreateCourse = () => {
           } else {
             // Has sessions → load them and start at step 4 (resources)
             setCreatedSessions(allSessions);
+            const allSess = Object.values(allSessions).flat();
             const resMap = {};
-            Object.values(allSessions)
-              .flat()
-              .forEach((s) => {
+            const createdResMap = {};
+            for (const s of allSess) {
+              try {
+                const rRes = await coursesApi.getAllCourseResources({
+                  CourseSessionId: s.id,
+                  "page-size": 100,
+                });
+                if (rRes.isSuccess && rRes.data?.items?.length > 0) {
+                  const items = rRes.data.items;
+                  resMap[s.id] = items.map((r) => ({
+                    id: r.id,
+                    title: r.title || "",
+                    resourceType: r.resourceType || "",
+                    url: r.url || "",
+                    file: null,
+                  }));
+                  createdResMap[s.id] = items;
+                } else {
+                  resMap[s.id] = [];
+                }
+              } catch {
                 resMap[s.id] = [];
-              });
+              }
+            }
             setResources(resMap);
-            const firstSession = Object.values(allSessions).flat()[0];
+            if (Object.keys(createdResMap).length > 0) {
+              setCreatedResources(createdResMap);
+            }
+            const firstSession = allSess[0];
             if (firstSession) {
               setActiveSessionForResources(firstSession.id);
               loadExistingResources(firstSession.id);
@@ -612,6 +646,54 @@ const CreateCourse = () => {
       });
     } finally {
       setSavingSession(false);
+    }
+  };
+
+  // Inline edit handlers for existing resources
+  const startEditResource = (sessionId, index) => {
+    const resArr = resources[sessionId] || [];
+    setEditingResourceKey(`${sessionId}|${index}`);
+    setResourceSnapshot({ ...resArr[index] });
+  };
+
+  const cancelEditResource = () => {
+    if (resourceSnapshot && editingResourceKey) {
+      const lastPipe = editingResourceKey.lastIndexOf("|");
+      const sessionId = editingResourceKey.slice(0, lastPipe);
+      const index = Number.parseInt(editingResourceKey.slice(lastPipe + 1), 10);
+      setResources((prev) => {
+        const arr = [...(prev[sessionId] || [])];
+        arr[index] = resourceSnapshot;
+        return { ...prev, [sessionId]: arr };
+      });
+    }
+    setEditingResourceKey(null);
+    setResourceSnapshot(null);
+  };
+
+  const saveEditResource = async (sessionId, index) => {
+    const res = (resources[sessionId] || [])[index];
+    if (!res?.id) return;
+    setSavingResource(true);
+    try {
+      await coursesApi.updateCourseResource(res.id, {
+        title: res.title,
+        resourceType: res.resourceType,
+      });
+      setEditingResourceKey(null);
+      setResourceSnapshot(null);
+      addToast({
+        title: t("tutorDashboard.createCourse.resourceSaved"),
+        color: "success",
+      });
+    } catch (err) {
+      console.error("Failed to save resource:", err);
+      addToast({
+        title: t("tutorDashboard.createCourse.error.createFailed"),
+        color: "danger",
+      });
+    } finally {
+      setSavingResource(false);
     }
   };
 
@@ -1010,6 +1092,23 @@ const CreateCourse = () => {
     }
   };
 
+  // View resource detail
+  const handleViewResourceDetail = async (resourceId) => {
+    setResourceDetailOpen(true);
+    setResourceDetailLoading(true);
+    setResourceDetailData(null);
+    try {
+      const res = await coursesApi.getCourseResourceById(resourceId);
+      if (res?.isSuccess) {
+        setResourceDetailData(res.data);
+      }
+    } catch (err) {
+      console.error("Failed to load resource detail:", err);
+    } finally {
+      setResourceDetailLoading(false);
+    }
+  };
+
   // Load existing items
   const loadExistingModules = async (courseId) => {
     setLoadingExistingModules(true);
@@ -1318,6 +1417,7 @@ const CreateCourse = () => {
           id: r.id,
           title: r.title || "",
           resourceType: r.resourceType || "",
+          url: r.url || "",
           file: null,
         }));
       });
@@ -1534,9 +1634,13 @@ const CreateCourse = () => {
       }
       // Refresh to get join-table IDs
       const mapped = await refreshCreatedModules();
+      // Also refresh sessions — reused modules may already have sessions
+      const sessionsData = await refreshCreatedSessions();
       const sessMap = {};
       mapped.forEach((m) => {
-        sessMap[m.id] = [];
+        if (!sessionsData[m.id] || sessionsData[m.id].length === 0) {
+          sessMap[m.id] = [];
+        }
       });
       setSessions((prev) => ({ ...sessMap, ...prev }));
       if (mapped.length > 0) {
@@ -1558,17 +1662,49 @@ const CreateCourse = () => {
   const handleCreateSessions = async () => {
     // Edit mode — just navigate to step 4
     if (Object.keys(createdSessions).length > 0) {
-      const resMap = {};
-      Object.values(createdSessions)
-        .flat()
-        .forEach((s) => {
-          resMap[s.id] = resources[s.id] || createdResources[s.id] || [];
-        });
-      setResources(resMap);
-      const firstSession = Object.values(createdSessions).flat()[0];
-      if (firstSession) {
-        setActiveSessionForResources(firstSession.id);
-        loadExistingResources(firstSession.id);
+      setLoading(true);
+      try {
+        const allSess = Object.values(createdSessions).flat();
+        const resMap = {};
+        const createdResMap = {};
+        for (const s of allSess) {
+          const existing = resources[s.id] || createdResources[s.id];
+          if (existing && existing.length > 0) {
+            resMap[s.id] = existing;
+          } else {
+            try {
+              const rRes = await coursesApi.getAllCourseResources({
+                CourseSessionId: s.id,
+                "page-size": 100,
+              });
+              if (rRes.isSuccess && rRes.data?.items?.length > 0) {
+                const items = rRes.data.items;
+                resMap[s.id] = items.map((r) => ({
+                  id: r.id,
+                  title: r.title || "",
+                  resourceType: r.resourceType || "",
+                  file: null,
+                }));
+                createdResMap[s.id] = items;
+              } else {
+                resMap[s.id] = [];
+              }
+            } catch {
+              resMap[s.id] = [];
+            }
+          }
+        }
+        setResources(resMap);
+        if (Object.keys(createdResMap).length > 0) {
+          setCreatedResources((prev) => ({ ...prev, ...createdResMap }));
+        }
+        const firstSession = allSess[0];
+        if (firstSession) {
+          setActiveSessionForResources(firstSession.id);
+          loadExistingResources(firstSession.id);
+        }
+      } finally {
+        setLoading(false);
       }
       setStep(4);
       return;
@@ -1656,15 +1792,38 @@ const CreateCourse = () => {
         }
       }
       // Refresh to get join-table IDs
-      await refreshCreatedSessions();
+      const sessionsData = await refreshCreatedSessions();
+      const allSess = Object.values(sessionsData).flat();
       const resMap = {};
-      Object.values(allCreatedSessions)
-        .flat()
-        .forEach((s) => {
+      const createdResMap = {};
+      for (const s of allSess) {
+        try {
+          const rRes = await coursesApi.getAllCourseResources({
+            CourseSessionId: s.id,
+            "page-size": 100,
+          });
+          if (rRes.isSuccess && rRes.data?.items?.length > 0) {
+            const items = rRes.data.items;
+            resMap[s.id] = items.map((r) => ({
+              id: r.id,
+              title: r.title || "",
+              resourceType: r.resourceType || "",
+              url: r.url || "",
+              file: null,
+            }));
+            createdResMap[s.id] = items;
+          } else {
+            resMap[s.id] = [];
+          }
+        } catch {
           resMap[s.id] = [];
-        });
+        }
+      }
       setResources((prev) => ({ ...resMap, ...prev }));
-      const firstSession = Object.values(allCreatedSessions).flat()[0];
+      if (Object.keys(createdResMap).length > 0) {
+        setCreatedResources(createdResMap);
+      }
+      const firstSession = allSess[0];
       if (firstSession) {
         setActiveSessionForResources(firstSession.id);
         loadExistingResources(firstSession.id);
@@ -1700,11 +1859,7 @@ const CreateCourse = () => {
           const updatedForSession = [];
           for (const r of sessResources) {
             if (r.id) {
-              // Update existing
-              await coursesApi.updateCourseResource(r.id, {
-                title: r.title,
-                resourceType: r.resourceType,
-              });
+              // Already saved inline — just carry forward
               updatedForSession.push(r);
             } else if (r.title.trim()) {
               // Create new
@@ -3731,137 +3886,243 @@ const CreateCourse = () => {
                     searchPlaceholder={t(
                       "tutorDashboard.createCourse.searchResources",
                     )}
+                    onViewDetail={(id) => handleViewResourceDetail(id)}
                   />
 
                   {/* New resources for active session */}
                   {getResourcesForSession(activeSessionForResources).map(
-                    (res, index) => (
-                      <Card
-                        key={index}
-                        shadow="none"
-                        style={{ backgroundColor: colors.background.light }}
-                      >
-                        <CardBody className="space-y-4 p-6">
-                          <div className="flex items-center justify-between">
-                            <h3
-                              className="text-base font-semibold"
-                              style={{ color: colors.text.primary }}
-                            >
-                              {t("tutorDashboard.createCourse.resourceNumber", {
-                                number: index + 1,
-                              })}
-                            </h3>
-                            <Button
-                              isIconOnly
-                              variant="light"
-                              color="danger"
-                              size="sm"
-                              onPress={() =>
-                                removeResource(activeSessionForResources, index)
-                              }
-                            >
-                              <Trash className="w-4 h-4" />
-                            </Button>
-                          </div>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <Input
-                              label={t(
-                                "tutorDashboard.createCourse.resourceTitle",
-                              )}
-                              placeholder={t(
-                                "tutorDashboard.createCourse.resourceTitlePlaceholder",
-                              )}
-                              labelPlacement="outside"
-                              value={res.title}
-                              onChange={(e) =>
-                                handleResourceChange(
-                                  activeSessionForResources,
-                                  index,
-                                  "title",
-                                  e.target.value,
-                                )
-                              }
-                              classNames={inputClassNames}
-                              isRequired
-                            />
-                            <Select
-                              label={t(
-                                "tutorDashboard.createCourse.resourceType",
-                              )}
-                              labelPlacement="outside"
-                              placeholder={t(
-                                "tutorDashboard.createCourse.resourceTypePlaceholder",
-                              )}
-                              selectedKeys={
-                                res.resourceType ? [res.resourceType] : []
-                              }
-                              onSelectionChange={(keys) =>
-                                handleResourceChange(
-                                  activeSessionForResources,
-                                  index,
-                                  "resourceType",
-                                  [...keys][0] || "",
-                                )
-                              }
-                              classNames={selectClassNames}
-                            >
-                              {[
-                                "Document",
-                                "Video",
-                                "Slide",
-                                "Audio",
-                                "Homework",
-                                "Exercise",
-                                "PracticeExam",
-                                "Reference",
-                                "Other",
-                              ].map((type) => (
-                                <SelectItem key={type}>{type}</SelectItem>
-                              ))}
-                            </Select>
-                          </div>
-                          <div>
-                            <p
-                              className="text-sm font-medium mb-2"
-                              style={{ color: colors.text.primary }}
-                            >
-                              {t("tutorDashboard.createCourse.resourceFile")}
-                            </p>
-                            <label
-                              className="flex items-center gap-3 p-3 rounded-xl border-2 border-dashed cursor-pointer"
-                              style={{ borderColor: colors.border.light }}
-                            >
-                              <FileIcon
-                                className="w-5 h-5"
-                                style={{ color: colors.text.tertiary }}
-                              />
-                              <span
-                                className="text-sm"
-                                style={{ color: colors.text.secondary }}
+                    (res, index) => {
+                      const resKey = `${activeSessionForResources}|${index}`;
+                      const isExisting = !!res.id;
+                      const isEditingRes = editingResourceKey === resKey;
+                      const isLocked = isExisting && !isEditingRes;
+                      return (
+                        <Card
+                          key={index}
+                          shadow="none"
+                          style={{ backgroundColor: colors.background.light }}
+                        >
+                          <CardBody className="space-y-4 p-6">
+                            <div className="flex items-center justify-between">
+                              <h3
+                                className="text-base font-semibold"
+                                style={{ color: colors.text.primary }}
                               >
-                                {res.file
-                                  ? res.file.name
-                                  : t(
-                                      "tutorDashboard.createCourse.noFileChosen",
+                                {t(
+                                  "tutorDashboard.createCourse.resourceNumber",
+                                  { number: index + 1 },
+                                )}
+                              </h3>
+                              <div className="flex items-center gap-1">
+                                {isExisting && !isEditingRes && (
+                                  <Button
+                                    isIconOnly
+                                    variant="light"
+                                    size="sm"
+                                    onPress={() =>
+                                      startEditResource(
+                                        activeSessionForResources,
+                                        index,
+                                      )
+                                    }
+                                    title={t(
+                                      "tutorDashboard.createCourse.editItem",
                                     )}
-                              </span>
-                              <input
-                                type="file"
-                                className="hidden"
+                                  >
+                                    <PencilSimple className="w-4 h-4" />
+                                  </Button>
+                                )}
+                                {isExisting && !isEditingRes && (
+                                  <Button
+                                    isIconOnly
+                                    variant="light"
+                                    color="danger"
+                                    size="sm"
+                                    onPress={() =>
+                                      removeResource(
+                                        activeSessionForResources,
+                                        index,
+                                      )
+                                    }
+                                  >
+                                    <Trash className="w-4 h-4" />
+                                  </Button>
+                                )}
+                                {isEditingRes && (
+                                  <>
+                                    <Button
+                                      size="sm"
+                                      variant="flat"
+                                      color="danger"
+                                      onPress={cancelEditResource}
+                                      startContent={<X className="w-4 h-4" />}
+                                    >
+                                      {t("tutorDashboard.createCourse.cancel")}
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      color="primary"
+                                      onPress={() =>
+                                        saveEditResource(
+                                          activeSessionForResources,
+                                          index,
+                                        )
+                                      }
+                                      isLoading={savingResource}
+                                      startContent={
+                                        !savingResource && (
+                                          <FloppyDisk className="w-4 h-4" />
+                                        )
+                                      }
+                                    >
+                                      {t(
+                                        "tutorDashboard.createCourse.saveItem",
+                                      )}
+                                    </Button>
+                                  </>
+                                )}
+                                {!isExisting && (
+                                  <Button
+                                    isIconOnly
+                                    variant="light"
+                                    color="danger"
+                                    size="sm"
+                                    onPress={() =>
+                                      removeResource(
+                                        activeSessionForResources,
+                                        index,
+                                      )
+                                    }
+                                  >
+                                    <Trash className="w-4 h-4" />
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                              <Input
+                                label={t(
+                                  "tutorDashboard.createCourse.resourceTitle",
+                                )}
+                                placeholder={t(
+                                  "tutorDashboard.createCourse.resourceTitlePlaceholder",
+                                )}
+                                labelPlacement="outside"
+                                value={res.title}
                                 onChange={(e) =>
                                   handleResourceChange(
                                     activeSessionForResources,
                                     index,
-                                    "file",
-                                    e.target.files?.[0] || null,
+                                    "title",
+                                    e.target.value,
                                   )
                                 }
+                                classNames={inputClassNames}
+                                isRequired
+                                isDisabled={isLocked}
                               />
-                            </label>
-                          </div>
-                        </CardBody>
-                      </Card>
-                    ),
+                              <Select
+                                label={t(
+                                  "tutorDashboard.createCourse.resourceType",
+                                )}
+                                labelPlacement="outside"
+                                placeholder={t(
+                                  "tutorDashboard.createCourse.resourceTypePlaceholder",
+                                )}
+                                selectedKeys={
+                                  res.resourceType ? [res.resourceType] : []
+                                }
+                                onSelectionChange={(keys) =>
+                                  handleResourceChange(
+                                    activeSessionForResources,
+                                    index,
+                                    "resourceType",
+                                    [...keys][0] || "",
+                                  )
+                                }
+                                classNames={selectClassNames}
+                                isDisabled={isLocked}
+                              >
+                                {[
+                                  "Document",
+                                  "Video",
+                                  "Slide",
+                                  "Audio",
+                                  "Homework",
+                                  "Exercise",
+                                  "PracticeExam",
+                                  "Reference",
+                                  "Other",
+                                ].map((type) => (
+                                  <SelectItem key={type}>{type}</SelectItem>
+                                ))}
+                              </Select>
+                            </div>
+                            <div>
+                              <p
+                                className="text-sm font-medium mb-2"
+                                style={{ color: colors.text.primary }}
+                              >
+                                {t("tutorDashboard.createCourse.resourceFile")}
+                              </p>
+                              <label
+                                className={`flex items-center gap-3 p-3 rounded-xl border-2 border-dashed ${isLocked ? "cursor-default opacity-70" : "cursor-pointer"}`}
+                                style={{ borderColor: colors.border.light }}
+                              >
+                                <FileIcon
+                                  className="w-5 h-5"
+                                  style={{ color: colors.text.tertiary }}
+                                />
+                                <span
+                                  className="text-sm flex-1 min-w-0 truncate"
+                                  style={{ color: colors.text.secondary }}
+                                >
+                                  {res.file
+                                    ? res.file.name
+                                    : res.id && res.url
+                                      ? res.url
+                                          .split("/")
+                                          .pop()
+                                          .split("?")[0] || res.url
+                                      : t(
+                                          "tutorDashboard.createCourse.noFileChosen",
+                                        )}
+                                </span>
+                                {res.id && res.url ? (
+                                  <a
+                                    href={res.url}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    title={t("courses.detail.resources.open")}
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="flex-shrink-0"
+                                  >
+                                    <ArrowSquareOut
+                                      size={16}
+                                      style={{ color: colors.primary.main }}
+                                    />
+                                  </a>
+                                ) : null}
+                                {!isLocked && (
+                                  <input
+                                    type="file"
+                                    className="hidden"
+                                    onChange={(e) =>
+                                      handleResourceChange(
+                                        activeSessionForResources,
+                                        index,
+                                        "file",
+                                        e.target.files?.[0] || null,
+                                      )
+                                    }
+                                  />
+                                )}
+                              </label>
+                            </div>
+                          </CardBody>
+                        </Card>
+                      );
+                    },
                   )}
 
                   <Button
@@ -4368,6 +4629,87 @@ const CreateCourse = () => {
                   }}
                 >
                   {t("tutorDashboard.createCourse.delete")}
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
+
+      {/* Resource Detail Modal */}
+      <Modal
+        isOpen={resourceDetailOpen}
+        onOpenChange={(open) => {
+          if (!open) setResourceDetailOpen(false);
+        }}
+        size="lg"
+        scrollBehavior="inside"
+      >
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalHeader>
+                {t("tutorDashboard.createCourse.resourceDetail")}
+              </ModalHeader>
+              <ModalBody>
+                {resourceDetailLoading ? (
+                  <div className="flex justify-center py-8">
+                    <Spinner />
+                  </div>
+                ) : resourceDetailData ? (
+                  <div className="flex flex-col gap-4">
+                    <div>
+                      <p
+                        className="text-sm font-semibold mb-1"
+                        style={{ color: colors.text.secondary }}
+                      >
+                        {t("tutorDashboard.createCourse.resourceTitle")}
+                      </p>
+                      <p style={{ color: colors.text.primary }}>
+                        {resourceDetailData.title}
+                      </p>
+                    </div>
+                    {resourceDetailData.resourceType && (
+                      <div>
+                        <p
+                          className="text-sm font-semibold mb-1"
+                          style={{ color: colors.text.secondary }}
+                        >
+                          {t("tutorDashboard.createCourse.resourceType")}
+                        </p>
+                        <p style={{ color: colors.text.primary }}>
+                          {resourceDetailData.resourceType}
+                        </p>
+                      </div>
+                    )}
+                    {resourceDetailData.url && (
+                      <div>
+                        <p
+                          className="text-sm font-semibold mb-1"
+                          style={{ color: colors.text.secondary }}
+                        >
+                          {t("tutorDashboard.createCourse.resourceFile")}
+                        </p>
+                        <a
+                          href={resourceDetailData.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="flex items-center gap-1.5 text-sm"
+                          style={{ color: colors.primary.main }}
+                        >
+                          <ArrowSquareOut size={16} />
+                          <span className="break-all">
+                            {resourceDetailData.url}
+                          </span>
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                ) : null}
+              </ModalBody>
+              <ModalFooter>
+                <Button variant="light" onPress={onClose}>
+                  {t("tutorDashboard.createCourse.close")}
                 </Button>
               </ModalFooter>
             </>
