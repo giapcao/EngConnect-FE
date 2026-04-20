@@ -7,6 +7,12 @@ export const studentApi = {
     return response.data;
   },
 
+  // Get student by ID
+  getStudentById: async (studentId) => {
+    const response = await axiosInstance.get(`/students/${studentId}`);
+    return response.data;
+  },
+
   // Get student profile
   getStudentProfile: async () => {
     const response = await axiosInstance.get("/students/profile");

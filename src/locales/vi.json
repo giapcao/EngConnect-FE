@@ -564,6 +564,7 @@
       "today": "Hôm nay",
       "tomorrow": "Ngày mai",
       "coursesInProgress": "Khóa học đang học",
+      "noCoursesInProgress": "Chưa có khóa học nào đang học",
       "weeklyGoal": "Mục tiêu tuần",
       "recentAchievements": "Thành tích gần đây",
       "viewAll": "Xem tất cả",
@@ -1485,6 +1486,8 @@
         "noFileChosen": "Chưa chọn tệp"
       },
       "courseSchedule": "Lịch học",
+      "progress": "Tiến độ",
+      "sessionsCompleted": "buổi đã hoàn thành",
       "noScheduledLessons": "Chưa có buổi học nào được lên lịch",
       "scheduleToday": "Hôm nay",
       "scheduleUpcoming": "Sắp tới",
@@ -2196,5 +2199,13 @@
     "noCourses": "Gia sư này chưa có khóa học nào.",
     "notFound": "Không tìm thấy hồ sơ gia sư.",
     "viewProfile": "Xem hồ sơ"
+  },
+  "studentProfile": {
+    "totalCourses": "khóa học đã đăng ký",
+    "inProgress": "Đang học",
+    "completed": "Đã hoàn thành",
+    "enrolledCourses": "Khóa học đã đăng ký",
+    "noEnrollments": "Chưa đăng ký khóa học nào.",
+    "notFound": "Không tìm thấy hồ sơ học viên."
   }
 }

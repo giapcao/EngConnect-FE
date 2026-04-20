@@ -3784,25 +3784,41 @@ const CreateCourse = () => {
                               classNames={inputClassNames}
                               isRequired
                             />
-                            <Input
+                            <Select
                               label={t(
                                 "tutorDashboard.createCourse.resourceType",
                               )}
+                              labelPlacement="outside"
                               placeholder={t(
                                 "tutorDashboard.createCourse.resourceTypePlaceholder",
                               )}
-                              labelPlacement="outside"
-                              value={res.resourceType}
-                              onChange={(e) =>
+                              selectedKeys={
+                                res.resourceType ? [res.resourceType] : []
+                              }
+                              onSelectionChange={(keys) =>
                                 handleResourceChange(
                                   activeSessionForResources,
                                   index,
                                   "resourceType",
-                                  e.target.value,
+                                  [...keys][0] || "",
                                 )
                               }
-                              classNames={inputClassNames}
-                            />
+                              classNames={selectClassNames}
+                            >
+                              {[
+                                "Document",
+                                "Video",
+                                "Slide",
+                                "Audio",
+                                "Homework",
+                                "Exercise",
+                                "PracticeExam",
+                                "Reference",
+                                "Other",
+                              ].map((type) => (
+                                <SelectItem key={type}>{type}</SelectItem>
+                              ))}
+                            </Select>
                           </div>
                           <div>
                             <p

@@ -301,6 +301,7 @@ const Dashboard = () => {
                     size="sm"
                     endContent={<ArrowRight className="w-4 h-4" />}
                     style={{ color: colors.primary.main }}
+                    onPress={() => navigate("/tutor/schedule")}
                   >
                     {t("tutorDashboard.dashboard.viewAll")}
                   </Button>

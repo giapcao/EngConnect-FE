@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Avatar, Card, CardBody, Chip, Spinner } from "@heroui/react";
+import { Avatar, Card, CardBody, Chip, Skeleton } from "@heroui/react";
 import * as MotionLib from "framer-motion";
 import Header from "../../components/Header/Header";
 import Footer from "../../components/Footer/Footer";
@@ -85,8 +85,22 @@ const TutorProfile = () => {
             className="shadow-none mb-8"
             style={{ backgroundColor: colors.background.gray }}
           >
-            <CardBody className="p-8 flex items-center justify-center min-h-[200px]">
-              <Spinner size="lg" color="success" />
+            <CardBody className="p-8">
+              <div className="flex flex-col md:flex-row items-start gap-6">
+                <Skeleton className="w-24 h-24 rounded-full flex-shrink-0" />
+                <div className="flex-1 space-y-3">
+                  <Skeleton className="h-7 w-56 rounded-lg" />
+                  <Skeleton className="h-4 w-72 rounded-lg" />
+                  <Skeleton className="h-4 w-48 rounded-lg" />
+                  <div className="flex gap-4 mt-2">
+                    <Skeleton className="h-4 w-24 rounded-lg" />
+                    <Skeleton className="h-4 w-28 rounded-lg" />
+                    <Skeleton className="h-4 w-24 rounded-lg" />
+                  </div>
+                  <Skeleton className="h-4 w-full rounded-lg" />
+                  <Skeleton className="h-4 w-4/5 rounded-lg" />
+                </div>
+              </div>
             </CardBody>
           </Card>
         ) : tutor ? (

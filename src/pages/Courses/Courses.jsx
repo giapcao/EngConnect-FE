@@ -53,8 +53,8 @@ const Courses = () => {
   const initialQ = searchParams.get("q") || "";
   const [searchInput, setSearchInput] = useState(initialQ);
   const [searchQuery, setSearchQuery] = useState(initialQ);
-  const [selectedCategory, setSelectedCategory] = useState("all");
-  const [selectedLevel, setSelectedLevel] = useState("");
+  const [selectedCategories, setSelectedCategories] = useState(new Set());
+  const [selectedLevels, setSelectedLevels] = useState(new Set());
   const [sortBy, setSortBy] = useState("newest");
   const [courses, setCourses] = useState([]);
   const [allCourses, setAllCourses] = useState([]);
@@ -117,14 +117,33 @@ const Courses = () => {
     return counts;
   }, [allCourses]);
 
+  const toggleCategory = (id) => {
+    setSelectedCategories((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleLevel = (level) => {
+    setSelectedLevels((prev) => {
+      const next = new Set(prev);
+      if (next.has(level)) next.delete(level);
+      else next.add(level);
+      return next;
+    });
+  };
+
   const filteredCourses = useMemo(() => {
     let result = courses.filter((course) => {
       const categoryMatch =
-        selectedCategory === "all" ||
-        course.courseCategories?.some(
-          (cat) => cat.categoryId === selectedCategory,
+        selectedCategories.size === 0 ||
+        course.courseCategories?.some((cat) =>
+          selectedCategories.has(cat.categoryId),
         );
-      const levelMatch = !selectedLevel || course.level === selectedLevel;
+      const levelMatch =
+        selectedLevels.size === 0 || selectedLevels.has(course.level);
       return categoryMatch && levelMatch;
     });
 
@@ -143,7 +162,7 @@ const Courses = () => {
     }
 
     return result;
-  }, [courses, selectedCategory, selectedLevel, sortBy]);
+  }, [courses, selectedCategories, selectedLevels, sortBy]);
 
   const benefits = [
     {
@@ -177,7 +196,9 @@ const Courses = () => {
   ];
 
   const hasActiveFilters =
-    selectedCategory !== "all" || selectedLevel !== "" || searchQuery !== "";
+    selectedCategories.size > 0 ||
+    selectedLevels.size > 0 ||
+    searchQuery !== "";
 
   // Sidebar content (shared between desktop and mobile)
   const sidebarContent = (
@@ -205,43 +226,47 @@ const Courses = () => {
         </button>
         {categoryOpen && (
           <div className="px-2 pb-3 space-y-0.5">
-            <button
-              className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-left transition-colors"
-              style={{
-                backgroundColor:
-                  selectedCategory === "all"
-                    ? `${colors.primary.main}15`
-                    : "transparent",
-                color:
-                  selectedCategory === "all"
-                    ? colors.primary.main
-                    : colors.text.secondary,
-              }}
-              onClick={() => setSelectedCategory("all")}
-            >
-              <span className="text-sm font-medium">
-                {t("courses.categories.all")}
-              </span>
-            </button>
-            {categories.map((cat) => (
-              <button
-                key={cat.id}
-                className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-left transition-colors"
-                style={{
-                  backgroundColor:
-                    selectedCategory === cat.id
+            {categories.map((cat) => {
+              const isSelected = selectedCategories.has(cat.id);
+              return (
+                <button
+                  key={cat.id}
+                  className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-left transition-colors"
+                  style={{
+                    backgroundColor: isSelected
                       ? `${colors.primary.main}15`
                       : "transparent",
-                  color:
-                    selectedCategory === cat.id
+                    color: isSelected
                       ? colors.primary.main
                       : colors.text.secondary,
-                }}
-                onClick={() => setSelectedCategory(cat.id)}
-              >
-                <span className="text-sm font-medium">{cat.name}</span>
-              </button>
-            ))}
+                  }}
+                  onClick={() => toggleCategory(cat.id)}
+                >
+                  <span className="text-sm font-medium">{cat.name}</span>
+                  {isSelected && (
+                    <span
+                      className="w-4 h-4 rounded flex items-center justify-center flex-shrink-0"
+                      style={{ backgroundColor: colors.primary.main }}
+                    >
+                      <svg
+                        width="10"
+                        height="10"
+                        viewBox="0 0 10 10"
+                        fill="none"
+                      >
+                        <path
+                          d="M2 5l2 2 4-4"
+                          stroke="white"
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </div>
         )}
       </div>
@@ -269,41 +294,47 @@ const Courses = () => {
         </button>
         {levelOpen && (
           <div className="px-2 pb-3 space-y-0.5">
-            <button
-              className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-left transition-colors"
-              style={{
-                backgroundColor: !selectedLevel
-                  ? `${colors.primary.main}15`
-                  : "transparent",
-                color: !selectedLevel
-                  ? colors.primary.main
-                  : colors.text.secondary,
-              }}
-              onClick={() => setSelectedLevel("")}
-            >
-              <span className="text-sm font-medium">
-                {t("courses.categories.allLevels")}
-              </span>
-            </button>
-            {LEVELS.map((level) => (
-              <button
-                key={level}
-                className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-left transition-colors"
-                style={{
-                  backgroundColor:
-                    selectedLevel === level
+            {LEVELS.map((level) => {
+              const isSelected = selectedLevels.has(level);
+              return (
+                <button
+                  key={level}
+                  className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-left transition-colors"
+                  style={{
+                    backgroundColor: isSelected
                       ? `${colors.primary.main}15`
                       : "transparent",
-                  color:
-                    selectedLevel === level
+                    color: isSelected
                       ? colors.primary.main
                       : colors.text.secondary,
-                }}
-                onClick={() => setSelectedLevel(level)}
-              >
-                <span className="text-sm font-medium">{level}</span>
-              </button>
-            ))}
+                  }}
+                  onClick={() => toggleLevel(level)}
+                >
+                  <span className="text-sm font-medium">{level}</span>
+                  {isSelected && (
+                    <span
+                      className="w-4 h-4 rounded flex items-center justify-center flex-shrink-0"
+                      style={{ backgroundColor: colors.primary.main }}
+                    >
+                      <svg
+                        width="10"
+                        height="10"
+                        viewBox="0 0 10 10"
+                        fill="none"
+                      >
+                        <path
+                          d="M2 5l2 2 4-4"
+                          stroke="white"
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </div>
         )}
       </div>
@@ -317,8 +348,8 @@ const Courses = () => {
           style={{ color: colors.state.error }}
           startContent={<X size={14} />}
           onPress={() => {
-            setSelectedCategory("all");
-            setSelectedLevel("");
+            setSelectedCategories(new Set());
+            setSelectedLevels(new Set());
           }}
         >
           {t("courses.search.clearFilters")}
@@ -492,40 +523,42 @@ const Courses = () => {
             </p>
             {hasActiveFilters && (
               <div className="flex items-center gap-2 flex-wrap">
-                {selectedCategory !== "all" && (
+                {[...selectedCategories].map((catId) => (
                   <span
+                    key={catId}
                     className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full"
                     style={{
                       backgroundColor: `${colors.primary.main}15`,
                       color: colors.primary.main,
                     }}
                   >
-                    {categories.find((c) => c.id === selectedCategory)?.name}
+                    {categories.find((c) => c.id === catId)?.name}
                     <button
-                      onClick={() => setSelectedCategory("all")}
+                      onClick={() => toggleCategory(catId)}
                       className="ml-0.5 hover:opacity-70"
                     >
                       <X size={12} />
                     </button>
                   </span>
-                )}
-                {selectedLevel && (
+                ))}
+                {[...selectedLevels].map((level) => (
                   <span
+                    key={level}
                     className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full"
                     style={{
                       backgroundColor: `${colors.primary.main}15`,
                       color: colors.primary.main,
                     }}
                   >
-                    {selectedLevel}
+                    {level}
                     <button
-                      onClick={() => setSelectedLevel("")}
+                      onClick={() => toggleLevel(level)}
                       className="ml-0.5 hover:opacity-70"
                     >
                       <X size={12} />
                     </button>
                   </span>
-                )}
+                ))}
                 {searchQuery && (
                   <span
                     className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full"
@@ -612,8 +645,8 @@ const Courses = () => {
                         color: colors.primary.main,
                       }}
                       onPress={() => {
-                        setSelectedCategory("all");
-                        setSelectedLevel("");
+                        setSelectedCategories(new Set());
+                        setSelectedLevels(new Set());
                         setSearchInput("");
                         setSearchQuery("");
                       }}
@@ -624,7 +657,12 @@ const Courses = () => {
                 </div>
               ) : (
                 <motion.div
-                  key={selectedCategory + selectedLevel + searchQuery + sortBy}
+                  key={
+                    [...selectedCategories].join() +
+                    [...selectedLevels].join() +
+                    searchQuery +
+                    sortBy
+                  }
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.3 }}

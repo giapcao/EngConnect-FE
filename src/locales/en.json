@@ -566,6 +566,7 @@
       "today": "Today",
       "tomorrow": "Tomorrow",
       "coursesInProgress": "Courses In Progress",
+      "noCoursesInProgress": "No courses in progress",
       "weeklyGoal": "Weekly Goal",
       "recentAchievements": "Recent Achievements",
       "viewAll": "View All",
@@ -1490,7 +1491,9 @@
       "noScheduledLessons": "No scheduled lessons for this course",
       "scheduleToday": "Today",
       "scheduleUpcoming": "Upcoming",
-      "viewAllSchedule": "View All Schedule"
+      "viewAllSchedule": "View All Schedule",
+      "progress": "Progress",
+      "sessionsCompleted": "sessions completed"
     }
   },
   "checkout": {
@@ -2199,5 +2202,13 @@
     "noCourses": "This tutor has no published courses yet.",
     "notFound": "Tutor profile not found.",
     "viewProfile": "View Profile"
+  },
+  "studentProfile": {
+    "totalCourses": "courses enrolled",
+    "inProgress": "In Progress",
+    "completed": "Completed",
+    "enrolledCourses": "Enrolled Courses",
+    "noEnrollments": "No enrolled courses yet.",
+    "notFound": "Student profile not found."
   }
 }

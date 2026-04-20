@@ -43,6 +43,7 @@ import TutorEarnings from "../pages/TutorDashboard/Earnings/Earnings";
 import TutorProfile from "../pages/TutorDashboard/Profile/Profile";
 import TutorNotification from "../pages/TutorDashboard/Notification/Notification";
 import TutorCreateCourse from "../pages/TutorDashboard/CreateCourse/CreateCourse";
+import StudentDetail from "../pages/TutorDashboard/Students/StudentDetail";
 
 // Admin Dashboard Pages
 import AdminDashboard from "../pages/AdminDashboard/Dashboard/Dashboard";
@@ -254,6 +255,10 @@ export const router = createBrowserRouter([
       {
         path: "students",
         element: <TutorStudents />,
+      },
+      {
+        path: "students/:studentId",
+        element: <StudentDetail />,
       },
       {
         path: "earnings",

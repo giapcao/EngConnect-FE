@@ -21,7 +21,7 @@ import calendarIllustration from "../../../assets/illustrations/calendar.avif";
 import { useSelector } from "react-redux";
 import { selectUser } from "../../../store";
 import { useNavigate } from "react-router-dom";
-import { studentApi } from "../../../api";
+import { studentApi, coursesApi } from "../../../api";
 
 const CDN_BASE = "https://d20854st1o56hw.cloudfront.net/";
 const withCDN = (url) => {
@@ -38,6 +38,8 @@ const Dashboard = () => {
 
   const [upcomingLessons, setUpcomingLessons] = useState([]);
   const [lessonsLoading, setLessonsLoading] = useState(true);
+  const [coursesInProgress, setCoursesInProgress] = useState([]);
+  const [coursesLoading, setCoursesLoading] = useState(true);
 
   const fetchUpcomingLessons = useCallback(async () => {
     if (!user?.studentId) return;
@@ -57,9 +59,27 @@ const Dashboard = () => {
     }
   }, [user?.studentId]);
 
+  const fetchCoursesInProgress = useCallback(async () => {
+    if (!user?.studentId) return;
+    try {
+      setCoursesLoading(true);
+      const res = await coursesApi.getAllCourseEnrollments({
+        StudentId: user.studentId,
+        Status: "InProgress",
+        "page-size": 5,
+      });
+      setCoursesInProgress(res?.data?.items || []);
+    } catch (err) {
+      console.error("Failed to fetch courses in progress:", err);
+    } finally {
+      setCoursesLoading(false);
+    }
+  }, [user?.studentId]);
+
   useEffect(() => {
     fetchUpcomingLessons();
-  }, [fetchUpcomingLessons]);
+    fetchCoursesInProgress();
+  }, [fetchUpcomingLessons, fetchCoursesInProgress]);
 
   const formatLessonTime = (dateStr) => {
     if (!dateStr) return "";
@@ -108,36 +128,6 @@ const Dashboard = () => {
       value: "7",
       color: colors.state.error,
       bg: `${colors.state.error}20`,
-    },
-  ];
-
-  const coursesInProgress = [
-    {
-      id: 1,
-      title: "Business English Masterclass",
-      progress: 65,
-      lessonsCompleted: 13,
-      totalLessons: 20,
-      image:
-        "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=300",
-    },
-    {
-      id: 2,
-      title: "IELTS Preparation Course",
-      progress: 40,
-      lessonsCompleted: 8,
-      totalLessons: 20,
-      image:
-        "https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=300",
-    },
-    {
-      id: 3,
-      title: "English for Beginners",
-      progress: 90,
-      lessonsCompleted: 18,
-      totalLessons: 20,
-      image:
-        "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=300",
     },
   ];
 
@@ -297,6 +287,7 @@ const Dashboard = () => {
                     size="sm"
                     endContent={<ArrowRight className="w-4 h-4" />}
                     style={{ color: colors.primary.main }}
+                    onPress={() => navigate("/student/schedule")}
                   >
                     {t("studentDashboard.dashboard.viewAll")}
                   </Button>
@@ -405,53 +396,97 @@ const Dashboard = () => {
                     size="sm"
                     endContent={<ArrowRight className="w-4 h-4" />}
                     style={{ color: colors.primary.main }}
+                    onPress={() => navigate("/student/my-courses")}
                   >
                     {t("studentDashboard.dashboard.viewAll")}
                   </Button>
                 </div>
 
-                <div className="space-y-4">
-                  {coursesInProgress.map((course) => (
-                    <div
-                      key={course.id}
-                      className="flex items-center gap-4 p-3 rounded-xl"
-                      style={{ backgroundColor: colors.background.gray }}
-                    >
-                      <img
-                        src={course.image}
-                        alt={course.title}
-                        className="w-16 h-16 rounded-lg object-cover flex-shrink-0"
-                      />
-                      <div className="flex-1 min-w-0">
-                        <p
-                          className="font-medium truncate"
-                          style={{ color: colors.text.primary }}
-                        >
-                          {course.title}
-                        </p>
-                        <p
-                          className="text-sm mb-2"
-                          style={{ color: colors.text.secondary }}
-                        >
-                          {course.lessonsCompleted}/{course.totalLessons}{" "}
-                          {t("studentDashboard.dashboard.lessonsCompleted")}
-                        </p>
-                        <Progress
-                          value={course.progress}
-                          size="sm"
-                          color="primary"
-                          className="max-w-full"
-                        />
-                      </div>
-                      <span
-                        className="text-sm font-semibold"
-                        style={{ color: colors.primary.main }}
+                {coursesLoading ? (
+                  <div className="space-y-4">
+                    {[1, 2, 3].map((i) => (
+                      <div
+                        key={i}
+                        className="flex items-center gap-4 p-3 rounded-xl animate-pulse"
+                        style={{ backgroundColor: colors.background.gray }}
                       >
-                        {course.progress}%
-                      </span>
-                    </div>
-                  ))}
-                </div>
+                        <div className="w-16 h-16 rounded-lg bg-default-200 flex-shrink-0" />
+                        <div className="flex-1 space-y-2">
+                          <div className="h-4 w-3/4 rounded bg-default-200" />
+                          <div className="h-3 w-1/2 rounded bg-default-200" />
+                          <div className="h-2 w-full rounded bg-default-200" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : coursesInProgress.length === 0 ? (
+                  <p
+                    className="text-sm text-center py-4"
+                    style={{ color: colors.text.secondary }}
+                  >
+                    {t("studentDashboard.dashboard.noCoursesInProgress")}
+                  </p>
+                ) : (
+                  <div className="space-y-4">
+                    {coursesInProgress.map((enrollment) => {
+                      const progress =
+                        enrollment.numsOfSession > 0
+                          ? Math.round(
+                              (enrollment.numOfCompleteSession /
+                                enrollment.numsOfSession) *
+                                100,
+                            )
+                          : 0;
+                      return (
+                        <div
+                          key={enrollment.id}
+                          className="flex items-center gap-4 p-3 rounded-xl cursor-pointer hover:opacity-80 transition-opacity"
+                          style={{ backgroundColor: colors.background.gray }}
+                          onClick={() =>
+                            navigate(`/student/courses/${enrollment.courseId}`)
+                          }
+                        >
+                          <img
+                            src={
+                              withCDN(enrollment.course?.thumbnailUrl) ||
+                              "https://placehold.co/300x300?text=No+Image"
+                            }
+                            alt={enrollment.course?.title}
+                            className="w-16 h-16 rounded-lg object-cover flex-shrink-0"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <p
+                              className="font-medium truncate"
+                              style={{ color: colors.text.primary }}
+                            >
+                              {enrollment.course?.title}
+                            </p>
+                            <p
+                              className="text-sm mb-2"
+                              style={{ color: colors.text.secondary }}
+                            >
+                              {enrollment.numOfCompleteSession}/
+                              {enrollment.numsOfSession}{" "}
+                              {t("studentDashboard.dashboard.lessonsCompleted")}
+                            </p>
+                            <Progress
+                              value={progress}
+                              size="sm"
+                              color="primary"
+                              className="max-w-full"
+                            />
+                          </div>
+                          <span
+                            className="text-sm font-semibold"
+                            style={{ color: colors.primary.main }}
+                          >
+                            {progress}%
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </CardBody>
             </Card>
           </motion.div>

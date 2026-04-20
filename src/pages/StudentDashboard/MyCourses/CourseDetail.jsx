@@ -11,6 +11,7 @@ import {
   Avatar,
   Divider,
   Spinner,
+  Progress,
   useDisclosure,
   Tooltip,
 } from "@heroui/react";
@@ -96,6 +97,9 @@ const StudentMyCourseDetail = () => {
   const [lessons, setLessons] = useState([]);
   const [lessonsLoading, setLessonsLoading] = useState(true);
   const [selectedLesson, setSelectedLesson] = useState(null);
+
+  // Enrollment state
+  const [enrollment, setEnrollment] = useState(null);
   const {
     isOpen: isLessonDetailOpen,
     onOpen: onLessonDetailOpen,
@@ -176,6 +180,24 @@ const StudentMyCourseDetail = () => {
     };
     fetchCourse();
   }, [id]);
+
+  useEffect(() => {
+    const fetchEnrollment = async () => {
+      if (!user?.studentId || !id) return;
+      try {
+        const res = await coursesApi.getAllCourseEnrollments({
+          StudentId: user.studentId,
+          CourseId: id,
+          "page-size": 1,
+        });
+        const item = res?.data?.items?.[0];
+        if (item) setEnrollment(item);
+      } catch (err) {
+        console.error("Failed to fetch enrollment:", err);
+      }
+    };
+    fetchEnrollment();
+  }, [user?.studentId, id]);
 
   useEffect(() => {
     const fetchLessons = async () => {
@@ -1503,6 +1525,53 @@ const StudentMyCourseDetail = () => {
                 >
                   {t("studentDashboard.myCourses.enrolled")}
                 </Chip>
+
+                {/* Course Progress */}
+                {enrollment && (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span
+                        className="text-sm font-medium"
+                        style={{ color: colors.text.primary }}
+                      >
+                        {t("courses.detail.progress")}
+                      </span>
+                      <span
+                        className="text-sm font-semibold"
+                        style={{ color: colors.primary.main }}
+                      >
+                        {enrollment.numsOfSession > 0
+                          ? Math.round(
+                              (enrollment.numOfCompleteSession /
+                                enrollment.numsOfSession) *
+                                100,
+                            )
+                          : 0}
+                        %
+                      </span>
+                    </div>
+                    <Progress
+                      value={
+                        enrollment.numsOfSession > 0
+                          ? (enrollment.numOfCompleteSession /
+                              enrollment.numsOfSession) *
+                            100
+                          : 0
+                      }
+                      size="md"
+                      color="primary"
+                      className="max-w-full"
+                    />
+                    <p
+                      className="text-xs text-center"
+                      style={{ color: colors.text.secondary }}
+                    >
+                      {enrollment.numOfCompleteSession}/
+                      {enrollment.numsOfSession}{" "}
+                      {t("courses.detail.sessionsCompleted")}
+                    </p>
+                  </div>
+                )}
 
                 <Divider />
 

@@ -24,6 +24,7 @@ import {
   LinkSimple,
   SpinnerGap,
   Exam,
+  ArrowRight,
 } from "@phosphor-icons/react";
 import { coursesApi } from "../../api";
 import VideoModal from "../VideoModal/VideoModal";
@@ -176,6 +177,13 @@ const LessonDetailModal = ({ isOpen, onClose, lesson, role = "tutor" }) => {
   const courseLink = isStudentView
     ? `/student/courses/${lesson?.courseId}`
     : `/tutor/courses/${lesson?.courseId}`;
+  const personProfileLink = isStudentView
+    ? lesson?.tutorId
+      ? `/tutor-profile/${lesson.tutorId}`
+      : null
+    : lesson?.studentId
+      ? `/tutor/students/${lesson.studentId}`
+      : null;
 
   if (!lesson) return null;
 
@@ -253,8 +261,28 @@ const LessonDetailModal = ({ isOpen, onClose, lesson, role = "tutor" }) => {
             <ModalBody className="space-y-4 pt-0">
               {/* Person info */}
               <div
-                className="flex items-center gap-3 p-3 rounded-xl"
+                className={`flex items-center gap-3 p-3 rounded-xl${personProfileLink ? " cursor-pointer hover:opacity-80 transition-opacity" : ""}`}
                 style={{ backgroundColor: colors.background.gray }}
+                role={personProfileLink ? "button" : undefined}
+                tabIndex={personProfileLink ? 0 : undefined}
+                onClick={
+                  personProfileLink
+                    ? () => {
+                        onClose();
+                        navigate(personProfileLink);
+                      }
+                    : undefined
+                }
+                onKeyDown={
+                  personProfileLink
+                    ? (e) => {
+                        if (e.key === "Enter") {
+                          onClose();
+                          navigate(personProfileLink);
+                        }
+                      }
+                    : undefined
+                }
               >
                 <Avatar
                   src={withCDN(personAvatar)}
@@ -276,6 +304,12 @@ const LessonDetailModal = ({ isOpen, onClose, lesson, role = "tutor" }) => {
                     {personLabel}
                   </p>
                 </div>
+                {personProfileLink && (
+                  <ArrowRight
+                    className="w-4 h-4 flex-shrink-0"
+                    style={{ color: colors.text.tertiary }}
+                  />
+                )}
               </div>
 
               {/* Date & Time */}

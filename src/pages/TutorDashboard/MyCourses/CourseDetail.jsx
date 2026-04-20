@@ -283,14 +283,16 @@ const TutorCourseDetail = () => {
 
   const getResourceIcon = (type) => {
     const t = (type || "").toLowerCase();
-    if (t === "pdf")
-      return <FilePdf size={14} weight="fill" style={{ color: "#ef4444" }} />;
     if (t === "video")
       return (
         <VideoCamera size={14} weight="fill" style={{ color: "#8b5cf6" }} />
       );
-    if (t === "link")
-      return <Link size={14} weight="bold" style={{ color: "#3b82f6" }} />;
+    if (t === "slide")
+      return <FilePdf size={14} weight="fill" style={{ color: "#f97316" }} />;
+    if (t === "audio")
+      return <FileText size={14} weight="fill" style={{ color: "#06b6d4" }} />;
+    if (t === "homework" || t === "exercise" || t === "practiceexam")
+      return <FileText size={14} weight="fill" style={{ color: "#f59e0b" }} />;
     return (
       <FileText
         size={14}
@@ -1664,11 +1666,19 @@ const TutorCourseDetail = () => {
                     }))
                   }
                 >
-                  {["PDF", "Video", "Link", "Audio", "Image", "Document"].map(
-                    (type) => (
-                      <SelectItem key={type}>{type}</SelectItem>
-                    ),
-                  )}
+                  {[
+                    "Document",
+                    "Video",
+                    "Slide",
+                    "Audio",
+                    "Homework",
+                    "Exercise",
+                    "PracticeExam",
+                    "Reference",
+                    "Other",
+                  ].map((type) => (
+                    <SelectItem key={type}>{type}</SelectItem>
+                  ))}
                 </Select>
                 <Input
                   label={t("courses.detail.resources.fieldUrl")}
@@ -1773,11 +1783,19 @@ const TutorCourseDetail = () => {
                     }))
                   }
                 >
-                  {["PDF", "Video", "Link", "Audio", "Image", "Document"].map(
-                    (type) => (
-                      <SelectItem key={type}>{type}</SelectItem>
-                    ),
-                  )}
+                  {[
+                    "Document",
+                    "Video",
+                    "Slide",
+                    "Audio",
+                    "Homework",
+                    "Exercise",
+                    "PracticeExam",
+                    "Reference",
+                    "Other",
+                  ].map((type) => (
+                    <SelectItem key={type}>{type}</SelectItem>
+                  ))}
                 </Select>
                 <div>
                   <p
