@@ -363,4 +363,35 @@ export const coursesApi = {
     );
     return response.data;
   },
+
+  // ==================== COURSE REVIEWS ====================
+  // Get course reviews (list)
+  getCourseReviews: async (params = {}) => {
+    const response = await axiosInstance.get("/course-reviews", { params });
+    return response.data;
+  },
+
+  // Get course review by ID
+  getCourseReviewById: async (id) => {
+    const response = await axiosInstance.get(`/course-reviews/${id}`);
+    return response.data;
+  },
+
+  // Create course review
+  createCourseReview: async (data) => {
+    const response = await axiosInstance.post("/course-reviews", data);
+    return response.data;
+  },
+
+  // Update course review
+  updateCourseReview: async (id, data) => {
+    const response = await axiosInstance.put(`/course-reviews/${id}`, data);
+    return response.data;
+  },
+
+  // Delete course review
+  deleteCourseReview: async (id) => {
+    const response = await axiosInstance.delete(`/course-reviews/${id}`);
+    return response.data;
+  },
 };

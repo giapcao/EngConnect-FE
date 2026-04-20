@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import {
   Card,
   CardBody,
+  Avatar,
   Button,
   Chip,
   Image,
@@ -12,7 +13,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { useThemeColors } from "../../../hooks/useThemeColors";
 import { motion } from "framer-motion";
-import { coursesApi, tutorApi } from "../../../api";
+import { coursesApi, tutorApi, studentApi } from "../../../api";
 import {
   ArrowLeft,
   BookOpen,
@@ -47,6 +48,14 @@ const AdminCourseDetail = () => {
   const [expandedSessions, setExpandedSessions] = useState({});
   const [sessionResources, setSessionResources] = useState({});
   const [loadingResources, setLoadingResources] = useState({});
+
+  const [reviews, setReviews] = useState([]);
+  const [reviewsLoading, setReviewsLoading] = useState(true);
+  const [reviewsPage, setReviewsPage] = useState(1);
+  const [reviewsHasMore, setReviewsHasMore] = useState(false);
+  const [reviewsLoadingMore, setReviewsLoadingMore] = useState(false);
+  const [reviewStudents, setReviewStudents] = useState({});
+  const REVIEWS_PAGE_SIZE = 5;
 
   const toggleModule = (moduleId) =>
     setExpandedModules((prev) => ({ ...prev, [moduleId]: !prev[moduleId] }));
@@ -98,6 +107,46 @@ const AdminCourseDetail = () => {
   };
 
   useEffect(() => {
+    const fetchReviews = async () => {
+      setReviewsLoading(true);
+      try {
+        const res = await coursesApi.getCourseReviews({
+          CourseId: id,
+          "page-index": 1,
+          "page-size": REVIEWS_PAGE_SIZE,
+        });
+        if (res.isSuccess) {
+          const items = res.data?.items || [];
+          setReviews(items);
+          setReviewsHasMore((res.data?.totalPages ?? 1) > 1);
+          const ids = [
+            ...new Set(
+              items.filter((r) => !r.isAnonymous).map((r) => r.studentId),
+            ),
+          ];
+          if (ids.length > 0) {
+            const entries = await Promise.all(
+              ids.map(async (sid) => {
+                try {
+                  const r = await studentApi.getStudentById(sid);
+                  return [sid, r.data];
+                } catch {
+                  return [sid, null];
+                }
+              }),
+            );
+            setReviewStudents(Object.fromEntries(entries));
+          }
+        }
+      } catch (_) {
+      } finally {
+        setReviewsLoading(false);
+      }
+    };
+    if (id) fetchReviews();
+  }, [id]);
+
+  useEffect(() => {
     const fetchDetail = async () => {
       setLoading(true);
       try {
@@ -117,6 +166,50 @@ const AdminCourseDetail = () => {
     };
     fetchDetail();
   }, [id]);
+
+  const handleLoadMoreReviews = async () => {
+    setReviewsLoadingMore(true);
+    const nextPage = reviewsPage + 1;
+    try {
+      const res = await coursesApi.getCourseReviews({
+        CourseId: id,
+        "page-index": nextPage,
+        "page-size": REVIEWS_PAGE_SIZE,
+      });
+      if (res.isSuccess) {
+        const items = res.data?.items || [];
+        setReviews((prev) => [...prev, ...items]);
+        setReviewsPage(nextPage);
+        setReviewsHasMore(nextPage < (res.data?.totalPages ?? 1));
+        const newIds = [
+          ...new Set(
+            items
+              .filter((r) => !r.isAnonymous && !reviewStudents[r.studentId])
+              .map((r) => r.studentId),
+          ),
+        ];
+        if (newIds.length > 0) {
+          const entries = await Promise.all(
+            newIds.map(async (sid) => {
+              try {
+                const r = await studentApi.getStudentById(sid);
+                return [sid, r.data];
+              } catch {
+                return [sid, null];
+              }
+            }),
+          );
+          setReviewStudents((prev) => ({
+            ...prev,
+            ...Object.fromEntries(entries),
+          }));
+        }
+      }
+    } catch (_) {
+    } finally {
+      setReviewsLoadingMore(false);
+    }
+  };
 
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
@@ -1108,6 +1201,125 @@ const AdminCourseDetail = () => {
                       </div>
                     );
                   })()}
+
+                  {/* Student Reviews */}
+                  <div
+                    className="p-4 rounded-xl"
+                    style={{ backgroundColor: colors.background.gray }}
+                  >
+                    <div className="flex items-center gap-2 mb-3">
+                      <p
+                        className="text-sm font-medium"
+                        style={{ color: colors.text.primary }}
+                      >
+                        {t("studentDashboard.myCourses.courseReview")}
+                      </p>
+                      {reviews.length > 0 && (
+                        <span
+                          className="text-xs"
+                          style={{ color: colors.text.tertiary }}
+                        >
+                          ({reviews.length})
+                        </span>
+                      )}
+                    </div>
+
+                    {reviewsLoading ? (
+                      <div className="flex justify-center py-4">
+                        <Spinner size="sm" color="primary" />
+                      </div>
+                    ) : reviews.length === 0 ? (
+                      <p
+                        className="text-xs text-center py-3"
+                        style={{ color: colors.text.tertiary }}
+                      >
+                        {t("courses.detail.noReviews")}
+                      </p>
+                    ) : (
+                      <div className="flex flex-col gap-2">
+                        {reviews.map((review) => (
+                          <div
+                            key={review.id}
+                            className="p-3 rounded-xl"
+                            style={{ backgroundColor: colors.background.light }}
+                          >
+                            <div className="flex items-center gap-2 mb-1.5">
+                              <Avatar
+                                size="sm"
+                                src={
+                                  review.isAnonymous
+                                    ? undefined
+                                    : reviewStudents[review.studentId]?.avatar
+                                }
+                                name={
+                                  review.isAnonymous
+                                    ? t("courses.detail.anonymous")
+                                    : `${reviewStudents[review.studentId]?.user?.firstName ?? ""} ${reviewStudents[review.studentId]?.user?.lastName ?? ""}`
+                                }
+                                className="w-7 h-7 text-xs flex-shrink-0"
+                              />
+                              <div className="flex-1 min-w-0">
+                                <p
+                                  className="text-xs font-medium"
+                                  style={{ color: colors.text.primary }}
+                                >
+                                  {review.isAnonymous
+                                    ? t("courses.detail.anonymous")
+                                    : `${reviewStudents[review.studentId]?.user?.firstName ?? ""} ${reviewStudents[review.studentId]?.user?.lastName ?? ""}`}
+                                </p>
+                                <p
+                                  className="text-xs"
+                                  style={{ color: colors.text.tertiary }}
+                                >
+                                  {review.createdAt
+                                    ? formatDate(review.createdAt)
+                                    : ""}
+                                </p>
+                              </div>
+                              <div className="flex items-center gap-0.5">
+                                {[1, 2, 3, 4, 5].map((s) => (
+                                  <Star
+                                    key={s}
+                                    size={12}
+                                    weight={
+                                      s <= review.rating ? "fill" : "regular"
+                                    }
+                                    color={
+                                      s <= review.rating
+                                        ? "#FBBF24"
+                                        : colors.text.tertiary
+                                    }
+                                  />
+                                ))}
+                              </div>
+                            </div>
+                            {review.comment && (
+                              <p
+                                className="text-xs leading-relaxed"
+                                style={{ color: colors.text.secondary }}
+                              >
+                                {review.comment}
+                              </p>
+                            )}
+                          </div>
+                        ))}
+
+                        {reviewsHasMore && (
+                          <div className="flex justify-center mt-1">
+                            <Button
+                              size="sm"
+                              variant="flat"
+                              isLoading={reviewsLoadingMore}
+                              onPress={handleLoadMoreReviews}
+                              style={{ color: colors.primary.main }}
+                            >
+                              {t("courses.detail.loadMoreReviews")}
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
               )
             )}

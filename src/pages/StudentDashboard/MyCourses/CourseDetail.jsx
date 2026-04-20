@@ -14,6 +14,12 @@ import {
   Progress,
   useDisclosure,
   Tooltip,
+  Textarea,
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
 } from "@heroui/react";
 import { motion } from "framer-motion";
 import { useThemeColors } from "../../../hooks/useThemeColors";
@@ -42,6 +48,9 @@ import {
   CalendarDots,
   ArrowRightIcon,
   Exam,
+  PencilSimple,
+  Trash,
+  ChatTeardropText,
 } from "@phosphor-icons/react";
 import { coursesApi, tutorApi, studentApi } from "../../../api";
 
@@ -125,6 +134,20 @@ const StudentMyCourseDetail = () => {
     isOpen: isQuizOpen,
     onOpen: onQuizOpen,
     onClose: onQuizClose,
+  } = useDisclosure();
+
+  // Review state
+  const [existingReview, setExistingReview] = useState(null);
+  const [reviewLoading, setReviewLoading] = useState(true);
+  const [reviewRating, setReviewRating] = useState(0);
+  const [reviewHover, setReviewHover] = useState(0);
+  const [reviewComment, setReviewComment] = useState("");
+  const [reviewSubmitting, setReviewSubmitting] = useState(false);
+  const [isEditingReview, setIsEditingReview] = useState(false);
+  const {
+    isOpen: isDeleteConfirmOpen,
+    onOpen: onDeleteConfirmOpen,
+    onClose: onDeleteConfirmClose,
   } = useDisclosure();
 
   const toggleModule = (moduleId) => {
@@ -218,6 +241,88 @@ const StudentMyCourseDetail = () => {
     };
     fetchLessons();
   }, [user?.studentId, id]);
+
+  // Fetch existing review
+  useEffect(() => {
+    const fetchReview = async () => {
+      if (!user?.studentId || !id) return;
+      try {
+        setReviewLoading(true);
+        const res = await coursesApi.getCourseReviews({
+          CourseId: id,
+          "page-size": 100,
+        });
+        const myReview = res?.data?.items?.find(
+          (r) => r.studentId === user.studentId,
+        );
+        if (myReview) {
+          setExistingReview(myReview);
+          setReviewRating(myReview.rating);
+          setReviewComment(myReview.comment || "");
+        }
+      } catch (err) {
+        console.error("Failed to fetch reviews:", err);
+      } finally {
+        setReviewLoading(false);
+      }
+    };
+    fetchReview();
+  }, [user?.studentId, id]);
+
+  const courseProgress =
+    enrollment?.numsOfSession > 0
+      ? (enrollment.numOfCompleteSession / enrollment.numsOfSession) * 100
+      : 0;
+
+  const canReview = courseProgress >= 50;
+
+  const handleSubmitReview = async () => {
+    if (!reviewRating || reviewSubmitting) return;
+    try {
+      setReviewSubmitting(true);
+      if (existingReview) {
+        const res = await coursesApi.updateCourseReview(existingReview.id, {
+          rating: reviewRating,
+          comment: reviewComment,
+          isAnonymous: false,
+        });
+        setExistingReview(res.data);
+        setIsEditingReview(false);
+      } else {
+        const res = await coursesApi.createCourseReview({
+          courseId: id,
+          studentId: user.studentId,
+          tutorId: course.tutorId,
+          enrollmentId: enrollment.id,
+          rating: reviewRating,
+          comment: reviewComment,
+          isAnonymous: false,
+        });
+        setExistingReview(res.data);
+      }
+    } catch (err) {
+      console.error("Failed to submit review:", err);
+    } finally {
+      setReviewSubmitting(false);
+    }
+  };
+
+  const handleDeleteReview = async () => {
+    if (!existingReview) return;
+    try {
+      setReviewSubmitting(true);
+      await coursesApi.deleteCourseReview(existingReview.id);
+      setExistingReview(null);
+      setReviewRating(0);
+      setReviewComment("");
+      setIsEditingReview(false);
+      onDeleteConfirmClose();
+    } catch (err) {
+      console.error("Failed to delete review:", err);
+    } finally {
+      setReviewSubmitting(false);
+    }
+  };
 
   const formatLessonTime = (dateStr) => {
     if (!dateStr) return "";
@@ -1382,6 +1487,246 @@ const StudentMyCourseDetail = () => {
             </Card>
           </motion.div>
 
+          {/* Course Review */}
+          {enrollment && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.15 }}
+            >
+              <Card
+                className="shadow-none"
+                style={{ backgroundColor: colors.background.light }}
+              >
+                <CardBody className="p-6">
+                  <h2
+                    className="font-semibold text-xl mb-4 flex items-center gap-2"
+                    style={{ color: colors.text.primary }}
+                  >
+                    <ChatTeardropText
+                      weight="duotone"
+                      className="w-5 h-5"
+                      style={{ color: colors.primary.main }}
+                    />
+                    {t("studentDashboard.myCourses.courseReview")}
+                  </h2>
+
+                  {!canReview ? (
+                    <div
+                      className="flex items-center gap-3 p-4 rounded-xl"
+                      style={{
+                        backgroundColor: `${colors.state.warning}10`,
+                        border: `1px solid ${colors.state.warning}30`,
+                      }}
+                    >
+                      <Star
+                        weight="duotone"
+                        className="w-5 h-5 flex-shrink-0"
+                        style={{ color: colors.state.warning }}
+                      />
+                      <p
+                        className="text-sm"
+                        style={{ color: colors.text.secondary }}
+                      >
+                        {t("studentDashboard.myCourses.reviewProgressRequired")}
+                      </p>
+                    </div>
+                  ) : reviewLoading ? (
+                    <div className="flex justify-center py-6">
+                      <Spinner size="md" />
+                    </div>
+                  ) : existingReview && !isEditingReview ? (
+                    /* Show existing review */
+                    <div className="space-y-4">
+                      <div
+                        className="p-4 rounded-xl"
+                        style={{
+                          backgroundColor: colors.background.gray,
+                          border: `1px solid ${colors.border.light}`,
+                        }}
+                      >
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-1">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <Star
+                                key={star}
+                                size={20}
+                                weight="fill"
+                                style={{
+                                  color:
+                                    star <= existingReview.rating
+                                      ? "#F59E0B"
+                                      : "rgba(0,0,0,0.1)",
+                                }}
+                              />
+                            ))}
+                            <span
+                              className="ml-2 text-sm font-semibold"
+                              style={{ color: colors.text.primary }}
+                            >
+                              {existingReview.rating}/5
+                            </span>
+                          </div>
+                          <span
+                            className="text-xs"
+                            style={{ color: colors.text.tertiary }}
+                          >
+                            {new Date(
+                              existingReview.updatedAt ||
+                                existingReview.createdAt,
+                            ).toLocaleDateString(dateLocale, {
+                              year: "numeric",
+                              month: "short",
+                              day: "numeric",
+                            })}
+                          </span>
+                        </div>
+                        {existingReview.comment && (
+                          <p
+                            className="text-sm leading-relaxed"
+                            style={{ color: colors.text.secondary }}
+                          >
+                            {existingReview.comment}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          size="sm"
+                          variant="flat"
+                          startContent={
+                            <PencilSimple
+                              weight="bold"
+                              className="w-3.5 h-3.5"
+                            />
+                          }
+                          style={{
+                            backgroundColor: `${colors.primary.main}15`,
+                            color: colors.primary.main,
+                          }}
+                          onPress={() => setIsEditingReview(true)}
+                        >
+                          {t("studentDashboard.myCourses.editReview")}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="flat"
+                          startContent={
+                            <Trash weight="bold" className="w-3.5 h-3.5" />
+                          }
+                          style={{
+                            backgroundColor: `${colors.state.error}15`,
+                            color: colors.state.error,
+                          }}
+                          onPress={onDeleteConfirmOpen}
+                        >
+                          {t("studentDashboard.myCourses.deleteReview")}
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    /* Write / Edit review form */
+                    <div className="space-y-4">
+                      <div>
+                        <p
+                          className="text-sm font-medium mb-2"
+                          style={{ color: colors.text.primary }}
+                        >
+                          {t("studentDashboard.myCourses.yourRating")}
+                        </p>
+                        <div className="flex items-center gap-1">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <button
+                              key={star}
+                              type="button"
+                              className="transition-transform hover:scale-110"
+                              onMouseEnter={() => setReviewHover(star)}
+                              onMouseLeave={() => setReviewHover(0)}
+                              onClick={() => setReviewRating(star)}
+                            >
+                              <Star
+                                size={28}
+                                weight="fill"
+                                style={{
+                                  color:
+                                    star <= (reviewHover || reviewRating)
+                                      ? "#F59E0B"
+                                      : "rgba(0,0,0,0.15)",
+                                  cursor: "pointer",
+                                }}
+                              />
+                            </button>
+                          ))}
+                          {reviewRating > 0 && (
+                            <span
+                              className="ml-2 text-sm font-semibold"
+                              style={{ color: colors.text.primary }}
+                            >
+                              {reviewRating}/5
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <div>
+                        <p
+                          className="text-sm font-medium mb-2"
+                          style={{ color: colors.text.primary }}
+                        >
+                          {t("studentDashboard.myCourses.yourReview")}
+                        </p>
+                        <Textarea
+                          placeholder={t(
+                            "studentDashboard.myCourses.reviewPlaceholder",
+                          )}
+                          value={reviewComment}
+                          onValueChange={setReviewComment}
+                          minRows={3}
+                          maxRows={6}
+                          variant="bordered"
+                          classNames={{
+                            inputWrapper: "border-1",
+                          }}
+                          style={{
+                            backgroundColor: colors.background.gray,
+                          }}
+                        />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          size="sm"
+                          isDisabled={!reviewRating}
+                          isLoading={reviewSubmitting}
+                          style={{
+                            backgroundColor: colors.primary.main,
+                            color: colors.text.white,
+                          }}
+                          onPress={handleSubmitReview}
+                        >
+                          {existingReview
+                            ? t("studentDashboard.myCourses.updateReview")
+                            : t("studentDashboard.myCourses.submitReview")}
+                        </Button>
+                        {isEditingReview && (
+                          <Button
+                            size="sm"
+                            variant="flat"
+                            onPress={() => {
+                              setIsEditingReview(false);
+                              setReviewRating(existingReview.rating);
+                              setReviewComment(existingReview.comment || "");
+                            }}
+                          >
+                            {t("studentDashboard.myCourses.cancel")}
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </CardBody>
+              </Card>
+            </motion.div>
+          )}
+
           {/* About the Instructor */}
           {tutorInfo && (
             <motion.div
@@ -1709,6 +2054,43 @@ const StudentMyCourseDetail = () => {
         lesson={selectedLesson}
         role="student"
       />
+
+      {/* Delete Review Confirmation Modal */}
+      <Modal
+        isOpen={isDeleteConfirmOpen}
+        onClose={onDeleteConfirmClose}
+        size="sm"
+      >
+        <ModalContent>
+          <ModalHeader
+            className="text-base"
+            style={{ color: colors.text.primary }}
+          >
+            {t("studentDashboard.myCourses.deleteReview")}
+          </ModalHeader>
+          <ModalBody>
+            <p className="text-sm" style={{ color: colors.text.secondary }}>
+              {t("studentDashboard.myCourses.confirmDeleteReview")}
+            </p>
+          </ModalBody>
+          <ModalFooter>
+            <Button size="sm" variant="flat" onPress={onDeleteConfirmClose}>
+              {t("studentDashboard.myCourses.cancel")}
+            </Button>
+            <Button
+              size="sm"
+              isLoading={reviewSubmitting}
+              style={{
+                backgroundColor: colors.state.error,
+                color: "#fff",
+              }}
+              onPress={handleDeleteReview}
+            >
+              {t("studentDashboard.myCourses.deleteReview")}
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </div>
   );
 };

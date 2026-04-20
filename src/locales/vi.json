@@ -621,7 +621,23 @@
       "lessonSchedule": "Lịch học",
       "noLessonsYet": "Chưa có buổi học nào cho khóa học này.",
       "pastLessons": "Buổi học đã qua",
-      "totalLessons": "Tổng buổi học"
+      "totalLessons": "Tổng buổi học",
+      "courseReview": "Đánh giá khóa học",
+      "writeReview": "Viết đánh giá",
+      "editReview": "Sửa đánh giá",
+      "yourRating": "Đánh giá của bạn",
+      "yourReview": "Nhận xét của bạn",
+      "reviewPlaceholder": "Chia sẻ trải nghiệm của bạn với khóa học này...",
+      "submitReview": "Gửi đánh giá",
+      "updateReview": "Cập nhật đánh giá",
+      "deleteReview": "Xóa đánh giá",
+      "reviewSubmitted": "Đánh giá của bạn đã được gửi!",
+      "reviewUpdated": "Đánh giá của bạn đã được cập nhật!",
+      "reviewDeleted": "Đánh giá của bạn đã được xóa.",
+      "reviewProgressRequired": "Bạn cần hoàn thành ít nhất 50% để đánh giá khóa học này.",
+      "confirmDeleteReview": "Bạn có chắc chắn muốn xóa đánh giá không?",
+      "cancel": "Hủy",
+      "submitting": "Đang gửi..."
     },
     "schedule": {
       "title": "Lịch học",
@@ -1492,7 +1508,11 @@
       "noScheduledLessons": "Chưa có buổi học nào được lên lịch",
       "scheduleToday": "Hôm nay",
       "scheduleUpcoming": "Sắp tới",
-      "viewAllSchedule": "Xem tất cả lịch học"
+      "viewAllSchedule": "Xem tất cả lịch học",
+      "studentReviews": "Đánh giá từ học viên",
+      "noReviews": "Chưa có đánh giá nào.",
+      "anonymous": "Nặc danh",
+      "loadMoreReviews": "Xem thêm"
     }
   },
   "checkout": {

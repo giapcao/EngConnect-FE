@@ -623,7 +623,23 @@
       "lessonSchedule": "Lesson Schedule",
       "noLessonsYet": "No lessons scheduled for this course yet.",
       "pastLessons": "Past Lessons",
-      "totalLessons": "Total Lessons"
+      "totalLessons": "Total Lessons",
+      "courseReview": "Course Review",
+      "writeReview": "Write a Review",
+      "editReview": "Edit Review",
+      "yourRating": "Your Rating",
+      "yourReview": "Your Review",
+      "reviewPlaceholder": "Share your experience with this course...",
+      "submitReview": "Submit Review",
+      "updateReview": "Update Review",
+      "deleteReview": "Delete Review",
+      "reviewSubmitted": "Your review has been submitted!",
+      "reviewUpdated": "Your review has been updated!",
+      "reviewDeleted": "Your review has been deleted.",
+      "reviewProgressRequired": "You need at least 50% progress to review this course.",
+      "confirmDeleteReview": "Are you sure you want to delete your review?",
+      "cancel": "Cancel",
+      "submitting": "Submitting..."
     },
     "schedule": {
       "title": "My Schedule",
@@ -1494,7 +1510,11 @@
       "scheduleUpcoming": "Upcoming",
       "viewAllSchedule": "View All Schedule",
       "progress": "Progress",
-      "sessionsCompleted": "sessions completed"
+      "sessionsCompleted": "sessions completed",
+      "studentReviews": "Student Reviews",
+      "noReviews": "No reviews yet.",
+      "anonymous": "Anonymous",
+      "loadMoreReviews": "Load More"
     }
   },
   "checkout": {

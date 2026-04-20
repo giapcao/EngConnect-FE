@@ -3,7 +3,15 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { selectUser } from "../../store";
 import { useTranslation } from "react-i18next";
-import { Button, Card, CardBody, Chip, Divider, Avatar } from "@heroui/react";
+import {
+  Button,
+  Card,
+  CardBody,
+  Chip,
+  Divider,
+  Avatar,
+  Spinner,
+} from "@heroui/react";
 import * as MotionLib from "framer-motion";
 import Header from "../../components/Header/Header";
 import Footer from "../../components/Footer/Footer";
@@ -23,7 +31,7 @@ import {
   Play,
   Certificate,
 } from "@phosphor-icons/react";
-import { coursesApi, tutorApi } from "../../api";
+import { coursesApi, tutorApi, studentApi } from "../../api";
 import VideoModal from "../../components/VideoModal/VideoModal";
 
 // eslint-disable-next-line no-unused-vars
@@ -51,7 +59,8 @@ const formatPrice = (price, currency) => {
 const CourseDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const dateLocale = i18n.language === "vi" ? "vi-VN" : "en-US";
   const colors = useThemeColors();
   const { theme } = useTheme();
   const user = useSelector(selectUser);
@@ -63,6 +72,15 @@ const CourseDetail = () => {
   const [tutorInfo, setTutorInfo] = useState(null);
   const [videoOpen, setVideoOpen] = useState(false);
   const instructorRef = useRef(null);
+
+  // Reviews state
+  const [reviews, setReviews] = useState([]);
+  const [reviewsLoading, setReviewsLoading] = useState(true);
+  const [reviewsPage, setReviewsPage] = useState(1);
+  const [reviewsHasMore, setReviewsHasMore] = useState(false);
+  const [reviewsLoadingMore, setReviewsLoadingMore] = useState(false);
+  const [reviewStudents, setReviewStudents] = useState({});
+  const PAGE_SIZE = 5;
 
   const toggleModule = (moduleId) => {
     setExpandedModules((prev) => ({ ...prev, [moduleId]: !prev[moduleId] }));
@@ -92,6 +110,100 @@ const CourseDetail = () => {
     };
     fetchCourse();
   }, [id]);
+
+  // Fetch reviews
+  useEffect(() => {
+    const fetchReviews = async () => {
+      try {
+        setReviewsLoading(true);
+        const res = await coursesApi.getCourseReviews({
+          CourseId: id,
+          "page-index": 1,
+          "page-size": PAGE_SIZE,
+        });
+        const items = res?.data?.items || [];
+        setReviews(items);
+        const total =
+          res?.data?.totalCount ?? res?.data?.totalItems ?? items.length;
+        setReviewsHasMore(total > PAGE_SIZE);
+        setReviewsPage(1);
+        // Fetch student info for each review
+        const studentIds = [
+          ...new Set(
+            items
+              .filter((r) => !r.isAnonymous && r.studentId)
+              .map((r) => r.studentId),
+          ),
+        ];
+        const studentMap = {};
+        await Promise.all(
+          studentIds.map(async (sid) => {
+            try {
+              const sRes = await studentApi.getStudentById(sid);
+              studentMap[sid] = sRes?.data || sRes;
+            } catch {
+              /* ignore */
+            }
+          }),
+        );
+        setReviewStudents(studentMap);
+      } catch {
+        setReviews([]);
+      } finally {
+        setReviewsLoading(false);
+      }
+    };
+    if (id) fetchReviews();
+  }, [id]);
+
+  const handleLoadMoreReviews = async () => {
+    try {
+      setReviewsLoadingMore(true);
+      const nextPage = reviewsPage + 1;
+      const res = await coursesApi.getCourseReviews({
+        CourseId: id,
+        "page-index": nextPage,
+        "page-size": PAGE_SIZE,
+      });
+      const items = res?.data?.items || [];
+      setReviews((prev) => [...prev, ...items]);
+      const total =
+        res?.data?.totalCount ??
+        res?.data?.totalItems ??
+        reviews.length + items.length;
+      setReviewsHasMore(reviews.length + items.length < total);
+      setReviewsPage(nextPage);
+      // Fetch student info for new reviews
+      const newStudentIds = [
+        ...new Set(
+          items
+            .filter(
+              (r) =>
+                !r.isAnonymous && r.studentId && !reviewStudents[r.studentId],
+            )
+            .map((r) => r.studentId),
+        ),
+      ];
+      if (newStudentIds.length > 0) {
+        const newMap = { ...reviewStudents };
+        await Promise.all(
+          newStudentIds.map(async (sid) => {
+            try {
+              const sRes = await studentApi.getStudentById(sid);
+              newMap[sid] = sRes?.data || sRes;
+            } catch {
+              /* ignore */
+            }
+          }),
+        );
+        setReviewStudents(newMap);
+      }
+    } catch {
+      // ignore
+    } finally {
+      setReviewsLoadingMore(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -708,6 +820,139 @@ const CourseDetail = () => {
                   </Card>
                 </motion.div>
               )}
+
+              {/* Student Reviews */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.45 }}
+              >
+                <Card
+                  className="shadow-none"
+                  style={{ backgroundColor: colors.background.gray }}
+                >
+                  <CardBody className="p-6">
+                    <div className="flex items-center gap-2 mb-4">
+                      <h2
+                        className="text-lg font-semibold"
+                        style={{ color: colors.text.primary }}
+                      >
+                        {t("studentDashboard.myCourses.courseReview")}
+                      </h2>
+                      {reviews.length > 0 && (
+                        <span
+                          className="text-sm"
+                          style={{ color: colors.text.tertiary }}
+                        >
+                          ({reviews.length})
+                        </span>
+                      )}
+                    </div>
+
+                    {reviewsLoading ? (
+                      <div className="flex justify-center py-6">
+                        <Spinner size="sm" color="primary" />
+                      </div>
+                    ) : reviews.length === 0 ? (
+                      <p
+                        className="text-sm text-center py-4"
+                        style={{ color: colors.text.tertiary }}
+                      >
+                        {t("courses.detail.noReviews")}
+                      </p>
+                    ) : (
+                      <div className="flex flex-col gap-4">
+                        {reviews.map((review) => (
+                          <div
+                            key={review.id}
+                            className="p-4 rounded-xl"
+                            style={{ backgroundColor: colors.background.light }}
+                          >
+                            <div className="flex items-center gap-2 mb-2">
+                              <Avatar
+                                size="sm"
+                                src={
+                                  review.isAnonymous
+                                    ? undefined
+                                    : reviewStudents[review.studentId]?.avatar
+                                }
+                                name={
+                                  review.isAnonymous
+                                    ? t("courses.detail.anonymous")
+                                    : `${reviewStudents[review.studentId]?.user?.firstName ?? ""} ${reviewStudents[review.studentId]?.user?.lastName ?? ""}`
+                                }
+                                className="w-8 h-8 text-xs"
+                              />
+                              <div>
+                                <p
+                                  className="text-sm font-medium"
+                                  style={{ color: colors.text.primary }}
+                                >
+                                  {review.isAnonymous
+                                    ? t("courses.detail.anonymous")
+                                    : `${reviewStudents[review.studentId]?.user?.firstName ?? ""} ${reviewStudents[review.studentId]?.user?.lastName ?? ""}`}
+                                </p>
+                                <p
+                                  className="text-xs"
+                                  style={{ color: colors.text.tertiary }}
+                                >
+                                  {review.createdAt
+                                    ? new Date(
+                                        review.createdAt,
+                                      ).toLocaleDateString(dateLocale, {
+                                        year: "numeric",
+                                        month: "short",
+                                        day: "numeric",
+                                      })
+                                    : ""}
+                                </p>
+                              </div>
+                              <div className="flex items-center gap-0.5 ml-auto">
+                                {[1, 2, 3, 4, 5].map((s) => (
+                                  <Star
+                                    key={s}
+                                    size={14}
+                                    weight={
+                                      s <= review.rating ? "fill" : "regular"
+                                    }
+                                    color={
+                                      s <= review.rating
+                                        ? "#FBBF24"
+                                        : colors.text.tertiary
+                                    }
+                                  />
+                                ))}
+                              </div>
+                            </div>
+                            {review.comment && (
+                              <p
+                                className="text-sm mt-1"
+                                style={{ color: colors.text.secondary }}
+                              >
+                                {review.comment}
+                              </p>
+                            )}
+                          </div>
+                        ))}
+
+                        {reviewsHasMore && (
+                          <div className="flex justify-center mt-2">
+                            <Button
+                              size="sm"
+                              variant="flat"
+                              isLoading={reviewsLoadingMore}
+                              onPress={handleLoadMoreReviews}
+                              style={{ color: colors.primary.main }}
+                            >
+                              {t("courses.detail.loadMoreReviews")}
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </CardBody>
+                </Card>
+              </motion.div>
             </div>
 
             {/* Right Column - Sticky Price Card (overlaps banner) */}
