@@ -131,7 +131,8 @@ const Schedule = () => {
     [lesson.tutorFirstName, lesson.tutorLastName].filter(Boolean).join(" ");
 
   const canJoinLesson = (lesson) =>
-    lesson.meetingStatus === "Waiting" && lesson.status !== "Completed";
+    lesson.meetingStatus === "InProgress" ||
+    (lesson.meetingStatus === "Waiting" && lesson.status !== "Completed");
 
   const handleOpenLessonDetail = (lesson) => {
     setSelectedLesson(lesson);

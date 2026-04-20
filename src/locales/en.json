@@ -1046,7 +1046,8 @@
       "noLessons": "No lessons yet",
       "noLessonsDesc": "Lessons will appear here when students enroll in your courses.",
       "upcomingLessons": "Upcoming Lessons",
-      "joinLesson": "Join",
+      "joinLesson": "Start",
+      "joinBack": "Join",
       "lessonLabel": "Lesson",
       "lessonStatus": {
         "scheduled": "Scheduled",

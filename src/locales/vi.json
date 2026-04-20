@@ -1044,7 +1044,8 @@
       "noLessons": "Chưa có buổi học",
       "noLessonsDesc": "Buổi học sẽ xuất hiện khi học viên đăng ký khóa học của bạn.",
       "upcomingLessons": "Buổi học sắp tới",
-      "joinLesson": "Tham gia",
+      "joinLesson": "Bắt đầu",
+      "joinBack": "Vào lại",
       "lessonLabel": "Buổi học",
       "lessonStatus": {
         "scheduled": "Đã lên lịch",

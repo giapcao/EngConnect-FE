@@ -363,7 +363,8 @@ const Dashboard = () => {
                             </p>
                           </div>
                         </div>
-                        {lesson.meetingStatus === "Waiting" && (
+                        {(lesson.meetingStatus === "Waiting" ||
+                          lesson.meetingStatus === "InProgress") && (
                           <Button
                             size="sm"
                             radius="full"
@@ -376,7 +377,9 @@ const Dashboard = () => {
                             }
                             onPress={() => navigate(`/meeting/${lesson.id}`)}
                           >
-                            {t("tutorDashboard.dashboard.start")}
+                            {lesson.meetingStatus === "InProgress"
+                              ? t("tutorDashboard.schedule.joinBack")
+                              : t("tutorDashboard.dashboard.start")}
                           </Button>
                         )}
                       </div>

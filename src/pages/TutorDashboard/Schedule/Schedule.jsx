@@ -359,11 +359,12 @@ const Schedule = () => {
     [lesson.studentFirstName, lesson.studentLastName].filter(Boolean).join(" ");
 
   const canJoinLesson = (lesson) =>
-    lesson.status !== "Completed" &&
-    lesson.status !== "NoStudent" &&
-    lesson.status !== "NoTutor" &&
-    lesson.status !== "Cancelled" &&
-    lesson.meetingStatus !== "Ended";
+    lesson.meetingStatus === "InProgress" ||
+    (lesson.status !== "Completed" &&
+      lesson.status !== "NoStudent" &&
+      lesson.status !== "NoTutor" &&
+      lesson.status !== "Cancelled" &&
+      lesson.meetingStatus !== "Ended");
 
   const handleOpenLessonDetail = (lesson) => {
     setSelectedLesson(lesson);
@@ -1319,7 +1320,9 @@ const Schedule = () => {
                                       navigate(`/meeting/${lesson.id}`);
                                     }}
                                   >
-                                    {t("tutorDashboard.schedule.joinLesson")}
+                                    {lesson.meetingStatus === "InProgress"
+                                      ? t("tutorDashboard.schedule.joinBack")
+                                      : t("tutorDashboard.schedule.joinLesson")}
                                   </Button>
                                 )}
                               </div>

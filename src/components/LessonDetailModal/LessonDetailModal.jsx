@@ -157,7 +157,8 @@ const LessonDetailModal = ({ isOpen, onClose, lesson, role = "tutor" }) => {
   };
 
   const canJoinLesson = (l) =>
-    l.meetingStatus === "Waiting" && l.status !== "Completed";
+    l.meetingStatus === "InProgress" ||
+    (l.meetingStatus === "Waiting" && l.status !== "Completed");
 
   const studentFullName = (l) =>
     [l.studentFirstName, l.studentLastName].filter(Boolean).join(" ");
@@ -643,7 +644,11 @@ const LessonDetailModal = ({ isOpen, onClose, lesson, role = "tutor" }) => {
                     navigate(`/meeting/${lesson.id}`);
                   }}
                 >
-                  {t("tutorDashboard.schedule.joinLesson")}
+                  {isStudentView
+                    ? t("studentDashboard.schedule.joinNow")
+                    : lesson.meetingStatus === "InProgress"
+                      ? t("tutorDashboard.schedule.joinBack")
+                      : t("tutorDashboard.schedule.joinLesson")}
                 </Button>
               )}
             </ModalFooter>
