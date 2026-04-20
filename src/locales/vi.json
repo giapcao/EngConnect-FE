@@ -1649,6 +1649,7 @@
       "finance": "Tài chính",
       "settings": "Cài đặt",
       "supportTickets": "Phiếu hỗ trợ",
+      "schedule": "Lịch học",
       "logout": "Đăng xuất"
     },
     "search": {
@@ -1768,7 +1769,9 @@
       "headline": "Tiêu đề",
       "nA": "N/A",
       "tutorCourses": "Khóa học của gia sư",
-      "noCourses": "Gia sư này chưa có khóa học nào."
+      "noCourses": "Gia sư này chưa có khóa học nào.",
+      "scheduleSlots": "Lịch dạy",
+      "noScheduleSlots": "Gia sư này chưa có lịch dạy nào."
     },
     "verification": {
       "title": "Yêu cầu xác minh gia sư",
@@ -2158,6 +2161,71 @@
         "Open": "Mở",
         "Resolved": "Đã giải quyết",
         "Closed": "Đã đóng"
+      }
+    },
+    "schedule": {
+      "title": "Quản lý lịch học",
+      "subtitle": "Giám sát bài học và lịch dạy của gia sư trên nền tảng",
+      "export": "Xuất",
+      "status": "Trạng thái",
+      "all": "Tất cả",
+      "nA": "N/A",
+      "lessonsTab": "Bài học",
+      "schedulesTab": "Lịch gia sư",
+      "searchLessonPlaceholder": "Tìm bài học theo khóa học hoặc người tham gia...",
+      "searchSchedulePlaceholder": "Tìm lịch gia sư...",
+      "noLessons": "Không tìm thấy bài học nào",
+      "noSchedules": "Không tìm thấy lịch gia sư nào",
+      "lessonDetail": "Chi tiết bài học",
+      "stats": {
+        "totalLessons": "Tổng bài học",
+        "scheduled": "Đã lên lịch",
+        "completed": "Hoàn thành",
+        "cancelled": "Đã hủy"
+      },
+      "table": {
+        "course": "Khóa học",
+        "tutor": "Gia sư",
+        "student": "Học viên",
+        "dateTime": "Ngày & Giờ",
+        "duration": "Thời lượng",
+        "status": "Trạng thái",
+        "actions": "Hành động",
+        "weekday": "Thứ",
+        "time": "Thời gian"
+      },
+      "lessonStatuses": {
+        "Scheduled": "Đã lên lịch",
+        "InProgress": "Đang diễn ra",
+        "Completed": "Hoàn thành",
+        "Cancelled": "Đã hủy",
+        "NoStudent": "Vắng học viên",
+        "NoTutor": "Vắng gia sư"
+      },
+      "scheduleStatuses": {
+        "Open": "Mở",
+        "Booked": "Đã đặt",
+        "Pending": "Đang chờ",
+        "Inactive": "Không hoạt động"
+      },
+      "days": {
+        "monday": "Thứ Hai",
+        "tuesday": "Thứ Ba",
+        "wednesday": "Thứ Tư",
+        "thursday": "Thứ Năm",
+        "friday": "Thứ Sáu",
+        "saturday": "Thứ Bảy",
+        "sunday": "Chủ Nhật"
+      },
+      "detail": {
+        "date": "Ngày",
+        "time": "Thời gian",
+        "lessonStatus": "Trạng thái bài học",
+        "meetingStatus": "Trạng thái cuộc họp",
+        "tutor": "Gia sư",
+        "student": "Học viên",
+        "recording": "Bản ghi",
+        "viewCourse": "Xem khóa học"
       }
     }
   },

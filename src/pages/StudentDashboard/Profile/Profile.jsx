@@ -346,34 +346,7 @@ const Profile = () => {
                 )}
               </div>
 
-              {/* Stats */}
-              <div className="grid grid-cols-2 gap-4">
-                {stats.map((stat, index) => (
-                  <div
-                    key={index}
-                    className="text-center p-3 rounded-xl"
-                    style={{ backgroundColor: colors.background.gray }}
-                  >
-                    <stat.icon
-                      weight="duotone"
-                      className="w-6 h-6 mx-auto mb-1"
-                      style={{ color: stat.color }}
-                    />
-                    <p
-                      className="text-xl font-bold"
-                      style={{ color: colors.text.primary }}
-                    >
-                      {stat.value}
-                    </p>
-                    <p
-                      className="text-xs"
-                      style={{ color: colors.text.secondary }}
-                    >
-                      {stat.label}
-                    </p>
-                  </div>
-                ))}
-              </div>
+              {/* Stats hidden */}
             </div>
           </CardBody>
         </Card>

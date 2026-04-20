@@ -48,6 +48,7 @@ import StudentDetail from "../pages/TutorDashboard/Students/StudentDetail";
 // Admin Dashboard Pages
 import AdminDashboard from "../pages/AdminDashboard/Dashboard/Dashboard";
 import AdminStudents from "../pages/AdminDashboard/StudentManagement/StudentManagement";
+import AdminStudentDetail from "../pages/AdminDashboard/StudentManagement/StudentDetail";
 import AdminTutors from "../pages/AdminDashboard/TutorManagament/TutorManagement";
 import AdminVerification from "../pages/AdminDashboard/TutorManagament/TutorVerification";
 import AdminCourses from "../pages/AdminDashboard/CourseManagement/CourseManagement";
@@ -56,6 +57,7 @@ import AdminCategories from "../pages/AdminDashboard/CourseManagement/CategoryMa
 import AdminAnalytics from "../pages/AdminDashboard/AnalyticsReports/AnalyticsReports";
 import AdminFinance from "../pages/AdminDashboard/FinancialManagement/FinancialManagement";
 import AdminSupportTickets from "../pages/AdminDashboard/SupportTickets/SupportTickets";
+import AdminScheduleManagement from "../pages/AdminDashboard/ScheduleManagement/ScheduleManagement";
 import AdminCourseDetail from "../pages/AdminDashboard/CourseManagement/CourseDetail";
 import AdminCourseVerificationDetail from "../pages/AdminDashboard/CourseManagement/CourseVerificationDetail";
 import AdminTutorDetail from "../pages/AdminDashboard/TutorManagament/TutorDetail";
@@ -291,6 +293,10 @@ export const router = createBrowserRouter([
         element: <AdminStudents />,
       },
       {
+        path: "students/:id",
+        element: <AdminStudentDetail />,
+      },
+      {
         path: "tutors",
         element: <AdminTutors />,
       },
@@ -333,6 +339,10 @@ export const router = createBrowserRouter([
       {
         path: "support-tickets",
         element: <AdminSupportTickets />,
+      },
+      {
+        path: "schedule",
+        element: <AdminScheduleManagement />,
       },
     ],
   },

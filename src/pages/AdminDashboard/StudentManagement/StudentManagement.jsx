@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Card,
   CardBody,
@@ -45,6 +46,7 @@ import {
 
 const StudentManagement = () => {
   const { t, i18n } = useTranslation();
+  const navigate = useNavigate();
   const colors = useThemeColors();
   const { inputClassNames } = useInputStyles();
   const { tableCardStyle, tableClassNames } = useTableStyles();
@@ -62,11 +64,6 @@ const StudentManagement = () => {
   // Stats
   const [totalStudentsCount, setTotalStudentsCount] = useState(0);
   const [activeCount, setActiveCount] = useState(0);
-
-  // Detail modal
-  const { isOpen, onOpen, onClose } = useDisclosure();
-  const [selectedStudent, setSelectedStudent] = useState(null);
-  const [detailLoading, setDetailLoading] = useState(false);
 
   // Edit modal
   const {
@@ -188,21 +185,8 @@ const StudentManagement = () => {
   };
 
   // View detail
-  const handleViewStudent = async (student) => {
-    setSelectedStudent(student);
-    onOpen();
-    setDetailLoading(true);
-    try {
-      const response = await adminApi.getStudentById(student.id);
-      setSelectedStudent(response.data);
-    } catch {
-      addToast({
-        title: t("adminDashboard.students.loadFailed"),
-        color: "danger",
-      });
-    } finally {
-      setDetailLoading(false);
-    }
+  const handleViewStudent = (student) => {
+    navigate(`/admin/students/${student.id}`);
   };
 
   // Edit
@@ -583,196 +567,6 @@ const StudentManagement = () => {
           </CardBody>
         </Card>
       </motion.div>
-
-      {/* Student Detail Modal */}
-      <Modal isOpen={isOpen} onClose={onClose} size="2xl">
-        <ModalContent style={{ backgroundColor: colors.background.light }}>
-          {(onClose) => (
-            <>
-              <ModalHeader style={{ color: colors.text.primary }}>
-                {t("adminDashboard.students.studentDetails")}
-              </ModalHeader>
-              <ModalBody>
-                {detailLoading ? (
-                  <div className="flex justify-center py-8">
-                    <Spinner size="lg" />
-                  </div>
-                ) : selectedStudent ? (
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-4">
-                      <Avatar
-                        src={selectedStudent.avatar}
-                        className="w-20 h-20"
-                      />
-                      <div>
-                        <h3
-                          className="text-xl font-semibold"
-                          style={{ color: colors.text.primary }}
-                        >
-                          {getStudentName(selectedStudent)}
-                        </h3>
-                        <p style={{ color: colors.text.secondary }}>
-                          {getStudentEmail(selectedStudent)}
-                        </p>
-                        <div className="flex gap-2 mt-2">
-                          <Chip
-                            size="sm"
-                            color={getStatusColor(selectedStudent.status)}
-                            variant="flat"
-                          >
-                            {selectedStudent.status ||
-                              t("adminDashboard.students.nA")}
-                          </Chip>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Info grid */}
-                    <div className="space-y-3">
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <p
-                            className="text-sm font-semibold"
-                            style={{ color: colors.text.secondary }}
-                          >
-                            {t("adminDashboard.students.email")}
-                          </p>
-                          <p style={{ color: colors.text.primary }}>
-                            {getStudentEmail(selectedStudent)}
-                          </p>
-                        </div>
-                        <div>
-                          <p
-                            className="text-sm font-semibold"
-                            style={{ color: colors.text.secondary }}
-                          >
-                            {t("adminDashboard.students.table.school")}
-                          </p>
-                          <p style={{ color: colors.text.primary }}>
-                            {selectedStudent.school ||
-                              t("adminDashboard.students.nA")}
-                          </p>
-                        </div>
-                        <div>
-                          <p
-                            className="text-sm font-semibold"
-                            style={{ color: colors.text.secondary }}
-                          >
-                            {t("adminDashboard.students.table.grade")}
-                          </p>
-                          <p style={{ color: colors.text.primary }}>
-                            {selectedStudent.grade ||
-                              t("adminDashboard.students.nA")}
-                          </p>
-                        </div>
-                        <div>
-                          <p
-                            className="text-sm font-semibold"
-                            style={{ color: colors.text.secondary }}
-                          >
-                            {t("adminDashboard.students.classLabel")}
-                          </p>
-                          <p style={{ color: colors.text.primary }}>
-                            {selectedStudent.class ||
-                              t("adminDashboard.students.nA")}
-                          </p>
-                        </div>
-                        <div>
-                          <p
-                            className="text-sm font-semibold"
-                            style={{ color: colors.text.secondary }}
-                          >
-                            {t("adminDashboard.students.username")}
-                          </p>
-                          <p style={{ color: colors.text.primary }}>
-                            {selectedStudent.user?.userName ||
-                              t("adminDashboard.students.nA")}
-                          </p>
-                        </div>
-                        <div>
-                          <p
-                            className="text-sm font-semibold"
-                            style={{ color: colors.text.secondary }}
-                          >
-                            {t("adminDashboard.students.table.joinDate")}
-                          </p>
-                          <p style={{ color: colors.text.primary }}>
-                            {selectedStudent.createdAt &&
-                            selectedStudent.createdAt !== "0001-01-01T00:00:00"
-                              ? new Date(
-                                  selectedStudent.createdAt,
-                                ).toLocaleDateString(
-                                  i18n.language === "vi" ? "vi-VN" : "en-US",
-                                  {
-                                    year: "numeric",
-                                    month: "short",
-                                    day: "numeric",
-                                  },
-                                )
-                              : t("adminDashboard.students.nA")}
-                          </p>
-                        </div>
-                        <div>
-                          <p
-                            className="text-sm font-semibold"
-                            style={{ color: colors.text.secondary }}
-                          >
-                            {t("adminDashboard.students.lastUpdated")}
-                          </p>
-                          <p style={{ color: colors.text.primary }}>
-                            {selectedStudent.updatedAt
-                              ? new Date(
-                                  selectedStudent.updatedAt,
-                                ).toLocaleDateString(
-                                  i18n.language === "vi" ? "vi-VN" : "en-US",
-                                  {
-                                    year: "numeric",
-                                    month: "short",
-                                    day: "numeric",
-                                  },
-                                )
-                              : t("adminDashboard.students.nA")}
-                          </p>
-                        </div>
-                      </div>
-                      {selectedStudent.notes && (
-                        <div>
-                          <p
-                            className="text-sm font-semibold mb-1"
-                            style={{ color: colors.text.secondary }}
-                          >
-                            {t("adminDashboard.students.notes")}
-                          </p>
-                          <p style={{ color: colors.text.primary }}>
-                            {selectedStudent.notes}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ) : null}
-              </ModalBody>
-              <ModalFooter>
-                <Button variant="light" onPress={onClose}>
-                  {t("adminDashboard.students.close")}
-                </Button>
-                <Button
-                  onPress={() => {
-                    onClose();
-                    if (selectedStudent) handleEditClick(selectedStudent);
-                  }}
-                  style={{
-                    backgroundColor: colors.primary.main,
-                    color: colors.text.white,
-                  }}
-                >
-                  {t("adminDashboard.students.edit")}
-                </Button>
-              </ModalFooter>
-            </>
-          )}
-        </ModalContent>
-      </Modal>
 
       {/* Edit Student Modal */}
       <Modal isOpen={isEditOpen} onClose={onEditClose} size="lg">

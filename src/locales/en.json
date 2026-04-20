@@ -1651,6 +1651,7 @@
       "finance": "Finance",
       "settings": "Settings",
       "supportTickets": "Support Tickets",
+      "schedule": "Schedule",
       "logout": "Logout"
     },
     "search": {
@@ -1770,7 +1771,9 @@
       "headline": "Headline",
       "nA": "N/A",
       "tutorCourses": "Tutor's Courses",
-      "noCourses": "This tutor has no courses yet."
+      "noCourses": "This tutor has no courses yet.",
+      "scheduleSlots": "Schedule Slots",
+      "noScheduleSlots": "This tutor has no schedule slots yet."
     },
     "verification": {
       "title": "Tutor Verification Requests",
@@ -2161,6 +2164,71 @@
         "Open": "Open",
         "Resolved": "Resolved",
         "Closed": "Closed"
+      }
+    },
+    "schedule": {
+      "title": "Schedule Management",
+      "subtitle": "Monitor lessons and tutor schedules across the platform",
+      "export": "Export",
+      "status": "Status",
+      "all": "All",
+      "nA": "N/A",
+      "lessonsTab": "Lessons",
+      "schedulesTab": "Tutor Schedules",
+      "searchLessonPlaceholder": "Search lessons by course or participant...",
+      "searchSchedulePlaceholder": "Search tutor schedules...",
+      "noLessons": "No lessons found",
+      "noSchedules": "No tutor schedules found",
+      "lessonDetail": "Lesson Detail",
+      "stats": {
+        "totalLessons": "Total Lessons",
+        "scheduled": "Scheduled",
+        "completed": "Completed",
+        "cancelled": "Cancelled"
+      },
+      "table": {
+        "course": "Course",
+        "tutor": "Tutor",
+        "student": "Student",
+        "dateTime": "Date & Time",
+        "duration": "Duration",
+        "status": "Status",
+        "actions": "Actions",
+        "weekday": "Weekday",
+        "time": "Time"
+      },
+      "lessonStatuses": {
+        "Scheduled": "Scheduled",
+        "InProgress": "In Progress",
+        "Completed": "Completed",
+        "Cancelled": "Cancelled",
+        "NoStudent": "No Student",
+        "NoTutor": "No Tutor"
+      },
+      "scheduleStatuses": {
+        "Open": "Open",
+        "Booked": "Booked",
+        "Pending": "Pending",
+        "Inactive": "Inactive"
+      },
+      "days": {
+        "monday": "Monday",
+        "tuesday": "Tuesday",
+        "wednesday": "Wednesday",
+        "thursday": "Thursday",
+        "friday": "Friday",
+        "saturday": "Saturday",
+        "sunday": "Sunday"
+      },
+      "detail": {
+        "date": "Date",
+        "time": "Time",
+        "lessonStatus": "Lesson Status",
+        "meetingStatus": "Meeting Status",
+        "tutor": "Tutor",
+        "student": "Student",
+        "recording": "Recording",
+        "viewCourse": "View Course"
       }
     }
   },

@@ -43,6 +43,7 @@ import {
   ShieldCheck,
   Tag,
   Ticket,
+  CalendarDots,
 } from "@phosphor-icons/react";
 
 const AdminDashboardLayout = () => {
@@ -110,6 +111,11 @@ const AdminDashboardLayout = () => {
           icon: Tag,
         },
       ],
+    },
+    {
+      path: "/admin/schedule",
+      label: t("adminDashboard.nav.schedule"),
+      icon: CalendarDots,
     },
     {
       path: "/admin/analytics",

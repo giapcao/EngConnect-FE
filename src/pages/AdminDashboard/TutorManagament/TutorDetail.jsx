@@ -4,7 +4,7 @@ import { Card, CardBody, Button, Avatar, Chip, Spinner } from "@heroui/react";
 import { useTranslation } from "react-i18next";
 import { useThemeColors } from "../../../hooks/useThemeColors";
 import { motion } from "framer-motion";
-import { adminApi, coursesApi } from "../../../api";
+import { adminApi, coursesApi, tutorApi } from "../../../api";
 import CourseCard from "../../../components/CourseCard/CourseCard";
 import CourseCardSkeleton from "../../../components/CourseCardSkeleton/CourseCardSkeleton";
 import {
@@ -12,6 +12,8 @@ import {
   Star,
   CheckCircle,
   GraduationCap,
+  CalendarDots,
+  Clock,
 } from "@phosphor-icons/react";
 import searchIllustration from "../../../assets/illustrations/search.avif";
 
@@ -25,6 +27,8 @@ const AdminTutorDetail = () => {
   const [loading, setLoading] = useState(true);
   const [courses, setCourses] = useState([]);
   const [loadingCourses, setLoadingCourses] = useState(true);
+  const [scheduleSlots, setScheduleSlots] = useState([]);
+  const [loadingSlots, setLoadingSlots] = useState(true);
 
   useEffect(() => {
     const fetchDetail = async () => {
@@ -52,8 +56,23 @@ const AdminTutorDetail = () => {
         setLoadingCourses(false);
       }
     };
+    const fetchSlots = async () => {
+      try {
+        setLoadingSlots(true);
+        const res = await tutorApi.getTutorSchedules({
+          TutorId: id,
+          "page-size": 100,
+        });
+        setScheduleSlots(res?.data?.items || []);
+      } catch (err) {
+        console.error("Failed to fetch tutor schedules:", err);
+      } finally {
+        setLoadingSlots(false);
+      }
+    };
     fetchDetail();
     fetchCourses();
+    fetchSlots();
   }, [id]);
 
   const getVerifiedColor = (status) => {
@@ -81,6 +100,33 @@ const AdminTutorDetail = () => {
   const getTutorEmail = (t) => {
     return t?.user?.email || "";
   };
+
+  const getScheduleStatusColor = (status) => {
+    switch (status) {
+      case "Open":
+        return "success";
+      case "Booked":
+        return "primary";
+      case "Pending":
+        return "warning";
+      case "Inactive":
+        return "default";
+      default:
+        return "default";
+    }
+  };
+
+  const formatSlotTime = (t) => (t ? t.slice(0, 5) : "");
+
+  const weekdayOrder = [
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+    "Sunday",
+  ];
 
   return (
     <div className="space-y-6">
@@ -338,11 +384,11 @@ const AdminTutorDetail = () => {
         {loadingCourses ? (
           <CourseCardSkeleton
             count={3}
-            gridClassName="grid sm:grid-cols-2 lg:grid-cols-3 gap-6"
+            gridClassName="grid sm:grid-cols-2 lg:grid-cols-4 gap-6"
             cardBgColor={colors.background.light}
           />
         ) : courses.length > 0 ? (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {courses.map((course) => (
               <CourseCard
                 key={course.id}
@@ -370,6 +416,112 @@ const AdminTutorDetail = () => {
               />
               <p className="text-sm" style={{ color: colors.text.secondary }}>
                 {t("adminDashboard.tutors.noCourses")}
+              </p>
+            </CardBody>
+          </Card>
+        )}
+      </motion.div>
+
+      {/* Schedule Slots */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.15, delay: 0.15 }}
+      >
+        <h2
+          className="text-xl font-bold mb-4 flex items-center gap-2"
+          style={{ color: colors.text.primary }}
+        >
+          <CalendarDots
+            size={22}
+            weight="duotone"
+            style={{ color: colors.primary.main }}
+          />
+          {t("adminDashboard.tutors.scheduleSlots")}
+          {!loadingSlots && (
+            <span
+              className="text-sm font-normal"
+              style={{ color: colors.text.tertiary }}
+            >
+              ({scheduleSlots.length})
+            </span>
+          )}
+        </h2>
+        {loadingSlots ? (
+          <div className="flex flex-wrap gap-3">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div
+                key={i}
+                className="h-20 w-48 rounded-xl animate-pulse"
+                style={{ backgroundColor: colors.background.light }}
+              />
+            ))}
+          </div>
+        ) : scheduleSlots.length > 0 ? (
+          <div className="space-y-5">
+            {weekdayOrder
+              .filter((day) => scheduleSlots.some((s) => s.weekday === day))
+              .map((day) => (
+                <div key={day}>
+                  <p
+                    className="text-sm font-semibold mb-2"
+                    style={{ color: colors.text.secondary }}
+                  >
+                    {t(`adminDashboard.schedule.days.${day.toLowerCase()}`, {
+                      defaultValue: day,
+                    })}
+                  </p>
+                  <div className="flex flex-wrap gap-3">
+                    {scheduleSlots
+                      .filter((s) => s.weekday === day)
+                      .sort((a, b) => a.startTime.localeCompare(b.startTime))
+                      .map((slot) => (
+                        <div
+                          key={slot.id}
+                          className="px-4 py-3 rounded-xl flex items-center gap-3 border"
+                          style={{
+                            backgroundColor: colors.background.light,
+                            borderColor: colors.border.light,
+                          }}
+                        >
+                          <div
+                            className="flex items-center gap-1 text-sm"
+                            style={{ color: colors.text.primary }}
+                          >
+                            <Clock
+                              size={14}
+                              style={{ color: colors.text.secondary }}
+                            />
+                            <span>
+                              {formatSlotTime(slot.startTime)} —{" "}
+                              {formatSlotTime(slot.endTime)}
+                            </span>
+                          </div>
+                          <Chip
+                            size="sm"
+                            variant="flat"
+                            color={getScheduleStatusColor(slot.status)}
+                          >
+                            {t(
+                              `adminDashboard.schedule.scheduleStatuses.${slot.status}`,
+                              { defaultValue: slot.status },
+                            )}
+                          </Chip>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              ))}
+          </div>
+        ) : (
+          <Card
+            shadow="none"
+            className="border-none"
+            style={{ backgroundColor: colors.background.light }}
+          >
+            <CardBody className="flex flex-col items-center justify-center py-10">
+              <p className="text-sm" style={{ color: colors.text.secondary }}>
+                {t("adminDashboard.tutors.noScheduleSlots")}
               </p>
             </CardBody>
           </Card>
