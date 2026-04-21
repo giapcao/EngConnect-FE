@@ -1,40 +1,20 @@
-import {
-  Card,
-  CardBody,
-  CardFooter,
-  Chip,
-  Button,
-  Avatar,
-} from "@heroui/react";
+import { Card, CardBody, Chip, Avatar, Progress } from "@heroui/react";
 import { useNavigate } from "react-router-dom";
-import { useTranslation } from "react-i18next";
 import { useThemeColors } from "../../hooks/useThemeColors";
-import { Star, Users, Clock } from "@phosphor-icons/react";
+import { Star, Users } from "@phosphor-icons/react";
 
 const CourseCard = ({
   course,
-  showViewButton = true,
   showCategory = false,
   showTutorInfo = true,
   statusBadge = null,
   topRightAction = null,
   basePath = "/courses",
-  variant = "default", // "default" | "compact"
   style: customStyle = {},
+  progress = null, // { completed, total } — when provided, shows progress bar instead of stats
 }) => {
   const navigate = useNavigate();
-  const { t } = useTranslation();
   const colors = useThemeColors();
-
-  const formatDuration = (timeStr) => {
-    if (!timeStr) return "";
-    const parts = timeStr.split(":");
-    const h = parseInt(parts[0], 10);
-    const m = parseInt(parts[1], 10);
-    if (h > 0 && m > 0) return `${h}h ${m}m`;
-    if (h > 0) return `${h}h`;
-    return `${m}m`;
-  };
 
   const formatPrice = (price) => {
     if (price == null) return "";
@@ -45,7 +25,9 @@ const CourseCard = ({
 
   return (
     <Card
-      className="h-full shadow-none"
+      isPressable
+      onPress={() => navigate(`${basePath}/${course.id}`)}
+      className="h-full w-full shadow-none"
       style={{
         backgroundColor: colors.background.light,
         ...customStyle,
@@ -57,9 +39,9 @@ const CourseCard = ({
           alt={course.title}
           className="w-full h-40 object-cover rounded-xl"
           style={
-            !course.thumbnailUrl
-              ? { backgroundColor: colors.background.gray }
-              : {}
+            course.thumbnailUrl
+              ? {}
+              : { backgroundColor: colors.background.gray }
           }
         />
         {statusBadge && (
@@ -78,9 +60,7 @@ const CourseCard = ({
           <div className="absolute top-5 right-5 z-10">{topRightAction}</div>
         )}
       </div>
-      <CardBody
-        className={`p-4 pt-0${variant === "compact" ? " flex-grow" : ""}`}
-      >
+      <CardBody className="p-4 pt-0 flex flex-col flex-1">
         <div className="flex items-center gap-2 mb-2">
           {course.level && (
             <Chip
@@ -108,7 +88,7 @@ const CourseCard = ({
           )}
         </div>
         <h3
-          className="font-semibold line-clamp-2 min-h-[40px]"
+          className="font-semibold line-clamp-2 min-h-[40px] mb-1"
           style={{ color: colors.text.primary }}
         >
           {course.title}
@@ -133,54 +113,54 @@ const CourseCard = ({
             </p>
           </div>
         )}
-        <div
-          className="flex items-center gap-3 text-sm"
-          style={{ color: colors.text.secondary }}
-        >
-          <span className="flex items-center gap-1">
-            <Star size={14} weight="fill" style={{ color: "#F59E0B" }} />
-            {course.ratingAverage}
-            {course.ratingCount > 0 && ` (${course.ratingCount})`}
-          </span>
-          {course.numberOfEnrollment > 0 && (
-            <span className="flex items-center gap-1">
-              <Users size={14} weight="duotone" />
-              {course.numberOfEnrollment?.toLocaleString()}
+        {progress ? (
+          <div className="mt-auto space-y-1.5">
+            <div
+              className="flex items-center justify-between text-xs"
+              style={{ color: colors.text.secondary }}
+            >
+              <span>Progress</span>
+              <span
+                className="font-medium"
+                style={{ color: colors.text.primary }}
+              >
+                {progress.completed}/{progress.total} lessons
+              </span>
+            </div>
+            <Progress
+              value={
+                progress.total > 0
+                  ? Math.round((progress.completed / progress.total) * 100)
+                  : 0
+              }
+              size="md"
+            />
+          </div>
+        ) : (
+          <div className="flex items-center justify-between mt-auto">
+            <div
+              className="flex items-center gap-3 text-sm"
+              style={{ color: colors.text.secondary }}
+            >
+              <span className="flex items-center gap-1">
+                <Star size={14} weight="fill" style={{ color: "#F59E0B" }} />
+                {course.ratingAverage}
+                {course.ratingCount > 0 && ` (${course.ratingCount})`}
+              </span>
+              <span className="flex items-center gap-1">
+                <Users size={14} weight="duotone" />
+                {course.numberOfEnrollment?.toLocaleString()}
+              </span>
+            </div>
+            <span
+              className="text-lg font-bold"
+              style={{ color: colors.primary.main }}
+            >
+              {formatPrice(course.price)}
             </span>
-          )}
-          {course.estimatedTime && (
-            <span className="flex items-center gap-1">
-              <Clock size={14} weight="duotone" />
-              {formatDuration(course.estimatedTime)}
-            </span>
-          )}
-        </div>
-      </CardBody>
-      <CardFooter
-        className={`p-4 pt-0 flex justify-between items-center${variant === "compact" ? " mt-auto" : ""}`}
-      >
-        <div>
-          <span
-            className="text-lg font-bold"
-            style={{ color: colors.primary.main }}
-          >
-            {formatPrice(course.price)}
-          </span>
-        </div>
-        {showViewButton && (
-          <Button
-            size="md"
-            style={{
-              fontWeight: "600",
-              backgroundColor: colors.button.primaryLight.background,
-              color: colors.button.primaryLight.text,
-            }}
-            onPress={() => navigate(`${basePath}/${course.id}`)}
-          >
-            {t("courses.viewDetails")}
-          </Button>
+          </div>
         )}
-      </CardFooter>
+      </CardBody>
     </Card>
   );
 };

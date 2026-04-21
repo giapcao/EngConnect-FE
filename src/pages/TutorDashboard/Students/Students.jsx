@@ -20,6 +20,7 @@ import { useThemeColors } from "../../../hooks/useThemeColors";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { coursesApi } from "../../../api";
+import message from "../../../assets/illustrations/message.avif";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -211,7 +212,7 @@ const Students = () => {
       ) : enrollments.length === 0 ? (
         <div className="flex flex-col items-center py-12 gap-4">
           <img
-            src="/src/assets/illustrations/message.avif"
+            src={message}
             alt="No students"
             className="w-68 h-68 object-contain"
           />

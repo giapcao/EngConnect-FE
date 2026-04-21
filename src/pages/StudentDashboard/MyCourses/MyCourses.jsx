@@ -38,6 +38,8 @@ const MyCourses = () => {
         enrollmentStatus: enrollment.status,
         enrolledAt: enrollment.enrolledAt,
         expiredAt: enrollment.expiredAt,
+        numOfCompleteSession: enrollment.numOfCompleteSession ?? 0,
+        numsOfSession: enrollment.numsOfSession ?? 0,
       }));
       setCourses(items);
     } catch (err) {
@@ -138,6 +140,7 @@ const MyCourses = () => {
           count={8}
           gridClassName="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
           cardBgColor={colors.background.light}
+          showProgress
         />
       ) : courses.length === 0 ? (
         <motion.div
@@ -188,8 +191,13 @@ const MyCourses = () => {
               <CourseCard
                 course={course}
                 showCategory={true}
+                showTutorInfo={false}
                 variant="compact"
                 basePath="/student/courses"
+                progress={{
+                  completed: course.numOfCompleteSession,
+                  total: course.numsOfSession,
+                }}
                 statusBadge={
                   course.enrollmentStatus
                     ? {
