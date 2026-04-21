@@ -209,10 +209,18 @@ const Students = () => {
           <Spinner size="lg" />
         </div>
       ) : enrollments.length === 0 ? (
-        <div className="flex justify-center py-12">
-          <p style={{ color: colors.text.tertiary }}>
+        <div className="flex flex-col items-center py-12 gap-4">
+          <img
+            src="/src/assets/illustrations/message.avif"
+            alt="No students"
+            className="w-68 h-68 object-contain"
+          />
+          <h3
+            className="text-xl font-semibold"
+            style={{ color: colors.text.primary }}
+          >
             {t("tutorDashboard.students.noStudents")}
-          </p>
+          </h3>
         </div>
       ) : (
         <motion.div

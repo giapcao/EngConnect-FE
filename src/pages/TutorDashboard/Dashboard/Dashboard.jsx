@@ -424,12 +424,19 @@ const Dashboard = () => {
                       <span style={{ color: colors.text.tertiary }}>...</span>
                     </div>
                   ) : recentStudents.length === 0 ? (
-                    <p
-                      className="text-sm text-center py-4"
-                      style={{ color: colors.text.tertiary }}
-                    >
-                      {t("tutorDashboard.students.noStudents")}
-                    </p>
+                    <div className="flex flex-col items-center py-4 gap-3">
+                      <img
+                        src="/src/assets/illustrations/message.avif"
+                        alt="No students"
+                        className="w-48 h-38 object-contain"
+                      />
+                      <p
+                        className="text-sm"
+                        style={{ color: colors.text.secondary }}
+                      >
+                        {t("tutorDashboard.students.noStudents")}
+                      </p>
+                    </div>
                   ) : (
                     recentStudents.map((enrollment) => {
                       const progress =

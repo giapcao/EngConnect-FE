@@ -1,16 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import {
-  Card,
-  CardBody,
-  Button,
-  Chip,
-  Divider,
-  Spinner,
-  RadioGroup,
-  Radio,
-} from "@heroui/react";
+import { Card, CardBody, Button, Chip, Divider, Spinner } from "@heroui/react";
 import * as MotionLib from "framer-motion";
 import Header from "../../components/Header/Header";
 import Footer from "../../components/Footer/Footer";
@@ -18,7 +9,6 @@ import { useThemeColors } from "../../hooks/useThemeColors";
 import {
   ArrowLeft,
   Clock,
-  CreditCard,
   Warning,
   Check,
   CalendarDots,
@@ -45,7 +35,7 @@ const Checkout = () => {
   const [schedules, setSchedules] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedSlots, setSelectedSlots] = useState([]);
-  const [paymentMethod, setPaymentMethod] = useState("");
+  const [paymentMethod] = useState("Payos");
   const [submitting, setSubmitting] = useState(false);
 
   const requiredSlots = course?.numsSessionInWeek || 0;
@@ -90,8 +80,7 @@ const Checkout = () => {
     });
   };
 
-  const canCheckout =
-    selectedSlots.length === requiredSlots && paymentMethod !== "";
+  const canCheckout = selectedSlots.length === requiredSlots;
 
   const handleCheckout = async () => {
     if (!canCheckout) return;
@@ -332,37 +321,6 @@ const Checkout = () => {
               </Card>
 
               {/* Payment Method */}
-              <Card
-                shadow="none"
-                className="border-none"
-                style={{ backgroundColor: colors.background.gray }}
-              >
-                <CardBody className="p-6">
-                  <h2
-                    className="font-semibold text-lg mb-4"
-                    style={{ color: colors.text.primary }}
-                  >
-                    <CreditCard
-                      weight="duotone"
-                      className="w-5 h-5 inline-block mr-2"
-                      style={{ color: colors.primary.main }}
-                    />
-                    {t("checkout.paymentMethod")}
-                  </h2>
-
-                  <RadioGroup
-                    value={paymentMethod}
-                    onValueChange={setPaymentMethod}
-                  >
-                    <Radio value="Vnpay">
-                      <span style={{ color: colors.text.primary }}>VNPay</span>
-                    </Radio>
-                    <Radio value="Payos">
-                      <span style={{ color: colors.text.primary }}>PayOS</span>
-                    </Radio>
-                  </RadioGroup>
-                </CardBody>
-              </Card>
             </div>
 
             {/* Right: Order Summary */}
@@ -425,19 +383,17 @@ const Checkout = () => {
                           {selectedSlots.length} / {requiredSlots}
                         </span>
                       </div>
-                      {paymentMethod && (
-                        <div className="flex justify-between text-sm">
-                          <span style={{ color: colors.text.secondary }}>
-                            {t("checkout.payment")}
-                          </span>
-                          <span
-                            className="font-medium"
-                            style={{ color: colors.text.primary }}
-                          >
-                            {paymentMethod === "Vnpay" ? "VNPay" : "PayOS"}
-                          </span>
-                        </div>
-                      )}
+                      <div className="flex justify-between text-sm">
+                        <span style={{ color: colors.text.secondary }}>
+                          {t("checkout.payment")}
+                        </span>
+                        <span
+                          className="font-medium"
+                          style={{ color: colors.text.primary }}
+                        >
+                          PayOS
+                        </span>
+                      </div>
                     </div>
 
                     <Divider />
