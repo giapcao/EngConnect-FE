@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState, useEffect } from "react";
 import {
   Card,
   CardBody,
@@ -9,6 +9,7 @@ import {
   Chip,
   Tabs,
   Tab,
+  Spinner,
   Dropdown,
   DropdownTrigger,
   DropdownMenu,
@@ -16,7 +17,9 @@ import {
 } from "@heroui/react";
 import { useTranslation } from "react-i18next";
 import { useThemeColors } from "../../../hooks/useThemeColors";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import { coursesApi } from "../../../api";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -33,132 +36,81 @@ const itemVariants = {
 import {
   MagnifyingGlass,
   DotsThree,
-  ChatCircle,
   Eye,
-  TrendUp,
-  Clock,
-  BookOpen,
-  Star,
   CalendarCheck,
-  Envelope,
 } from "@phosphor-icons/react";
 
 const Students = () => {
   const { t } = useTranslation();
   const colors = useThemeColors();
+  const navigate = useNavigate();
   const [selectedTab, setSelectedTab] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [enrollments, setEnrollments] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const students = [
-    {
-      id: 1,
-      name: "Nguyen Van A",
-      email: "nguyenvana@email.com",
-      avatar: "https://i.pravatar.cc/150?u=student1",
-      course: "Business English",
-      progress: 65,
-      lessonsCompleted: 13,
-      totalLessons: 20,
-      lastLesson: "2 hours ago",
-      rating: 4.8,
-      status: "active",
-      enrolledDate: "Jan 15, 2026",
-    },
-    {
-      id: 2,
-      name: "Tran Thi B",
-      email: "tranthib@email.com",
-      avatar: "https://i.pravatar.cc/150?u=student2",
-      course: "IELTS Preparation",
-      progress: 40,
-      lessonsCompleted: 8,
-      totalLessons: 20,
-      lastLesson: "Yesterday",
-      rating: 4.5,
-      status: "active",
-      enrolledDate: "Jan 10, 2026",
-    },
-    {
-      id: 3,
-      name: "Le Van C",
-      email: "levanc@email.com",
-      avatar: "https://i.pravatar.cc/150?u=student3",
-      course: "Conversational English",
-      progress: 85,
-      lessonsCompleted: 17,
-      totalLessons: 20,
-      lastLesson: "3 days ago",
-      rating: 5.0,
-      status: "active",
-      enrolledDate: "Dec 20, 2025",
-    },
-    {
-      id: 4,
-      name: "Pham Thi D",
-      email: "phamthid@email.com",
-      avatar: "https://i.pravatar.cc/150?u=student4",
-      course: "Business English",
-      progress: 100,
-      lessonsCompleted: 20,
-      totalLessons: 20,
-      lastLesson: "1 week ago",
-      rating: 4.9,
-      status: "completed",
-      enrolledDate: "Nov 15, 2025",
-    },
-    {
-      id: 5,
-      name: "Hoang Van E",
-      email: "hoangvane@email.com",
-      avatar: "https://i.pravatar.cc/150?u=student5",
-      course: "IELTS Preparation",
-      progress: 20,
-      lessonsCompleted: 4,
-      totalLessons: 20,
-      lastLesson: "2 weeks ago",
-      rating: 4.2,
-      status: "inactive",
-      enrolledDate: "Jan 5, 2026",
-    },
-  ];
+  useEffect(() => {
+    const fetchEnrollments = async () => {
+      setLoading(true);
+      try {
+        const params = { "page-size": 50, page: 1 };
+        params.Status =
+          selectedTab === "all" ? "InProgress,Completed" : selectedTab;
+        if (searchQuery.trim()) params["search-term"] = searchQuery.trim();
+        const data = await coursesApi.getMyStudentEnrollments(params);
+        setEnrollments(data?.data?.items ?? []);
+      } catch {
+        setEnrollments([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchEnrollments();
+  }, [selectedTab, searchQuery]);
 
   const getStatusColor = (status) => {
-    switch (status) {
-      case "active":
-        return colors.state.success;
-      case "completed":
-        return colors.primary.main;
-      case "inactive":
-        return colors.state.warning;
-      default:
-        return colors.text.secondary;
-    }
+    if (status === "InProgress") return colors.state.success;
+    if (status === "Completed") return colors.primary.main;
+    return colors.text.secondary;
   };
 
-  const filteredStudents = students.filter((student) => {
-    const matchesTab = selectedTab === "all" || student.status === selectedTab;
-    const matchesSearch =
-      student.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      student.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      student.course.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesTab && matchesSearch;
-  });
+  const getStatusLabel = (status) => {
+    if (status === "InProgress") return t("tutorDashboard.students.inProgress");
+    if (status === "Completed") return t("tutorDashboard.students.completed");
+    return status;
+  };
+
+  const formatDate = (iso) => {
+    if (!iso) return "";
+    return new Date(iso).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  };
+
+  const totalInProgress = enrollments.filter(
+    (e) => e.status === "InProgress",
+  ).length;
+  const totalCompleted = enrollments.filter(
+    (e) => e.status === "Completed",
+  ).length;
 
   const stats = [
     {
       label: t("tutorDashboard.students.totalStudents"),
-      value: students.length,
+      value: loading ? "..." : enrollments.length,
       color: colors.primary.main,
     },
     {
       label: t("tutorDashboard.students.activeStudents"),
-      value: students.filter((s) => s.status === "active").length,
+      value: loading ? "..." : totalInProgress,
       color: colors.state.success,
     },
     {
       label: t("tutorDashboard.students.completedCourses"),
-      value: students.filter((s) => s.status === "completed").length,
-      color: colors.state.info,
+      value: loading ? "..." : totalCompleted,
+      color: colors.primary.main,
     },
   ];
 
@@ -182,7 +134,7 @@ const Students = () => {
       </motion.div>
 
       {/* Stats */}
-      <motion.div
+      {/* <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.15 }}
@@ -205,7 +157,7 @@ const Students = () => {
             </CardBody>
           </Card>
         ))}
-      </motion.div>
+      </motion.div> */}
 
       {/* Filters */}
       <motion.div
@@ -243,193 +195,178 @@ const Students = () => {
           }}
         >
           <Tab key="all" title={t("tutorDashboard.students.all")} />
-          <Tab key="active" title={t("tutorDashboard.students.active")} />
-          <Tab key="completed" title={t("tutorDashboard.students.completed")} />
-          <Tab key="inactive" title={t("tutorDashboard.students.inactive")} />
+          <Tab
+            key="InProgress"
+            title={t("tutorDashboard.students.inProgress")}
+          />
+          <Tab key="Completed" title={t("tutorDashboard.students.completed")} />
         </Tabs>
       </motion.div>
 
       {/* Students List */}
-      <motion.div
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-        className="space-y-4"
-      >
-        {filteredStudents.map((student) => (
-          <motion.div key={student.id} variants={itemVariants}>
-            <Card
-              shadow="none"
-              className="border-none"
-              style={{ backgroundColor: colors.background.light }}
-            >
-              <CardBody className="p-4">
-                <div className="flex flex-col lg:flex-row lg:items-center gap-4">
-                  {/* Student Info */}
-                  <div className="flex items-center gap-4 flex-1">
-                    <Avatar
-                      src={student.avatar}
-                      size="lg"
-                      className="flex-shrink-0"
-                    />
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3
-                          className="font-semibold"
-                          style={{ color: colors.text.primary }}
-                        >
-                          {student.name}
-                        </h3>
-                        <Chip
-                          size="sm"
-                          style={{
-                            backgroundColor: `${getStatusColor(student.status)}20`,
-                            color: getStatusColor(student.status),
-                          }}
-                        >
-                          {student.status}
-                        </Chip>
+      {loading ? (
+        <div className="flex justify-center py-12">
+          <Spinner size="lg" />
+        </div>
+      ) : enrollments.length === 0 ? (
+        <div className="flex justify-center py-12">
+          <p style={{ color: colors.text.tertiary }}>
+            {t("tutorDashboard.students.noStudents")}
+          </p>
+        </div>
+      ) : (
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+          className="space-y-4"
+        >
+          {enrollments.map((enrollment) => {
+            const progress =
+              enrollment.numsOfSession > 0
+                ? Math.round(
+                    (enrollment.numOfCompleteSession /
+                      enrollment.numsOfSession) *
+                      100,
+                  )
+                : 0;
+
+            return (
+              <motion.div key={enrollment.id} variants={itemVariants}>
+                <Card
+                  shadow="none"
+                  className="border-none"
+                  style={{ backgroundColor: colors.background.light }}
+                >
+                  <CardBody className="p-4">
+                    <div className="flex flex-col lg:flex-row lg:items-center gap-4">
+                      {/* Student Info */}
+                      <div className="flex items-center gap-4 flex-1">
+                        <Avatar
+                          src={enrollment.studentAvatar}
+                          size="lg"
+                          className="flex-shrink-0"
+                        />
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h3
+                              className="font-semibold"
+                              style={{ color: colors.text.primary }}
+                            >
+                              {enrollment.studentName}
+                            </h3>
+                            <Chip
+                              size="sm"
+                              style={{
+                                backgroundColor: `${getStatusColor(enrollment.status)}20`,
+                                color: getStatusColor(enrollment.status),
+                              }}
+                            >
+                              {getStatusLabel(enrollment.status)}
+                            </Chip>
+                          </div>
+                          <p
+                            className="text-sm cursor-pointer hover:underline"
+                            style={{ color: colors.primary.main }}
+                            onClick={() =>
+                              navigate(`/tutor/courses/${enrollment.courseId}`)
+                            }
+                          >
+                            {enrollment.courseName}
+                          </p>
+                          <p
+                            className="text-xs mt-0.5"
+                            style={{ color: colors.text.tertiary }}
+                          >
+                            {t("tutorDashboard.students.enrolledAt")}:{" "}
+                            {formatDate(enrollment.enrolledAt)}
+                          </p>
+                        </div>
                       </div>
-                      <p
-                        className="text-sm"
-                        style={{ color: colors.text.secondary }}
-                      >
-                        {student.email}
-                      </p>
-                      <p
-                        className="text-sm"
-                        style={{ color: colors.primary.main }}
-                      >
-                        {student.course}
-                      </p>
-                    </div>
-                  </div>
 
-                  {/* Progress */}
-                  <div className="flex-1 lg:max-w-xs">
-                    <div className="flex items-center justify-between mb-2">
-                      <span
-                        className="text-sm"
-                        style={{ color: colors.text.secondary }}
-                      >
-                        {t("tutorDashboard.students.progress")}
-                      </span>
-                      <span
-                        className="text-sm font-medium"
-                        style={{ color: colors.text.primary }}
-                      >
-                        {student.lessonsCompleted}/{student.totalLessons}{" "}
-                        {t("tutorDashboard.students.lessons")}
-                      </span>
-                    </div>
-                    <Progress
-                      value={student.progress}
-                      size="sm"
-                      classNames={{
-                        indicator: "bg-primary",
-                      }}
-                      style={{
-                        backgroundColor: colors.background.gray,
-                      }}
-                    />
-                  </div>
-
-                  {/* Stats */}
-                  <div className="flex items-center gap-4 lg:gap-6">
-                    <div className="flex items-center gap-1">
-                      <Star
-                        weight="fill"
-                        className="w-4 h-4"
-                        style={{ color: colors.state.warning }}
-                      />
-                      <span
-                        className="text-sm font-medium"
-                        style={{ color: colors.text.primary }}
-                      >
-                        {student.rating}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Clock
-                        weight="duotone"
-                        className="w-4 h-4"
-                        style={{ color: colors.text.tertiary }}
-                      />
-                      <span
-                        className="text-sm"
-                        style={{ color: colors.text.secondary }}
-                      >
-                        {student.lastLesson}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Actions */}
-                  <div className="flex items-center gap-2">
-                    <Button
-                      isIconOnly
-                      variant="flat"
-                      size="sm"
-                      style={{
-                        backgroundColor: colors.background.primaryLight,
-                        color: colors.primary.main,
-                      }}
-                    >
-                      <ChatCircle weight="duotone" className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      isIconOnly
-                      variant="flat"
-                      size="sm"
-                      style={{
-                        backgroundColor: colors.background.gray,
-                        color: colors.text.secondary,
-                      }}
-                    >
-                      <Envelope weight="duotone" className="w-4 h-4" />
-                    </Button>
-                    <Dropdown>
-                      <DropdownTrigger>
-                        <Button
-                          isIconOnly
-                          variant="flat"
+                      {/* Progress */}
+                      <div className="flex-1 lg:max-w-xs">
+                        <div className="flex items-center justify-between mb-2">
+                          <span
+                            className="text-sm"
+                            style={{ color: colors.text.secondary }}
+                          >
+                            {t("tutorDashboard.students.progress")}
+                          </span>
+                          <span
+                            className="text-sm font-medium"
+                            style={{ color: colors.text.primary }}
+                          >
+                            {enrollment.numOfCompleteSession}/
+                            {enrollment.numsOfSession}{" "}
+                            {t("tutorDashboard.students.lessons")}
+                          </span>
+                        </div>
+                        <Progress
+                          value={progress}
                           size="sm"
+                          classNames={{
+                            indicator: "bg-primary",
+                          }}
                           style={{
                             backgroundColor: colors.background.gray,
-                            color: colors.text.secondary,
                           }}
-                        >
-                          <DotsThree weight="bold" className="w-5 h-5" />
-                        </Button>
-                      </DropdownTrigger>
-                      <DropdownMenu>
-                        <DropdownItem
-                          key="view"
-                          startContent={<Eye className="w-4 h-4" />}
-                        >
-                          {t("tutorDashboard.students.viewProfile")}
-                        </DropdownItem>
-                        <DropdownItem
-                          key="progress"
-                          startContent={<TrendUp className="w-4 h-4" />}
-                        >
-                          {t("tutorDashboard.students.viewProgress")}
-                        </DropdownItem>
-                        <DropdownItem
-                          key="schedule"
-                          startContent={<CalendarCheck className="w-4 h-4" />}
-                        >
-                          {t("tutorDashboard.students.scheduleLesson")}
-                        </DropdownItem>
-                      </DropdownMenu>
-                    </Dropdown>
-                  </div>
-                </div>
-              </CardBody>
-            </Card>
-          </motion.div>
-        ))}
-      </motion.div>
+                        />
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex items-center gap-2">
+                        <Dropdown>
+                          <DropdownTrigger>
+                            <Button
+                              isIconOnly
+                              variant="flat"
+                              size="sm"
+                              style={{
+                                backgroundColor: colors.background.gray,
+                                color: colors.text.secondary,
+                              }}
+                            >
+                              <DotsThree weight="bold" className="w-5 h-5" />
+                            </Button>
+                          </DropdownTrigger>
+                          <DropdownMenu
+                            onAction={(key) => {
+                              if (key === "view")
+                                navigate(
+                                  `/tutor/students/${enrollment.studentId}`,
+                                );
+                              if (key === "schedule")
+                                navigate(
+                                  `/tutor/schedule?studentId=${enrollment.studentId}&courseId=${enrollment.courseId}`,
+                                );
+                            }}
+                          >
+                            <DropdownItem
+                              key="view"
+                              startContent={<Eye className="w-4 h-4" />}
+                            >
+                              {t("tutorDashboard.students.viewProfile")}
+                            </DropdownItem>
+                            <DropdownItem
+                              key="schedule"
+                              startContent={
+                                <CalendarCheck className="w-4 h-4" />
+                              }
+                            >
+                              {t("tutorDashboard.students.scheduleLesson")}
+                            </DropdownItem>
+                          </DropdownMenu>
+                        </Dropdown>
+                      </div>
+                    </div>
+                  </CardBody>
+                </Card>
+              </motion.div>
+            );
+          })}
+        </motion.div>
+      )}
     </div>
   );
 };

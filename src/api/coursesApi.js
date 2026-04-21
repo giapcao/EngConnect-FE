@@ -149,6 +149,15 @@ export const coursesApi = {
     return response.data;
   },
 
+  // Get tutor's student enrollments
+  getMyStudentEnrollments: async (params = {}) => {
+    const response = await axiosInstance.get(
+      "/course-enrollments/my-student-enrollments/tutor",
+      { params }
+    );
+    return response.data;
+  },
+
 
   // ==================== COURSE MODULE ====================
   // Get course modules by CourseId

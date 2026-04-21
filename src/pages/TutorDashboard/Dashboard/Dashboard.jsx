@@ -21,7 +21,7 @@ import calendarIllustration from "../../../assets/illustrations/calendar.avif";
 import { useSelector } from "react-redux";
 import { selectUser } from "../../../store";
 import { useNavigate } from "react-router-dom";
-import { studentApi } from "../../../api";
+import { studentApi, coursesApi } from "../../../api";
 
 const CDN_BASE = "https://d20854st1o56hw.cloudfront.net/";
 const withCDN = (url) => {
@@ -38,6 +38,8 @@ const Dashboard = () => {
 
   const [upcomingLessons, setUpcomingLessons] = useState([]);
   const [lessonsLoading, setLessonsLoading] = useState(true);
+  const [recentStudents, setRecentStudents] = useState([]);
+  const [recentStudentsLoading, setRecentStudentsLoading] = useState(true);
 
   const fetchUpcomingLessons = useCallback(async () => {
     if (!user?.tutorId) return;
@@ -60,6 +62,24 @@ const Dashboard = () => {
   useEffect(() => {
     fetchUpcomingLessons();
   }, [fetchUpcomingLessons]);
+
+  useEffect(() => {
+    const fetchRecentStudents = async () => {
+      try {
+        const data = await coursesApi.getMyStudentEnrollments({
+          Status: "InProgress,Completed",
+          "page-size": 5,
+          page: 1,
+        });
+        setRecentStudents(data?.data?.items ?? []);
+      } catch {
+        setRecentStudents([]);
+      } finally {
+        setRecentStudentsLoading(false);
+      }
+    };
+    fetchRecentStudents();
+  }, []);
 
   const formatLessonTime = (dateStr) => {
     if (!dateStr) return "";
@@ -112,33 +132,6 @@ const Dashboard = () => {
       change: "+18%",
       color: colors.state.success,
       bg: `${colors.state.success}20`,
-    },
-  ];
-
-  const recentStudents = [
-    {
-      id: 1,
-      name: "Nguyen Van A",
-      avatar: "https://i.pravatar.cc/150?u=student1",
-      course: "Business English",
-      progress: 65,
-      lastLesson: "2 hours ago",
-    },
-    {
-      id: 2,
-      name: "Tran Thi B",
-      avatar: "https://i.pravatar.cc/150?u=student2",
-      course: "IELTS Preparation",
-      progress: 40,
-      lastLesson: "Yesterday",
-    },
-    {
-      id: 3,
-      name: "Le Van C",
-      avatar: "https://i.pravatar.cc/150?u=student3",
-      course: "Conversational English",
-      progress: 85,
-      lastLesson: "3 days ago",
     },
   ];
 
@@ -214,7 +207,7 @@ const Dashboard = () => {
       </motion.div>
 
       {/* Stats Grid */}
-      <motion.div
+      {/* <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.15 }}
@@ -266,7 +259,7 @@ const Dashboard = () => {
             </CardBody>
           </Card>
         ))}
-      </motion.div>
+      </motion.div> */}
 
       {/* Main Content Grid */}
       <div className="grid lg:grid-cols-3 gap-6">
@@ -419,53 +412,81 @@ const Dashboard = () => {
                     size="sm"
                     endContent={<ArrowRight className="w-4 h-4" />}
                     style={{ color: colors.primary.main }}
+                    onPress={() => navigate("/tutor/students")}
                   >
                     {t("tutorDashboard.dashboard.viewAll")}
                   </Button>
                 </div>
 
                 <div className="space-y-4">
-                  {recentStudents.map((student) => (
-                    <div key={student.id} className="flex items-center gap-4">
-                      <Avatar
-                        src={student.avatar}
-                        size="md"
-                        className="flex-shrink-0"
-                      />
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between mb-1">
-                          <p
-                            className="font-medium"
-                            style={{ color: colors.text.primary }}
-                          >
-                            {student.name}
-                          </p>
-                          <span
-                            className="text-xs"
-                            style={{ color: colors.text.tertiary }}
-                          >
-                            {student.lastLesson}
-                          </span>
-                        </div>
-                        <p
-                          className="text-sm mb-2"
-                          style={{ color: colors.text.secondary }}
-                        >
-                          {student.course}
-                        </p>
-                        <Progress
-                          value={student.progress}
-                          size="sm"
-                          classNames={{
-                            indicator: "bg-primary",
-                          }}
-                          style={{
-                            backgroundColor: colors.background.gray,
-                          }}
-                        />
-                      </div>
+                  {recentStudentsLoading ? (
+                    <div className="flex justify-center py-4">
+                      <span style={{ color: colors.text.tertiary }}>...</span>
                     </div>
-                  ))}
+                  ) : recentStudents.length === 0 ? (
+                    <p
+                      className="text-sm text-center py-4"
+                      style={{ color: colors.text.tertiary }}
+                    >
+                      {t("tutorDashboard.students.noStudents")}
+                    </p>
+                  ) : (
+                    recentStudents.map((enrollment) => {
+                      const progress =
+                        enrollment.numsOfSession > 0
+                          ? Math.round(
+                              (enrollment.numOfCompleteSession /
+                                enrollment.numsOfSession) *
+                                100,
+                            )
+                          : 0;
+                      return (
+                        <div
+                          key={enrollment.id}
+                          className="flex items-center gap-4"
+                        >
+                          <Avatar
+                            src={enrollment.studentAvatar}
+                            size="md"
+                            className="flex-shrink-0"
+                          />
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between mb-1">
+                              <p
+                                className="font-medium"
+                                style={{ color: colors.text.primary }}
+                              >
+                                {enrollment.studentName}
+                              </p>
+                              <span
+                                className="text-xs"
+                                style={{ color: colors.text.tertiary }}
+                              >
+                                {enrollment.numOfCompleteSession}/
+                                {enrollment.numsOfSession} sessions
+                              </span>
+                            </div>
+                            <p
+                              className="text-sm mb-2"
+                              style={{ color: colors.text.secondary }}
+                            >
+                              {enrollment.courseName}
+                            </p>
+                            <Progress
+                              value={progress}
+                              size="sm"
+                              classNames={{
+                                indicator: "bg-primary",
+                              }}
+                              style={{
+                                backgroundColor: colors.background.gray,
+                              }}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
                 </div>
               </CardBody>
             </Card>

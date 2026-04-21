@@ -1,49 +1,139 @@
-import { Card, CardBody, Button, Avatar } from "@heroui/react";
+import { useState, useEffect } from "react";
+import { Card, CardBody, Button, Avatar, Spinner } from "@heroui/react";
 import { useTranslation } from "react-i18next";
 import { useThemeColors } from "../../../hooks/useThemeColors";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import { adminApi, coursesApi } from "../../../api";
 import {
   Users,
   ChalkboardTeacher,
   BookOpen,
   CurrencyDollar,
-  TrendUp,
-  TrendDown,
   ArrowRight,
-  CalendarCheck,
-  Clock,
-  Star,
 } from "@phosphor-icons/react";
 
 const Dashboard = () => {
   const { t } = useTranslation();
   const colors = useThemeColors();
+  const navigate = useNavigate();
+
+  const [statsLoading, setStatsLoading] = useState(true);
+  const [totalStudents, setTotalStudents] = useState(0);
+  const [totalTutors, setTotalTutors] = useState(0);
+  const [totalCourses, setTotalCourses] = useState(0);
+
+  const [pendingLoading, setPendingLoading] = useState(true);
+  const [pendingCourses, setPendingCourses] = useState([]);
+  const [pendingCoursesCount, setPendingCoursesCount] = useState(0);
+  const [courseDetails, setCourseDetails] = useState({});
+  const [pendingTutors, setPendingTutors] = useState([]);
+  const [pendingTutorsCount, setPendingTutorsCount] = useState(0);
+  const [tutorDetails, setTutorDetails] = useState({});
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const [studentsRes, tutorsRes, coursesRes] = await Promise.allSettled([
+          adminApi.getAllStudents({ "page-size": 1, page: 1 }),
+          adminApi.getAllTutors({ "page-size": 1, page: 1 }),
+          adminApi.getAllCoursesAdmin({ "page-size": 1, page: 1 }),
+        ]);
+        if (studentsRes.status === "fulfilled")
+          setTotalStudents(studentsRes.value.data?.totalItems || 0);
+        if (tutorsRes.status === "fulfilled")
+          setTotalTutors(tutorsRes.value.data?.totalItems || 0);
+        if (coursesRes.status === "fulfilled")
+          setTotalCourses(coursesRes.value.data?.totalItems || 0);
+      } catch (err) {
+        console.error("Failed to fetch dashboard stats:", err);
+      } finally {
+        setStatsLoading(false);
+      }
+    };
+    fetchStats();
+  }, []);
+
+  useEffect(() => {
+    const fetchPending = async () => {
+      setPendingLoading(true);
+      try {
+        const [courseRes, tutorRes] = await Promise.allSettled([
+          coursesApi.getCourseVerificationRequests({
+            Status: "Pending",
+            "page-size": 5,
+            page: 1,
+          }),
+          adminApi.getVerificationRequests({
+            Status: "Pending",
+            "page-size": 5,
+            page: 1,
+          }),
+        ]);
+
+        if (courseRes.status === "fulfilled") {
+          const items = courseRes.value.data?.items || [];
+          setPendingCourses(items);
+          setPendingCoursesCount(courseRes.value.data?.totalItems || 0);
+          const ids = [
+            ...new Set(items.map((r) => r.courseId).filter(Boolean)),
+          ];
+          if (ids.length > 0) {
+            const results = await Promise.allSettled(
+              ids.map((id) => coursesApi.getCourseById(id)),
+            );
+            const details = {};
+            results.forEach((r, i) => {
+              if (r.status === "fulfilled") details[ids[i]] = r.value.data;
+            });
+            setCourseDetails(details);
+          }
+        }
+
+        if (tutorRes.status === "fulfilled") {
+          const items = tutorRes.value.data?.items || [];
+          setPendingTutors(items);
+          setPendingTutorsCount(tutorRes.value.data?.totalItems || 0);
+          const ids = [...new Set(items.map((r) => r.tutorId).filter(Boolean))];
+          if (ids.length > 0) {
+            const results = await Promise.allSettled(
+              ids.map((id) => adminApi.getTutorById(id)),
+            );
+            const details = {};
+            results.forEach((r, i) => {
+              if (r.status === "fulfilled") details[ids[i]] = r.value.data;
+            });
+            setTutorDetails(details);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch pending approvals:", err);
+      } finally {
+        setPendingLoading(false);
+      }
+    };
+    fetchPending();
+  }, []);
 
   const stats = [
     {
       icon: Users,
       label: t("adminDashboard.dashboard.stats.totalStudents"),
-      value: "12,847",
-      change: "+12.5%",
-      trend: "up",
+      value: statsLoading ? "..." : totalStudents.toLocaleString(),
       color: colors.primary.main,
       bg: colors.background.primaryLight,
     },
     {
       icon: ChalkboardTeacher,
       label: t("adminDashboard.dashboard.stats.totalTutors"),
-      value: "458",
-      change: "+8.2%",
-      trend: "up",
+      value: statsLoading ? "..." : totalTutors.toLocaleString(),
       color: colors.state.success,
       bg: `${colors.state.success}20`,
     },
     {
       icon: BookOpen,
       label: t("adminDashboard.dashboard.stats.totalCourses"),
-      value: "1,234",
-      change: "+15.3%",
-      trend: "up",
+      value: statsLoading ? "..." : totalCourses.toLocaleString(),
       color: colors.state.warning,
       bg: `${colors.state.warning}20`,
     },
@@ -51,8 +141,6 @@ const Dashboard = () => {
       icon: CurrencyDollar,
       label: t("adminDashboard.dashboard.stats.revenue"),
       value: "$128,450",
-      change: "+22.4%",
-      trend: "up",
       color: colors.state.error,
       bg: `${colors.state.error}20`,
     },
@@ -101,62 +189,6 @@ const Dashboard = () => {
     },
   ];
 
-  const topTutors = [
-    {
-      id: 1,
-      name: "Sarah Johnson",
-      avatar: "https://i.pravatar.cc/150?u=tutor1",
-      specialty: "Business English",
-      rating: 4.9,
-      students: 234,
-      earnings: "$12,450",
-    },
-    {
-      id: 2,
-      name: "Michael Chen",
-      avatar: "https://i.pravatar.cc/150?u=tutor2",
-      specialty: "IELTS Preparation",
-      rating: 4.8,
-      students: 189,
-      earnings: "$9,830",
-    },
-    {
-      id: 3,
-      name: "Emma Wilson",
-      avatar: "https://i.pravatar.cc/150?u=tutor3",
-      specialty: "Conversational English",
-      rating: 4.9,
-      students: 312,
-      earnings: "$15,200",
-    },
-  ];
-
-  const pendingApprovals = [
-    {
-      id: 1,
-      type: "tutor",
-      name: "David Brown",
-      avatar: "https://i.pravatar.cc/150?u=pending1",
-      specialty: "Grammar Expert",
-      submitted: "2 days ago",
-    },
-    {
-      id: 2,
-      type: "course",
-      name: "Advanced TOEFL Strategies",
-      tutor: "Lisa Wang",
-      submitted: "1 day ago",
-    },
-    {
-      id: 3,
-      type: "tutor",
-      name: "Anna Martinez",
-      avatar: "https://i.pravatar.cc/150?u=pending2",
-      specialty: "Academic Writing",
-      submitted: "3 hours ago",
-    },
-  ];
-
   return (
     <div className="space-y-6">
       {/* Page Header */}
@@ -191,29 +223,15 @@ const Dashboard = () => {
               style={{ backgroundColor: colors.background.light }}
             >
               <CardBody className="p-5">
-                <div className="flex items-start justify-between">
-                  <div
-                    className="w-12 h-12 rounded-xl flex items-center justify-center"
-                    style={{ backgroundColor: stat.bg }}
-                  >
-                    <stat.icon
-                      className="w-6 h-6"
-                      weight="duotone"
-                      style={{ color: stat.color }}
-                    />
-                  </div>
-                  <div
-                    className={`flex items-center gap-1 text-sm font-medium ${
-                      stat.trend === "up" ? "text-green-500" : "text-red-500"
-                    }`}
-                  >
-                    {stat.trend === "up" ? (
-                      <TrendUp className="w-4 h-4" />
-                    ) : (
-                      <TrendDown className="w-4 h-4" />
-                    )}
-                    {stat.change}
-                  </div>
+                <div
+                  className="w-12 h-12 rounded-xl flex items-center justify-center"
+                  style={{ backgroundColor: stat.bg }}
+                >
+                  <stat.icon
+                    className="w-6 h-6"
+                    weight="duotone"
+                    style={{ color: stat.color }}
+                  />
                 </div>
                 <div className="mt-4">
                   <p
@@ -235,11 +253,10 @@ const Dashboard = () => {
         ))}
       </div>
 
-      {/* Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Recent Activities */}
+      {/* Pending Approvals — 2 separate cards */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Course Verification card */}
         <motion.div
-          className="lg:col-span-2"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.15 }}
@@ -251,182 +268,174 @@ const Dashboard = () => {
           >
             <CardBody className="p-5">
               <div className="flex items-center justify-between mb-4">
-                <h3
-                  className="text-lg font-semibold"
-                  style={{ color: colors.text.primary }}
-                >
-                  {t("adminDashboard.dashboard.recentActivities")}
-                </h3>
+                <div className="flex items-center gap-2">
+                  <BookOpen
+                    className="w-5 h-5"
+                    style={{ color: colors.primary.main }}
+                  />
+                  <h3
+                    className="text-lg font-semibold"
+                    style={{ color: colors.text.primary }}
+                  >
+                    {t("adminDashboard.dashboard.courseVerification")}
+                  </h3>
+                  <span
+                    className="px-1.5 py-0.5 text-xs font-medium rounded-full"
+                    style={{
+                      backgroundColor: colors.primary.main + "20",
+                      color: colors.primary.main,
+                    }}
+                  >
+                    {pendingCoursesCount}
+                  </span>
+                </div>
                 <Button
                   variant="light"
                   size="sm"
-                  endContent={<ArrowRight className="w-4 h-4" />}
+                  endContent={<ArrowRight className="w-3 h-3" />}
                   style={{ color: colors.primary.main }}
+                  onPress={() => navigate("/admin/course-verification")}
                 >
                   {t("adminDashboard.dashboard.viewAll")}
                 </Button>
               </div>
-              <div className="space-y-4">
-                {recentActivities.map((activity) => (
-                  <div
-                    key={activity.id}
-                    className="flex items-center gap-3 p-3 rounded-xl transition-colors"
-                    style={{ backgroundColor: colors.background.gray }}
-                  >
-                    {activity.avatar ? (
-                      <Avatar src={activity.avatar} size="sm" />
-                    ) : (
+              {pendingLoading ? (
+                <div className="flex justify-center py-3">
+                  <Spinner size="sm" />
+                </div>
+              ) : pendingCourses.length === 0 ? (
+                <p
+                  className="text-xs text-center py-3"
+                  style={{ color: colors.text.tertiary }}
+                >
+                  {t("adminDashboard.dashboard.noPending")}
+                </p>
+              ) : (
+                <div className="space-y-1.5">
+                  {pendingCourses.slice(0, 5).map((item) => {
+                    const course = courseDetails[item.courseId];
+                    return (
                       <div
-                        className="w-8 h-8 rounded-full flex items-center justify-center"
-                        style={{
-                          backgroundColor: colors.background.primaryLight,
-                        }}
+                        key={item.id}
+                        className="flex items-center gap-2 px-3 py-2 rounded-lg"
+                        style={{ backgroundColor: colors.background.gray }}
                       >
-                        {activity.type === "course" ? (
-                          <BookOpen
-                            className="w-4 h-4"
-                            style={{ color: colors.primary.main }}
-                          />
-                        ) : (
-                          <CurrencyDollar
-                            className="w-4 h-4"
-                            style={{ color: colors.state.success }}
-                          />
-                        )}
-                      </div>
-                    )}
-                    <div className="flex-1">
-                      <p
-                        className="text-sm font-medium"
-                        style={{ color: colors.text.primary }}
-                      >
-                        {activity.action}
-                      </p>
-                      <p
-                        className="text-xs"
-                        style={{ color: colors.text.secondary }}
-                      >
-                        {activity.user}
-                      </p>
-                    </div>
-                    <span
-                      className="text-xs"
-                      style={{ color: colors.text.tertiary }}
-                    >
-                      {activity.time}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </CardBody>
-          </Card>
-        </motion.div>
-
-        {/* Pending Approvals */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.15 }}
-        >
-          <Card
-            shadow="none"
-            className="border-none h-full"
-            style={{ backgroundColor: colors.background.light }}
-          >
-            <CardBody className="p-5">
-              <div className="flex items-center justify-between mb-4">
-                <h3
-                  className="text-lg font-semibold"
-                  style={{ color: colors.text.primary }}
-                >
-                  {t("adminDashboard.dashboard.pendingApprovals")}
-                </h3>
-                <span
-                  className="px-2 py-1 text-xs font-medium rounded-full"
-                  style={{
-                    backgroundColor: colors.state.warning + "20",
-                    color: colors.state.warning,
-                  }}
-                >
-                  {pendingApprovals.length}
-                </span>
-              </div>
-              <div className="space-y-3">
-                {pendingApprovals.map((item) => (
-                  <div
-                    key={item.id}
-                    className="p-3 rounded-xl"
-                    style={{ backgroundColor: colors.background.gray }}
-                  >
-                    <div className="flex items-start gap-3">
-                      {item.avatar ? (
-                        <Avatar src={item.avatar} size="sm" />
-                      ) : (
                         <div
-                          className="w-8 h-8 rounded-full flex items-center justify-center"
+                          className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
                           style={{
                             backgroundColor: colors.background.primaryLight,
                           }}
                         >
                           <BookOpen
-                            className="w-4 h-4"
+                            className="w-3.5 h-3.5"
                             style={{ color: colors.primary.main }}
                           />
                         </div>
-                      )}
-                      <div className="flex-1">
                         <p
-                          className="text-sm font-medium"
+                          className="text-xs flex-1 truncate"
                           style={{ color: colors.text.primary }}
                         >
-                          {item.name}
-                        </p>
-                        <p
-                          className="text-xs"
-                          style={{ color: colors.text.secondary }}
-                        >
-                          {item.specialty || item.tutor}
-                        </p>
-                        <p
-                          className="text-xs mt-1"
-                          style={{ color: colors.text.tertiary }}
-                        >
-                          {item.submitted}
+                          {course?.title || item.courseId}
                         </p>
                       </div>
-                    </div>
-                    <div className="flex gap-2 mt-3">
-                      <Button
-                        size="sm"
-                        className="flex-1"
-                        style={{
-                          backgroundColor: colors.state.success,
-                          color: colors.text.white,
-                        }}
-                      >
-                        {t("adminDashboard.dashboard.approve")}
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="flat"
-                        className="flex-1"
-                        style={{
-                          backgroundColor: colors.state.error + "20",
-                          color: colors.state.error,
-                        }}
-                      >
-                        {t("adminDashboard.dashboard.reject")}
-                      </Button>
-                    </div>
-                  </div>
-                ))}
+                    );
+                  })}
+                </div>
+              )}
+            </CardBody>
+          </Card>
+        </motion.div>
+
+        {/* Tutor Verification card */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.15 }}
+        >
+          <Card
+            shadow="none"
+            className="border-none h-full"
+            style={{ backgroundColor: colors.background.light }}
+          >
+            <CardBody className="p-5">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <ChalkboardTeacher
+                    className="w-5 h-5"
+                    style={{ color: colors.state.success }}
+                  />
+                  <h3
+                    className="text-lg font-semibold"
+                    style={{ color: colors.text.primary }}
+                  >
+                    {t("adminDashboard.dashboard.tutorVerification")}
+                  </h3>
+                  <span
+                    className="px-1.5 py-0.5 text-xs font-medium rounded-full"
+                    style={{
+                      backgroundColor: colors.state.success + "20",
+                      color: colors.state.success,
+                    }}
+                  >
+                    {pendingTutorsCount}
+                  </span>
+                </div>
+                <Button
+                  variant="light"
+                  size="sm"
+                  endContent={<ArrowRight className="w-3 h-3" />}
+                  style={{ color: colors.primary.main }}
+                  onPress={() => navigate("/admin/verification")}
+                >
+                  {t("adminDashboard.dashboard.viewAll")}
+                </Button>
               </div>
+              {pendingLoading ? (
+                <div className="flex justify-center py-3">
+                  <Spinner size="sm" />
+                </div>
+              ) : pendingTutors.length === 0 ? (
+                <p
+                  className="text-xs text-center py-3"
+                  style={{ color: colors.text.tertiary }}
+                >
+                  {t("adminDashboard.dashboard.noPending")}
+                </p>
+              ) : (
+                <div className="space-y-1.5">
+                  {pendingTutors.slice(0, 5).map((item) => {
+                    const tutor = tutorDetails[item.tutorId];
+                    const name = tutor?.user
+                      ? `${tutor.user.firstName || ""} ${tutor.user.lastName || ""}`.trim()
+                      : "";
+                    return (
+                      <div
+                        key={item.id}
+                        className="flex items-center gap-2 px-3 py-2 rounded-lg"
+                        style={{ backgroundColor: colors.background.gray }}
+                      >
+                        <Avatar
+                          src={tutor?.avatar || ""}
+                          size="sm"
+                          className="w-6 h-6 flex-shrink-0"
+                        />
+                        <p
+                          className="text-xs flex-1 truncate"
+                          style={{ color: colors.text.primary }}
+                        >
+                          {name || item.tutorId}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </CardBody>
           </Card>
         </motion.div>
       </div>
 
-      {/* Top Tutors */}
+      {/* Recent Activities */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -443,7 +452,7 @@ const Dashboard = () => {
                 className="text-lg font-semibold"
                 style={{ color: colors.text.primary }}
               >
-                {t("adminDashboard.dashboard.topTutors")}
+                {t("adminDashboard.dashboard.recentActivities")}
               </h3>
               <Button
                 variant="light"
@@ -454,81 +463,55 @@ const Dashboard = () => {
                 {t("adminDashboard.dashboard.viewAll")}
               </Button>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {topTutors.map((tutor, index) => (
+            <div className="space-y-4">
+              {recentActivities.map((activity) => (
                 <div
-                  key={tutor.id}
-                  className="p-4 rounded-xl"
+                  key={activity.id}
+                  className="flex items-center gap-3 p-3 rounded-xl transition-colors"
                   style={{ backgroundColor: colors.background.gray }}
                 >
-                  <div className="flex items-center gap-3 mb-3">
-                    <Avatar src={tutor.avatar} size="md" />
-                    <div>
-                      <p
-                        className="font-medium"
-                        style={{ color: colors.text.primary }}
-                      >
-                        {tutor.name}
-                      </p>
-                      <p
-                        className="text-sm"
-                        style={{ color: colors.text.secondary }}
-                      >
-                        {tutor.specialty}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-3 gap-2 text-center">
-                    <div>
-                      <div className="flex items-center justify-center gap-1">
-                        <Star
+                  {activity.avatar ? (
+                    <Avatar src={activity.avatar} size="sm" />
+                  ) : (
+                    <div
+                      className="w-8 h-8 rounded-full flex items-center justify-center"
+                      style={{
+                        backgroundColor: colors.background.primaryLight,
+                      }}
+                    >
+                      {activity.type === "course" ? (
+                        <BookOpen
                           className="w-4 h-4"
-                          weight="fill"
-                          style={{ color: colors.state.warning }}
+                          style={{ color: colors.primary.main }}
                         />
-                        <span
-                          className="font-semibold"
-                          style={{ color: colors.text.primary }}
-                        >
-                          {tutor.rating}
-                        </span>
-                      </div>
-                      <p
-                        className="text-xs"
-                        style={{ color: colors.text.tertiary }}
-                      >
-                        Rating
-                      </p>
+                      ) : (
+                        <CurrencyDollar
+                          className="w-4 h-4"
+                          style={{ color: colors.state.success }}
+                        />
+                      )}
                     </div>
-                    <div>
-                      <p
-                        className="font-semibold"
-                        style={{ color: colors.text.primary }}
-                      >
-                        {tutor.students}
-                      </p>
-                      <p
-                        className="text-xs"
-                        style={{ color: colors.text.tertiary }}
-                      >
-                        Students
-                      </p>
-                    </div>
-                    <div>
-                      <p
-                        className="font-semibold"
-                        style={{ color: colors.state.success }}
-                      >
-                        {tutor.earnings}
-                      </p>
-                      <p
-                        className="text-xs"
-                        style={{ color: colors.text.tertiary }}
-                      >
-                        Earnings
-                      </p>
-                    </div>
+                  )}
+                  <div className="flex-1">
+                    <p
+                      className="text-sm font-medium"
+                      style={{ color: colors.text.primary }}
+                    >
+                      {activity.action}
+                    </p>
+                    <p
+                      className="text-xs"
+                      style={{ color: colors.text.secondary }}
+                    >
+                      {activity.user}
+                    </p>
                   </div>
+                  <span
+                    className="text-xs"
+                    style={{ color: colors.text.tertiary }}
+                  >
+                    {activity.time}
+                  </span>
                 </div>
               ))}
             </div>

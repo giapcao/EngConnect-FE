@@ -18,6 +18,7 @@ import {
 } from "@phosphor-icons/react";
 import IllustrationImage from "../../../assets/illustrations/morning.avif";
 import calendarIllustration from "../../../assets/illustrations/calendar.avif";
+import chillIllustration from "../../../assets/illustrations/chill.avif";
 import { useSelector } from "react-redux";
 import { selectUser } from "../../../store";
 import { useNavigate } from "react-router-dom";
@@ -209,7 +210,7 @@ const Dashboard = () => {
       </motion.div>
 
       {/* Stats Grid */}
-      <motion.div
+      {/* <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.15 }}
@@ -252,7 +253,7 @@ const Dashboard = () => {
             </CardBody>
           </Card>
         ))}
-      </motion.div>
+      </motion.div> */}
 
       {/* Main Content Grid */}
       <div className="grid lg:grid-cols-3 gap-6">
@@ -420,12 +421,20 @@ const Dashboard = () => {
                     ))}
                   </div>
                 ) : coursesInProgress.length === 0 ? (
-                  <p
-                    className="text-sm text-center py-4"
-                    style={{ color: colors.text.secondary }}
-                  >
-                    {t("studentDashboard.dashboard.noCoursesInProgress")}
-                  </p>
+                  <div className="flex flex-col items-center justify-center py-4">
+                    <img
+                      src={chillIllustration}
+                      alt="No courses"
+                      draggable={false}
+                      className="w-48 h-38 object-contain"
+                    />
+                    <p
+                      className="text-sm"
+                      style={{ color: colors.text.secondary }}
+                    >
+                      {t("studentDashboard.dashboard.noCoursesInProgress")}
+                    </p>
+                  </div>
                 ) : (
                   <div className="space-y-4">
                     {coursesInProgress.map((enrollment) => {

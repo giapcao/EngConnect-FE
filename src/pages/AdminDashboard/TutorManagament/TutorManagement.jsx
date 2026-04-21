@@ -278,15 +278,6 @@ const TutorManagement = () => {
             {t("adminDashboard.tutors.subtitle")}
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button
-            variant="flat"
-            startContent={<Export className="w-4 h-4" />}
-            style={{ color: colors.text.primary }}
-          >
-            {t("adminDashboard.tutors.export")}
-          </Button>
-        </div>
       </motion.div>
 
       {/* Stats Grid */}

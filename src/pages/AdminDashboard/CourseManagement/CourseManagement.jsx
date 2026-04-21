@@ -298,15 +298,6 @@ const CourseManagement = () => {
             {t("adminDashboard.courses.subtitle")}
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button
-            variant="flat"
-            startContent={<Export className="w-4 h-4" />}
-            style={{ color: colors.text.primary }}
-          >
-            {t("adminDashboard.courses.export")}
-          </Button>
-        </div>
       </motion.div>
 
       {/* Stats Grid */}

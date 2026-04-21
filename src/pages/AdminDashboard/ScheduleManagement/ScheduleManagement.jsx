@@ -348,19 +348,10 @@ const ScheduleManagement = () => {
             {t("adminDashboard.schedule.subtitle")}
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button
-            variant="flat"
-            startContent={<Export className="w-4 h-4" />}
-            style={{ color: colors.text.primary }}
-          >
-            {t("adminDashboard.schedule.export")}
-          </Button>
-        </div>
       </motion.div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      {/* <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {lessonStats.map((stat, index) => (
           <motion.div
             key={index}
@@ -404,7 +395,7 @@ const ScheduleManagement = () => {
             </Card>
           </motion.div>
         ))}
-      </div>
+      </div> */}
 
       {/* Tabs */}
       <motion.div
