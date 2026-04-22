@@ -158,6 +158,7 @@ const CreateCourse = () => {
   const [savingNewSessions, setSavingNewSessions] = useState(false);
   const [deletingModuleId, setDeletingModuleId] = useState(null);
   const [deletingSessionKey, setDeletingSessionKey] = useState(null);
+  const [deletingResourceKey, setDeletingResourceKey] = useState(null);
 
   // Inline edit for created (saved) modules
   const [editingCreatedModuleId, setEditingCreatedModuleId] = useState(null);
@@ -726,6 +727,41 @@ const CreateCourse = () => {
     }
   };
 
+  // Remove an existing resource from a session via DELETE /sessions-resources/{id}
+  const handleDeleteSessionResource = async (
+    sessionId,
+    resourceId,
+    resourceIdx,
+  ) => {
+    if (!resourceId) return;
+    setDeletingResourceKey(`${sessionId}|${resourceIdx}`);
+    try {
+      await coursesApi.removeSessionResource(resourceId);
+      setResources((prev) => {
+        const arr = (prev[sessionId] || []).filter((_, i) => i !== resourceIdx);
+        return { ...prev, [sessionId]: arr };
+      });
+      setCreatedResources((prev) => {
+        const arr = (prev[sessionId] || []).filter(
+          (r) => r.id !== resourceId,
+        );
+        return { ...prev, [sessionId]: arr };
+      });
+      addToast({
+        title: t("tutorDashboard.createCourse.resourceDeleted"),
+        color: "success",
+      });
+    } catch (err) {
+      console.error("Failed to delete session resource:", err);
+      addToast({
+        title: t("tutorDashboard.createCourse.error.deleteFailed"),
+        color: "danger",
+      });
+    } finally {
+      setDeletingResourceKey(null);
+    }
+  };
+
   // Save only NEW modules (edit mode)
   const handleSaveNewModules = async () => {
     for (const mod of modules) {
@@ -1064,11 +1100,6 @@ const CreateCourse = () => {
   };
 
   const removeResource = (sessionId, index) => {
-    const resArr = resources[sessionId] || [];
-    const res = resArr[index];
-    if (res?.id) {
-      setDeletedResourceIds((prev) => [...prev, res.id]);
-    }
     setResources((prev) => {
       const arr = (prev[sessionId] || []).filter((_, i) => i !== index);
       return { ...prev, [sessionId]: arr };
@@ -1683,6 +1714,7 @@ const CreateCourse = () => {
                   id: r.id,
                   title: r.title || "",
                   resourceType: r.resourceType || "",
+                  url: r.url || "",
                   file: null,
                 }));
                 createdResMap[s.id] = items;
@@ -1847,10 +1879,6 @@ const CreateCourse = () => {
       const isEditing = Object.keys(createdResources).length > 0;
 
       if (isEditing) {
-        // DELETE removed resources
-        for (const id of deletedResourceIds) {
-          await coursesApi.deleteCourseResource(id);
-        }
         // UPDATE existing resources & CREATE new ones
         const allSessions = Object.values(createdSessions).flat();
         const allCreatedResources = {};
@@ -1876,22 +1904,21 @@ const CreateCourse = () => {
               if (res.isSuccess) updatedForSession.push(res.data);
             }
           }
-          // Reuse selected existing resources
+          // Reuse selected existing resources via sessions-resources join table
           const selectedIds = selectedExistingResources[sess.id] || [];
-          for (const parentId of selectedIds) {
-            const payload = {
-              CourseSessionId: sess.id,
-              ParentResourceId: parentId,
-            };
-            const res = await coursesApi.createCourseResource(payload);
-            if (res.isSuccess) updatedForSession.push(res.data);
+          if (selectedIds.length > 0) {
+            await coursesApi.addSessionResource({
+              courseSessionId: sess.id,
+              courseResources: selectedIds.map((id) => ({
+                courseResourceId: id,
+              })),
+            });
           }
           if (updatedForSession.length > 0) {
             allCreatedResources[sess.id] = updatedForSession;
           }
         }
         setCreatedResources(allCreatedResources);
-        setDeletedResourceIds([]);
         setSelectedExistingResources({});
         setStep(5);
       } else {
@@ -1916,15 +1943,15 @@ const CreateCourse = () => {
             const res = await coursesApi.createCourseResource(payload);
             if (res.isSuccess) createdForSession.push(res.data);
           }
-          // Reuse selected existing resources
+          // Reuse selected existing resources via sessions-resources join table
           const selectedIds = selectedExistingResources[sess.id] || [];
-          for (const parentId of selectedIds) {
-            const payload = {
-              CourseSessionId: sess.id,
-              ParentResourceId: parentId,
-            };
-            const res = await coursesApi.createCourseResource(payload);
-            if (res.isSuccess) createdForSession.push(res.data);
+          if (selectedIds.length > 0) {
+            await coursesApi.addSessionResource({
+              courseSessionId: sess.id,
+              courseResources: selectedIds.map((id) => ({
+                courseResourceId: id,
+              })),
+            });
           }
           if (createdForSession.length > 0) {
             allCreatedResources[sess.id] = createdForSession;
@@ -3938,11 +3965,17 @@ const CreateCourse = () => {
                                     variant="light"
                                     color="danger"
                                     size="sm"
+                                    isLoading={
+                                      deletingResourceKey ===
+                                      `${activeSessionForResources}|${index}`
+                                    }
                                     onPress={() =>
-                                      removeResource(
-                                        activeSessionForResources,
+                                      setDeleteConfirm({
+                                        type: "sessionResource",
+                                        sessionId: activeSessionForResources,
+                                        resourceId: res.id,
                                         index,
-                                      )
+                                      })
                                     }
                                   >
                                     <Trash className="w-4 h-4" />
@@ -4600,7 +4633,9 @@ const CreateCourse = () => {
                   {deleteConfirm?.type === "module" ||
                   deleteConfirm?.type === "createdModule"
                     ? t("tutorDashboard.createCourse.confirmDeleteModule")
-                    : t("tutorDashboard.createCourse.confirmDeleteSession")}
+                    : deleteConfirm?.type === "sessionResource"
+                      ? t("tutorDashboard.createCourse.confirmDeleteResource")
+                      : t("tutorDashboard.createCourse.confirmDeleteSession")}
                 </p>
               </ModalBody>
               <ModalFooter>
@@ -4623,6 +4658,12 @@ const CreateCourse = () => {
                       handleDeleteCreatedSession(
                         deleteConfirm.moduleId,
                         deleteConfirm.sessionId,
+                      );
+                    } else if (deleteConfirm?.type === "sessionResource") {
+                      handleDeleteSessionResource(
+                        deleteConfirm.sessionId,
+                        deleteConfirm.resourceId,
+                        deleteConfirm.index,
                       );
                     }
                     setDeleteConfirm(null);

@@ -262,6 +262,13 @@ export const coursesApi = {
     return response.data;
   },
 
+  // Add existing resource(s) to a session via the sessions-resources join table
+  addSessionResource: async (data) => {
+    // data: { courseSessionId, courseResources: [{ courseResourceId }] }
+    const response = await axiosInstance.post("/sessions-resources", data);
+    return response.data;
+  },
+
   
   // ==================== COURSE SESSION ====================
   // Get course sessions by CourseModuleId
