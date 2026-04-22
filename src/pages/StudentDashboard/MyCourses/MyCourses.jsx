@@ -155,7 +155,7 @@ const MyCourses = () => {
             draggable={false}
             onDragStart={(e) => e.preventDefault()}
             onContextMenu={(e) => e.preventDefault()}
-            className="w-52 h-52 object-contain"
+            className="w-68 h-68 object-contain"
           />
           <h3
             className="text-xl font-semibold"

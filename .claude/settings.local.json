@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(npx eslint *)",
-      "Bash(npx vite *)"
+      "Bash(npx vite *)",
+      "Bash(node -e \"const fs=require\\('fs'\\); const src=fs.readFileSync\\('src/pages/VideoCall/VideoCall.jsx','utf8'\\); console.log\\('Lines:', src.split\\('\\\\n'\\).length\\); console.log\\('Has Timer import:', src.includes\\('Timer'\\)\\); console.log\\('Has Warning import:', src.includes\\('Warning'\\)\\); console.log\\('Has formatElapsed:', src.includes\\('formatElapsed'\\)\\); console.log\\('Has confirmDialog:', src.includes\\('confirmDialog'\\)\\); console.log\\('Has elapsedSeconds:', src.includes\\('elapsedSeconds'\\)\\); console.log\\('Has remoteName:', src.includes\\('remoteName'\\)\\); console.log\\('Has animate-ping:', src.includes\\('animate-ping'\\)\\);\")"
     ]
   }
 }
