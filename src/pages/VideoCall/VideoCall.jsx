@@ -1,10 +1,11 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { selectUser } from "../../store";
 import { useTranslation } from "react-i18next";
-import { meetingApi, authApi } from "../../api";
+import { meetingApi, authApi, studentApi } from "../../api";
 import useWebRTC from "../../hooks/useWebRTC";
+import WhiteboardPanel from "./WhiteboardPanel";
 import {
   Microphone,
   MicrophoneSlash,
@@ -22,8 +23,33 @@ import {
   MonitorArrowUp,
   Warning,
   Timer,
+  ChalkboardSimple,
+  Paperclip,
+  DownloadSimple,
+  FileArrowDown,
 } from "@phosphor-icons/react";
 import conversationIllustration from "../../assets/illustrations/conversation.avif";
+
+// ── File transfer via RTCDataChannel ────────────────────────────────────────
+// Backend has no file-upload endpoint — files go P2P over the existing data
+// channel using the same 14 KB chunking approach as whiteboard sync.
+const FILE_CHUNK = 14_000;
+let _fileSeq = 0;
+
+function dataURLtoBlob(dataURL) {
+  const [header, b64] = dataURL.split(",");
+  const mime = header.match(/:(.*?);/)[1];
+  const binary = atob(b64);
+  const arr = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) arr[i] = binary.charCodeAt(i);
+  return new Blob([arr], { type: mime });
+}
+
+function formatFileSize(bytes) {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
 
 const VideoCall = () => {
   const { lessonId } = useParams();
@@ -32,7 +58,22 @@ const VideoCall = () => {
   const user = useSelector(selectUser);
   const dateLocale = i18n.language === "vi" ? "vi-VN" : "en-US";
 
-  const userRole = user?.tutorId ? "Tutor" : "Student";
+  // meetingInfo + lessonInfo are declared first so userRole can be derived
+  const [meetingInfo, setMeetingInfo] = useState(null);
+  const [lessonInfo, setLessonInfo] = useState(null);
+  const [loadingInfo, setLoadingInfo] = useState(true);
+  const [accessDenied, setAccessDenied] = useState(false);
+
+  // Role is derived from the lesson record (tutorId field), NOT from the user
+  // profile, so a tutor who purchased another tutor's course joins as Student.
+  const userRole = useMemo(() => {
+    if (lessonInfo) {
+      const myId = String(user?.tutorId || "");
+      const tutorId = String(lessonInfo.tutorId || "");
+      if (myId && tutorId) return myId === tutorId ? "Tutor" : "Student";
+    }
+    return user?.tutorId ? "Tutor" : "Student";
+  }, [lessonInfo, user]);
 
   const {
     connectionState,
@@ -46,24 +87,30 @@ const VideoCall = () => {
     screenStream,
     chatMessages,
     error,
+    isDataChannelOpen,
     connect,
     disconnect,
     toggleAudio,
     toggleVideo,
     toggleScreenShare,
     sendMessage,
+    sendData,
+    onDataMessage,
     endMeeting,
     leaveRoom,
+    setWhiteboardRecording,
   } = useWebRTC(lessonId, userRole);
 
-  const [meetingInfo, setMeetingInfo] = useState(null);
-  const [loadingInfo, setLoadingInfo] = useState(true);
   const [showChat, setShowChat] = useState(false);
+  const [showWhiteboard, setShowWhiteboard] = useState(false);
   const [chatInput, setChatInput] = useState("");
   const [joined, setJoined] = useState(false);
   const [userNames, setUserNames] = useState({});
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [confirmDialog, setConfirmDialog] = useState(null); // null | "leave" | "end"
+
+  const [localFileMessages, setLocalFileMessages] = useState([]);
+  // { id, name, size, mimeType, url, isMe, sentAt }
 
   const localVideoRef = useRef(null);
   const remoteVideoRef = useRef(null);
@@ -71,6 +118,29 @@ const VideoCall = () => {
   const chatEndRef = useRef(null);
   const fetchingNamesRef = useRef(new Set());
   const elapsedTimerRef = useRef(null);
+  const whiteboardCaptureRef = useRef(null);
+  const pendingFileChunksRef = useRef({});
+  const fileInputRef = useRef(null);
+
+  // Create off-DOM capture canvas for whiteboard recording (1280x720 fixed size)
+  useEffect(() => {
+    const c = document.createElement("canvas");
+    c.width = 1280;
+    c.height = 720;
+    whiteboardCaptureRef.current = c;
+    return () => {
+      whiteboardCaptureRef.current = null;
+    };
+  }, []);
+
+  // Switch recording source when whiteboard opens/closes
+  useEffect(() => {
+    if (showWhiteboard) {
+      setWhiteboardRecording(whiteboardCaptureRef.current);
+    } else {
+      setWhiteboardRecording(null);
+    }
+  }, [showWhiteboard, setWhiteboardRecording]);
 
   // Fetch display name for a userId and cache it
   const fetchUserName = useCallback(
@@ -101,14 +171,21 @@ const VideoCall = () => {
     });
   }, [chatMessages, user, fetchUserName]);
 
-  // Fetch meeting info
+  // Fetch meeting + lesson info in parallel; treat 401/403/404 as access denied
   useEffect(() => {
     const fetchInfo = async () => {
       try {
-        const res = await meetingApi.getMeeting(lessonId);
-        setMeetingInfo(res.data || res);
-      } catch {
-        // Meeting may not exist yet
+        const [meetingRes, lessonRes] = await Promise.all([
+          meetingApi.getMeeting(lessonId),
+          studentApi.getLessonById(lessonId),
+        ]);
+        setMeetingInfo(meetingRes.data || meetingRes);
+        setLessonInfo(lessonRes.data || lessonRes);
+      } catch (err) {
+        const status = err?.response?.status;
+        if (status === 401 || status === 403 || status === 404) {
+          setAccessDenied(true);
+        }
       } finally {
         setLoadingInfo(false);
       }
@@ -136,19 +213,21 @@ const VideoCall = () => {
     };
   }, [joined, connectionState]);
 
-  // Attach streams to video elements
+  // Attach local stream — re-run when whiteboard is toggled (new DOM element)
   useEffect(() => {
     if (localVideoRef.current && localStream) {
       localVideoRef.current.srcObject = localStream;
     }
-  }, [localStream]);
+  }, [localStream, showWhiteboard]);
 
+  // Attach remote stream — re-run when whiteboard is toggled
   useEffect(() => {
     if (remoteVideoRef.current && remoteStream) {
       remoteVideoRef.current.srcObject = remoteStream;
     }
-  }, [remoteStream]);
+  }, [remoteStream, showWhiteboard]);
 
+  // Attach screen share stream
   useEffect(() => {
     if (screenVideoRef.current && screenStream) {
       screenVideoRef.current.srcObject = screenStream;
@@ -158,7 +237,94 @@ const VideoCall = () => {
   // Auto-scroll chat
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [chatMessages]);
+  }, [chatMessages, localFileMessages]);
+
+  // Merge SignalR text messages + P2P file messages, sorted by time
+  const allMessages = useMemo(() => {
+    const texts = chatMessages.map((m) => ({ ...m, isFile: false }));
+    const files = localFileMessages.map((m) => ({ ...m, isFile: true }));
+    return [...texts, ...files].sort(
+      (a, b) => new Date(a.sentAt) - new Date(b.sentAt),
+    );
+  }, [chatMessages, localFileMessages]);
+
+  // Sync whiteboard open/close state across peers so WhiteboardSync is always
+  // mounted on both sides when the whiteboard is active on either side
+  useEffect(() => {
+    const unsub = onDataMessage((rawData) => {
+      try {
+        const msg = JSON.parse(rawData);
+        if (msg.type === "wb:open") setShowWhiteboard(true);
+        else if (msg.type === "wb:close") setShowWhiteboard(false);
+      } catch {
+        /* ignore */
+      }
+    });
+    return () => unsub();
+  }, [onDataMessage]);
+
+  // Receive files sent via data channel
+  useEffect(() => {
+    const unsub = onDataMessage((rawData) => {
+      try {
+        const msg = JSON.parse(rawData);
+        if (msg.type !== "file:chunk") return;
+
+        const { id, i, n, d } = msg;
+        if (!pendingFileChunksRef.current[id]) {
+          pendingFileChunksRef.current[id] = {
+            parts: new Array(n).fill(null),
+            got: 0,
+            n,
+          };
+        }
+        const entry = pendingFileChunksRef.current[id];
+        if (entry.parts[i] === null) {
+          entry.parts[i] = d;
+          entry.got++;
+        }
+        if (entry.got === entry.n) {
+          const payload = entry.parts.join("");
+          delete pendingFileChunksRef.current[id];
+          const fileMsg = JSON.parse(payload);
+          if (fileMsg.type === "file") {
+            const blob = dataURLtoBlob(fileMsg.data);
+            const url = URL.createObjectURL(blob);
+            setLocalFileMessages((prev) => [
+              ...prev,
+              {
+                id: fileMsg.id,
+                name: fileMsg.name,
+                size: fileMsg.size,
+                mimeType: fileMsg.mimeType,
+                url,
+                isMe: false,
+                sentAt: new Date().toISOString(),
+              },
+            ]);
+          }
+        }
+      } catch {
+        // not a file message — ignore
+      }
+    });
+    return () => unsub();
+  }, [onDataMessage]);
+
+  // Revoke blob URLs when component unmounts to avoid memory leaks
+  useEffect(() => {
+    return () => {
+      localFileMessages.forEach((m) => {
+        try {
+          URL.revokeObjectURL(m.url);
+        } catch {
+          /* ignore */
+        }
+      });
+    };
+    // intentionally empty dep — runs only on unmount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleJoin = useCallback(async () => {
     setJoined(true);
@@ -187,6 +353,57 @@ const VideoCall = () => {
     }
   };
 
+  const handleSendFile = useCallback(
+    (file) => {
+      if (!file || !isDataChannelOpen) return;
+      const MAX = 25 * 1024 * 1024; // 25 MB
+      if (file.size > MAX) {
+        alert("File too large (max 25 MB)");
+        return;
+      }
+      const id = String(++_fileSeq) + Date.now().toString(36);
+      const reader = new FileReader();
+      reader.onload = () => {
+        const payload = JSON.stringify({
+          type: "file",
+          id,
+          name: file.name,
+          size: file.size,
+          mimeType: file.type || "application/octet-stream",
+          data: reader.result,
+        });
+        const n = Math.ceil(payload.length / FILE_CHUNK);
+        for (let i = 0; i < n; i++) {
+          const d = payload.slice(i * FILE_CHUNK, (i + 1) * FILE_CHUNK);
+          sendData(JSON.stringify({ type: "file:chunk", id, i, n, d }));
+        }
+        // Show on sender side immediately
+        const url = URL.createObjectURL(file);
+        setLocalFileMessages((prev) => [
+          ...prev,
+          {
+            id,
+            name: file.name,
+            size: file.size,
+            mimeType: file.type || "application/octet-stream",
+            url,
+            isMe: true,
+            sentAt: new Date().toISOString(),
+          },
+        ]);
+      };
+      reader.readAsDataURL(file);
+    },
+    [isDataChannelOpen, sendData],
+  );
+
+  // Whiteboard toggle — notify the other peer so their WhiteboardSync also mounts
+  const handleToggleWhiteboard = () => {
+    const next = !showWhiteboard;
+    setShowWhiteboard(next);
+    sendData(JSON.stringify({ type: next ? "wb:open" : "wb:close" }));
+  };
+
   // Format elapsed seconds as MM:SS or H:MM:SS
   const formatElapsed = (secs) => {
     const h = Math.floor(secs / 3600);
@@ -197,45 +414,20 @@ const VideoCall = () => {
     return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
   };
 
-  // Derive remote participant's display name from meetingInfo
-  const getRemoteName = () => {
-    if (!meetingInfo) return null;
-    if (userRole === "Tutor") {
-      return (
-        meetingInfo.studentName ||
-        meetingInfo.studentFullName ||
-        (meetingInfo.studentFirstName
-          ? `${meetingInfo.studentFirstName} ${meetingInfo.studentLastName || ""}`.trim()
-          : null) ||
-        (meetingInfo.student
-          ? `${meetingInfo.student.firstName || ""} ${meetingInfo.student.lastName || ""}`.trim() ||
-            meetingInfo.student.userName
-          : null)
-      );
-    } else {
-      return (
-        meetingInfo.tutorName ||
-        meetingInfo.tutorFullName ||
-        (meetingInfo.tutorFirstName
-          ? `${meetingInfo.tutorFirstName} ${meetingInfo.tutorLastName || ""}`.trim()
-          : null) ||
-        (meetingInfo.tutor
-          ? `${meetingInfo.tutor.firstName || ""} ${meetingInfo.tutor.lastName || ""}`.trim() ||
-            meetingInfo.tutor.userName
-          : null)
-      );
-    }
-  };
+  // Remote name and session title come from the lesson API (definitive fields)
+  const remoteName = lessonInfo
+    ? userRole === "Tutor"
+      ? `${lessonInfo.studentFirstName || ""} ${lessonInfo.studentLastName || ""}`.trim() ||
+        null
+      : `${lessonInfo.tutorFirstName || ""} ${lessonInfo.tutorLastName || ""}`.trim() ||
+        null
+    : null;
 
-  // Session title from meetingInfo
   const sessionTitle =
+    lessonInfo?.sessionTitle ||
     meetingInfo?.sessionTitle ||
-    meetingInfo?.lessonTitle ||
-    meetingInfo?.courseTitle ||
-    meetingInfo?.title ||
     t("videoCall.title");
 
-  const remoteName = getRemoteName();
   const remoteParticipant = participants[0];
   const remoteAudioEnabled = remoteParticipant?.isAudioEnabled !== false;
   const remoteVideoEnabled = remoteParticipant?.isVideoEnabled !== false;
@@ -264,6 +456,31 @@ const VideoCall = () => {
     );
   };
 
+  // Access denied screen — backend blocked this user from the meeting
+  if (accessDenied) {
+    return (
+      <div className="fixed inset-0 bg-gray-900 flex items-center justify-center z-50">
+        <div className="text-center max-w-sm mx-4">
+          <div className="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center mx-auto mb-4">
+            <Warning weight="fill" className="w-9 h-9 text-red-400" />
+          </div>
+          <h2 className="text-xl font-bold text-white mb-2">
+            {t("videoCall.accessDenied")}
+          </h2>
+          <p className="text-gray-400 text-sm mb-6">
+            {t("videoCall.accessDeniedDesc")}
+          </p>
+          <button
+            onClick={() => navigate(-1)}
+            className="px-6 py-2.5 rounded-xl bg-white text-gray-900 font-medium hover:bg-gray-100 transition-colors"
+          >
+            {t("videoCall.backToSchedule")}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   // Meeting ended screen
   if (meetingStatus === "Ended") {
     return (
@@ -276,7 +493,9 @@ const VideoCall = () => {
           <h2 className="text-2xl font-bold text-white mb-2">
             {t("videoCall.meetingEnded")}
           </h2>
-          <p className="text-gray-400 mb-6">{t("videoCall.meetingEndedDesc")}</p>
+          <p className="text-gray-400 mb-6">
+            {t("videoCall.meetingEndedDesc")}
+          </p>
           <button
             onClick={() => navigate(-1)}
             className="px-6 py-2.5 rounded-xl bg-white text-gray-900 font-medium hover:bg-gray-100 transition-colors"
@@ -301,7 +520,9 @@ const VideoCall = () => {
             <h1 className="text-2xl font-bold text-white mb-1">
               {sessionTitle}
             </h1>
-            <p className="text-gray-400 text-sm">{t("videoCall.readyToJoin")}</p>
+            <p className="text-gray-400 text-sm">
+              {t("videoCall.readyToJoin")}
+            </p>
           </div>
 
           <div className="rounded-2xl bg-gray-800/60 p-6 mb-6 backdrop-blur">
@@ -363,11 +584,11 @@ const VideoCall = () => {
   return (
     <div className="fixed inset-0 bg-gray-900 flex flex-col z-50">
       {/* Top bar */}
-      <div className="flex items-center justify-between px-4 py-2.5 bg-gray-800/90 backdrop-blur border-b border-gray-700/50">
+      <div className="flex items-center justify-between px-4 py-2.5 bg-gray-800/90 backdrop-blur border-b border-gray-700/50 relative">
         {/* Left: connection + title */}
         <div className="flex items-center gap-3 min-w-0">
           <ConnectionBadge />
-          <span className="text-white text-sm font-semibold truncate max-w-[220px]">
+          <span className="text-white text-sm font-semibold truncate max-w-[200px]">
             {sessionTitle}
           </span>
           {participants.length > 0 && (
@@ -379,7 +600,7 @@ const VideoCall = () => {
 
         {/* Center: elapsed timer */}
         {connectionState === "connected" && (
-          <div className="flex items-center gap-1.5 text-emerald-400 text-sm font-mono font-medium absolute left-1/2 -translate-x-1/2">
+          <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-1.5 text-emerald-400 text-sm font-mono font-medium">
             <Timer weight="fill" className="w-4 h-4" />
             {formatElapsed(elapsedSeconds)}
           </div>
@@ -399,151 +620,243 @@ const VideoCall = () => {
 
       {/* Content area */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Videos */}
-        <div className="flex-1 flex items-center justify-center p-4 gap-4">
-          {/* Remote video (main) */}
-          <div className="relative flex-1 h-full max-h-full rounded-2xl overflow-hidden bg-gray-800">
-            {remoteStream ? (
-              <>
-                <video
-                  ref={remoteVideoRef}
-                  autoPlay
-                  playsInline
-                  className="w-full h-full object-cover"
+        <div className="flex-1 flex p-3 gap-3 overflow-hidden">
+          {/* ── Whiteboard mode ── */}
+          {showWhiteboard ? (
+            <>
+              {/* Whiteboard panel */}
+              <div className="flex-1 rounded-2xl overflow-hidden bg-white">
+                <WhiteboardPanel
+                  sendData={sendData}
+                  onDataMessage={onDataMessage}
+                  isHost={userRole === "Tutor"}
+                  isDataChannelOpen={isDataChannelOpen}
+                  captureCanvas={whiteboardCaptureRef.current}
                 />
-                {/* Remote status badges (top-right) */}
-                {(!remoteAudioEnabled || !remoteVideoEnabled) && (
-                  <div className="absolute top-3 right-3 flex gap-1.5">
-                    {!remoteAudioEnabled && (
-                      <div className="flex items-center gap-1 bg-gray-900/80 backdrop-blur px-2 py-1 rounded-full">
-                        <MicrophoneSlash
-                          weight="bold"
-                          className="w-3.5 h-3.5 text-red-400"
-                        />
-                        <span className="text-[11px] text-red-400 font-medium">
-                          {t("videoCall.remoteMuted")}
+              </div>
+
+              {/* Video column: remote + local stacked */}
+              <div className="w-44 flex flex-col gap-3 flex-shrink-0">
+                {/* Remote video tile */}
+                <div className="flex-1 rounded-xl overflow-hidden bg-gray-800 relative">
+                  {remoteStream && remoteVideoEnabled ? (
+                    <video
+                      ref={remoteVideoRef}
+                      autoPlay
+                      playsInline
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex flex-col items-center justify-center gap-1">
+                      <UserCircle
+                        weight="fill"
+                        className="w-10 h-10 text-gray-600"
+                      />
+                      {remoteName && (
+                        <span className="text-gray-500 text-[11px] text-center px-2">
+                          {remoteName}
                         </span>
-                      </div>
-                    )}
-                    {!remoteVideoEnabled && (
-                      <div className="flex items-center gap-1 bg-gray-900/80 backdrop-blur px-2 py-1 rounded-full">
-                        <VideoCameraSlash
-                          weight="bold"
-                          className="w-3.5 h-3.5 text-amber-400"
-                        />
-                        <span className="text-[11px] text-amber-400 font-medium">
-                          {t("videoCall.remoteCameraOff")}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                )}
-                {/* Remote name (bottom-left) */}
-                {remoteName && (
-                  <div className="absolute bottom-4 left-4 flex items-center gap-1.5 bg-gray-900/70 backdrop-blur px-3 py-1.5 rounded-full">
-                    <div className="w-2 h-2 rounded-full bg-emerald-400" />
-                    <span className="text-white text-xs font-medium">
-                      {remoteName}
+                      )}
+                    </div>
+                  )}
+                  {/* Remote status badges */}
+                  {!remoteAudioEnabled && (
+                    <div className="absolute top-1.5 left-1.5 bg-red-500 rounded-full p-1">
+                      <MicrophoneSlash
+                        weight="bold"
+                        className="w-3 h-3 text-white"
+                      />
+                    </div>
+                  )}
+                  {/* Remote name label */}
+                  {remoteName && remoteStream && (
+                    <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/60 py-1.5 flex justify-center">
+                      <span className="text-[11px] text-white/90 font-medium">
+                        {remoteName}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Local video tile */}
+                <div className="flex-1 rounded-xl overflow-hidden bg-gray-800 relative">
+                  <video
+                    ref={localVideoRef}
+                    autoPlay
+                    playsInline
+                    muted
+                    className="w-full h-full object-cover"
+                    style={{
+                      transform: "scaleX(-1)",
+                      display: localStream && isVideoEnabled ? "block" : "none",
+                    }}
+                  />
+                  {!(localStream && isVideoEnabled) && (
+                    <div className="w-full h-full flex items-center justify-center bg-gray-800">
+                      <UserCircle
+                        weight="fill"
+                        className="w-10 h-10 text-gray-600"
+                      />
+                    </div>
+                  )}
+                  {!isAudioEnabled && (
+                    <div className="absolute top-1.5 left-1.5 bg-red-500 rounded-full p-1">
+                      <MicrophoneSlash
+                        weight="bold"
+                        className="w-3 h-3 text-white"
+                      />
+                    </div>
+                  )}
+                  <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/60 py-1.5 flex justify-center">
+                    <span className="text-[11px] text-white/90 font-medium">
+                      {t("videoCall.you")}
                     </span>
                   </div>
-                )}
-              </>
-            ) : (
-              /* Waiting / connecting state */
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                {connectionState === "connecting" ? (
-                  <>
-                    <CircleNotch
-                      weight="bold"
-                      className="w-12 h-12 text-emerald-400 animate-spin mb-4"
-                    />
-                    <p className="text-gray-400 text-sm">
-                      {t("videoCall.connecting")}
-                    </p>
-                  </>
-                ) : (
-                  <>
-                    {/* Pulsing avatar rings */}
-                    <div className="relative flex items-center justify-center mb-6">
-                      <div className="absolute w-32 h-32 rounded-full border-2 border-emerald-500/20 animate-ping" />
-                      <div className="absolute w-24 h-24 rounded-full border-2 border-emerald-500/30 animate-ping [animation-delay:0.3s]" />
-                      <div className="relative w-20 h-20 rounded-full bg-gray-700 flex items-center justify-center">
-                        <UserCircle
-                          weight="fill"
-                          className="w-14 h-14 text-gray-500"
-                        />
-                      </div>
-                    </div>
-                    <p className="text-gray-300 text-sm font-medium">
-                      {remoteName
-                        ? t("videoCall.waitingFor", { name: remoteName })
-                        : t("videoCall.waitingForOther")}
-                    </p>
-                  </>
-                )}
+                </div>
               </div>
-            )}
+            </>
+          ) : (
+            /* ── Normal video mode ── */
+            <div className="relative flex-1 h-full rounded-2xl overflow-hidden bg-gray-800">
+              {remoteStream ? (
+                <>
+                  <video
+                    ref={remoteVideoRef}
+                    autoPlay
+                    playsInline
+                    className="w-full h-full object-cover"
+                  />
+                  {/* Remote status badges (top-right) */}
+                  {(!remoteAudioEnabled || !remoteVideoEnabled) && (
+                    <div className="absolute top-3 right-3 flex gap-1.5">
+                      {!remoteAudioEnabled && (
+                        <div className="flex items-center gap-1 bg-gray-900/80 backdrop-blur px-2 py-1 rounded-full">
+                          <MicrophoneSlash
+                            weight="bold"
+                            className="w-3.5 h-3.5 text-red-400"
+                          />
+                          <span className="text-[11px] text-red-400 font-medium">
+                            {t("videoCall.remoteMuted")}
+                          </span>
+                        </div>
+                      )}
+                      {!remoteVideoEnabled && (
+                        <div className="flex items-center gap-1 bg-gray-900/80 backdrop-blur px-2 py-1 rounded-full">
+                          <VideoCameraSlash
+                            weight="bold"
+                            className="w-3.5 h-3.5 text-amber-400"
+                          />
+                          <span className="text-[11px] text-amber-400 font-medium">
+                            {t("videoCall.remoteCameraOff")}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {/* Remote name overlay (bottom-left) */}
+                  {remoteName && (
+                    <div className="absolute bottom-20 left-4 flex items-center gap-1.5 bg-gray-900/70 backdrop-blur px-3 py-1.5 rounded-full">
+                      <div className="w-2 h-2 rounded-full bg-emerald-400" />
+                      <span className="text-white text-xs font-medium">
+                        {remoteName}
+                      </span>
+                    </div>
+                  )}
+                </>
+              ) : (
+                /* Waiting / connecting state */
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  {connectionState === "connecting" ? (
+                    <>
+                      <CircleNotch
+                        weight="bold"
+                        className="w-12 h-12 text-emerald-400 animate-spin mb-4"
+                      />
+                      <p className="text-gray-400 text-sm">
+                        {t("videoCall.connecting")}
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <div className="relative flex items-center justify-center mb-6">
+                        <div className="absolute w-32 h-32 rounded-full border-2 border-emerald-500/20 animate-ping" />
+                        <div className="absolute w-24 h-24 rounded-full border-2 border-emerald-500/30 animate-ping [animation-delay:0.3s]" />
+                        <div className="relative w-20 h-20 rounded-full bg-gray-700 flex items-center justify-center">
+                          <UserCircle
+                            weight="fill"
+                            className="w-14 h-14 text-gray-500"
+                          />
+                        </div>
+                      </div>
+                      <p className="text-gray-300 text-sm font-medium">
+                        {remoteName
+                          ? t("videoCall.waitingFor", { name: remoteName })
+                          : t("videoCall.waitingForOther")}
+                      </p>
+                    </>
+                  )}
+                </div>
+              )}
 
-            {/* Screen share preview (shown when sharing) */}
-            {isScreenSharing && screenStream && (
-              <div className="absolute bottom-4 left-4 w-64 h-40 rounded-xl overflow-hidden bg-black shadow-2xl border-2 border-emerald-500/50">
+              {/* Screen share preview */}
+              {isScreenSharing && screenStream && (
+                <div className="absolute bottom-20 left-4 w-64 h-40 rounded-xl overflow-hidden bg-black shadow-2xl border-2 border-emerald-500/50">
+                  <video
+                    ref={screenVideoRef}
+                    autoPlay
+                    playsInline
+                    muted
+                    className="w-full h-full object-contain"
+                  />
+                  <div className="absolute top-2 left-2 bg-emerald-500 rounded-full px-2 py-0.5">
+                    <span className="text-[10px] text-white font-medium">
+                      {t("videoCall.sharing")}
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {/* Local camera PIP */}
+              <div className="absolute bottom-4 right-4 w-48 h-36 rounded-xl overflow-hidden bg-gray-900 shadow-2xl border-2 border-gray-600/60">
                 <video
-                  ref={screenVideoRef}
+                  ref={localVideoRef}
                   autoPlay
                   playsInline
                   muted
-                  className="w-full h-full object-contain"
+                  className="w-full h-full object-cover"
+                  style={{
+                    transform: "scaleX(-1)",
+                    display: localStream && isVideoEnabled ? "block" : "none",
+                  }}
                 />
-                <div className="absolute top-2 left-2 bg-emerald-500 rounded-full px-2 py-0.5">
-                  <span className="text-[10px] text-white font-medium">
-                    {t("videoCall.sharing")}
+                {!(localStream && isVideoEnabled) && (
+                  <div className="w-full h-full flex items-center justify-center bg-gray-800">
+                    <UserCircle
+                      weight="fill"
+                      className="w-12 h-12 text-gray-600"
+                    />
+                  </div>
+                )}
+                {!isAudioEnabled && (
+                  <div className="absolute top-2 left-2 bg-red-500 rounded-full p-1">
+                    <MicrophoneSlash
+                      weight="bold"
+                      className="w-3 h-3 text-white"
+                    />
+                  </div>
+                )}
+                <div className="absolute bottom-0 inset-x-0 flex justify-center pb-1.5">
+                  <span className="text-[11px] text-white/80 font-medium bg-gray-900/60 px-2 py-0.5 rounded-full">
+                    {t("videoCall.you")}
                   </span>
                 </div>
               </div>
-            )}
-
-            {/* Local camera PIP */}
-            <div className="absolute bottom-4 right-4 w-48 h-36 rounded-xl overflow-hidden bg-gray-900 shadow-2xl border-2 border-gray-600/60 group">
-              <video
-                ref={localVideoRef}
-                autoPlay
-                playsInline
-                muted
-                className="w-full h-full object-cover"
-                style={{
-                  transform: "scaleX(-1)",
-                  display: localStream && isVideoEnabled ? "block" : "none",
-                }}
-              />
-              {!(localStream && isVideoEnabled) && (
-                <div className="w-full h-full flex items-center justify-center bg-gray-800">
-                  <UserCircle
-                    weight="fill"
-                    className="w-12 h-12 text-gray-600"
-                  />
-                </div>
-              )}
-              {/* Mic mute indicator */}
-              {!isAudioEnabled && (
-                <div className="absolute top-2 left-2 bg-red-500 rounded-full p-1">
-                  <MicrophoneSlash
-                    weight="bold"
-                    className="w-3 h-3 text-white"
-                  />
-                </div>
-              )}
-              {/* "You" label */}
-              <div className="absolute bottom-0 inset-x-0 flex justify-center pb-1.5">
-                <span className="text-[11px] text-white/80 font-medium bg-gray-900/60 px-2 py-0.5 rounded-full">
-                  {t("videoCall.you")}
-                </span>
-              </div>
             </div>
-          </div>
+          )}
 
           {/* Chat panel */}
           {showChat && (
-            <div className="w-80 h-full flex flex-col bg-gray-800 rounded-2xl ml-4 overflow-hidden">
+            <div className="w-80 flex flex-col bg-gray-800 rounded-2xl overflow-hidden flex-shrink-0">
               <div className="flex items-center justify-between px-4 py-3 border-b border-gray-700">
                 <h3 className="text-white font-semibold text-sm">
                   {t("videoCall.chat")}
@@ -557,7 +870,7 @@ const VideoCall = () => {
               </div>
 
               <div className="flex-1 overflow-y-auto p-3 space-y-3">
-                {chatMessages.length === 0 ? (
+                {allMessages.length === 0 ? (
                   <div className="flex flex-col items-center justify-center h-full opacity-60">
                     <img
                       src={conversationIllustration}
@@ -572,19 +885,28 @@ const VideoCall = () => {
                     </p>
                   </div>
                 ) : (
-                  chatMessages.map((msg, idx) => {
-                    const isMe =
-                      msg.userId === user?.userId || msg.userId === user?.sub;
-                    const prevMsg = chatMessages[idx - 1];
+                  allMessages.map((msg, idx) => {
+                    const isMe = msg.isFile
+                      ? msg.isMe
+                      : msg.userId === user?.userId || msg.userId === user?.sub;
+                    const prevMsg = allMessages[idx - 1];
                     const sameSenderAsPrev =
-                      prevMsg && prevMsg.userId === msg.userId;
+                      prevMsg &&
+                      !prevMsg.isFile &&
+                      !msg.isFile &&
+                      prevMsg.userId === msg.userId;
                     const isFirst = idx === 0 || !sameSenderAsPrev;
                     const senderName = isMe
                       ? t("videoCall.you")
-                      : userNames[msg.userId] || "...";
+                      : msg.isFile
+                        ? remoteName || "..."
+                        : userNames[msg.userId] || "...";
+                    const isImage =
+                      msg.isFile && msg.mimeType?.startsWith("image/");
+
                     return (
                       <div
-                        key={idx}
+                        key={msg.isFile ? `f-${msg.id}` : idx}
                         className={`flex flex-col ${isMe ? "items-end" : "items-start"} ${!isFirst ? "!mt-0.5" : ""}`}
                       >
                         {isFirst && (
@@ -594,23 +916,80 @@ const VideoCall = () => {
                             {senderName}
                           </p>
                         )}
-                        <div
-                          className={`max-w-[80%] px-3 py-1.5 text-sm ${
-                            isMe
-                              ? "bg-emerald-500 text-white rounded-2xl rounded-br-md"
-                              : "bg-gray-700 text-gray-200 rounded-2xl rounded-bl-md"
-                          }`}
-                        >
-                          <p className="break-words">{msg.message}</p>
-                          <p
-                            className={`text-[10px] mt-0.5 ${isMe ? "text-emerald-200 text-right" : "text-gray-500"}`}
+
+                        {msg.isFile ? (
+                          /* ── File message bubble ── */
+                          <div
+                            className={`max-w-[85%] rounded-2xl overflow-hidden ${isMe ? "rounded-br-md" : "rounded-bl-md"} ${isMe ? "bg-emerald-600" : "bg-gray-700"}`}
                           >
-                            {new Date(msg.sentAt).toLocaleTimeString(
-                              dateLocale,
-                              { hour: "2-digit", minute: "2-digit" },
+                            {isImage && (
+                              <a
+                                href={msg.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                download={msg.name}
+                              >
+                                <img
+                                  src={msg.url}
+                                  alt={msg.name}
+                                  className="max-w-full max-h-48 object-contain block"
+                                />
+                              </a>
                             )}
-                          </p>
-                        </div>
+                            <div className="flex items-center gap-2 px-3 py-2">
+                              {!isImage && (
+                                <FileArrowDown
+                                  weight="bold"
+                                  className="w-5 h-5 shrink-0 text-white/70"
+                                />
+                              )}
+                              <div className="flex-1 min-w-0">
+                                <p className="text-white text-xs font-medium truncate">
+                                  {msg.name}
+                                </p>
+                                <p
+                                  className={`text-[10px] ${isMe ? "text-emerald-200" : "text-gray-400"}`}
+                                >
+                                  {formatFileSize(msg.size)}
+                                </p>
+                              </div>
+                              <a
+                                href={msg.url}
+                                download={msg.name}
+                                className={`p-1.5 rounded-lg shrink-0 transition-colors ${isMe ? "bg-emerald-500 hover:bg-emerald-400" : "bg-gray-600 hover:bg-gray-500"}`}
+                                title="Download"
+                              >
+                                <DownloadSimple
+                                  weight="bold"
+                                  className="w-3.5 h-3.5 text-white"
+                                />
+                              </a>
+                            </div>
+                            <p
+                              className={`text-[10px] px-3 pb-1.5 ${isMe ? "text-emerald-200 text-right" : "text-gray-500"}`}
+                            >
+                              {new Date(msg.sentAt).toLocaleTimeString(
+                                dateLocale,
+                                { hour: "2-digit", minute: "2-digit" },
+                              )}
+                            </p>
+                          </div>
+                        ) : (
+                          /* ── Text message bubble ── */
+                          <div
+                            className={`max-w-[80%] px-3 py-1.5 text-sm ${isMe ? "bg-emerald-500 text-white rounded-2xl rounded-br-md" : "bg-gray-700 text-gray-200 rounded-2xl rounded-bl-md"}`}
+                          >
+                            <p className="break-words">{msg.message}</p>
+                            <p
+                              className={`text-[10px] mt-0.5 ${isMe ? "text-emerald-200 text-right" : "text-gray-500"}`}
+                            >
+                              {new Date(msg.sentAt).toLocaleTimeString(
+                                dateLocale,
+                                { hour: "2-digit", minute: "2-digit" },
+                              )}
+                            </p>
+                          </div>
+                        )}
                       </div>
                     );
                   })
@@ -618,11 +997,37 @@ const VideoCall = () => {
                 <div ref={chatEndRef} />
               </div>
 
+              {/* Hidden file input */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleSendFile(file);
+                  e.target.value = "";
+                }}
+              />
+
               <form
                 onSubmit={handleSendChat}
                 className="p-3 border-t border-gray-700"
               >
                 <div className="flex gap-2">
+                  {/* File attachment button */}
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={!isDataChannelOpen}
+                    title={
+                      isDataChannelOpen
+                        ? t("videoCall.sendFile")
+                        : t("videoCall.whiteboardConnecting")
+                    }
+                    className="p-2 rounded-xl text-gray-400 hover:text-white hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors shrink-0"
+                  >
+                    <Paperclip weight="bold" className="w-4 h-4" />
+                  </button>
                   <input
                     value={chatInput}
                     onChange={(e) => setChatInput(e.target.value)}
@@ -684,14 +1089,17 @@ const VideoCall = () => {
           </span>
         </button>
 
-        {/* Screen share (tutor only) */}
+        {/* Screen share (tutor only, disabled when whiteboard is open) */}
         {userRole === "Tutor" && (
           <button
             onClick={toggleScreenShare}
+            disabled={showWhiteboard}
             className={`flex flex-col items-center gap-1 px-5 py-3 rounded-2xl transition-colors ${
               isScreenSharing
                 ? "bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30"
-                : "bg-gray-700 text-white hover:bg-gray-600"
+                : showWhiteboard
+                  ? "bg-gray-700/40 text-gray-600 cursor-not-allowed"
+                  : "bg-gray-700 text-white hover:bg-gray-600"
             }`}
           >
             <MonitorArrowUp weight="bold" className="w-5 h-5" />
@@ -700,6 +1108,29 @@ const VideoCall = () => {
             </span>
           </button>
         )}
+
+        {/* Whiteboard (both roles, disabled when screen sharing) */}
+        <button
+          onClick={handleToggleWhiteboard}
+          disabled={isScreenSharing}
+          className={`flex flex-col items-center gap-1 px-5 py-3 rounded-2xl transition-colors ${
+            showWhiteboard
+              ? "bg-violet-500/20 text-violet-400 hover:bg-violet-500/30"
+              : isScreenSharing
+                ? "bg-gray-700/40 text-gray-600 cursor-not-allowed"
+                : "bg-gray-700 text-white hover:bg-gray-600"
+          }`}
+        >
+          <ChalkboardSimple weight="bold" className="w-5 h-5" />
+          <span className="text-[11px] font-medium leading-none">
+            {t("videoCall.whiteboard")}
+            {showWhiteboard && !isDataChannelOpen && (
+              <span className="block text-[9px] text-violet-400/70 leading-none mt-0.5">
+                {t("videoCall.whiteboardConnecting")}
+              </span>
+            )}
+          </span>
+        </button>
 
         {/* Separator */}
         <div className="w-px h-10 bg-gray-700 mx-1" />

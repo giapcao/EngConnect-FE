@@ -2317,6 +2317,11 @@
     "remoteCameraOff": "Đã tắt camera",
     "waitingFor": "Đang chờ {{name}}...",
     "cancel": "Hủy",
+    "whiteboard": "Bảng",
+    "whiteboardConnecting": "Đang kết nối bảng...",
+    "sendFile": "Gửi file",
+    "accessDenied": "Không có quyền truy cập",
+    "accessDeniedDesc": "Bạn không có quyền tham gia cuộc họp này.",
     "connection": {
       "connected": "Đã kết nối",
       "connecting": "Đang kết nối",

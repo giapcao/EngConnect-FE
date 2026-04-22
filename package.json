@@ -16,6 +16,7 @@
     "@phosphor-icons/react": "^2.1.10",
     "@reduxjs/toolkit": "^2.11.2",
     "@tailwindcss/vite": "^4.1.18",
+    "@tldraw/tldraw": "^4.5.10",
     "antd": "^6.1.4",
     "axios": "^1.13.4",
     "framer-motion": "^12.25.0",

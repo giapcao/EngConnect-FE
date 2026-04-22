@@ -2320,6 +2320,11 @@
     "remoteCameraOff": "Camera off",
     "waitingFor": "Waiting for {{name}}...",
     "cancel": "Cancel",
+    "whiteboard": "Board",
+    "whiteboardConnecting": "Connecting board...",
+    "sendFile": "Send file",
+    "accessDenied": "Access Denied",
+    "accessDeniedDesc": "You don't have permission to join this meeting.",
     "connection": {
       "connected": "Connected",
       "connecting": "Connecting",

@@ -20,6 +20,7 @@ export default function useWebRTC(lessonId, userRole) {
   const [screenStream, setScreenStream] = useState(null);
   const [chatMessages, setChatMessages] = useState([]);
   const [error, setError] = useState(null);
+  const [isDataChannelOpen, setIsDataChannelOpen] = useState(false);
 
   const hubRef = useRef(null);
   const peerRef = useRef(null);
@@ -42,6 +43,10 @@ export default function useWebRTC(lessonId, userRole) {
   const remoteConnectionIdRef = useRef(null);
   const pendingIceCandidatesRef = useRef([]);
   const iceServersRef = useRef(DEFAULT_ICE_SERVERS);
+  const dataChannelRef = useRef(null);
+  const dataListenersRef = useRef(new Set());
+  // When set to a canvas element, the recording draw loop reads from it (whiteboard mode)
+  const whiteboardCanvasRef = useRef(null);
 
   const loadIceServers = useCallback(async () => {
     try {
@@ -119,7 +124,34 @@ export default function useWebRTC(lessonId, userRole) {
     return connection;
   }, []);
 
-  // Renegotiate peer connection (new offer/answer) after addTrack/removeTrack
+  // Set up a data channel (used by both offerer and answerer)
+  const setupDataChannel = useCallback((channel) => {
+    // Close any existing channel first
+    if (dataChannelRef.current && dataChannelRef.current !== channel) {
+      try { dataChannelRef.current.close(); } catch { /* ignore */ }
+    }
+    dataChannelRef.current = channel;
+
+    channel.onopen = () => {
+      console.log("[DataChannel] open");
+      setIsDataChannelOpen(true);
+    };
+    channel.onclose = () => {
+      console.log("[DataChannel] closed");
+      setIsDataChannelOpen(false);
+      if (dataChannelRef.current === channel) {
+        dataChannelRef.current = null;
+      }
+    };
+    channel.onerror = (err) => {
+      console.error("[DataChannel] error:", err);
+    };
+    channel.onmessage = (event) => {
+      dataListenersRef.current.forEach((fn) => fn(event.data));
+    };
+  }, []);
+
+  // Renegotiate peer connection after addTrack/removeTrack
   const renegotiate = useCallback(async () => {
     const pc = peerRef.current;
     const hub = hubRef.current;
@@ -139,6 +171,12 @@ export default function useWebRTC(lessonId, userRole) {
     (remoteConnectionId) => {
       if (peerRef.current) {
         peerRef.current.close();
+      }
+      // Close existing data channel on reconnect
+      if (dataChannelRef.current) {
+        try { dataChannelRef.current.close(); } catch { /* ignore */ }
+        dataChannelRef.current = null;
+        setIsDataChannelOpen(false);
       }
 
       pendingIceCandidatesRef.current = [];
@@ -166,7 +204,7 @@ export default function useWebRTC(lessonId, userRole) {
           remote.addTrack(track);
         });
         setRemoteStream(new MediaStream(remote.getTracks()));
-        // Connect remote audio to recording AudioContext mix (no recorder restart)
+        // Connect remote audio to recording AudioContext mix
         if (userRole === "Tutor") {
           const remoteAudioTracks = event.streams[0]?.getAudioTracks();
           if (
@@ -184,6 +222,11 @@ export default function useWebRTC(lessonId, userRole) {
             } catch { /* ignore */ }
           }
         }
+      };
+
+      // Answerer receives the data channel created by the offerer
+      pc.ondatachannel = (event) => {
+        setupDataChannel(event.channel);
       };
 
       pc.onicecandidate = (event) => {
@@ -223,7 +266,7 @@ export default function useWebRTC(lessonId, userRole) {
 
       return pc;
     },
-    [lessonId, userRole],
+    [lessonId, userRole, setupDataChannel],
   );
 
   // Start media
@@ -248,7 +291,7 @@ export default function useWebRTC(lessonId, userRole) {
         setLocalStream(stream);
         setIsVideoEnabled(false);
         return stream;
-      } catch (audioErr) {
+      } catch {
         setError("Cannot access camera or microphone");
         return null;
       }
@@ -278,9 +321,19 @@ export default function useWebRTC(lessonId, userRole) {
         videoEl.play().catch(() => {});
         canvasVideoElRef.current = videoEl;
 
-        // Draw loop (setInterval keeps running in background tabs, throttled to ~1 fps)
+        // Draw loop (~30 fps)
+        // Reads from whiteboard capture canvas when active, otherwise from camera video
         const draw = () => {
-          if (videoEl.readyState >= videoEl.HAVE_CURRENT_DATA) {
+          const wbCanvas = whiteboardCanvasRef.current;
+          if (wbCanvas && wbCanvas.width > 0 && wbCanvas.height > 0) {
+            // Whiteboard mode: draw from the periodically-updated capture canvas
+            if (canvas.width !== wbCanvas.width || canvas.height !== wbCanvas.height) {
+              canvas.width = wbCanvas.width;
+              canvas.height = wbCanvas.height;
+            }
+            ctx2d.drawImage(wbCanvas, 0, 0, canvas.width, canvas.height);
+          } else if (videoEl.readyState >= videoEl.HAVE_CURRENT_DATA) {
+            // Default: draw from camera video
             const vw = videoEl.videoWidth;
             const vh = videoEl.videoHeight;
             if (vw && vh && (canvas.width !== vw || canvas.height !== vh)) {
@@ -290,7 +343,7 @@ export default function useWebRTC(lessonId, userRole) {
             ctx2d.drawImage(videoEl, 0, 0, canvas.width, canvas.height);
           }
         };
-        drawTimerRef.current = setInterval(draw, 33); // ~30 fps
+        drawTimerRef.current = setInterval(draw, 33);
 
         // --- AudioContext for stable audio track ---
         const audioCtx = new AudioContext();
@@ -374,7 +427,6 @@ export default function useWebRTC(lessonId, userRole) {
       const cleanup = () => {
         recorderRef.current = null;
         recordingStreamRef.current = null;
-        // Stop draw loop
         if (drawTimerRef.current) {
           clearInterval(drawTimerRef.current);
           drawTimerRef.current = null;
@@ -384,7 +436,6 @@ export default function useWebRTC(lessonId, userRole) {
           canvasVideoElRef.current = null;
         }
         canvasRef.current = null;
-        // Disconnect audio nodes
         try { audioNodesRef.current.mic?.disconnect(); } catch { /* ignore */ }
         try { audioNodesRef.current.remote?.disconnect(); } catch { /* ignore */ }
         try { audioNodesRef.current.screenAudio?.disconnect(); } catch { /* ignore */ }
@@ -456,6 +507,12 @@ export default function useWebRTC(lessonId, userRole) {
 
       // Create peer and send offer to the new user
       const pc = createPeerConnection(data.connectionId);
+
+      // Offerer creates the data channel BEFORE creating the offer
+      // This ensures the channel is included in the SDP negotiation
+      const dc = pc.createDataChannel("whiteboard", { ordered: true });
+      setupDataChannel(dc);
+
       try {
         const offer = await pc.createOffer();
         await pc.setLocalDescription(offer);
@@ -563,11 +620,15 @@ export default function useWebRTC(lessonId, userRole) {
 
     connection.onreconnecting(() => {
       setConnectionState("reconnecting");
-      // Clear stale peer so fresh negotiation happens after reconnect
       if (peerRef.current) {
         peerRef.current.close();
         peerRef.current = null;
       }
+      if (dataChannelRef.current) {
+        try { dataChannelRef.current.close(); } catch { /* ignore */ }
+        dataChannelRef.current = null;
+      }
+      setIsDataChannelOpen(false);
       pendingIceCandidatesRef.current = [];
       remoteConnectionIdRef.current = null;
       setRemoteStream(null);
@@ -575,7 +636,6 @@ export default function useWebRTC(lessonId, userRole) {
 
     connection.onreconnected(async () => {
       setConnectionState("connected");
-      // Re-join the room — new connectionId after reconnect, need fresh UserJoined
       if (userRole === "Tutor") {
         try {
           await connection.invoke("CreateRoom", lessonId);
@@ -597,17 +657,15 @@ export default function useWebRTC(lessonId, userRole) {
       await connection.start();
       setConnectionState("connected");
 
-      // Tutor creates room, then joins. Student just joins.
       if (userRole === "Tutor") {
         try {
           await connection.invoke("CreateRoom", lessonId);
         } catch {
-          // Room may already exist — that's fine
+          // Room may already exist
         }
       }
       await connection.invoke("JoinRoom", lessonId);
 
-      // Start recording
       startRecording(stream);
     } catch (err) {
       console.error("SignalR connection failed:", err);
@@ -624,54 +682,47 @@ export default function useWebRTC(lessonId, userRole) {
     flushPendingIceCandidates,
     startRecording,
     stopRecording,
+    setupDataChannel,
   ]);
 
   // Toggle screen share (tutor only)
-  // No recorder restart — just swap the canvas video source + audio nodes
   const toggleScreenShare = useCallback(async () => {
     if (userRole !== "Tutor") return;
     const pc = peerRef.current;
     if (!pc) return;
 
     if (screenStreamRef.current) {
-      // --- Stop screen share — switch back to camera ---
+      // Stop screen share — switch back to camera
       const oldScreen = screenStreamRef.current;
       screenStreamRef.current = null;
       setScreenStream(null);
       setIsScreenSharing(false);
 
-      // 1. Swap canvas drawing source back to camera
       if (canvasVideoElRef.current) {
         canvasVideoElRef.current.srcObject = localStreamRef.current;
         canvasVideoElRef.current.play().catch(() => {});
       }
 
-      // 2. Disconnect screen audio from recording mix
       try { audioNodesRef.current.screenAudio?.disconnect(); } catch { /* ignore */ }
       audioNodesRef.current.screenAudio = null;
 
-      // 3. Remove screen audio sender from peer connection
       if (screenAudioSenderRef.current && pc) {
         try { pc.removeTrack(screenAudioSenderRef.current); } catch { /* ignore */ }
         screenAudioSenderRef.current = null;
       }
 
-      // 4. Swap peer video back to camera
       const cameraTrack = localStreamRef.current?.getVideoTracks()[0];
       if (cameraTrack) {
         const sender = pc.getSenders().find((s) => s.track?.kind === "video");
         if (sender) await sender.replaceTrack(cameraTrack);
       }
 
-      // 5. Renegotiate so remote side drops the screen audio track
       await renegotiate();
-
-      // 6. Stop old screen tracks
       oldScreen.getTracks().forEach((t) => t.stop());
       return;
     }
 
-    // --- Start screen share ---
+    // Start screen share
     try {
       const screenStr = await navigator.mediaDevices.getDisplayMedia({
         video: true,
@@ -681,13 +732,11 @@ export default function useWebRTC(lessonId, userRole) {
       setScreenStream(screenStr);
       setIsScreenSharing(true);
 
-      // 1. Swap canvas drawing source to screen
       if (canvasVideoElRef.current) {
         canvasVideoElRef.current.srcObject = screenStr;
         canvasVideoElRef.current.play().catch(() => {});
       }
 
-      // 2. Connect screen audio to recording mix
       const screenAudioTrack = screenStr.getAudioTracks()[0];
       if (
         screenAudioTrack &&
@@ -703,47 +752,38 @@ export default function useWebRTC(lessonId, userRole) {
         } catch { /* ignore */ }
       }
 
-      // 3. Replace video track on peer connection
       const screenTrack = screenStr.getVideoTracks()[0];
       const videoSender = pc.getSenders().find((s) => s.track?.kind === "video");
       if (videoSender) await videoSender.replaceTrack(screenTrack);
 
-      // 4. Add screen audio to peer connection (so student hears it)
       if (screenAudioTrack && pc) {
         screenAudioSenderRef.current = pc.addTrack(screenAudioTrack, screenStr);
       }
 
-      // 5. Renegotiate so remote side receives the new screen audio track
       await renegotiate();
 
-      // When user stops sharing via browser UI
       screenTrack.onended = async () => {
         const oldScr = screenStreamRef.current;
         screenStreamRef.current = null;
         setScreenStream(null);
         setIsScreenSharing(false);
 
-        // Swap canvas back to camera
         if (canvasVideoElRef.current) {
           canvasVideoElRef.current.srcObject = localStreamRef.current;
           canvasVideoElRef.current.play().catch(() => {});
         }
-        // Disconnect screen audio from recording
         try { audioNodesRef.current.screenAudio?.disconnect(); } catch { /* ignore */ }
         audioNodesRef.current.screenAudio = null;
 
-        // Remove screen audio sender from peer
         if (screenAudioSenderRef.current && peerRef.current) {
           try { peerRef.current.removeTrack(screenAudioSenderRef.current); } catch { /* ignore */ }
           screenAudioSenderRef.current = null;
         }
-        // Swap peer video back to camera
         const camTrack = localStreamRef.current?.getVideoTracks()[0];
         if (camTrack) {
           const s = peerRef.current?.getSenders().find((s) => s.track?.kind === "video");
           if (s) await s.replaceTrack(camTrack);
         }
-        // Renegotiate so remote side drops screen audio
         await renegotiate();
         if (oldScr) oldScr.getTracks().forEach((t) => t.stop());
       };
@@ -805,6 +845,29 @@ export default function useWebRTC(lessonId, userRole) {
     [lessonId],
   );
 
+  // Send data over the whiteboard data channel
+  const sendData = useCallback((data) => {
+    const dc = dataChannelRef.current;
+    if (dc && dc.readyState === "open") {
+      try {
+        dc.send(data);
+      } catch (err) {
+        console.error("[DataChannel] send error:", err);
+      }
+    }
+  }, []);
+
+  // Register a listener for incoming data channel messages; returns an unsubscribe function
+  const onDataMessage = useCallback((fn) => {
+    dataListenersRef.current.add(fn);
+    return () => dataListenersRef.current.delete(fn);
+  }, []);
+
+  // Switch recording source between camera (null) and whiteboard capture canvas
+  const setWhiteboardRecording = useCallback((captureCanvas) => {
+    whiteboardCanvasRef.current = captureCanvas || null;
+  }, []);
+
   // End meeting (tutor only) — flush recording before signaling
   const endMeeting = useCallback(async () => {
     await stopRecording();
@@ -841,6 +904,12 @@ export default function useWebRTC(lessonId, userRole) {
   // Disconnect & cleanup
   const disconnect = useCallback(async () => {
     stopRecording();
+
+    if (dataChannelRef.current) {
+      try { dataChannelRef.current.close(); } catch { /* ignore */ }
+      dataChannelRef.current = null;
+      setIsDataChannelOpen(false);
+    }
 
     if (screenStreamRef.current) {
       screenStreamRef.current.getTracks().forEach((t) => t.stop());
@@ -880,6 +949,10 @@ export default function useWebRTC(lessonId, userRole) {
   useEffect(() => {
     return () => {
       stopRecording();
+      if (dataChannelRef.current) {
+        try { dataChannelRef.current.close(); } catch { /* ignore */ }
+        dataChannelRef.current = null;
+      }
       if (screenStreamRef.current) {
         screenStreamRef.current.getTracks().forEach((t) => t.stop());
         screenStreamRef.current = null;
@@ -913,12 +986,16 @@ export default function useWebRTC(lessonId, userRole) {
     screenStream,
     chatMessages,
     error,
+    isDataChannelOpen,
     connect,
     disconnect,
     toggleAudio,
     toggleVideo,
     toggleScreenShare,
     sendMessage,
+    sendData,
+    onDataMessage,
+    setWhiteboardRecording,
     endMeeting,
     leaveRoom,
   };
