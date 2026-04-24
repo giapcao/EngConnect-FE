@@ -20,6 +20,7 @@ import {
   ModalFooter,
 } from "@heroui/react";
 import { useTranslation } from "react-i18next";
+import { useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
 import { useThemeColors } from "../../../hooks/useThemeColors";
 import useInputStyles from "../../../hooks/useInputStyles";
@@ -46,6 +47,7 @@ import {
   ArrowSquareOut,
 } from "@phosphor-icons/react";
 import { coursesApi } from "../../../api";
+import { selectUser } from "../../../store";
 
 const LEVELS = [
   "Beginner",
@@ -59,6 +61,7 @@ const LEVELS = [
 const CreateCourse = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const user = useSelector(selectUser);
   const { courseId: continueId } = useParams();
   const colors = useThemeColors();
   const { inputClassNames, selectClassNames } = useInputStyles();
@@ -211,6 +214,12 @@ const CreateCourse = () => {
         const res = await coursesApi.getCourseById(continueId);
         const c = res.data;
         if (!c) return;
+
+        // Ownership check — block editing courses not owned by current tutor
+        if (c.tutorId && user?.tutorId && c.tutorId !== user.tutorId) {
+          navigate("/tutor/my-courses", { replace: true });
+          return;
+        }
 
         // Populate course info
         setCreatedCourseId(c.id);

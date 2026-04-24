@@ -114,6 +114,7 @@ const StudentMyCourseDetail = () => {
 
   // Enrollment state
   const [enrollment, setEnrollment] = useState(null);
+  const [enrollmentChecked, setEnrollmentChecked] = useState(false);
 
   // Tick for live countdown
   const [now, setNow] = useState(() => Date.now());
@@ -231,9 +232,18 @@ const StudentMyCourseDetail = () => {
           "page-size": 1,
         });
         const item = res?.data?.items?.[0];
-        if (item) setEnrollment(item);
+        if (item) {
+          setEnrollment(item);
+        } else {
+          navigate("/student/my-courses", { replace: true });
+          return;
+        }
       } catch (err) {
         console.error("Failed to fetch enrollment:", err);
+        navigate("/student/my-courses", { replace: true });
+        return;
+      } finally {
+        setEnrollmentChecked(true);
       }
     };
     fetchEnrollment();

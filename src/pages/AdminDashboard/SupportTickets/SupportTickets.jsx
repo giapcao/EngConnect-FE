@@ -189,11 +189,8 @@ const SupportTickets = () => {
       const res = await supportApi.getTicketById(ticket.id);
       if (res.isSuccess) {
         setSelectedTicket(res.data);
-        const messages = res.data.supportTicketMessages || [];
-        // The ticket creator is the sender who is not the current admin
-        const creatorMsg =
-          messages.find((m) => m.senderId !== user?.userId) || messages[0];
-        resolveSender(creatorMsg?.senderId);
+        // Use createdBy from the ticket itself — reliable even when there are no messages yet
+        resolveSender(res.data.createdBy);
       }
     } catch {
       addToast({ title: "Failed to load ticket", color: "danger" });

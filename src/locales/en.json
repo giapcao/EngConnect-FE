@@ -1224,8 +1224,13 @@
       "progress": "Progress",
       "lessons": "lessons",
       "viewProfile": "View Profile",
+      "profile": "Profile",
       "viewProgress": "View Progress",
-      "scheduleLesson": "Schedule Lesson"
+      "scheduleLesson": "Schedule Lesson",
+      "scheduleModal": {
+        "title": "Lesson Schedule",
+        "noLessons": "No lessons found for this student."
+      }
     },
     "homework": {
       "title": "Homework",

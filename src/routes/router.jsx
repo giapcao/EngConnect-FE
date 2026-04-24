@@ -4,6 +4,7 @@ import GuestRoute from "./GuestRoute";
 import AdminRoute from "./AdminRoute";
 import NonAdminRoute from "./NonAdminRoute";
 import TutorRoute from "./TutorRoute";
+import RequireTutorRoute from "./RequireTutorRoute";
 import DashboardLayout from "../layouts/DashboardLayout";
 import TutorDashboardLayout from "../layouts/TutorDashboardLayout";
 import AdminDashboardLayout from "../layouts/AdminDashboardLayout";
@@ -227,7 +228,9 @@ export const router = createBrowserRouter([
     path: "/tutor",
     element: (
       <NonAdminRoute>
-        <TutorDashboardLayout />
+        <RequireTutorRoute>
+          <TutorDashboardLayout />
+        </RequireTutorRoute>
       </NonAdminRoute>
     ),
     children: [

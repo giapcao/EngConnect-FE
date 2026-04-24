@@ -1221,9 +1221,14 @@
       "enrolledAt": "Ngày đăng ký",
       "progress": "Tiến độ",
       "lessons": "buổi học",
+      "profile": "Hồ sơ",
       "viewProfile": "Xem hồ sơ",
       "viewProgress": "Xem tiến độ",
-      "scheduleLesson": "Đặt lịch học"
+      "scheduleLesson": "Đặt lịch học",
+      "scheduleModal": {
+        "title": "Lịch học",
+        "noLessons": "Không tìm thấy buổi học nào của học viên này."
+      }
     },
     "homework": {
       "title": "Bài tập",

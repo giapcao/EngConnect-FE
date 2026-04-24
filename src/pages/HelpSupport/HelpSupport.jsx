@@ -173,6 +173,7 @@ const HelpSupport = () => {
     setCreating(true);
     try {
       const res = await supportApi.createTicket({
+        createdBy: user?.userId,
         subject: createForm.subject,
         description: createForm.description,
         type: createForm.type,

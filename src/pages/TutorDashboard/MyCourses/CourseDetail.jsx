@@ -1,4 +1,5 @@
 ﻿import { useState, useEffect, useRef } from "react";
+import { useSelector } from "react-redux";
 import { useParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
@@ -52,6 +53,7 @@ import {
   ChatTeardropText,
 } from "@phosphor-icons/react";
 import { coursesApi, tutorApi, studentApi } from "../../../api";
+import { selectUser } from "../../../store";
 import useInputStyles from "../../../hooks/useInputStyles";
 
 const formatDuration = (timeStr) => {
@@ -78,6 +80,7 @@ const TutorCourseDetail = () => {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   const colors = useThemeColors();
+  const user = useSelector(selectUser);
   const dateLocale = i18n.language === "vi" ? "vi-VN" : "en-US";
   const { theme } = useTheme();
   const { inputClassNames, selectClassNames } = useInputStyles();
@@ -126,6 +129,14 @@ const TutorCourseDetail = () => {
       try {
         setLoading(true);
         const res = await coursesApi.getCourseById(id);
+        if (
+          res.data?.tutorId &&
+          user?.tutorId &&
+          res.data.tutorId !== user.tutorId
+        ) {
+          navigate("/tutor/my-courses", { replace: true });
+          return;
+        }
         setCourse(res.data);
         if (res.data?.tutorId) {
           try {

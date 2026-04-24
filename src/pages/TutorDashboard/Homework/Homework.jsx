@@ -14,7 +14,6 @@ import {
   ModalBody,
   ModalFooter,
   useDisclosure,
-  Spinner,
   Textarea,
   Select,
   SelectItem,
@@ -58,6 +57,7 @@ import { lessonHomeworkApi, studentApi, coursesApi } from "../../../api";
 import { useThemeColors } from "../../../hooks/useThemeColors";
 import useInputStyles from "../../../hooks/useInputStyles";
 import toDoIllustration from "../../../assets/illustrations/to-do.avif";
+import HomeworkSkeleton from "../../../components/HomeworkSkeleton/HomeworkSkeleton";
 
 const CDN_BASE = "https://d20854st1o56hw.cloudfront.net/";
 const withCDN = (url) => {
@@ -694,7 +694,7 @@ const Homework = () => {
       </motion.div>
 
       {/* Stats */}
-      <motion.div
+      {/* <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.15 }}
@@ -724,7 +724,7 @@ const Homework = () => {
           value={stats.graded}
           accent={colors.state.success}
         />
-      </motion.div>
+      </motion.div> */}
 
       {/* Filters */}
       <motion.div
@@ -774,9 +774,7 @@ const Homework = () => {
 
       {/* List */}
       {loading ? (
-        <div className="flex justify-center py-16">
-          <Spinner size="lg" />
-        </div>
+        <HomeworkSkeleton count={5} showTutorBadge={false} />
       ) : filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center gap-3 py-12">
           <img

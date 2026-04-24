@@ -9,18 +9,21 @@ import {
   Chip,
   Tabs,
   Tab,
-  Spinner,
-  Dropdown,
-  DropdownTrigger,
-  DropdownMenu,
-  DropdownItem,
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
 } from "@heroui/react";
 import { useTranslation } from "react-i18next";
 import { useThemeColors } from "../../../hooks/useThemeColors";
 import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { selectUser } from "../../../store";
 import { motion } from "framer-motion";
-import { coursesApi } from "../../../api";
+import { coursesApi, studentApi } from "../../../api";
 import message from "../../../assets/illustrations/message.avif";
+import LessonDetailModal from "../../../components/LessonDetailModal/LessonDetailModal";
+import StudentsSkeleton from "../../../components/StudentsSkeleton/StudentsSkeleton";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -36,19 +39,52 @@ const itemVariants = {
 };
 import {
   MagnifyingGlass,
-  DotsThree,
   Eye,
   CalendarCheck,
+  Clock,
 } from "@phosphor-icons/react";
 
 const Students = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const dateLocale = i18n.language === "vi" ? "vi-VN" : "en-US";
   const colors = useThemeColors();
   const navigate = useNavigate();
+  const user = useSelector(selectUser);
   const [selectedTab, setSelectedTab] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [enrollments, setEnrollments] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // Schedule modal
+  const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
+  const [scheduleStudent, setScheduleStudent] = useState(null);
+  const [lessons, setLessons] = useState([]);
+  const [lessonsLoading, setLessonsLoading] = useState(false);
+  const [selectedLesson, setSelectedLesson] = useState(null);
+
+  const openScheduleModal = async (enrollment) => {
+    setScheduleStudent({
+      studentId: enrollment.studentId,
+      studentName: enrollment.studentName,
+    });
+    setScheduleModalOpen(true);
+    setLessonsLoading(true);
+    try {
+      const res = await studentApi.getLessons({
+        TutorId: user?.tutorId,
+        StudentId: enrollment.studentId,
+        "page-size": 200,
+      });
+      const items = res?.data?.items || [];
+      setLessons(
+        items.sort((a, b) => new Date(b.startTime) - new Date(a.startTime)),
+      );
+    } catch {
+      setLessons([]);
+    } finally {
+      setLessonsLoading(false);
+    }
+  };
 
   useEffect(() => {
     const fetchEnrollments = async () => {
@@ -85,6 +121,41 @@ const Students = () => {
     if (!iso) return "";
     return new Date(iso).toLocaleDateString("en-US", {
       year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  };
+
+  const getLessonStatusStyle = (status) => {
+    switch (status) {
+      case "Scheduled":
+        return {
+          bg: colors.background.primaryLight,
+          color: colors.primary.main,
+        };
+      case "InProgress":
+        return { bg: "#FEF3C7", color: "#D97706" };
+      case "Completed":
+        return { bg: "#D1FAE5", color: "#059669" };
+      case "Cancelled":
+        return { bg: "#FEE2E2", color: "#DC2626" };
+      default:
+        return { bg: colors.background.gray, color: colors.text.secondary };
+    }
+  };
+
+  const formatLessonTime = (dateStr) => {
+    if (!dateStr) return "";
+    return new Date(dateStr).toLocaleTimeString(dateLocale, {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  const formatLessonDate = (dateStr) => {
+    if (!dateStr) return "";
+    return new Date(dateStr).toLocaleDateString(dateLocale, {
+      weekday: "short",
       month: "short",
       day: "numeric",
     });
@@ -206,9 +277,7 @@ const Students = () => {
 
       {/* Students List */}
       {loading ? (
-        <div className="flex justify-center py-12">
-          <Spinner size="lg" />
-        </div>
+        <StudentsSkeleton count={5} />
       ) : enrollments.length === 0 ? (
         <div className="flex flex-col items-center py-12 gap-4">
           <img
@@ -324,49 +393,33 @@ const Students = () => {
                       </div>
 
                       {/* Actions */}
-                      <div className="flex items-center gap-2">
-                        <Dropdown>
-                          <DropdownTrigger>
-                            <Button
-                              isIconOnly
-                              variant="flat"
-                              size="sm"
-                              style={{
-                                backgroundColor: colors.background.gray,
-                                color: colors.text.secondary,
-                              }}
-                            >
-                              <DotsThree weight="bold" className="w-5 h-5" />
-                            </Button>
-                          </DropdownTrigger>
-                          <DropdownMenu
-                            onAction={(key) => {
-                              if (key === "view")
-                                navigate(
-                                  `/tutor/students/${enrollment.studentId}`,
-                                );
-                              if (key === "schedule")
-                                navigate(
-                                  `/tutor/schedule?studentId=${enrollment.studentId}&courseId=${enrollment.courseId}`,
-                                );
-                            }}
-                          >
-                            <DropdownItem
-                              key="view"
-                              startContent={<Eye className="w-4 h-4" />}
-                            >
-                              {t("tutorDashboard.students.viewProfile")}
-                            </DropdownItem>
-                            <DropdownItem
-                              key="schedule"
-                              startContent={
-                                <CalendarCheck className="w-4 h-4" />
-                              }
-                            >
-                              {t("tutorDashboard.students.scheduleLesson")}
-                            </DropdownItem>
-                          </DropdownMenu>
-                        </Dropdown>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <Button
+                          size="sm"
+                          variant="flat"
+                          startContent={<Eye className="w-4 h-4" />}
+                          style={{
+                            backgroundColor: `${colors.primary.main}15`,
+                            color: colors.primary.main,
+                          }}
+                          onPress={() =>
+                            navigate(`/tutor/students/${enrollment.studentId}`)
+                          }
+                        >
+                          {t("tutorDashboard.students.profile")}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="flat"
+                          startContent={<CalendarCheck className="w-4 h-4" />}
+                          style={{
+                            backgroundColor: `${colors.state.success}15`,
+                            color: colors.state.success,
+                          }}
+                          onPress={() => openScheduleModal(enrollment)}
+                        >
+                          {t("tutorDashboard.students.scheduleLesson")}
+                        </Button>
                       </div>
                     </div>
                   </CardBody>
@@ -376,6 +429,129 @@ const Students = () => {
           })}
         </motion.div>
       )}
+
+      {/* Schedule Modal */}
+      <Modal
+        isOpen={scheduleModalOpen}
+        onOpenChange={setScheduleModalOpen}
+        size="2xl"
+        scrollBehavior="inside"
+      >
+        <ModalContent>
+          {() => (
+            <>
+              <ModalHeader style={{ color: colors.text.primary }}>
+                {scheduleStudent?.studentName
+                  ? `${t("tutorDashboard.students.scheduleModal.title")} — ${scheduleStudent.studentName}`
+                  : t("tutorDashboard.students.scheduleModal.title")}
+              </ModalHeader>
+              <ModalBody className="pb-6">
+                {lessonsLoading ? (
+                  <div className="flex justify-center py-10">
+                    <Spinner />
+                  </div>
+                ) : lessons.length === 0 ? (
+                  <p
+                    className="text-center py-10"
+                    style={{ color: colors.text.secondary }}
+                  >
+                    {t("tutorDashboard.students.scheduleModal.noLessons")}
+                  </p>
+                ) : (
+                  <div className="space-y-2">
+                    {lessons.map((lesson) => {
+                      const statusStyle = getLessonStatusStyle(lesson.status);
+                      const isToday =
+                        new Date(lesson.startTime).toDateString() ===
+                        new Date().toDateString();
+                      return (
+                        <div
+                          key={lesson.lessonId || lesson.id}
+                          className="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:opacity-80 transition-opacity"
+                          style={{ backgroundColor: colors.background.gray }}
+                          onClick={() => setSelectedLesson(lesson)}
+                        >
+                          {isToday ? (
+                            <div
+                              className="w-10 h-10 rounded-lg flex flex-col items-center justify-center flex-shrink-0"
+                              style={{
+                                backgroundColor: colors.background.primaryLight,
+                              }}
+                            >
+                              <Clock
+                                size={18}
+                                weight="duotone"
+                                style={{ color: colors.primary.main }}
+                              />
+                            </div>
+                          ) : (
+                            <div
+                              className="w-12 h-12 rounded-lg flex flex-col items-center justify-center flex-shrink-0"
+                              style={{
+                                backgroundColor: colors.background.primaryLight,
+                              }}
+                            >
+                              <span
+                                className="text-sm font-bold"
+                                style={{ color: colors.primary.main }}
+                              >
+                                {new Date(lesson.startTime).getDate()}
+                              </span>
+                              <span
+                                style={{
+                                  color: colors.primary.main,
+                                  fontSize: "10px",
+                                }}
+                              >
+                                {new Date(lesson.startTime).toLocaleDateString(
+                                  dateLocale,
+                                  { month: "short" },
+                                )}
+                              </span>
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <p
+                              className="text-sm font-medium truncate"
+                              style={{ color: colors.text.primary }}
+                            >
+                              {lesson.sessionTitle || lesson.courseTitle || "—"}
+                            </p>
+                            <p
+                              className="text-xs mt-0.5"
+                              style={{ color: colors.text.tertiary }}
+                            >
+                              {isToday
+                                ? `${formatLessonTime(lesson.startTime)} — ${formatLessonTime(lesson.endTime)}`
+                                : `${formatLessonDate(lesson.startTime)} · ${formatLessonTime(lesson.startTime)} — ${formatLessonTime(lesson.endTime)}`}
+                            </p>
+                          </div>
+                          <Chip
+                            size="sm"
+                            className="text-xs"
+                            style={{
+                              backgroundColor: statusStyle.bg,
+                              color: statusStyle.color,
+                            }}
+                          >
+                            {lesson.status}
+                          </Chip>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </ModalBody>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
+
+      <LessonDetailModal
+        isOpen={!!selectedLesson}
+        onClose={() => setSelectedLesson(null)}
+        lesson={selectedLesson}
+      />
     </div>
   );
 };
