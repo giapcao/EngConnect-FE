@@ -529,30 +529,43 @@ const TutorCourseDetail = () => {
         >
           {t("courses.detail.backToCourses")}
         </Button>
-        {canEdit ? (
-          isIncomplete ? (
-            <Button
-              color="warning"
-              variant="flat"
-              startContent={<ArrowRight size={18} />}
-              onPress={() => navigate(`/tutor/create-course/${course.id}`)}
-            >
-              {t("courses.detail.continueCourse")}
-            </Button>
-          ) : (
-            <Button
-              color="primary"
-              startContent={<PencilSimple size={18} />}
-              onPress={() => navigate(`/tutor/create-course/${course.id}`)}
-              style={{
-                backgroundColor: colors.primary.main,
-                color: colors.text.white,
-              }}
-            >
-              {t("tutorDashboard.myCourses.editCourse")}
-            </Button>
-          )
-        ) : null}
+        <div className="flex items-center gap-2">
+          <Button
+            variant="flat"
+            size="sm"
+            onPress={() => navigate("/tutor/homework")}
+            style={{
+              backgroundColor: `${colors.primary.main}15`,
+              color: colors.primary.main,
+            }}
+          >
+            {t("tutorDashboard.nav.homework")}
+          </Button>
+          {canEdit ? (
+            isIncomplete ? (
+              <Button
+                color="warning"
+                variant="flat"
+                startContent={<ArrowRight size={18} />}
+                onPress={() => navigate(`/tutor/create-course/${course.id}`)}
+              >
+                {t("courses.detail.continueCourse")}
+              </Button>
+            ) : (
+              <Button
+                color="primary"
+                startContent={<PencilSimple size={18} />}
+                onPress={() => navigate(`/tutor/create-course/${course.id}`)}
+                style={{
+                  backgroundColor: colors.primary.main,
+                  color: colors.text.white,
+                }}
+              >
+                {t("tutorDashboard.myCourses.editCourse")}
+              </Button>
+            )
+          ) : null}
+        </div>
       </motion.div>
 
       {/* Incomplete course alert */}

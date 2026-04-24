@@ -37,6 +37,7 @@ import {
   MagnifyingGlassIcon,
   SquaresFour,
   Question,
+  NotePencil,
 } from "@phosphor-icons/react";
 
 const DashboardLayout = () => {
@@ -67,6 +68,11 @@ const DashboardLayout = () => {
       path: "/student/schedule",
       label: t("studentDashboard.nav.schedule"),
       icon: CalendarDots,
+    },
+    {
+      path: "/student/homework",
+      label: t("studentDashboard.nav.homework"),
+      icon: NotePencil,
     },
   ];
 

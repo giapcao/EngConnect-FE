@@ -154,6 +154,19 @@ const PaymentReturn = () => {
                         #{result.orderCode}
                       </span>
                     </div>
+                    {result.amount != null && (
+                      <div className="flex justify-between">
+                        <span style={{ color: colors.text.secondary }}>
+                          {t("paymentReturn.amount")}
+                        </span>
+                        <span
+                          className="font-medium"
+                          style={{ color: colors.text.primary }}
+                        >
+                          {result.amount.toLocaleString("vi-VN")} ₫
+                        </span>
+                      </div>
+                    )}
                     <div className="flex justify-between">
                       <span style={{ color: colors.text.secondary }}>
                         {t("paymentReturn.status")}

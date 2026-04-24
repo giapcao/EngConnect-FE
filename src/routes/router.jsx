@@ -71,7 +71,8 @@ import VideoCall from "../pages/VideoCall/VideoCall";
 // Not Found Page
 import NotFound from "../pages/NotFound/NotFound";
 import Test from "../pages/Test/test";
-import Homework from "../pages/TutorDashboard/Homework/Homework";
+import TutorHomework from "../pages/TutorDashboard/Homework/Homework";
+import StudentHomework from "../pages/StudentDashboard/Homework/Homework";
 
 export const router = createBrowserRouter([
   {
@@ -214,7 +215,7 @@ export const router = createBrowserRouter([
       },
       {
         path: "homework",
-        element: <Homework />,
+        element: <StudentHomework />,
       },
       {
         path: "notifications",
@@ -265,6 +266,10 @@ export const router = createBrowserRouter([
       {
         path: "earnings",
         element: <TutorEarnings />,
+      },
+      {
+        path: "homework",
+        element: <TutorHomework />,
       },
       {
         path: "profile",

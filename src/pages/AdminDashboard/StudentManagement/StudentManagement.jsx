@@ -285,7 +285,7 @@ const StudentManagement = () => {
             {t("adminDashboard.students.subtitle")}
           </p>
         </div>
-        <div className="flex gap-2">
+        {/* <div className="flex gap-2">
           <Button
             variant="flat"
             startContent={<Export className="w-4 h-4" />}
@@ -293,7 +293,7 @@ const StudentManagement = () => {
           >
             {t("adminDashboard.students.export")}
           </Button>
-        </div>
+        </div> */}
       </motion.div>
 
       {/* Stats Grid */}

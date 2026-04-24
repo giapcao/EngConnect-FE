@@ -39,6 +39,7 @@ import {
   ChalkboardTeacher,
   SealCheck,
   Question,
+  NotePencil,
 } from "@phosphor-icons/react";
 
 const TutorDashboardLayout = () => {
@@ -106,6 +107,11 @@ const TutorDashboardLayout = () => {
       path: "/tutor/students",
       label: t("tutorDashboard.nav.students"),
       icon: Student,
+    },
+    {
+      path: "/tutor/homework",
+      label: t("tutorDashboard.nav.homework"),
+      icon: NotePencil,
     },
     {
       path: "/tutor/earnings",

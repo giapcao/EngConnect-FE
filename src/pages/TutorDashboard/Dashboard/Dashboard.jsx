@@ -48,8 +48,8 @@ const Dashboard = () => {
       const res = await studentApi.getLessons({
         TutorId: user.tutorId,
         Status: "Scheduled",
-        "page-size": 5,
-        "sort-params": "StartTime",
+        "page-size": 4,
+        //"sort-params": "StartTime",
       });
       setUpcomingLessons(res?.data?.items || []);
     } catch (err) {
@@ -68,7 +68,7 @@ const Dashboard = () => {
       try {
         const data = await coursesApi.getMyStudentEnrollments({
           Status: "InProgress,Completed",
-          "page-size": 5,
+          "page-size": 4,
           page: 1,
         });
         setRecentStudents(data?.data?.items ?? []);

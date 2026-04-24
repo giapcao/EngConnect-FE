@@ -35,7 +35,7 @@ const lightColors = {
   },
   border: {
     light: '#E5E7EB',
-    medium: '#D1D5DB',
+    medium: '#E5E7EB',
     dark: '#9CA3AF',
   },
   button: {

@@ -691,7 +691,7 @@ const StudentMyCourseDetail = () => {
           <div
             key={res.id}
             className="flex items-center gap-2 px-2.5 py-1.5 rounded-md"
-            style={{ backgroundColor: colors.background.light }}
+            style={{ backgroundColor: colors.background.gray }}
           >
             <span className="flex-shrink-0">
               {getResourceIcon(res.resourceType)}
@@ -702,6 +702,16 @@ const StudentMyCourseDetail = () => {
             >
               {res.title}
             </span>
+            <Chip
+              size="sm"
+              variant="flat"
+              className="text-xs h-5 px-1"
+              style={{
+                fontSize: "10px",
+              }}
+            >
+              {res.resourceType}
+            </Chip>
             <a
               href={res.url}
               target="_blank"
@@ -726,6 +736,7 @@ const StudentMyCourseDetail = () => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.15 }}
+        className="flex items-center justify-between"
       >
         <Button
           variant="light"
@@ -734,6 +745,17 @@ const StudentMyCourseDetail = () => {
           style={{ color: colors.text.secondary }}
         >
           {t("studentDashboard.myCourses.backToMyCourses")}
+        </Button>
+        <Button
+          variant="flat"
+          size="sm"
+          onPress={() => navigate("/student/homework")}
+          style={{
+            backgroundColor: `${colors.primary.main}15`,
+            color: colors.primary.main,
+          }}
+        >
+          {t("studentDashboard.nav.homework")}
         </Button>
       </motion.div>
 

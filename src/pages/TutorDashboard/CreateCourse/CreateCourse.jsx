@@ -145,6 +145,9 @@ const CreateCourse = () => {
   // Delete confirmation
   const [deleteConfirm, setDeleteConfirm] = useState(null);
 
+  // Submit for verification confirmation
+  const [submitConfirm, setSubmitConfirm] = useState(false);
+
   // Inline edit mode for existing items
   const [editingModuleIndex, setEditingModuleIndex] = useState(null);
   const [moduleSnapshot, setModuleSnapshot] = useState(null);
@@ -742,9 +745,7 @@ const CreateCourse = () => {
         return { ...prev, [sessionId]: arr };
       });
       setCreatedResources((prev) => {
-        const arr = (prev[sessionId] || []).filter(
-          (r) => r.id !== resourceId,
-        );
+        const arr = (prev[sessionId] || []).filter((r) => r.id !== resourceId);
         return { ...prev, [sessionId]: arr };
       });
       addToast({
@@ -4399,8 +4400,7 @@ const CreateCourse = () => {
             <Button
               color="primary"
               size="lg"
-              onPress={handleSubmitVerification}
-              isLoading={loading}
+              onPress={() => setSubmitConfirm(true)}
               isDisabled={loading}
               style={{
                 backgroundColor: colors.primary.main,
@@ -4425,7 +4425,7 @@ const CreateCourse = () => {
         size="2xl"
         scrollBehavior="inside"
       >
-        <ModalContent>
+        <ModalContent style={{ backgroundColor: colors.background.light }}>
           {(onClose) => (
             <>
               <ModalHeader className="flex flex-col gap-1">
@@ -4614,6 +4614,53 @@ const CreateCourse = () => {
         </ModalContent>
       </Modal>
 
+      {/* Submit for Verification Confirmation Modal */}
+      <Modal
+        isOpen={submitConfirm}
+        onOpenChange={(open) => {
+          if (!open) setSubmitConfirm(false);
+        }}
+        size="sm"
+      >
+        <ModalContent style={{ backgroundColor: colors.background.light }}>
+          {(onClose) => (
+            <>
+              <ModalHeader style={{ color: colors.text.primary }}>
+                {t("tutorDashboard.createCourse.confirmSubmitTitle")}
+              </ModalHeader>
+              <ModalBody>
+                <p style={{ color: colors.text.secondary }}>
+                  {t("tutorDashboard.createCourse.confirmSubmitMessage")}
+                </p>
+              </ModalBody>
+              <ModalFooter>
+                <Button variant="flat" onPress={onClose}>
+                  {t("tutorDashboard.createCourse.cancel")}
+                </Button>
+                <Button
+                  isLoading={loading}
+                  onPress={() => {
+                    setSubmitConfirm(false);
+                    handleSubmitVerification();
+                  }}
+                  style={{
+                    backgroundColor: colors.primary.main,
+                    color: colors.text.white,
+                  }}
+                  startContent={
+                    !loading && (
+                      <PaperPlaneTilt weight="bold" className="w-4 h-4" />
+                    )
+                  }
+                >
+                  {t("tutorDashboard.createCourse.yes")}
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
+
       {/* Delete Confirmation Modal */}
       <Modal
         isOpen={!!deleteConfirm}
@@ -4622,7 +4669,7 @@ const CreateCourse = () => {
         }}
         size="sm"
       >
-        <ModalContent>
+        <ModalContent style={{ backgroundColor: colors.background.light }}>
           {(onClose) => (
             <>
               <ModalHeader>
@@ -4686,7 +4733,7 @@ const CreateCourse = () => {
         size="lg"
         scrollBehavior="inside"
       >
-        <ModalContent>
+        <ModalContent style={{ backgroundColor: colors.background.light }}>
           {(onClose) => (
             <>
               <ModalHeader>
@@ -4767,7 +4814,7 @@ const CreateCourse = () => {
         size="2xl"
         scrollBehavior="inside"
       >
-        <ModalContent>
+        <ModalContent style={{ backgroundColor: colors.background.light }}>
           {(onClose) => (
             <>
               <ModalHeader>

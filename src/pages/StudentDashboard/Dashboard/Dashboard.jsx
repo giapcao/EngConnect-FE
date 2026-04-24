@@ -461,7 +461,7 @@ const Dashboard = () => {
                               "https://placehold.co/300x300?text=No+Image"
                             }
                             alt={enrollment.course?.title}
-                            className="w-16 h-16 rounded-lg object-cover flex-shrink-0"
+                            className="w-24 h-16 rounded-lg object-cover flex-shrink-0"
                           />
                           <div className="flex-1 min-w-0">
                             <p
