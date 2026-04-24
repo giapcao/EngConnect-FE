@@ -43,14 +43,6 @@ const Footer = () => {
     ],
   };
 
-  const socialLinks = [
-    { icon: Facebook, href: "#", label: "Facebook" },
-    { icon: Instagram, href: "#", label: "Instagram" },
-    { icon: Twitter, href: "#", label: "Twitter" },
-    { icon: Linkedin, href: "#", label: "LinkedIn" },
-    { icon: Youtube, href: "#", label: "YouTube" },
-  ];
-
   const handleSubscribe = (e) => {
     e.preventDefault();
     if (email) {
@@ -228,7 +220,7 @@ const Footer = () => {
                       className="w-4 h-4"
                       style={{ color: colors.primary.main }}
                     />
-                    <span>+84 123 456 789</span>
+                    <span>+84 834 102 996</span>
                   </a>
 
                   {/* Address */}

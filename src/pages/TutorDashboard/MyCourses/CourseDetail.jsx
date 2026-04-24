@@ -541,17 +541,19 @@ const TutorCourseDetail = () => {
           {t("courses.detail.backToCourses")}
         </Button>
         <div className="flex items-center gap-2">
-          <Button
-            variant="flat"
-            size="sm"
-            onPress={() => navigate("/tutor/homework")}
-            style={{
-              backgroundColor: `${colors.primary.main}15`,
-              color: colors.primary.main,
-            }}
-          >
-            {t("tutorDashboard.nav.homework")}
-          </Button>
+          {statusLower === "published" && (
+            <Button
+              variant="flat"
+              size="sm"
+              onPress={() => navigate("/tutor/homework")}
+              style={{
+                backgroundColor: `${colors.primary.main}15`,
+                color: colors.primary.main,
+              }}
+            >
+              {t("tutorDashboard.nav.homework")}
+            </Button>
+          )}
           {canEdit ? (
             isIncomplete ? (
               <Button

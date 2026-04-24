@@ -29,6 +29,8 @@ import VideoModal from "../../../components/VideoModal/VideoModal";
 import LessonDetailModal from "../../../components/LessonDetailModal/LessonDetailModal";
 import LessonSummaryModal from "../../../components/LessonSummaryModal/LessonSummaryModal";
 import LessonQuizModal from "../../../components/LessonQuizModal/LessonQuizModal";
+import StudentHomeworkDetailModal from "../../../components/StudentHomeworkDetailModal/StudentHomeworkDetailModal";
+import StudentHomeworkSubmitModal from "../../../components/StudentHomeworkSubmitModal/StudentHomeworkSubmitModal";
 import {
   Star,
   Clock,
@@ -56,8 +58,16 @@ import {
   Lightning,
   ClockCountdown,
   Paperclip,
+  NotePencil,
+  Target,
+  Warning,
 } from "@phosphor-icons/react";
-import { coursesApi, tutorApi, studentApi } from "../../../api";
+import {
+  coursesApi,
+  tutorApi,
+  studentApi,
+  lessonHomeworkApi,
+} from "../../../api";
 
 const formatDuration = (timeStr) => {
   if (!timeStr) return "";
@@ -86,6 +96,14 @@ const getResourceIcon = (type) => {
   }
 };
 
+const CDN_BASE = "https://d20854st1o56hw.cloudfront.net/";
+const withCDN = (url) => {
+  if (!url) return undefined;
+  if (url.startsWith("http")) return url;
+  return CDN_BASE + url;
+};
+
+
 const StudentMyCourseDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -101,7 +119,6 @@ const StudentMyCourseDetail = () => {
   const [tutorInfo, setTutorInfo] = useState(null);
   const [videoOpen, setVideoOpen] = useState(false);
   const instructorRef = useRef(null);
-
   // Resources state (per sessionId)
   const [expandedResources, setExpandedResources] = useState({});
   const [sessionResources, setSessionResources] = useState({});
@@ -111,6 +128,22 @@ const StudentMyCourseDetail = () => {
   const [lessons, setLessons] = useState([]);
   const [lessonsLoading, setLessonsLoading] = useState(true);
   const [selectedLesson, setSelectedLesson] = useState(null);
+
+  // Homework state (for this course)
+  const [courseHomeworks, setCourseHomeworks] = useState([]);
+
+  // HW inline modal state
+  const [selectedHwModal, setSelectedHwModal] = useState(null);
+  const {
+    isOpen: isHwDetailOpen,
+    onOpen: onHwDetailOpen,
+    onClose: onHwDetailClose,
+  } = useDisclosure();
+  const {
+    isOpen: isHwSubmitOpen,
+    onOpen: onHwSubmitOpen,
+    onClose: onHwSubmitClose,
+  } = useDisclosure();
 
   // Enrollment state
   const [enrollment, setEnrollment] = useState(null);
@@ -270,6 +303,26 @@ const StudentMyCourseDetail = () => {
   }, [user?.studentId, id]);
 
   useEffect(() => {
+    const fetchHomeworks = async () => {
+      if (!user?.studentId || !id) return;
+      try {
+        const res = await lessonHomeworkApi.getHomeworks({
+          StudentId: user.studentId,
+          "page-size": 200,
+        });
+        const items = res?.data?.items || [];
+        setCourseHomeworks(
+          items.filter((h) => h.courseId === id && h.status !== "NotStarted"),
+        );
+      } catch (err) {
+        console.error("Failed to fetch homeworks:", err);
+        setCourseHomeworks([]);
+      }
+    };
+    fetchHomeworks();
+  }, [user?.studentId, id]);
+
+  useEffect(() => {
     const fetchReview = async () => {
       if (!user?.studentId || !id) return;
       try {
@@ -350,6 +403,40 @@ const StudentMyCourseDetail = () => {
     }
   };
 
+  const hwStatusChipProps = (status) => {
+    switch (status) {
+      case "Assigned":
+        return { bg: `${colors.state.warning}20`, color: colors.state.warning, label: t("studentDashboard.homework.status.assigned") };
+      case "Submitted":
+        return { bg: `${colors.primary.main}20`, color: colors.primary.main, label: t("studentDashboard.homework.status.submitted") };
+      case "Scored":
+        return { bg: `${colors.state.success}20`, color: colors.state.success, label: t("studentDashboard.homework.status.scored") };
+      default:
+        return { bg: `${colors.text.tertiary}20`, color: colors.text.tertiary, label: status };
+    }
+  };
+
+  const openHwDetail = (hw) => {
+    setSelectedHwModal(hw);
+    onHwDetailOpen();
+  };
+
+  const openHwSubmit = (hw) => {
+    setSelectedHwModal(hw);
+    onHwSubmitOpen();
+  };
+
+  const handleHwSubmitSuccess = async () => {
+    onHwDetailClose();
+    try {
+      const res = await lessonHomeworkApi.getHomeworks({ StudentId: user.studentId, "page-size": 200 });
+      const items = res?.data?.items || [];
+      setCourseHomeworks(items.filter((h) => h.courseId === id && h.status !== "NotStarted"));
+    } catch (err) {
+      console.error("Failed to refresh homeworks:", err);
+    }
+  };
+
   const formatLessonTime = (dateStr) => {
     if (!dateStr) return "";
     const d = new Date(dateStr);
@@ -416,6 +503,16 @@ const StudentMyCourseDetail = () => {
     });
     return map;
   }, [lessons]);
+
+  const homeworksByLessonId = useMemo(() => {
+    const map = {};
+    courseHomeworks.forEach((h) => {
+      if (!h.lessonId) return;
+      if (!map[h.lessonId]) map[h.lessonId] = [];
+      map[h.lessonId].push(h);
+    });
+    return map;
+  }, [courseHomeworks]);
 
   // Determine current primary lesson for a session (latest non-cancelled, else latest)
   const getPrimaryLesson = (sessionId) => {
@@ -1302,6 +1399,9 @@ const StudentMyCourseDetail = () => {
                                     const extraLessons = sessionLessons.filter(
                                       (l) => l.id !== primary?.id,
                                     );
+                                    const sessionHws = sessionLessons.flatMap(
+                                      (l) => homeworksByLessonId[l.id] || [],
+                                    );
                                     const isResOpen = expandedResources[sessId];
                                     const outcomesList = sess.sessionOutcomes
                                       ? sess.sessionOutcomes
@@ -1639,6 +1739,210 @@ const StudentMyCourseDetail = () => {
                                                     </div>
                                                   ),
                                                 )}
+                                              </div>
+                                            )}
+
+                                            {/* Homework for this session */}
+                                            {sessionHws.length > 0 && (
+                                              <div className="mt-3 space-y-1.5">
+                                                <p
+                                                  className="text-[10px] uppercase tracking-wide font-semibold flex items-center gap-1.5"
+                                                  style={{
+                                                    color: colors.text.tertiary,
+                                                  }}
+                                                >
+                                                  <NotePencil
+                                                    weight="duotone"
+                                                    className="w-3.5 h-3.5"
+                                                    style={{
+                                                      color:
+                                                        colors.primary.main,
+                                                    }}
+                                                  />
+                                                  {t(
+                                                    "studentDashboard.homework.title",
+                                                  )}
+                                                </p>
+                                                {sessionHws.map((hw) => {
+                                                  const statusColor =
+                                                    hw.status === "Scored"
+                                                      ? colors.state.success
+                                                      : hw.status ===
+                                                          "Submitted"
+                                                        ? colors.primary.main
+                                                        : hw.status ===
+                                                            "Assigned"
+                                                          ? colors.state.warning
+                                                          : colors.text
+                                                              .tertiary;
+                                                  const statusLabel =
+                                                    hw.status === "Scored"
+                                                      ? t(
+                                                          "studentDashboard.homework.status.scored",
+                                                        )
+                                                      : hw.status ===
+                                                          "Submitted"
+                                                        ? t(
+                                                            "studentDashboard.homework.status.submitted",
+                                                          )
+                                                        : hw.status ===
+                                                            "Assigned"
+                                                          ? t(
+                                                              "studentDashboard.homework.status.assigned",
+                                                            )
+                                                          : hw.status;
+                                                  const isOverdue =
+                                                    hw.status === "Assigned" &&
+                                                    hw.dueAt &&
+                                                    new Date(hw.dueAt) <
+                                                      new Date();
+                                                  return (
+                                                    <div
+                                                      key={hw.id}
+                                                      className="flex items-center gap-2.5 p-2.5 rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
+                                                      style={{
+                                                        backgroundColor: `${statusColor}10`,
+                                                        border: `1px solid ${statusColor}25`,
+                                                      }}
+                                                      role="button"
+                                                      tabIndex={0}
+                                                      onClick={() => openHwDetail(hw)}
+                                                      onKeyDown={(e) =>
+                                                        e.key === "Enter" &&
+                                                        openHwDetail(hw)
+                                                      }
+                                                    >
+                                                      <NotePencil
+                                                        weight="duotone"
+                                                        className="w-4 h-4 flex-shrink-0"
+                                                        style={{
+                                                          color: statusColor,
+                                                        }}
+                                                      />
+                                                      <div className="flex-1 min-w-0">
+                                                        <div className="flex items-center gap-1.5 flex-wrap mb-0.5">
+                                                          <Chip
+                                                            size="sm"
+                                                            className="h-4"
+                                                            style={{
+                                                              backgroundColor: `${statusColor}25`,
+                                                              color:
+                                                                statusColor,
+                                                              fontSize: "9px",
+                                                            }}
+                                                          >
+                                                            {statusLabel}
+                                                          </Chip>
+                                                          {isOverdue && (
+                                                            <Chip
+                                                              size="sm"
+                                                              className="h-4"
+                                                              style={{
+                                                                backgroundColor: `${colors.state.error}20`,
+                                                                color:
+                                                                  colors.state
+                                                                    .error,
+                                                                fontSize: "9px",
+                                                              }}
+                                                              startContent={
+                                                                <Warning
+                                                                  weight="fill"
+                                                                  className="w-2.5 h-2.5 ml-0.5"
+                                                                />
+                                                              }
+                                                            >
+                                                              {t(
+                                                                "studentDashboard.homework.overdue",
+                                                              )}
+                                                            </Chip>
+                                                          )}
+                                                        </div>
+                                                        <p
+                                                          className="text-xs font-medium truncate"
+                                                          style={{
+                                                            color:
+                                                              colors.text
+                                                                .primary,
+                                                          }}
+                                                        >
+                                                          {hw.title ||
+                                                            hw.description?.slice(
+                                                              0,
+                                                              60,
+                                                            )}
+                                                        </p>
+                                                        <div
+                                                          className="flex items-center gap-2 text-[10px] mt-0.5"
+                                                          style={{
+                                                            color:
+                                                              colors.text
+                                                                .tertiary,
+                                                          }}
+                                                        >
+                                                          {hw.dueAt ? (
+                                                            <span className="flex items-center gap-1">
+                                                              <Clock className="w-3 h-3" />
+                                                              {formatLessonDate(
+                                                                hw.dueAt,
+                                                              )}
+                                                            </span>
+                                                          ) : (
+                                                            <span>
+                                                              {t(
+                                                                "studentDashboard.homework.noDueDate",
+                                                              )}
+                                                            </span>
+                                                          )}
+                                                          <span className="flex items-center gap-1">
+                                                            <Target className="w-3 h-3" />
+                                                            {t(
+                                                              "studentDashboard.homework.maxScore",
+                                                            )}
+                                                            :{" "}
+                                                            {hw.maxScore ??
+                                                              "—"}
+                                                          </span>
+                                                        </div>
+                                                      </div>
+                                                      {hw.status ===
+                                                      "Scored" ? (
+                                                        <span
+                                                          className="text-xs font-bold whitespace-nowrap"
+                                                          style={{
+                                                            color:
+                                                              colors.state
+                                                                .success,
+                                                          }}
+                                                        >
+                                                          {hw.score}/
+                                                          {hw.maxScore}
+                                                        </span>
+                                                      ) : hw.status ===
+                                                        "Assigned" ? (
+                                                        <span
+                                                          className="text-xs font-semibold whitespace-nowrap"
+                                                          style={{
+                                                            color:
+                                                              colors.primary
+                                                                .main,
+                                                          }}
+                                                        >
+                                                          {t(
+                                                            "studentDashboard.homework.submit",
+                                                          )}
+                                                        </span>
+                                                      ) : null}
+                                                      <ArrowSquareOut
+                                                        className="w-3.5 h-3.5 flex-shrink-0"
+                                                        style={{
+                                                          color:
+                                                            colors.text
+                                                              .tertiary,
+                                                        }}
+                                                      />
+                                                    </div>
+                                                  );
+                                                })}
                                               </div>
                                             )}
 
@@ -2386,6 +2690,23 @@ const StudentMyCourseDetail = () => {
           </ModalFooter>
         </ModalContent>
       </Modal>
+
+      {/* ==================== HW DETAIL MODAL ==================== */}
+      <StudentHomeworkDetailModal
+        isOpen={isHwDetailOpen}
+        onClose={onHwDetailClose}
+        hw={selectedHwModal}
+        onSubmitClick={(hw) => openHwSubmit(hw)}
+        onTutorClick={(hw) => navigate(`/tutor-profile/${hw.tutorId}`)}
+      />
+
+      {/* ==================== HW SUBMIT MODAL ==================== */}
+      <StudentHomeworkSubmitModal
+        isOpen={isHwSubmitOpen}
+        onClose={onHwSubmitClose}
+        hw={selectedHwModal}
+        onSubmitSuccess={handleHwSubmitSuccess}
+      />
     </div>
   );
 };

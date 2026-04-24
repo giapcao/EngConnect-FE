@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Card,
@@ -8,15 +8,9 @@ import {
   Chip,
   Tabs,
   Tab,
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
   useDisclosure,
   Avatar,
   Progress,
-  addToast,
 } from "@heroui/react";
 import { useSelector } from "react-redux";
 import { selectUser } from "../../../store";
@@ -26,22 +20,14 @@ import {
   MagnifyingGlass,
   Clock,
   CheckCircle,
-  FileArrowDown,
-  ArrowSquareOut,
   Star,
-  Warning,
   PaperPlaneTilt,
-  CloudArrowUp,
-  X,
   FilePdf,
   FileImage,
   FileZip,
   FileDoc,
   File as FileIcon,
   CaretRight,
-  GraduationCap,
-  Calendar,
-  Target,
   Hourglass,
 } from "@phosphor-icons/react";
 import { lessonHomeworkApi } from "../../../api";
@@ -50,6 +36,8 @@ import useInputStyles from "../../../hooks/useInputStyles";
 import toDoIllustration from "../../../assets/illustrations/to-do.avif";
 import chillIllustration from "../../../assets/illustrations/chill.avif";
 import HomeworkSkeleton from "../../../components/HomeworkSkeleton/HomeworkSkeleton";
+import StudentHomeworkDetailModal from "../../../components/StudentHomeworkDetailModal/StudentHomeworkDetailModal";
+import StudentHomeworkSubmitModal from "../../../components/StudentHomeworkSubmitModal/StudentHomeworkSubmitModal";
 
 const CDN_BASE = "https://d20854st1o56hw.cloudfront.net/";
 const withCDN = (url) => {
@@ -144,14 +132,7 @@ const Homework = () => {
   const [selectedTab, setSelectedTab] = useState("all");
   const [selectedHw, setSelectedHw] = useState(null);
 
-  // Submit modal state
   const submitDisclosure = useDisclosure();
-  const [submitFile, setSubmitFile] = useState(null);
-  const [submitError, setSubmitError] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-  const [isDragging, setIsDragging] = useState(false);
-  const fileInputRef = useRef(null);
-
   const detailDisclosure = useDisclosure();
 
   const fetchHomeworks = useCallback(async () => {
@@ -246,54 +227,8 @@ const Homework = () => {
 
   const openSubmit = (hw) => {
     setSelectedHw(hw);
-    setSubmitFile(null);
-    setSubmitError("");
     submitDisclosure.onOpen();
   };
-
-  const onFileSelected = (file) => {
-    if (!file) return;
-    if (file.size > MAX_UPLOAD_BYTES) {
-      setSubmitError(t("studentDashboard.homework.fileTooLarge"));
-      setSubmitFile(null);
-      return;
-    }
-    setSubmitError("");
-    setSubmitFile(file);
-  };
-
-  const handleSubmit = async () => {
-    if (!submitFile) {
-      setSubmitError(t("studentDashboard.homework.fileRequired"));
-      return;
-    }
-    try {
-      setSubmitting(true);
-      await lessonHomeworkApi.submitHomework(selectedHw.id, submitFile);
-      addToast({
-        title: t("studentDashboard.homework.submitSuccess"),
-        color: "success",
-        timeout: 3000,
-      });
-      submitDisclosure.onClose();
-      detailDisclosure.onClose();
-      fetchHomeworks();
-    } catch (err) {
-      console.error("Failed to submit homework:", err);
-      addToast({
-        title: t("studentDashboard.homework.submitError"),
-        color: "danger",
-        timeout: 3000,
-      });
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const chipPropsSelected = useMemo(
-    () => (selectedHw ? statusChipProps(selectedHw.status) : null),
-    [selectedHw, statusChipProps],
-  );
 
   // ── Small components ──────────────────────────────────────────────────────
   const StatCard = ({ icon: Icon, label, value, accent, alert }) => (
@@ -461,7 +396,8 @@ const Homework = () => {
         <Tabs
           selectedKey={selectedTab}
           onSelectionChange={setSelectedTab}
-          variant="light"
+          variant="solid"
+          color="primary"
           classNames={{ tabList: "gap-2", tab: "px-4" }}
         >
           <Tab key="all" title={t("studentDashboard.homework.filter.all")} />
@@ -656,643 +592,25 @@ const Homework = () => {
       )}
 
       {/* ==================== DETAIL MODAL ==================== */}
-      <Modal
+      <StudentHomeworkDetailModal
         isOpen={detailDisclosure.isOpen}
         onClose={detailDisclosure.onClose}
-        size="3xl"
-        scrollBehavior="inside"
-      >
-        <ModalContent style={{ backgroundColor: colors.background.light }}>
-          <ModalHeader className="flex flex-col gap-2">
-            <div className="flex items-center gap-2 flex-wrap">
-              {chipPropsSelected && (
-                <Chip
-                  size="sm"
-                  style={{
-                    backgroundColor: chipPropsSelected.bg,
-                    color: chipPropsSelected.color,
-                  }}
-                >
-                  {chipPropsSelected.label}
-                </Chip>
-              )}
-              {selectedHw?.dueAt &&
-                (() => {
-                  const due = computeDueInfo(selectedHw.dueAt, t);
-                  const dueColor =
-                    due.tone === "danger"
-                      ? colors.state.error
-                      : due.tone === "warning"
-                        ? colors.state.warning
-                        : colors.text.tertiary;
-                  return (
-                    <div
-                      className="flex items-center gap-1"
-                      style={{ color: dueColor }}
-                    >
-                      <Clock weight="bold" className="w-3.5 h-3.5" />
-                      <span className="text-xs font-semibold">{due.label}</span>
-                    </div>
-                  );
-                })()}
-            </div>
-            <span
-              className="text-lg font-semibold"
-              style={{ color: colors.text.primary }}
-            >
-              {selectedHw?.title}
-            </span>
-            {selectedHw && (
-              <Breadcrumb
-                hw={selectedHw}
-                size="md"
-                onCourseClick={() => {
-                  detailDisclosure.onClose();
-                  navigate(`/student/courses/${selectedHw.courseId}`);
-                }}
-              />
-            )}
-          </ModalHeader>
-          <ModalBody className="space-y-5 pb-2">
-            {selectedHw && (
-              <>
-                {/* Tutor */}
-                {selectedHw.tutor && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      detailDisclosure.onClose();
-                      navigate(`/tutor-profile/${selectedHw.tutorId}`);
-                    }}
-                    className="flex items-center gap-3 p-3 rounded-xl w-full hover:opacity-80 transition-opacity text-left"
-                    style={{ backgroundColor: colors.background.gray }}
-                  >
-                    <Avatar src={withCDN(selectedHw.tutor.avatar)} size="md" />
-                    <div className="flex-1 min-w-0">
-                      <p
-                        className="text-[11px] uppercase tracking-wide font-semibold"
-                        style={{ color: colors.text.tertiary }}
-                      >
-                        {t("studentDashboard.homework.yourTutor")}
-                      </p>
-                      <p
-                        className="text-sm font-semibold"
-                        style={{ color: colors.text.primary }}
-                      >
-                        {`${selectedHw.tutor.firstName || ""} ${selectedHw.tutor.lastName || ""}`.trim()}
-                      </p>
-                    </div>
-                    <ArrowSquareOut
-                      className="w-4 h-4 shrink-0"
-                      style={{ color: colors.primary.main }}
-                    />
-                  </button>
-                )}
-
-                {/* Description */}
-                <div>
-                  <p
-                    className="text-xs font-semibold uppercase tracking-wide mb-2"
-                    style={{ color: colors.text.tertiary }}
-                  >
-                    {t("studentDashboard.homework.description")}
-                  </p>
-                  <p
-                    className="text-sm whitespace-pre-wrap"
-                    style={{ color: colors.text.primary }}
-                  >
-                    {selectedHw.description}
-                  </p>
-                </div>
-
-                {/* Meta grid */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  <div
-                    className="p-3 rounded-xl"
-                    style={{ backgroundColor: colors.background.gray }}
-                  >
-                    <div className="flex items-center gap-1.5 mb-1">
-                      <Calendar
-                        className="w-3.5 h-3.5"
-                        style={{ color: colors.text.tertiary }}
-                      />
-                      <p
-                        className="text-[11px] uppercase tracking-wide font-semibold"
-                        style={{ color: colors.text.tertiary }}
-                      >
-                        {t("studentDashboard.homework.dueDate")}
-                      </p>
-                    </div>
-                    <p
-                      className="text-sm font-medium"
-                      style={{ color: colors.text.primary }}
-                    >
-                      {formatDate(selectedHw.dueAt, locale) ||
-                        t("studentDashboard.homework.noDueDate")}
-                    </p>
-                  </div>
-                  <div
-                    className="p-3 rounded-xl"
-                    style={{ backgroundColor: colors.background.gray }}
-                  >
-                    <div className="flex items-center gap-1.5 mb-1">
-                      <Target
-                        className="w-3.5 h-3.5"
-                        style={{ color: colors.text.tertiary }}
-                      />
-                      <p
-                        className="text-[11px] uppercase tracking-wide font-semibold"
-                        style={{ color: colors.text.tertiary }}
-                      >
-                        {t("studentDashboard.homework.maxScore")}
-                      </p>
-                    </div>
-                    <p
-                      className="text-sm font-medium"
-                      style={{ color: colors.text.primary }}
-                    >
-                      {selectedHw.maxScore ?? "—"}
-                    </p>
-                  </div>
-                  {selectedHw.assignedAt && (
-                    <div
-                      className="p-3 rounded-xl"
-                      style={{ backgroundColor: colors.background.gray }}
-                    >
-                      <p
-                        className="text-[11px] uppercase tracking-wide font-semibold mb-1"
-                        style={{ color: colors.text.tertiary }}
-                      >
-                        {t("studentDashboard.homework.assignedAt")}
-                      </p>
-                      <p
-                        className="text-sm font-medium"
-                        style={{ color: colors.text.primary }}
-                      >
-                        {formatDate(selectedHw.assignedAt, locale)}
-                      </p>
-                    </div>
-                  )}
-                  {selectedHw.submittedAt && (
-                    <div
-                      className="p-3 rounded-xl"
-                      style={{ backgroundColor: colors.background.gray }}
-                    >
-                      <p
-                        className="text-[11px] uppercase tracking-wide font-semibold mb-1"
-                        style={{ color: colors.text.tertiary }}
-                      >
-                        {t("studentDashboard.homework.submittedAt")}
-                      </p>
-                      <p
-                        className="text-sm font-medium"
-                        style={{ color: colors.text.primary }}
-                      >
-                        {formatDate(selectedHw.submittedAt, locale)}
-                      </p>
-                    </div>
-                  )}
-                </div>
-
-                {/* Resource */}
-                {selectedHw.resourceUrl && (
-                  <div>
-                    <p
-                      className="text-xs font-semibold uppercase tracking-wide mb-2"
-                      style={{ color: colors.text.tertiary }}
-                    >
-                      {t("studentDashboard.homework.resource")}
-                    </p>
-                    <a
-                      href={withCDN(selectedHw.resourceUrl)}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="flex items-center gap-3 p-3 rounded-xl hover:opacity-90 transition-opacity"
-                      style={{ backgroundColor: `${colors.primary.main}12` }}
-                    >
-                      {getFileTypeIcon(
-                        selectedHw.resourceUrl,
-                        "w-9 h-9 shrink-0",
-                        { color: colors.primary.main },
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <p
-                          className="text-sm font-semibold truncate"
-                          style={{ color: colors.primary.main }}
-                        >
-                          {getFileBaseName(selectedHw.resourceUrl) ||
-                            t("studentDashboard.homework.downloadResource")}
-                        </p>
-                        <p
-                          className="text-xs"
-                          style={{ color: colors.text.tertiary }}
-                        >
-                          {t("studentDashboard.homework.downloadResource")}
-                        </p>
-                      </div>
-                      <ArrowSquareOut
-                        className="w-4 h-4 shrink-0"
-                        style={{ color: colors.primary.main }}
-                      />
-                    </a>
-                  </div>
-                )}
-
-                {/* Submission */}
-                {selectedHw.submissionUrl && (
-                  <div>
-                    <p
-                      className="text-xs font-semibold uppercase tracking-wide mb-2"
-                      style={{ color: colors.text.tertiary }}
-                    >
-                      {t("studentDashboard.homework.mySubmission")}
-                    </p>
-                    {IMAGE_EXT_RE.test(
-                      getFileBaseName(selectedHw.submissionUrl),
-                    ) ? (
-                      <a
-                        href={withCDN(selectedHw.submissionUrl)}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="block rounded-xl overflow-hidden hover:opacity-90 transition-opacity"
-                        style={{ backgroundColor: colors.background.gray }}
-                      >
-                        <img
-                          src={withCDN(selectedHw.submissionUrl)}
-                          alt="Submission"
-                          className="w-full max-h-80 object-contain"
-                        />
-                        <div className="p-3 flex items-center justify-between">
-                          <span
-                            className="text-xs truncate"
-                            style={{ color: colors.text.secondary }}
-                          >
-                            {getFileBaseName(selectedHw.submissionUrl)}
-                          </span>
-                          <FileArrowDown
-                            className="w-4 h-4 shrink-0"
-                            style={{ color: colors.primary.main }}
-                          />
-                        </div>
-                      </a>
-                    ) : (
-                      <a
-                        href={withCDN(selectedHw.submissionUrl)}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="flex items-center gap-3 p-3 rounded-xl hover:opacity-90 transition-opacity"
-                        style={{ backgroundColor: `${colors.state.success}12` }}
-                      >
-                        {getFileTypeIcon(
-                          selectedHw.submissionUrl,
-                          "w-9 h-9 shrink-0",
-                          { color: colors.state.success },
-                        )}
-                        <div className="flex-1 min-w-0">
-                          <p
-                            className="text-sm font-semibold truncate"
-                            style={{ color: colors.state.success }}
-                          >
-                            {getFileBaseName(selectedHw.submissionUrl)}
-                          </p>
-                          <p
-                            className="text-xs"
-                            style={{ color: colors.text.tertiary }}
-                          >
-                            {t("studentDashboard.homework.viewSubmission")}
-                          </p>
-                        </div>
-                        <ArrowSquareOut
-                          className="w-4 h-4 shrink-0"
-                          style={{ color: colors.state.success }}
-                        />
-                      </a>
-                    )}
-                  </div>
-                )}
-
-                {/* Score + Feedback */}
-                {selectedHw.status === "Scored" && (
-                  <div
-                    className="p-5 rounded-xl space-y-4"
-                    style={{
-                      backgroundColor: `${colors.state.success}10`,
-                      border: `1px solid ${colors.state.success}30`,
-                    }}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div
-                          className="w-10 h-10 rounded-full flex items-center justify-center"
-                          style={{
-                            backgroundColor: `${colors.state.success}25`,
-                          }}
-                        >
-                          <GraduationCap
-                            weight="fill"
-                            className="w-5 h-5"
-                            style={{ color: colors.state.success }}
-                          />
-                        </div>
-                        <div>
-                          <p
-                            className="text-xs uppercase tracking-wide font-semibold"
-                            style={{ color: colors.text.tertiary }}
-                          >
-                            {t("studentDashboard.homework.score")}
-                          </p>
-                          <p
-                            className="text-sm font-medium"
-                            style={{ color: colors.text.primary }}
-                          >
-                            {t("studentDashboard.homework.scoreProgress", {
-                              score: selectedHw.score,
-                              max: selectedHw.maxScore,
-                            })}
-                          </p>
-                        </div>
-                      </div>
-                      <span
-                        className="text-3xl font-bold"
-                        style={{ color: colors.state.success }}
-                      >
-                        {selectedHw.score}
-                        <span
-                          className="text-base font-normal"
-                          style={{ color: colors.text.tertiary }}
-                        >
-                          /{selectedHw.maxScore}
-                        </span>
-                      </span>
-                    </div>
-                    <Progress
-                      aria-label="Score progress"
-                      value={
-                        selectedHw.maxScore
-                          ? (selectedHw.score / selectedHw.maxScore) * 100
-                          : 0
-                      }
-                      size="md"
-                      color="success"
-                    />
-                    <div>
-                      <p
-                        className="text-xs font-semibold uppercase tracking-wide mb-1"
-                        style={{ color: colors.text.tertiary }}
-                      >
-                        {t("studentDashboard.homework.tutorFeedback")}
-                      </p>
-                      <p
-                        className="text-sm whitespace-pre-wrap"
-                        style={{ color: colors.text.primary }}
-                      >
-                        {selectedHw.tutorFeedback ||
-                          t("studentDashboard.homework.noFeedback")}
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </>
-            )}
-          </ModalBody>
-          <ModalFooter>
-            <Button variant="light" onPress={detailDisclosure.onClose}>
-              {t("studentDashboard.homework.close")}
-            </Button>
-            {selectedHw?.status === "Assigned" && (
-              <Button
-                startContent={
-                  <PaperPlaneTilt weight="bold" className="w-4 h-4" />
-                }
-                onPress={() => {
-                  detailDisclosure.onClose();
-                  openSubmit(selectedHw);
-                }}
-                style={{
-                  backgroundColor: colors.primary.main,
-                  color: colors.text.white,
-                }}
-              >
-                {t("studentDashboard.homework.submit")}
-              </Button>
-            )}
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+        hw={selectedHw}
+        onSubmitClick={openSubmit}
+        onCourseClick={(hw) => navigate(`/student/courses/${hw.courseId}`)}
+        onTutorClick={(hw) => navigate(`/tutor-profile/${hw.tutorId}`)}
+      />
 
       {/* ==================== SUBMIT MODAL ==================== */}
-      <Modal
+      <StudentHomeworkSubmitModal
         isOpen={submitDisclosure.isOpen}
         onClose={submitDisclosure.onClose}
-        size="lg"
-        isDismissable={!submitting}
-      >
-        <ModalContent style={{ backgroundColor: colors.background.light }}>
-          <ModalHeader style={{ color: colors.text.primary }}>
-            {t("studentDashboard.homework.submitModalTitle")}
-          </ModalHeader>
-          <ModalBody>
-            <div className="space-y-4">
-              {selectedHw && (
-                <div
-                  className="p-3 rounded-xl"
-                  style={{ backgroundColor: colors.background.gray }}
-                >
-                  <p
-                    className="text-xs uppercase tracking-wide font-semibold mb-1"
-                    style={{ color: colors.text.tertiary }}
-                  >
-                    {t("studentDashboard.homework.title")}
-                  </p>
-                  <p
-                    className="text-sm font-semibold mb-1"
-                    style={{ color: colors.text.primary }}
-                  >
-                    {selectedHw.title}
-                  </p>
-                  <Breadcrumb hw={selectedHw} />
-                </div>
-              )}
-
-              {/* Hidden file input */}
-              <input
-                ref={fileInputRef}
-                type="file"
-                className="hidden"
-                onChange={(e) => {
-                  onFileSelected(e.target.files?.[0]);
-                  e.target.value = "";
-                }}
-              />
-
-              {!submitFile ? (
-                <div
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => fileInputRef.current?.click()}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ")
-                      fileInputRef.current?.click();
-                  }}
-                  onDragOver={(e) => {
-                    e.preventDefault();
-                    setIsDragging(true);
-                  }}
-                  onDragLeave={() => setIsDragging(false)}
-                  onDrop={(e) => {
-                    e.preventDefault();
-                    setIsDragging(false);
-                    onFileSelected(e.dataTransfer.files?.[0]);
-                  }}
-                  className="rounded-2xl p-8 text-center cursor-pointer transition-all outline-none focus-visible:ring-2"
-                  style={{
-                    border: `2px dashed ${isDragging ? colors.primary.main : colors.border.main}`,
-                    backgroundColor: isDragging
-                      ? `${colors.primary.main}10`
-                      : colors.background.gray,
-                  }}
-                >
-                  <CloudArrowUp
-                    weight="duotone"
-                    className="w-12 h-12 mx-auto mb-3"
-                    style={{ color: colors.primary.main }}
-                  />
-                  <p
-                    className="text-sm font-medium mb-1"
-                    style={{ color: colors.text.primary }}
-                  >
-                    {isDragging
-                      ? t("studentDashboard.homework.dropFile")
-                      : t("studentDashboard.homework.dragDropHint")}
-                  </p>
-                  {!isDragging && (
-                    <p
-                      className="text-sm mb-2"
-                      style={{ color: colors.primary.main }}
-                    >
-                      {t("studentDashboard.homework.browseFile")}
-                    </p>
-                  )}
-                  <p
-                    className="text-xs"
-                    style={{ color: colors.text.tertiary }}
-                  >
-                    {t("studentDashboard.homework.supportedFormats")}
-                  </p>
-                </div>
-              ) : (
-                <div
-                  className="flex items-center gap-3 p-4 rounded-xl"
-                  style={{ backgroundColor: `${colors.primary.main}12` }}
-                >
-                  {submitFile.type?.startsWith("image/") ? (
-                    <img
-                      src={URL.createObjectURL(submitFile)}
-                      alt="Preview"
-                      className="w-14 h-14 rounded-lg object-cover shrink-0"
-                      onLoad={(e) => URL.revokeObjectURL(e.currentTarget.src)}
-                    />
-                  ) : (
-                    getFileTypeIcon(submitFile.name, "w-10 h-10 shrink-0", {
-                      color: colors.primary.main,
-                    })
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <p
-                      className="text-xs uppercase tracking-wide font-semibold mb-0.5"
-                      style={{ color: colors.text.tertiary }}
-                    >
-                      {t("studentDashboard.homework.fileSelected")}
-                    </p>
-                    <p
-                      className="text-sm font-medium truncate"
-                      style={{ color: colors.text.primary }}
-                    >
-                      {submitFile.name}
-                    </p>
-                    <p
-                      className="text-xs"
-                      style={{ color: colors.text.tertiary }}
-                    >
-                      {formatFileSize(submitFile.size)}
-                    </p>
-                  </div>
-                  <Button
-                    isIconOnly
-                    size="sm"
-                    variant="light"
-                    onPress={() => setSubmitFile(null)}
-                    isDisabled={submitting}
-                    aria-label={t("studentDashboard.homework.removeFile")}
-                  >
-                    <X weight="bold" className="w-4 h-4" />
-                  </Button>
-                </div>
-              )}
-
-              {submitError && (
-                <div
-                  className="flex items-center gap-2 p-2.5 rounded-lg text-sm"
-                  style={{
-                    backgroundColor: `${colors.state.error}15`,
-                    color: colors.state.error,
-                  }}
-                >
-                  <Warning weight="fill" className="w-4 h-4 shrink-0" />
-                  <span>{submitError}</span>
-                </div>
-              )}
-
-              {/* Re-submission notice */}
-              {selectedHw?.submissionUrl && (
-                <div
-                  className="flex items-start gap-2 p-3 rounded-xl"
-                  style={{ backgroundColor: `${colors.state.warning}12` }}
-                >
-                  <Warning
-                    weight="fill"
-                    className="w-4 h-4 shrink-0 mt-0.5"
-                    style={{ color: colors.state.warning }}
-                  />
-                  <p
-                    className="text-xs"
-                    style={{ color: colors.text.secondary }}
-                  >
-                    {t("studentDashboard.homework.resubmit")}
-                  </p>
-                </div>
-              )}
-            </div>
-          </ModalBody>
-          <ModalFooter>
-            <Button
-              variant="light"
-              onPress={submitDisclosure.onClose}
-              isDisabled={submitting}
-            >
-              {t("studentDashboard.homework.cancel")}
-            </Button>
-            <Button
-              onPress={handleSubmit}
-              isLoading={submitting}
-              isDisabled={!submitFile}
-              startContent={
-                !submitting && (
-                  <PaperPlaneTilt weight="bold" className="w-4 h-4" />
-                )
-              }
-              style={{
-                backgroundColor: colors.primary.main,
-                color: colors.text.white,
-              }}
-            >
-              {submitting
-                ? t("studentDashboard.homework.submitting")
-                : t("studentDashboard.homework.submitBtn")}
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+        hw={selectedHw}
+        onSubmitSuccess={() => {
+          detailDisclosure.onClose();
+          fetchHomeworks();
+        }}
+      />
     </div>
   );
 };

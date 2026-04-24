@@ -749,7 +749,8 @@ const Homework = () => {
         <Tabs
           selectedKey={selectedTab}
           onSelectionChange={setSelectedTab}
-          variant="light"
+          variant="solid"
+          color="primary"
           classNames={{ tabList: "gap-2", tab: "px-4" }}
         >
           <Tab key="all" title={t("tutorDashboard.homework.filter.all")} />

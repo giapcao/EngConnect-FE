@@ -40,10 +40,10 @@ const itemVariants = {
 };
 
 // Import images
-import avatarDylan from "../../assets/images/avatar-dylan.png";
+import avatarGiap from "../../assets/images/avatar-Giap.jpg";
 import avatarKaius from "../../assets/images/avatar-kaius.png";
 import avatarThien from "../../assets/images/avatar-Thien.png";
-import avatarZane from "../../assets/images/avatar-zane.png";
+import avatarCuong from "../../assets/images/avatar-Cuong.jpg";
 import projectImage from "../../assets/illustrations/selfie.avif";
 import hybridWorkImage from "../../assets/illustrations/project.avif";
 
@@ -88,7 +88,7 @@ const About = () => {
     {
       name: "Cao Dinh Giap",
       role: t("about.team.ceo"),
-      avatar: avatarDylan,
+      avatar: avatarGiap,
     },
     {
       name: "Phung Minh Thien",
@@ -103,7 +103,7 @@ const About = () => {
     {
       name: "Nguyen Chi Cuong",
       role: t("about.team.member"),
-      avatar: avatarZane,
+      avatar: avatarCuong,
     },
   ];
 

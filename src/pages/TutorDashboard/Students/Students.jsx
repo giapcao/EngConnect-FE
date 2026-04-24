@@ -13,6 +13,7 @@ import {
   ModalContent,
   ModalHeader,
   ModalBody,
+  Spinner,
 } from "@heroui/react";
 import { useTranslation } from "react-i18next";
 import { useThemeColors } from "../../../hooks/useThemeColors";
@@ -260,7 +261,8 @@ const Students = () => {
         <Tabs
           selectedKey={selectedTab}
           onSelectionChange={setSelectedTab}
-          variant="light"
+          variant="solid"
+          color="primary"
           classNames={{
             tabList: "gap-2",
             tab: "px-4",
@@ -437,7 +439,7 @@ const Students = () => {
         size="2xl"
         scrollBehavior="inside"
       >
-        <ModalContent>
+        <ModalContent style={{ backgroundColor: colors.background.light }}>
           {() => (
             <>
               <ModalHeader style={{ color: colors.text.primary }}>
