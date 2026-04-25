@@ -495,6 +495,16 @@ const TutorCourseDetail = () => {
     });
   };
 
+  const formatLessonTimeBadge = (dateStr) => {
+    if (!dateStr) return { hhmm: "", period: "" };
+    const full = new Date(dateStr).toLocaleTimeString(dateLocale, {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+    const parts = full.split(" ");
+    return { hhmm: parts[0], period: parts[1] || "" };
+  };
+
   const formatLessonDate = (dateStr) => {
     if (!dateStr) return "";
     const d = new Date(dateStr);
@@ -508,20 +518,37 @@ const TutorCourseDetail = () => {
   const getLessonStatusStyle = (status) => {
     switch (status) {
       case "Scheduled":
-        return {
-          bg: colors.background.primaryLight,
-          color: colors.primary.main,
-        };
+        return { bg: `${colors.primary.main}20`, color: colors.primary.main };
       case "InProgress":
-        return { bg: "#FEF3C7", color: "#D97706" };
+        return { bg: `${colors.state.warning}20`, color: colors.state.warning };
       case "Completed":
-        return { bg: "#D1FAE5", color: "#059669" };
+        return { bg: `${colors.state.success}20`, color: colors.state.success };
       case "Cancelled":
-        return { bg: "#FEE2E2", color: "#DC2626" };
+        return { bg: `${colors.state.error}20`, color: colors.state.error };
       default:
         return { bg: colors.background.gray, color: colors.text.secondary };
     }
   };
+
+  const getLessonStatusLabel = (status) => {
+    const map = {
+      Scheduled: t("tutorDashboard.schedule.lessonStatus.scheduled"),
+      Completed: t("tutorDashboard.schedule.lessonStatus.completed"),
+      Cancelled: t("tutorDashboard.schedule.lessonStatus.cancelled"),
+      InProgress: t("tutorDashboard.schedule.lessonStatus.inProgress"),
+      NoStudent: t("tutorDashboard.schedule.lessonStatus.noStudent"),
+      NoTutor: t("tutorDashboard.schedule.lessonStatus.noTutor"),
+    };
+    return map[status] || status;
+  };
+
+  const canJoinLesson = (lesson) =>
+    lesson.meetingStatus === "InProgress" ||
+    (lesson.status !== "Completed" &&
+      lesson.status !== "NoStudent" &&
+      lesson.status !== "NoTutor" &&
+      lesson.status !== "Cancelled" &&
+      lesson.meetingStatus !== "Ended");
 
   return (
     <div className="space-y-6">
@@ -1347,57 +1374,56 @@ const TutorCourseDetail = () => {
                             return (
                               <div
                                 key={lesson.id}
-                                className="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:opacity-80 transition-opacity"
-                                style={{
-                                  backgroundColor: colors.background.gray,
-                                }}
-                                onClick={() => setSelectedLesson(lesson)}
+                                className="flex items-center gap-3 p-3 rounded-xl"
+                                style={{ backgroundColor: colors.background.gray }}
                               >
+                                {(() => {
+                                  const { hhmm, period } = formatLessonTimeBadge(lesson.startTime);
+                                  return (
+                                    <div
+                                      className="w-12 h-10 rounded-lg flex flex-col items-center justify-center flex-shrink-0 px-1"
+                                      style={{ backgroundColor: `${colors.primary.main}15` }}
+                                    >
+                                      <span className="text-xs font-bold leading-none" style={{ color: colors.primary.main }}>
+                                        {hhmm}
+                                      </span>
+                                      {period && (
+                                        <span className="text-[9px] font-medium leading-none mt-0.5" style={{ color: colors.primary.main, opacity: 0.75 }}>
+                                          {period}
+                                        </span>
+                                      )}
+                                    </div>
+                                  );
+                                })()}
                                 <div
-                                  className="w-10 h-10 rounded-lg flex flex-col items-center justify-center flex-shrink-0"
-                                  style={{
-                                    backgroundColor:
-                                      colors.background.primaryLight,
-                                  }}
+                                  className="flex-1 min-w-0 cursor-pointer hover:opacity-70 transition-opacity"
+                                  onClick={() => setSelectedLesson(lesson)}
                                 >
-                                  <Clock
-                                    size={18}
-                                    weight="duotone"
-                                    style={{ color: colors.primary.main }}
-                                  />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <p
-                                    className="text-sm font-medium truncate"
-                                    style={{ color: colors.text.primary }}
-                                  >
+                                  <p className="text-sm font-medium truncate" style={{ color: colors.text.primary }}>
                                     {lesson.sessionTitle || lesson.courseTitle}
                                   </p>
-                                  <p
-                                    className="text-xs mt-0.5"
-                                    style={{ color: colors.text.tertiary }}
-                                  >
-                                    {formatLessonTime(lesson.startTime)} —{" "}
-                                    {formatLessonTime(lesson.endTime)}
+                                  <p className="text-xs mt-0.5" style={{ color: colors.text.tertiary }}>
+                                    {formatLessonTime(lesson.startTime)} — {formatLessonTime(lesson.endTime)}
                                     {lesson.studentFirstName && (
-                                      <span>
-                                        {" · "}
-                                        {lesson.studentFirstName}{" "}
-                                        {lesson.studentLastName}
-                                      </span>
+                                      <span> · {lesson.studentFirstName} {lesson.studentLastName}</span>
                                     )}
                                   </p>
                                 </div>
-                                <Chip
-                                  size="sm"
-                                  className="text-xs"
-                                  style={{
-                                    backgroundColor: statusStyle.bg,
-                                    color: statusStyle.color,
-                                  }}
-                                >
-                                  {lesson.status}
-                                </Chip>
+                                <div className="flex items-center gap-3 shrink-0">
+                                  <Chip size="sm" className="text-xs" style={{ backgroundColor: statusStyle.bg, color: statusStyle.color }}>
+                                    {getLessonStatusLabel(lesson.status)}
+                                  </Chip>
+                                  {canJoinLesson(lesson) && (
+                                    <Button
+                                      size="sm"
+                                      startContent={<VideoCamera weight="fill" className="w-3.5 h-3.5" />}
+                                      onPress={() => navigate(`/meeting/${lesson.id}`)}
+                                      style={{ backgroundColor: colors.primary.main, color: "#fff" }}
+                                    >
+                                      {t("tutorDashboard.schedule.joinLesson")}
+                                    </Button>
+                                  )}
+                                </div>
                               </div>
                             );
                           })}
@@ -1422,72 +1448,49 @@ const TutorCourseDetail = () => {
                             return (
                               <div
                                 key={lesson.id}
-                                className="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:opacity-80 transition-opacity"
-                                style={{
-                                  backgroundColor: colors.background.gray,
-                                }}
-                                onClick={() => setSelectedLesson(lesson)}
+                                className="flex items-center gap-3 p-3 rounded-xl"
+                                style={{ backgroundColor: colors.background.gray }}
                               >
                                 <div
                                   className="w-12 h-12 rounded-lg flex flex-col items-center justify-center flex-shrink-0"
-                                  style={{
-                                    backgroundColor:
-                                      colors.background.primaryLight,
-                                  }}
+                                  style={{ backgroundColor: `${colors.primary.main}15` }}
                                 >
-                                  <span
-                                    className="text-sm font-bold"
-                                    style={{ color: colors.primary.main }}
-                                  >
+                                  <span className="text-sm font-bold leading-none" style={{ color: colors.primary.main }}>
                                     {new Date(lesson.startTime).getDate()}
                                   </span>
-                                  <span
-                                    className="text-sm"
-                                    style={{
-                                      color: colors.primary.main,
-                                      fontSize: "10px",
-                                    }}
-                                  >
-                                    {new Date(
-                                      lesson.startTime,
-                                    ).toLocaleDateString(dateLocale, {
-                                      month: "short",
-                                    })}
+                                  <span className="mt-0.5" style={{ color: colors.primary.main, fontSize: "10px" }}>
+                                    {new Date(lesson.startTime).toLocaleDateString(dateLocale, { month: "short" })}
                                   </span>
                                 </div>
-                                <div className="flex-1 min-w-0">
-                                  <p
-                                    className="text-sm font-medium truncate"
-                                    style={{ color: colors.text.primary }}
-                                  >
+                                <div
+                                  className="flex-1 min-w-0 cursor-pointer hover:opacity-70 transition-opacity"
+                                  onClick={() => setSelectedLesson(lesson)}
+                                >
+                                  <p className="text-sm font-medium truncate" style={{ color: colors.text.primary }}>
                                     {lesson.sessionTitle || lesson.courseTitle}
                                   </p>
-                                  <p
-                                    className="text-xs mt-0.5"
-                                    style={{ color: colors.text.tertiary }}
-                                  >
-                                    {formatLessonDate(lesson.startTime)} ·{" "}
-                                    {formatLessonTime(lesson.startTime)} —{" "}
-                                    {formatLessonTime(lesson.endTime)}
+                                  <p className="text-xs mt-0.5" style={{ color: colors.text.tertiary }}>
+                                    {formatLessonDate(lesson.startTime)} · {formatLessonTime(lesson.startTime)} — {formatLessonTime(lesson.endTime)}
                                     {lesson.studentFirstName && (
-                                      <span>
-                                        {" · "}
-                                        {lesson.studentFirstName}{" "}
-                                        {lesson.studentLastName}
-                                      </span>
+                                      <span> · {lesson.studentFirstName} {lesson.studentLastName}</span>
                                     )}
                                   </p>
                                 </div>
-                                <Chip
-                                  size="sm"
-                                  className="text-xs"
-                                  style={{
-                                    backgroundColor: statusStyle.bg,
-                                    color: statusStyle.color,
-                                  }}
-                                >
-                                  {lesson.status}
-                                </Chip>
+                                <div className="flex items-center gap-3 shrink-0">
+                                  <Chip size="sm" className="text-xs" style={{ backgroundColor: statusStyle.bg, color: statusStyle.color }}>
+                                    {getLessonStatusLabel(lesson.status)}
+                                  </Chip>
+                                  {canJoinLesson(lesson) && (
+                                    <Button
+                                      size="sm"
+                                      startContent={<VideoCamera weight="fill" className="w-3.5 h-3.5" />}
+                                      onPress={() => navigate(`/meeting/${lesson.id}`)}
+                                      style={{ backgroundColor: colors.primary.main, color: "#fff" }}
+                                    >
+                                      {t("tutorDashboard.schedule.joinLesson")}
+                                    </Button>
+                                  )}
+                                </div>
                               </div>
                             );
                           })}

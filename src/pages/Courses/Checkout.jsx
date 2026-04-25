@@ -166,7 +166,7 @@ const Checkout = () => {
   return (
     <div
       className="min-h-screen"
-      style={{ backgroundColor: colors.background.light }}
+      style={{ backgroundColor: colors.background.gray }}
     >
       <Header />
 
@@ -197,7 +197,7 @@ const Checkout = () => {
               <Card
                 shadow="none"
                 className="border-none"
-                style={{ backgroundColor: colors.background.gray }}
+                style={{ backgroundColor: colors.background.light }}
               >
                 <CardBody className="p-6">
                   <div className="flex items-center justify-between mb-4">
@@ -329,7 +329,7 @@ const Checkout = () => {
                 <Card
                   shadow="none"
                   className="border-none"
-                  style={{ backgroundColor: colors.background.gray }}
+                  style={{ backgroundColor: colors.background.light }}
                 >
                   <CardBody className="p-6 space-y-4">
                     <h2

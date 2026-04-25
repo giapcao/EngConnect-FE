@@ -62,6 +62,7 @@ const Schedule = () => {
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState("all");
   const [sidebarView, setSidebarView] = useState("today");
+  const [currentTime, setCurrentTime] = useState(new Date());
 
   // Calendar week navigation
   const [calendarWeekStart, setCalendarWeekStart] = useState(() => {
@@ -103,6 +104,11 @@ const Schedule = () => {
   useEffect(() => {
     fetchLessons();
   }, [fetchLessons]);
+
+  useEffect(() => {
+    const interval = setInterval(() => setCurrentTime(new Date()), 60000);
+    return () => clearInterval(interval);
+  }, []);
 
   const now = new Date();
   const todayStr = now.toDateString();
@@ -222,12 +228,11 @@ const Schedule = () => {
   const HOUR_HEIGHT = 48;
 
   const currentTimeTop = useMemo(() => {
-    const h = new Date().getHours();
-    const m = new Date().getMinutes();
+    const h = currentTime.getHours();
+    const m = currentTime.getMinutes();
     if (h < CALENDAR_START_HOUR || h >= CALENDAR_END_HOUR) return null;
     return (((h - CALENDAR_START_HOUR) * 60 + m) / 60) * HOUR_HEIGHT;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [currentTime]);
 
   const getLessonsForDay = (dayDate) =>
     lessons.filter(
@@ -252,19 +257,17 @@ const Schedule = () => {
   const getLessonBlockColor = (status) => {
     switch (status) {
       case "Scheduled":
-        return { bg: "#DCFCE7", border: "#22C55E", text: "#166534" };
+        return { bg: `${colors.state.success}25`, border: colors.state.success, text: colors.state.success };
       case "InProgress":
-        return { bg: "#FEF3C7", border: "#F59E0B", text: "#92400E" };
+        return { bg: `${colors.state.warning}25`, border: colors.state.warning, text: colors.state.warning };
       case "Completed":
-        return { bg: "#DBEAFE", border: "#3B82F6", text: "#1E40AF" };
+        return { bg: `${colors.primary.main}25`, border: colors.primary.main, text: colors.primary.main };
       case "Cancelled":
-        return { bg: "#FEE2E2", border: "#EF4444", text: "#991B1B" };
       case "NoStudent":
-        return { bg: "#FEE2E2", border: "#EF4444", text: "#991B1B" };
       case "NoTutor":
-        return { bg: "#FEE2E2", border: "#EF4444", text: "#991B1B" };
+        return { bg: `${colors.state.error}25`, border: colors.state.error, text: colors.state.error };
       default:
-        return { bg: "#F3F4F6", border: "#9CA3AF", text: "#374151" };
+        return { bg: colors.background.gray, border: colors.border.medium, text: colors.text.secondary };
     }
   };
 
@@ -423,7 +426,7 @@ const Schedule = () => {
                       className="grid border-b"
                       style={{
                         gridTemplateColumns: "44px repeat(7, 1fr)",
-                        borderColor: colors.border.light,
+                        borderColor: colors.border.medium,
                       }}
                     >
                       <div className="p-1" />
@@ -516,7 +519,7 @@ const Schedule = () => {
                               key={dayIdx}
                               className="relative border-l"
                               style={{
-                                borderColor: colors.border.light,
+                                borderColor: colors.border.medium,
                                 backgroundColor: dayIsToday
                                   ? `${colors.primary.main}05`
                                   : "transparent",
@@ -535,14 +538,14 @@ const Schedule = () => {
                                     className="absolute w-full border-t"
                                     style={{
                                       top: `${i * HOUR_HEIGHT}px`,
-                                      borderColor: colors.border.light,
+                                      borderColor: colors.border.medium,
                                     }}
                                   />
                                   <div
                                     className="absolute w-full border-t border-dashed"
                                     style={{
                                       top: `${i * HOUR_HEIGHT + HOUR_HEIGHT / 2}px`,
-                                      borderColor: `${colors.border.light}80`,
+                                      borderColor: `${colors.border.medium}80`,
                                     }}
                                   />
                                 </div>
@@ -641,7 +644,7 @@ const Schedule = () => {
                 {/* Legend */}
                 <div
                   className="flex flex-wrap items-center gap-4 mt-3 pt-3 border-t"
-                  style={{ borderColor: colors.border.light }}
+                  style={{ borderColor: colors.border.medium }}
                 >
                   {[
                     "Scheduled",

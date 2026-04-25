@@ -18,10 +18,10 @@ dist-ssr
 .env.*.local
 
 # Claude AI settings
-.claude
+.claude/
 
 # Docs 
-docs
+docs/
 
 # Editor directories and files
 .vscode/*

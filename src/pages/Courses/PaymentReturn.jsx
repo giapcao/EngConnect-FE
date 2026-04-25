@@ -55,7 +55,7 @@ const PaymentReturn = () => {
   return (
     <div
       className="min-h-screen flex flex-col"
-      style={{ backgroundColor: colors.background.default }}
+      style={{ backgroundColor: colors.background.gray }}
     >
       <Header />
       <main className="flex-1 flex items-center justify-center px-4 py-16">
@@ -66,7 +66,7 @@ const PaymentReturn = () => {
           className="w-full max-w-md"
         >
           <Card
-            shadow="sm"
+            shadow="none"
             className="overflow-hidden"
             style={{ backgroundColor: colors.background.light }}
           >

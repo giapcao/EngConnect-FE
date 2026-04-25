@@ -121,6 +121,7 @@ const Schedule = () => {
   } = useDisclosure();
   const [selectedLesson, setSelectedLesson] = useState(null);
   const [sidebarView, setSidebarView] = useState("today");
+  const [currentTime, setCurrentTime] = useState(new Date());
 
   // Video recording modal
   const {
@@ -180,6 +181,11 @@ const Schedule = () => {
   useEffect(() => {
     fetchLessons();
   }, [fetchLessons]);
+
+  useEffect(() => {
+    const interval = setInterval(() => setCurrentTime(new Date()), 60000);
+    return () => clearInterval(interval);
+  }, []);
 
   const todayName =
     WEEKDAYS[new Date().getDay() === 0 ? 6 : new Date().getDay() - 1];
@@ -435,12 +441,11 @@ const Schedule = () => {
 
   // Current time indicator position
   const currentTimeTop = useMemo(() => {
-    const h = new Date().getHours();
-    const m = new Date().getMinutes();
+    const h = currentTime.getHours();
+    const m = currentTime.getMinutes();
     if (h < CALENDAR_START_HOUR || h >= CALENDAR_END_HOUR) return null;
     return (((h - CALENDAR_START_HOUR) * 60 + m) / 60) * HOUR_HEIGHT;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [currentTime]);
 
   const getLessonsForDay = (dayDate) => {
     return lessons.filter((l) => {
@@ -467,19 +472,17 @@ const Schedule = () => {
   const getLessonBlockColor = (status) => {
     switch (status) {
       case "Scheduled":
-        return { bg: "#DCFCE7", border: "#22C55E", text: "#166534" };
+        return { bg: `${colors.state.success}25`, border: colors.state.success, text: colors.state.success };
       case "InProgress":
-        return { bg: "#FEF3C7", border: "#F59E0B", text: "#92400E" };
+        return { bg: `${colors.state.warning}25`, border: colors.state.warning, text: colors.state.warning };
       case "Completed":
-        return { bg: "#DBEAFE", border: "#3B82F6", text: "#1E40AF" };
+        return { bg: `${colors.primary.main}25`, border: colors.primary.main, text: colors.primary.main };
       case "Cancelled":
-        return { bg: "#FEE2E2", border: "#EF4444", text: "#991B1B" };
       case "NoStudent":
-        return { bg: "#FEE2E2", border: "#EF4444", text: "#991B1B" };
       case "NoTutor":
-        return { bg: "#FEE2E2", border: "#EF4444", text: "#991B1B" };
+        return { bg: `${colors.state.error}25`, border: colors.state.error, text: colors.state.error };
       default:
-        return { bg: "#F3F4F6", border: "#9CA3AF", text: "#374151" };
+        return { bg: colors.background.gray, border: colors.border.medium, text: colors.text.secondary };
     }
   };
 
@@ -747,7 +750,7 @@ const Schedule = () => {
                   {/* Legend */}
                   <div
                     className="flex flex-wrap items-center gap-4 mt-4 pt-4 border-t"
-                    style={{ borderColor: colors.border.light }}
+                    style={{ borderColor: colors.border.medium }}
                   >
                     {["Open", "Booked", "Pending", "Inactive"].map((status) => (
                       <div key={status} className="flex items-center gap-2">
@@ -863,7 +866,7 @@ const Schedule = () => {
                         className="grid border-b"
                         style={{
                           gridTemplateColumns: "44px repeat(7, 1fr)",
-                          borderColor: colors.border.light,
+                          borderColor: colors.border.medium,
                         }}
                       >
                         <div className="p-1" />
@@ -956,7 +959,7 @@ const Schedule = () => {
                                 key={dayIdx}
                                 className="relative border-l"
                                 style={{
-                                  borderColor: colors.border.light,
+                                  borderColor: colors.border.medium,
                                   backgroundColor: dayIsToday
                                     ? `${colors.primary.main}05`
                                     : "transparent",
@@ -975,14 +978,14 @@ const Schedule = () => {
                                       className="absolute w-full border-t"
                                       style={{
                                         top: `${i * HOUR_HEIGHT}px`,
-                                        borderColor: colors.border.light,
+                                        borderColor: colors.border.medium,
                                       }}
                                     />
                                     <div
                                       className="absolute w-full border-t border-dashed"
                                       style={{
                                         top: `${i * HOUR_HEIGHT + HOUR_HEIGHT / 2}px`,
-                                        borderColor: `${colors.border.light}80`,
+                                        borderColor: `${colors.border.medium}80`,
                                       }}
                                     />
                                   </div>
@@ -1083,7 +1086,7 @@ const Schedule = () => {
                   {/* Legend */}
                   <div
                     className="flex flex-wrap items-center gap-4 mt-3 pt-3 border-t"
-                    style={{ borderColor: colors.border.light }}
+                    style={{ borderColor: colors.border.medium }}
                   >
                     {[
                       "Scheduled",
@@ -1319,6 +1322,141 @@ const Schedule = () => {
                                       e.stopPropagation?.();
                                       navigate(`/meeting/${lesson.id}`);
                                     }}
+                                  >
+                                    {lesson.meetingStatus === "InProgress"
+                                      ? t("tutorDashboard.schedule.joinBack")
+                                      : t("tutorDashboard.schedule.joinLesson")}
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
+                </CardBody>
+              </Card>
+
+              {/* Mobile Today/Upcoming — visible on sm/md, hidden on lg+ */}
+              <Card
+                shadow="none"
+                className="border-none lg:hidden"
+                style={{ backgroundColor: colors.background.light }}
+              >
+                <CardBody className="p-4">
+                  <Tabs
+                    selectedKey={sidebarView}
+                    onSelectionChange={setSidebarView}
+                    variant="solid"
+                    fullWidth
+                    className="mb-4"
+                  >
+                    <Tab
+                      key="today"
+                      title={
+                        <div className="flex items-center gap-1.5 text-xs">
+                          <CalendarDots weight="duotone" className="w-3.5 h-3.5" />
+                          <span>{t("tutorDashboard.schedule.today")}</span>
+                          {todayLessons.length > 0 && (
+                            <Chip size="sm" variant="flat" className="h-4 min-w-4 text-[10px]">
+                              {todayLessons.length}
+                            </Chip>
+                          )}
+                        </div>
+                      }
+                    />
+                    <Tab
+                      key="upcoming"
+                      title={
+                        <div className="flex items-center gap-1.5 text-xs">
+                          <Clock weight="duotone" className="w-3.5 h-3.5" />
+                          <span>{t("tutorDashboard.schedule.upcomingSidebarTab")}</span>
+                          {upcomingLessons.length > 0 && (
+                            <Chip size="sm" variant="flat" className="h-4 min-w-4 text-[10px]">
+                              {upcomingLessons.length}
+                            </Chip>
+                          )}
+                        </div>
+                      }
+                    />
+                  </Tabs>
+                  {(() => {
+                    const list = sidebarView === "today" ? todayLessons : upcomingLessons;
+                    const emptyMsg = sidebarView === "today"
+                      ? t("tutorDashboard.schedule.noLessonsToday")
+                      : t("tutorDashboard.schedule.noUpcoming");
+                    if (list.length === 0) {
+                      return (
+                        <p className="text-sm text-center py-6" style={{ color: colors.text.tertiary }}>
+                          {emptyMsg}
+                        </p>
+                      );
+                    }
+                    return (
+                      <div className="space-y-3 max-h-[400px] overflow-y-auto">
+                        {list.map((lesson) => {
+                          const blockColor = getLessonBlockColor(lesson.status);
+                          const durationMin = Math.round(
+                            (new Date(lesson.endTime) - new Date(lesson.startTime)) / 60000,
+                          );
+                          const meetingInfo = getMeetingStatusInfo(lesson);
+                          return (
+                            <div
+                              key={lesson.id}
+                              className="p-3 rounded-xl"
+                              style={{ backgroundColor: colors.background.gray }}
+                            >
+                              <div className="flex items-start gap-2.5">
+                                <Avatar
+                                  src={withCDN(lesson.studentAvatar)}
+                                  name={studentFullName(lesson)}
+                                  size="sm"
+                                  className="w-8 h-8 flex-shrink-0"
+                                />
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-semibold text-sm truncate" style={{ color: colors.text.primary }}>
+                                    {studentFullName(lesson) || t("tutorDashboard.schedule.lessonLabel")}
+                                  </p>
+                                  <p className="text-xs truncate mt-0.5" style={{ color: colors.text.secondary }}>
+                                    {lesson.courseTitle}
+                                  </p>
+                                  <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                                    <span className="text-[11px] flex items-center gap-1" style={{ color: colors.text.tertiary }}>
+                                      <Clock weight="duotone" className="w-3 h-3" />
+                                      {sidebarView === "upcoming" &&
+                                        new Date(lesson.startTime).toLocaleDateString(dateLocale, { day: "numeric", month: "short" }) + " · "}
+                                      {formatLessonTime(lesson.startTime)} — {formatLessonTime(lesson.endTime)}
+                                    </span>
+                                    <Chip size="sm" className="h-4" style={{ backgroundColor: `${blockColor.border}20`, color: blockColor.border, fontSize: "10px" }}>
+                                      {durationMin}m
+                                    </Chip>
+                                  </div>
+                                  {meetingInfo && (
+                                    <span className="text-[11px] flex items-center gap-1 mt-1" style={{ color: meetingInfo.color }}>
+                                      <Circle weight="fill" className="w-2 h-2" />
+                                      {meetingInfo.label}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2 mt-2">
+                                <Button
+                                  size="sm"
+                                  variant="flat"
+                                  className="flex-1"
+                                  startContent={<Eye className="w-3.5 h-3.5" />}
+                                  onPress={() => handleOpenLessonDetail(lesson)}
+                                >
+                                  {t("tutorDashboard.schedule.viewDetail")}
+                                </Button>
+                                {canJoinLesson(lesson) && (
+                                  <Button
+                                    size="sm"
+                                    className="flex-1"
+                                    style={{ backgroundColor: colors.primary.main, color: colors.text.white }}
+                                    startContent={<VideoCamera weight="fill" className="w-3.5 h-3.5" />}
+                                    onPress={() => navigate(`/meeting/${lesson.id}`)}
                                   >
                                     {lesson.meetingStatus === "InProgress"
                                       ? t("tutorDashboard.schedule.joinBack")
