@@ -103,7 +103,6 @@ const withCDN = (url) => {
   return CDN_BASE + url;
 };
 
-
 const StudentMyCourseDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -128,6 +127,9 @@ const StudentMyCourseDetail = () => {
   const [lessons, setLessons] = useState([]);
   const [lessonsLoading, setLessonsLoading] = useState(true);
   const [selectedLesson, setSelectedLesson] = useState(null);
+
+  // Module details fetched after lessons load (for Learning Path)
+  const [moduleInfoMap, setModuleInfoMap] = useState({});
 
   // Homework state (for this course)
   const [courseHomeworks, setCourseHomeworks] = useState([]);
@@ -291,6 +293,7 @@ const StudentMyCourseDetail = () => {
           StudentId: user.studentId,
           CourseId: id,
           "page-size": 200,
+          "sort-params": "StartTime-asc",
         });
         setLessons(res?.data?.items || []);
       } catch (err) {
@@ -303,24 +306,42 @@ const StudentMyCourseDetail = () => {
   }, [user?.studentId, id]);
 
   useEffect(() => {
-    const fetchHomeworks = async () => {
-      if (!user?.studentId || !id) return;
-      try {
-        const res = await lessonHomeworkApi.getHomeworks({
-          StudentId: user.studentId,
-          "page-size": 200,
+    if (!lessons.length) return;
+    const uniqueModuleIds = [...new Set(lessons.map((l) => l.moduleId).filter(Boolean))];
+    if (!uniqueModuleIds.length) return;
+    Promise.all(uniqueModuleIds.map((mid) => coursesApi.getCourseModuleById(mid)))
+      .then((results) => {
+        const map = {};
+        results.forEach((res) => {
+          const mod = res?.data;
+          if (mod?.id) map[mod.id] = mod;
         });
-        const items = res?.data?.items || [];
-        setCourseHomeworks(
-          items.filter((h) => h.courseId === id && h.status !== "NotStarted"),
-        );
-      } catch (err) {
-        console.error("Failed to fetch homeworks:", err);
-        setCourseHomeworks([]);
-      }
-    };
-    fetchHomeworks();
-  }, [user?.studentId, id]);
+        setModuleInfoMap(map);
+      })
+      .catch((err) => console.error("Failed to fetch module info:", err));
+  }, [lessons]);
+
+  const fetchHomeworksByLessons = useCallback(async () => {
+    if (!lessons.length) return;
+    const lessonIds = lessons.map((l) => l.id).filter(Boolean);
+    if (!lessonIds.length) return;
+    try {
+      const results = await Promise.all(
+        lessonIds.map((lid) =>
+          lessonHomeworkApi.getHomeworks({ LessonId: lid, "page-size": 50 }),
+        ),
+      );
+      const items = results.flatMap((res) => res?.data?.items || []);
+      setCourseHomeworks(items.filter((h) => h.status !== "NotStarted"));
+    } catch (err) {
+      console.error("Failed to fetch homeworks:", err);
+      setCourseHomeworks([]);
+    }
+  }, [lessons]);
+
+  useEffect(() => {
+    fetchHomeworksByLessons();
+  }, [fetchHomeworksByLessons]);
 
   useEffect(() => {
     const fetchReview = async () => {
@@ -406,13 +427,29 @@ const StudentMyCourseDetail = () => {
   const hwStatusChipProps = (status) => {
     switch (status) {
       case "Assigned":
-        return { bg: `${colors.state.warning}20`, color: colors.state.warning, label: t("studentDashboard.homework.status.assigned") };
+        return {
+          bg: `${colors.state.warning}20`,
+          color: colors.state.warning,
+          label: t("studentDashboard.homework.status.assigned"),
+        };
       case "Submitted":
-        return { bg: `${colors.primary.main}20`, color: colors.primary.main, label: t("studentDashboard.homework.status.submitted") };
+        return {
+          bg: `${colors.primary.main}20`,
+          color: colors.primary.main,
+          label: t("studentDashboard.homework.status.submitted"),
+        };
       case "Scored":
-        return { bg: `${colors.state.success}20`, color: colors.state.success, label: t("studentDashboard.homework.status.scored") };
+        return {
+          bg: `${colors.state.success}20`,
+          color: colors.state.success,
+          label: t("studentDashboard.homework.status.scored"),
+        };
       default:
-        return { bg: `${colors.text.tertiary}20`, color: colors.text.tertiary, label: status };
+        return {
+          bg: `${colors.text.tertiary}20`,
+          color: colors.text.tertiary,
+          label: status,
+        };
     }
   };
 
@@ -428,13 +465,7 @@ const StudentMyCourseDetail = () => {
 
   const handleHwSubmitSuccess = async () => {
     onHwDetailClose();
-    try {
-      const res = await lessonHomeworkApi.getHomeworks({ StudentId: user.studentId, "page-size": 200 });
-      const items = res?.data?.items || [];
-      setCourseHomeworks(items.filter((h) => h.courseId === id && h.status !== "NotStarted"));
-    } catch (err) {
-      console.error("Failed to refresh homeworks:", err);
-    }
+    await fetchHomeworksByLessons();
   };
 
   const formatLessonTime = (dateStr) => {
@@ -513,6 +544,48 @@ const StudentMyCourseDetail = () => {
     });
     return map;
   }, [courseHomeworks]);
+
+  const modulesFromLessons = useMemo(() => {
+    if (!lessons.length) return [];
+    const moduleOrder = [];
+    const moduleSessionsMap = {};
+    lessons.forEach((lesson) => {
+      const { moduleId, sessionId } = lesson;
+      if (!moduleId || !sessionId) return;
+      if (!moduleSessionsMap[moduleId]) {
+        moduleOrder.push(moduleId);
+        moduleSessionsMap[moduleId] = { sessionOrder: [], sessionLessonsMap: {} };
+      }
+      const mod = moduleSessionsMap[moduleId];
+      if (!mod.sessionLessonsMap[sessionId]) {
+        mod.sessionOrder.push(sessionId);
+        mod.sessionLessonsMap[sessionId] = [];
+      }
+      mod.sessionLessonsMap[sessionId].push(lesson);
+    });
+    return moduleOrder.map((moduleId) => {
+      const info = moduleInfoMap[moduleId] || null;
+      const modData = moduleSessionsMap[moduleId];
+      return {
+        moduleId,
+        title: info?.title || "",
+        description: info?.description || "",
+        sessions: modData.sessionOrder.map((sessionId, sessIdx) => {
+          const lessonList = modData.sessionLessonsMap[sessionId];
+          const sessionInfo = info?.courseSessions?.find(
+            (s) => s.courseSessionId === sessionId,
+          ) || null;
+          return {
+            sessionId,
+            sessionTitle: sessionInfo?.sessionTitle || lessonList[0]?.sessionTitle || "",
+            sessionDescription: sessionInfo?.sessionDescription || "",
+            sessionOutcomes: sessionInfo?.sessionOutcomes || "",
+            sessionNumber: sessionInfo?.sessionNumber ?? sessIdx + 1,
+          };
+        }),
+      };
+    });
+  }, [lessons, moduleInfoMap]);
 
   // Determine current primary lesson for a session (latest non-cancelled, else latest)
   const getPrimaryLesson = (sessionId) => {
@@ -634,11 +707,8 @@ const StudentMyCourseDetail = () => {
         .map((s) => s.trim())
         .filter(Boolean)
     : [];
-  const modules = (course.courseCourseModules || []).sort(
-    (a, b) => a.moduleNumber - b.moduleNumber,
-  );
-  const totalSessions = modules.reduce(
-    (sum, m) => sum + (m.courseModuleCourseSessions?.length || 0),
+  const totalSessions = modulesFromLessons.reduce(
+    (sum, m) => sum + m.sessions.length,
     0,
   );
 
@@ -1263,7 +1333,7 @@ const StudentMyCourseDetail = () => {
           </motion.div>
 
           {/* Your Learning Path (merged curriculum + schedule) */}
-          {modules.length > 0 && (
+          {modulesFromLessons.length > 0 && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -1294,26 +1364,24 @@ const StudentMyCourseDetail = () => {
                         className="text-sm"
                         style={{ color: colors.text.secondary }}
                       >
-                        {modules.length} {t("courses.detail.modules")} ·{" "}
+                        {modulesFromLessons.length} {t("courses.detail.modules")} ·{" "}
                         {totalSessions} {t("courses.detail.sessions")}
                       </span>
                     </div>
                   </div>
 
                   <div className="space-y-3">
-                    {modules.map((mod, idx) => {
-                      const isExpanded = expandedModules[mod.id] ?? idx === 0;
-                      const sessions = (
-                        mod.courseModuleCourseSessions || []
-                      ).sort((a, b) => a.sessionNumber - b.sessionNumber);
+                    {modulesFromLessons.map((mod, idx) => {
+                      const isExpanded = expandedModules[mod.moduleId] ?? idx === 0;
+                      const { sessions } = mod;
                       const modCompleted = sessions.filter((s) => {
-                        const st = getSessionState(s.courseSessionId);
+                        const st = getSessionState(s.sessionId);
                         return st.key === "completed";
                       }).length;
 
                       return (
                         <div
-                          key={mod.id}
+                          key={mod.moduleId}
                           className="rounded-xl overflow-hidden border"
                           style={{ borderColor: colors.border.light }}
                         >
@@ -1321,7 +1389,7 @@ const StudentMyCourseDetail = () => {
                             type="button"
                             className="w-full flex items-center justify-between p-4 text-left"
                             style={{ backgroundColor: colors.background.gray }}
-                            onClick={() => toggleModule(mod.id)}
+                            onClick={() => toggleModule(mod.moduleId)}
                           >
                             <div className="flex items-center gap-3 flex-1 min-w-0">
                               <div
@@ -1340,7 +1408,7 @@ const StudentMyCourseDetail = () => {
                                   className="font-semibold text-sm truncate"
                                   style={{ color: colors.text.primary }}
                                 >
-                                  {mod.moduleTitle}
+                                  {mod.title}
                                 </p>
                                 <p
                                   className="text-xs mt-0.5"
@@ -1373,12 +1441,12 @@ const StudentMyCourseDetail = () => {
                                 backgroundColor: colors.background.gray,
                               }}
                             >
-                              {mod.moduleDescription && (
+                              {mod.description && (
                                 <p
                                   className="text-sm leading-relaxed"
                                   style={{ color: colors.text.secondary }}
                                 >
-                                  {mod.moduleDescription}
+                                  {mod.description}
                                 </p>
                               )}
                               {sessions.length === 0 ? (
@@ -1391,7 +1459,7 @@ const StudentMyCourseDetail = () => {
                               ) : (
                                 <div className="space-y-3">
                                   {sessions.map((sess) => {
-                                    const sessId = sess.courseSessionId;
+                                    const sessId = sess.sessionId;
                                     const state = getSessionState(sessId);
                                     const primary = getPrimaryLesson(sessId);
                                     const sessionLessons =
@@ -1417,7 +1485,7 @@ const StudentMyCourseDetail = () => {
 
                                     return (
                                       <div
-                                        key={sess.id}
+                                        key={sessId}
                                         className="rounded-xl overflow-hidden border transition-all"
                                         style={{
                                           borderColor,
@@ -1806,7 +1874,9 @@ const StudentMyCourseDetail = () => {
                                                       }}
                                                       role="button"
                                                       tabIndex={0}
-                                                      onClick={() => openHwDetail(hw)}
+                                                      onClick={() =>
+                                                        openHwDetail(hw)
+                                                      }
                                                       onKeyDown={(e) =>
                                                         e.key === "Enter" &&
                                                         openHwDetail(hw)
@@ -1899,8 +1969,7 @@ const StudentMyCourseDetail = () => {
                                                               "studentDashboard.homework.maxScore",
                                                             )}
                                                             :{" "}
-                                                            {hw.maxScore ??
-                                                              "—"}
+                                                            {hw.maxScore ?? "—"}
                                                           </span>
                                                         </div>
                                                       </div>

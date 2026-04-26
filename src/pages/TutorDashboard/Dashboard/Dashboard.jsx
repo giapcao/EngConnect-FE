@@ -49,7 +49,7 @@ const Dashboard = () => {
         TutorId: user.tutorId,
         Status: "Scheduled",
         "page-size": 4,
-        //"sort-params": "StartTime",
+        "sort-params": "StartTime-asc",
       });
       setUpcomingLessons(res?.data?.items || []);
     } catch (err) {

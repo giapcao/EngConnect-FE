@@ -75,11 +75,9 @@ const Students = () => {
         TutorId: user?.tutorId,
         StudentId: enrollment.studentId,
         "page-size": 200,
+        "sort-params": "StartTime-asc",
       });
-      const items = res?.data?.items || [];
-      setLessons(
-        items.sort((a, b) => new Date(b.startTime) - new Date(a.startTime)),
-      );
+      setLessons(res?.data?.items || []);
     } catch {
       setLessons([]);
     } finally {
