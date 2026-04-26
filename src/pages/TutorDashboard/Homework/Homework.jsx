@@ -1217,17 +1217,32 @@ const Homework = () => {
                   min={1}
                   classNames={inputClassNames}
                 />
-                <Input
-                  type="datetime-local"
-                  label={t("tutorDashboard.homework.dueAtLabel")}
-                  labelPlacement="outside"
-                  description={t("tutorDashboard.homework.dueAtHint")}
-                  value={createForm.dueAt}
-                  onValueChange={(v) =>
-                    setCreateForm((p) => ({ ...p, dueAt: v }))
-                  }
-                  classNames={inputClassNames}
-                />
+                <div className="flex flex-col gap-1.5">
+                  <span
+                    className="text-sm font-medium"
+                    style={{ color: colors.text.secondary }}
+                  >
+                    {t("tutorDashboard.homework.dueAtLabel")}
+                  </span>
+                  <input
+                    type="datetime-local"
+                    className="w-full h-10 px-3 rounded-xl text-sm outline-none transition-colors"
+                    style={{
+                      backgroundColor: colors.background.input,
+                      color: colors.text.primary,
+                    }}
+                    value={createForm.dueAt}
+                    onChange={(e) =>
+                      setCreateForm((p) => ({ ...p, dueAt: e.target.value }))
+                    }
+                  />
+                  <span
+                    className="text-xs"
+                    style={{ color: colors.text.tertiary }}
+                  >
+                    {t("tutorDashboard.homework.dueAtHint")}
+                  </span>
+                </div>
               </div>
             </div>
           </ModalBody>
