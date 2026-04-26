@@ -38,6 +38,8 @@ import {
   SquaresFour,
   Question,
   NotePencil,
+  Wallet,
+  CreditCard,
 } from "@phosphor-icons/react";
 
 const DashboardLayout = () => {
@@ -73,6 +75,11 @@ const DashboardLayout = () => {
       path: "/student/homework",
       label: t("studentDashboard.nav.homework"),
       icon: NotePencil,
+    },
+    {
+      path: "/student/orders",
+      label: t("studentDashboard.nav.myPayment"),
+      icon: CreditCard,
     },
   ];
 

@@ -1,309 +1,336 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Card,
   CardBody,
   Button,
-  Dropdown,
-  DropdownTrigger,
-  DropdownMenu,
-  DropdownItem,
+  Input,
+  Chip,
   Table,
   TableHeader,
   TableColumn,
   TableBody,
   TableRow,
   TableCell,
-  Chip,
   Pagination,
   Tabs,
   Tab,
+  Dropdown,
+  DropdownTrigger,
+  DropdownMenu,
+  DropdownItem,
+  Spinner,
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  useDisclosure,
 } from "@heroui/react";
-import { useTranslation } from "react-i18next";
 import { useThemeColors } from "../../../hooks/useThemeColors";
 import useTableStyles from "../../../hooks/useTableStyles";
+import useInputStyles from "../../../hooks/useInputStyles";
 import { motion } from "framer-motion";
+import { adminApi, coursesApi } from "../../../api";
 import {
-  CurrencyDollar,
-  TrendUp,
-  TrendDown,
-  CalendarBlank,
-  CaretDown,
-  Export,
-  Wallet,
-  ArrowsLeftRight,
+  MagnifyingGlass,
   Receipt,
-  Bank,
+  ArrowsLeftRight,
+  CheckCircle,
+  XCircle,
+  CaretDown,
+  Funnel,
+  Eye,
+  ArrowSquareOut,
 } from "@phosphor-icons/react";
 
+const PAGE_SIZE = 10;
+
+const parseMeta = (raw) => {
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return {};
+  }
+};
+
+const formatAmount = (amount, currency) =>
+  new Intl.NumberFormat("vi-VN").format(amount) + " " + (currency || "VND");
+
+const formatDate = (iso) =>
+  new Date(iso).toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+const formatSlots = (slots = []) =>
+  slots.map((s) => `${s.weekday} ${s.startTime.slice(0, 5)}–${s.endTime.slice(0, 5)}`).join("\n");
+
+const ORDER_STATUSES = ["All", "Paid", "Pending", "Cancelled"];
+const TXN_STATUSES = ["All", "Success", "Pending", "Failed"];
+
+const orderStatusColor = (s) => {
+  if (s === "Paid") return "success";
+  if (s === "Pending") return "warning";
+  if (s === "Cancelled") return "danger";
+  return "default";
+};
+
+const txnStatusColor = (s) => {
+  if (s === "Success") return "success";
+  if (s === "Pending") return "warning";
+  if (s === "Failed") return "danger";
+  return "default";
+};
+
+const DetailRow = ({ label, children }) => {
+  const colors = useThemeColors();
+  return (
+    <div className="flex flex-col gap-0.5">
+      <span className="text-xs font-medium uppercase tracking-wide" style={{ color: "#9CA3AF" }}>
+        {label}
+      </span>
+      <div className="text-sm" style={{ color: colors.text.primary }}>
+        {children}
+      </div>
+    </div>
+  );
+};
+
 const FinancialManagement = () => {
-  const { t } = useTranslation();
+  const navigate = useNavigate();
   const colors = useThemeColors();
   const { tableCardStyle, tableClassNames } = useTableStyles();
-  const [selectedPeriod, setSelectedPeriod] = useState("month");
-  const [activeTab, setActiveTab] = useState("overview");
-  const [page, setPage] = useState(1);
+  const { inputClassNames } = useInputStyles();
 
-  const stats = [
-    {
-      icon: CurrencyDollar,
-      label: t("adminDashboard.finance.stats.totalRevenue"),
-      value: "$128,450",
-      change: "+22.4%",
-      trend: "up",
-      color: colors.state.success,
-      bg: `${colors.state.success}20`,
-    },
-    {
-      icon: Wallet,
-      label: t("adminDashboard.finance.stats.pendingPayouts"),
-      value: "$24,680",
-      change: "+5.2%",
-      trend: "up",
-      color: colors.state.warning,
-      bg: `${colors.state.warning}20`,
-    },
-    {
-      icon: ArrowsLeftRight,
-      label: t("adminDashboard.finance.stats.totalTransactions"),
-      value: "3,456",
-      change: "+18.3%",
-      trend: "up",
-      color: colors.primary.main,
-      bg: colors.background.primaryLight,
-    },
-    {
-      icon: Bank,
-      label: t("adminDashboard.finance.stats.platformFees"),
-      value: "$15,230",
-      change: "+12.1%",
-      trend: "up",
-      color: colors.state.error,
-      bg: `${colors.state.error}20`,
-    },
-  ];
+  const [activeTab, setActiveTab] = useState("orders");
 
-  const transactions = [
-    {
-      id: "TXN001",
-      type: "course_purchase",
-      description: "Business English Masterclass",
-      user: "John Doe",
-      amount: "$49.99",
-      fee: "$5.00",
-      status: "completed",
-      date: "Jan 26, 2024",
-    },
-    {
-      id: "TXN002",
-      type: "tutor_payout",
-      description: "Monthly earnings payout",
-      user: "Sarah Johnson",
-      amount: "$1,245.00",
-      fee: "$0.00",
-      status: "completed",
-      date: "Jan 25, 2024",
-    },
-    {
-      id: "TXN003",
-      type: "course_purchase",
-      description: "IELTS Preparation Guide",
-      user: "Emily Chen",
-      amount: "$79.99",
-      fee: "$8.00",
-      status: "completed",
-      date: "Jan 25, 2024",
-    },
-    {
-      id: "TXN004",
-      type: "refund",
-      description: "Course refund request",
-      user: "Michael Brown",
-      amount: "-$29.99",
-      fee: "$0.00",
-      status: "pending",
-      date: "Jan 24, 2024",
-    },
-    {
-      id: "TXN005",
-      type: "subscription",
-      description: "Premium subscription",
-      user: "Lisa Wang",
-      amount: "$19.99",
-      fee: "$2.00",
-      status: "completed",
-      date: "Jan 24, 2024",
-    },
-  ];
+  // Summary stats
+  const [stats, setStats] = useState({
+    totalOrders: 0,
+    paidOrders: 0,
+    totalTxns: 0,
+    failedTxns: 0,
+  });
 
-  const pendingPayouts = [
-    {
-      id: "PAY001",
-      tutor: "Sarah Johnson",
-      amount: "$2,450.00",
-      period: "Jan 1-15, 2024",
-      status: "pending",
-    },
-    {
-      id: "PAY002",
-      tutor: "Michael Chen",
-      amount: "$1,830.00",
-      period: "Jan 1-15, 2024",
-      status: "pending",
-    },
-    {
-      id: "PAY003",
-      tutor: "Emma Wilson",
-      amount: "$3,200.00",
-      period: "Jan 1-15, 2024",
-      status: "processing",
-    },
-  ];
+  // Orders tab state
+  const [orders, setOrders] = useState([]);
+  const [ordersTotal, setOrdersTotal] = useState(1);
+  const [ordersPage, setOrdersPage] = useState(1);
+  const [ordersSearch, setOrdersSearch] = useState("");
+  const [ordersDebSearch, setOrdersDebSearch] = useState("");
+  const [ordersStatus, setOrdersStatus] = useState("All");
+  const [ordersLoading, setOrdersLoading] = useState(false);
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "completed":
-        return "success";
-      case "pending":
-        return "warning";
-      case "processing":
-        return "primary";
-      case "failed":
-        return "danger";
-      default:
-        return "default";
+  // Transactions tab state
+  const [txns, setTxns] = useState([]);
+  const [txnsTotal, setTxnsTotal] = useState(1);
+  const [txnsPage, setTxnsPage] = useState(1);
+  const [txnsSearch, setTxnsSearch] = useState("");
+  const [txnsDebSearch, setTxnsDebSearch] = useState("");
+  const [txnsStatus, setTxnsStatus] = useState("All");
+  const [txnsLoading, setTxnsLoading] = useState(false);
+
+  // Lookup caches
+  const [courseMap, setCourseMap] = useState({});
+  const [studentMap, setStudentMap] = useState({});
+
+  // Modals
+  const { isOpen: isOrderOpen, onOpen: onOrderOpen, onClose: onOrderClose } = useDisclosure();
+  const { isOpen: isTxnOpen, onOpen: onTxnOpen, onClose: onTxnClose } = useDisclosure();
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [selectedTxn, setSelectedTxn] = useState(null);
+
+  // Debounce orders search
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setOrdersDebSearch(ordersSearch);
+      setOrdersPage(1);
+    }, 500);
+    return () => clearTimeout(t);
+  }, [ordersSearch]);
+
+  // Debounce txns search
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setTxnsDebSearch(txnsSearch);
+      setTxnsPage(1);
+    }, 500);
+    return () => clearTimeout(t);
+  }, [txnsSearch]);
+
+  // Fetch summary stats on mount
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const [allOrders, paidOrders, allTxns, failedTxns] = await Promise.all([
+          adminApi.getPaymentOrders({ page: 1, "page-size": 1 }),
+          adminApi.getPaymentOrders({ page: 1, "page-size": 1, Status: "Paid" }),
+          adminApi.getPaymentTransactions({ page: 1, "page-size": 1 }),
+          adminApi.getPaymentTransactions({ page: 1, "page-size": 1, Status: "Failed" }),
+        ]);
+        setStats({
+          totalOrders: allOrders.data?.totalItems || 0,
+          paidOrders: paidOrders.data?.totalItems || 0,
+          totalTxns: allTxns.data?.totalItems || 0,
+          failedTxns: failedTxns.data?.totalItems || 0,
+        });
+      } catch {
+        // ignore
+      }
+    };
+    fetchStats();
+  }, []);
+
+  // Fetch orders
+  const fetchOrders = useCallback(async () => {
+    setOrdersLoading(true);
+    try {
+      const params = {
+        page: ordersPage,
+        "page-size": PAGE_SIZE,
+        "sort-params": "OrderNo-asc",
+      };
+      if (ordersDebSearch) params["search-term"] = ordersDebSearch;
+      if (ordersStatus !== "All") params.Status = ordersStatus;
+      const res = await adminApi.getPaymentOrders(params);
+      const data = res.data || {};
+      setOrders(data.items || []);
+      setOrdersTotal(data.totalPages || 1);
+    } catch {
+      setOrders([]);
+    } finally {
+      setOrdersLoading(false);
     }
+  }, [ordersPage, ordersDebSearch, ordersStatus]);
+
+  // Fetch transactions
+  const fetchTxns = useCallback(async () => {
+    setTxnsLoading(true);
+    try {
+      const params = {
+        page: txnsPage,
+        "page-size": PAGE_SIZE,
+        "sort-params": "OrderNo-asc",
+      };
+      if (txnsDebSearch) params["search-term"] = txnsDebSearch;
+      if (txnsStatus !== "All") params.Status = txnsStatus;
+      const res = await adminApi.getPaymentTransactions(params);
+      const data = res.data || {};
+      setTxns(data.items || []);
+      setTxnsTotal(data.totalPages || 1);
+    } catch {
+      setTxns([]);
+    } finally {
+      setTxnsLoading(false);
+    }
+  }, [txnsPage, txnsDebSearch, txnsStatus]);
+
+  useEffect(() => { fetchOrders(); }, [fetchOrders]);
+  useEffect(() => { fetchTxns(); }, [fetchTxns]);
+
+  // Resolve course names
+  useEffect(() => {
+    if (!orders.length) return;
+    const ids = [
+      ...new Set(orders.map((o) => parseMeta(o.metaData).courseId).filter(Boolean)),
+    ];
+    const missing = ids.filter((id) => !courseMap[id]);
+    if (!missing.length) return;
+    Promise.all(
+      missing.map((id) =>
+        coursesApi.getCourseById(id)
+          .then((res) => ({ id, title: res.data?.title || res.data?.name || "Unknown Course" }))
+          .catch(() => ({ id, title: "Unknown Course" }))
+      )
+    ).then((results) => {
+      setCourseMap((prev) => {
+        const next = { ...prev };
+        results.forEach(({ id, title }) => { next[id] = title; });
+        return next;
+      });
+    });
+  }, [orders]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Resolve student names
+  useEffect(() => {
+    const ids = [
+      ...new Set(
+        [...orders.map((o) => o.studentId), ...txns.map((t) => t.studentId)].filter(Boolean)
+      ),
+    ];
+    const missing = ids.filter((id) => !studentMap[id]);
+    if (!missing.length) return;
+    Promise.all(
+      missing.map((id) =>
+        adminApi.getStudentById(id)
+          .then((res) => {
+            const u = res.data?.user;
+            const name = u
+              ? `${u.firstName || ""} ${u.lastName || ""}`.trim() || u.email
+              : "Unknown";
+            return { id, name };
+          })
+          .catch(() => ({ id, name: "Unknown" }))
+      )
+    ).then((results) => {
+      setStudentMap((prev) => {
+        const next = { ...prev };
+        results.forEach(({ id, name }) => { next[id] = name; });
+        return next;
+      });
+    });
+  }, [orders, txns]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleViewOrder = (order) => {
+    setSelectedOrder(order);
+    onOrderOpen();
   };
 
-  const getTypeLabel = (type) => {
-    switch (type) {
-      case "course_purchase":
-        return t("adminDashboard.finance.types.coursePurchase");
-      case "tutor_payout":
-        return t("adminDashboard.finance.types.tutorPayout");
-      case "refund":
-        return t("adminDashboard.finance.types.refund");
-      case "subscription":
-        return t("adminDashboard.finance.types.subscription");
-      default:
-        return type;
-    }
+  const handleViewTxn = (txn) => {
+    setSelectedTxn(txn);
+    onTxnOpen();
   };
+
+  const statCards = [
+    { label: "Total Orders", value: stats.totalOrders, icon: Receipt, color: colors.primary.main, bg: colors.background.primaryLight },
+    { label: "Paid Orders", value: stats.paidOrders, icon: CheckCircle, color: colors.state.success, bg: `${colors.state.success}20` },
+    { label: "Total Transactions", value: stats.totalTxns, icon: ArrowsLeftRight, color: "#8B5CF6", bg: "#8B5CF620" },
+    { label: "Failed Transactions", value: stats.failedTxns, icon: XCircle, color: colors.state.error, bg: `${colors.state.error}20` },
+  ];
+
+  // Derived data for selected items
+  const orderMeta = selectedOrder ? parseMeta(selectedOrder.metaData) : {};
+  const txnOrder = selectedTxn ? orders.find((o) => o.id === selectedTxn.orderId) : null;
+  const txnOrderMeta = txnOrder ? parseMeta(txnOrder.metaData) : {};
 
   return (
     <div className="space-y-6">
-      {/* Page Header */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.15 }}
-        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
-      >
-        <div>
-          <h1
-            className="text-2xl lg:text-3xl font-bold mb-1"
-            style={{ color: colors.text.primary }}
-          >
-            {t("adminDashboard.finance.title")}
-          </h1>
-          <p style={{ color: colors.text.secondary }}>
-            {t("adminDashboard.finance.subtitle")}
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Dropdown>
-            <DropdownTrigger>
-              <Button
-                variant="flat"
-                startContent={<CalendarBlank className="w-4 h-4" />}
-                endContent={<CaretDown className="w-4 h-4" />}
-              >
-                {selectedPeriod === "week"
-                  ? t("adminDashboard.finance.thisWeek")
-                  : selectedPeriod === "month"
-                    ? t("adminDashboard.finance.thisMonth")
-                    : t("adminDashboard.finance.thisYear")}
-              </Button>
-            </DropdownTrigger>
-            <DropdownMenu
-              aria-label="Period selection"
-              onAction={(key) => setSelectedPeriod(key)}
-              selectedKeys={[selectedPeriod]}
-              selectionMode="single"
-            >
-              <DropdownItem key="week">
-                {t("adminDashboard.finance.thisWeek")}
-              </DropdownItem>
-              <DropdownItem key="month">
-                {t("adminDashboard.finance.thisMonth")}
-              </DropdownItem>
-              <DropdownItem key="year">
-                {t("adminDashboard.finance.thisYear")}
-              </DropdownItem>
-            </DropdownMenu>
-          </Dropdown>
-          <Button
-            variant="flat"
-            startContent={<Export className="w-4 h-4" />}
-            style={{ color: colors.text.primary }}
-          >
-            {t("adminDashboard.finance.export")}
-          </Button>
-        </div>
+      {/* Header */}
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.15 }}>
+        <h1 className="text-2xl lg:text-3xl font-bold mb-1" style={{ color: colors.text.primary }}>
+          Financial Management
+        </h1>
+        <p style={{ color: colors.text.secondary }}>
+          Monitor payment orders and transaction records across the platform.
+        </p>
       </motion.div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.map((stat, index) => (
-          <motion.div
-            key={index}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.15 }}
-          >
-            <Card
-              shadow="none"
-              className="border-none"
-              style={{ backgroundColor: colors.background.light }}
-            >
+      {/* Stat Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {statCards.map((s, i) => (
+          <motion.div key={i} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.15, delay: i * 0.05 }}>
+            <Card shadow="none" className="border-none" style={{ backgroundColor: colors.background.light }}>
               <CardBody className="p-5">
-                <div className="flex items-start justify-between">
-                  <div
-                    className="w-12 h-12 rounded-xl flex items-center justify-center"
-                    style={{ backgroundColor: stat.bg }}
-                  >
-                    <stat.icon
-                      className="w-6 h-6"
-                      weight="duotone"
-                      style={{ color: stat.color }}
-                    />
-                  </div>
-                  <div
-                    className={`flex items-center gap-1 text-sm font-medium ${
-                      stat.trend === "up" ? "text-green-500" : "text-red-500"
-                    }`}
-                  >
-                    {stat.trend === "up" ? (
-                      <TrendUp className="w-4 h-4" />
-                    ) : (
-                      <TrendDown className="w-4 h-4" />
-                    )}
-                    {stat.change}
-                  </div>
+                <div className="w-11 h-11 rounded-xl flex items-center justify-center mb-3" style={{ backgroundColor: s.bg }}>
+                  <s.icon className="w-5 h-5" weight="duotone" style={{ color: s.color }} />
                 </div>
-                <div className="mt-4">
-                  <p
-                    className="text-2xl font-bold"
-                    style={{ color: colors.text.primary }}
-                  >
-                    {stat.value}
-                  </p>
-                  <p
-                    className="text-sm mt-1"
-                    style={{ color: colors.text.secondary }}
-                  >
-                    {stat.label}
-                  </p>
-                </div>
+                <p className="text-2xl font-bold" style={{ color: colors.text.primary }}>
+                  {s.value.toLocaleString()}
+                </p>
+                <p className="text-sm mt-1" style={{ color: colors.text.secondary }}>{s.label}</p>
               </CardBody>
             </Card>
           </motion.div>
@@ -311,141 +338,220 @@ const FinancialManagement = () => {
       </div>
 
       {/* Tabs */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.15 }}
-      >
-        <Tabs
-          selectedKey={activeTab}
-          onSelectionChange={setActiveTab}
-          variant="underlined"
-          classNames={{
-            tabList: "gap-6",
-            cursor: "w-full",
-          }}
-          style={{ color: colors.text.primary }}
-        >
-          <Tab
-            key="overview"
-            title={t("adminDashboard.finance.tabs.overview")}
-          />
-          <Tab
-            key="transactions"
-            title={t("adminDashboard.finance.tabs.transactions")}
-          />
-          <Tab key="payouts" title={t("adminDashboard.finance.tabs.payouts")} />
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.15 }}>
+        <Tabs selectedKey={activeTab} onSelectionChange={setActiveTab} variant="underlined" classNames={{ tabList: "gap-6", cursor: "w-full" }}>
+          <Tab key="orders" title="Orders" />
+          <Tab key="transactions" title="Transactions" />
         </Tabs>
       </motion.div>
 
-      {/* Transactions Table */}
-      {activeTab === "transactions" && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.15 }}
-        >
+      {/* Orders Tab */}
+      {activeTab === "orders" && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.15 }} className="space-y-4">
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Input
+              placeholder="Search orders..."
+              value={ordersSearch}
+              onValueChange={setOrdersSearch}
+              startContent={<MagnifyingGlass className="w-4 h-4" style={{ color: colors.text.tertiary }} />}
+              classNames={inputClassNames}
+              className="max-w-xs"
+            />
+            <Dropdown>
+              <DropdownTrigger>
+                <Button variant="flat" startContent={<Funnel className="w-4 h-4" />} endContent={<CaretDown className="w-4 h-4" />} style={{ color: colors.text.primary }}>
+                  Status: {ordersStatus}
+                </Button>
+              </DropdownTrigger>
+              <DropdownMenu aria-label="Order status filter" selectedKeys={[ordersStatus]} selectionMode="single" onAction={(key) => { setOrdersStatus(key); setOrdersPage(1); }}>
+                {ORDER_STATUSES.map((s) => <DropdownItem key={s}>{s}</DropdownItem>)}
+              </DropdownMenu>
+            </Dropdown>
+          </div>
+
           <Card shadow="none" className="border-none" style={tableCardStyle}>
             <CardBody className="p-0">
               <Table
-                aria-label="Transactions table"
+                aria-label="Payment orders"
                 classNames={tableClassNames}
                 bottomContent={
-                  <div className="flex w-full justify-center py-4">
-                    <Pagination
-                      isCompact
-                      showControls
-                      showShadow
-                      color="primary"
-                      page={page}
-                      total={10}
-                      onChange={(page) => setPage(page)}
-                    />
-                  </div>
+                  ordersTotal > 1 && (
+                    <div className="flex w-full justify-center py-4">
+                      <Pagination isCompact showControls showShadow color="primary" page={ordersPage} total={ordersTotal} onChange={setOrdersPage} />
+                    </div>
+                  )
                 }
               >
                 <TableHeader>
-                  <TableColumn>
-                    {t("adminDashboard.finance.table.id")}
-                  </TableColumn>
-                  <TableColumn>
-                    {t("adminDashboard.finance.table.type")}
-                  </TableColumn>
-                  <TableColumn>
-                    {t("adminDashboard.finance.table.description")}
-                  </TableColumn>
-                  <TableColumn>
-                    {t("adminDashboard.finance.table.user")}
-                  </TableColumn>
-                  <TableColumn>
-                    {t("adminDashboard.finance.table.amount")}
-                  </TableColumn>
-                  <TableColumn>
-                    {t("adminDashboard.finance.table.fee")}
-                  </TableColumn>
-                  <TableColumn>
-                    {t("adminDashboard.finance.table.status")}
-                  </TableColumn>
-                  <TableColumn>
-                    {t("adminDashboard.finance.table.date")}
-                  </TableColumn>
+                  <TableColumn>Order #</TableColumn>
+                  <TableColumn>Student</TableColumn>
+                  <TableColumn>Course</TableColumn>
+                  <TableColumn>Schedule</TableColumn>
+                  <TableColumn>Amount</TableColumn>
+                  <TableColumn>Status</TableColumn>
+                  <TableColumn>Date</TableColumn>
+                  <TableColumn> </TableColumn>
                 </TableHeader>
-                <TableBody>
-                  {transactions.map((transaction) => (
-                    <TableRow key={transaction.id}>
+                <TableBody
+                  isLoading={ordersLoading}
+                  loadingContent={<Spinner color="primary" />}
+                  emptyContent={!ordersLoading && <span style={{ color: colors.text.tertiary }}>No orders found.</span>}
+                >
+                  {orders.map((order) => {
+                    const meta = parseMeta(order.metaData);
+                    return (
+                      <TableRow key={order.id}>
+                        <TableCell>
+                          <span className="font-mono text-sm font-semibold" style={{ color: colors.primary.main }}>
+                            #{order.orderNo}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-sm" style={{ color: colors.text.secondary }}>
+                            {order.studentId ? studentMap[order.studentId] || "Loading..." : "—"}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-sm font-medium" style={{ color: colors.text.primary }}>
+                            {meta.courseId ? courseMap[meta.courseId] || "Loading..." : "—"}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-sm" style={{ color: colors.text.secondary }}>
+                            {formatSlots(meta.scheduleSlots) || "—"}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <span className="font-medium text-sm" style={{ color: colors.text.primary }}>
+                            {formatAmount(order.totalAmount, order.currency)}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <Chip size="sm" variant="flat" color={orderStatusColor(order.status)}>
+                            {order.status}
+                          </Chip>
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-sm" style={{ color: colors.text.tertiary }}>
+                            {formatDate(order.createdAt)}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            isIconOnly
+                            size="sm"
+                            variant="light"
+                            onPress={() => handleViewOrder(order)}
+                          >
+                            <Eye className="w-4 h-4" style={{ color: colors.text.secondary }} />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </CardBody>
+          </Card>
+        </motion.div>
+      )}
+
+      {/* Transactions Tab */}
+      {activeTab === "transactions" && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.15 }} className="space-y-4">
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Input
+              placeholder="Search transactions..."
+              value={txnsSearch}
+              onValueChange={setTxnsSearch}
+              startContent={<MagnifyingGlass className="w-4 h-4" style={{ color: colors.text.tertiary }} />}
+              classNames={inputClassNames}
+              className="max-w-xs"
+            />
+            <Dropdown>
+              <DropdownTrigger>
+                <Button variant="flat" startContent={<Funnel className="w-4 h-4" />} endContent={<CaretDown className="w-4 h-4" />} style={{ color: colors.text.primary }}>
+                  Status: {txnsStatus}
+                </Button>
+              </DropdownTrigger>
+              <DropdownMenu aria-label="Transaction status filter" selectedKeys={[txnsStatus]} selectionMode="single" onAction={(key) => { setTxnsStatus(key); setTxnsPage(1); }}>
+                {TXN_STATUSES.map((s) => <DropdownItem key={s}>{s}</DropdownItem>)}
+              </DropdownMenu>
+            </Dropdown>
+          </div>
+
+          <Card shadow="none" className="border-none" style={tableCardStyle}>
+            <CardBody className="p-0">
+              <Table
+                aria-label="Payment transactions"
+                classNames={tableClassNames}
+                bottomContent={
+                  txnsTotal > 1 && (
+                    <div className="flex w-full justify-center py-4">
+                      <Pagination isCompact showControls showShadow color="primary" page={txnsPage} total={txnsTotal} onChange={setTxnsPage} />
+                    </div>
+                  )
+                }
+              >
+                <TableHeader>
+                  <TableColumn>Order #</TableColumn>
+                  <TableColumn>Student</TableColumn>
+                  <TableColumn>Amount</TableColumn>
+                  <TableColumn>Status</TableColumn>
+                  <TableColumn>Bank Tx ID</TableColumn>
+                  <TableColumn>Date</TableColumn>
+                  <TableColumn> </TableColumn>
+                </TableHeader>
+                <TableBody
+                  isLoading={txnsLoading}
+                  loadingContent={<Spinner color="primary" />}
+                  emptyContent={!txnsLoading && <span style={{ color: colors.text.tertiary }}>No transactions found.</span>}
+                >
+                  {txns.map((txn) => (
+                    <TableRow key={txn.id}>
                       <TableCell>
-                        <span
-                          className="font-mono text-sm"
-                          style={{ color: colors.text.primary }}
-                        >
-                          {transaction.id}
+                        <span className="font-mono text-sm font-semibold" style={{ color: colors.primary.main }}>
+                          #{txn.orderNo}
                         </span>
                       </TableCell>
                       <TableCell>
-                        <Chip size="sm" variant="flat">
-                          {getTypeLabel(transaction.type)}
+                        <span className="text-sm" style={{ color: colors.text.secondary }}>
+                          {txn.studentId ? studentMap[txn.studentId] || "Loading..." : "—"}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <span className="font-medium text-sm" style={{ color: colors.text.primary }}>
+                          {formatAmount(txn.amount, txn.currency)}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <Chip size="sm" variant="flat" color={txnStatusColor(txn.status)}>
+                          {txn.status}
                         </Chip>
                       </TableCell>
                       <TableCell>
-                        <span style={{ color: colors.text.primary }}>
-                          {transaction.description}
+                        <span className="font-mono text-xs" style={{ color: colors.text.tertiary }}>
+                          {txn.bankTransactionId
+                            ? txn.bankTransactionId.length > 20
+                              ? txn.bankTransactionId.slice(0, 20) + "…"
+                              : txn.bankTransactionId
+                            : "—"}
                         </span>
                       </TableCell>
                       <TableCell>
-                        <span style={{ color: colors.text.secondary }}>
-                          {transaction.user}
+                        <span className="text-sm" style={{ color: colors.text.tertiary }}>
+                          {formatDate(txn.createdAt)}
                         </span>
                       </TableCell>
                       <TableCell>
-                        <span
-                          className="font-medium"
-                          style={{
-                            color: transaction.amount.startsWith("-")
-                              ? colors.state.error
-                              : colors.state.success,
-                          }}
-                        >
-                          {transaction.amount}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <span style={{ color: colors.text.tertiary }}>
-                          {transaction.fee}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <Chip
+                        <Button
+                          isIconOnly
                           size="sm"
-                          color={getStatusColor(transaction.status)}
-                          variant="flat"
+                          variant="light"
+                          onPress={() => handleViewTxn(txn)}
                         >
-                          {transaction.status}
-                        </Chip>
-                      </TableCell>
-                      <TableCell>
-                        <span style={{ color: colors.text.secondary }}>
-                          {transaction.date}
-                        </span>
+                          <Eye className="w-4 h-4" style={{ color: colors.text.secondary }} />
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -456,242 +562,127 @@ const FinancialManagement = () => {
         </motion.div>
       )}
 
-      {/* Payouts */}
-      {activeTab === "payouts" && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.15 }}
-        >
-          <Card
-            shadow="none"
-            className="border-none"
-            style={{ backgroundColor: colors.background.light }}
-          >
-            <CardBody className="p-5">
-              <div className="flex items-center justify-between mb-4">
-                <h3
-                  className="text-lg font-semibold"
-                  style={{ color: colors.text.primary }}
-                >
-                  {t("adminDashboard.finance.pendingPayouts")}
-                </h3>
-                <Button
-                  size="sm"
-                  style={{
-                    backgroundColor: colors.primary.main,
-                    color: colors.text.white,
-                  }}
-                >
-                  {t("adminDashboard.finance.processAll")}
-                </Button>
-              </div>
-              <div className="space-y-3">
-                {pendingPayouts.map((payout) => (
-                  <div
-                    key={payout.id}
-                    className="flex items-center justify-between p-4 rounded-xl"
-                    style={{ backgroundColor: colors.background.gray }}
-                  >
-                    <div>
-                      <p
-                        className="font-medium"
-                        style={{ color: colors.text.primary }}
-                      >
-                        {payout.tutor}
-                      </p>
-                      <p
-                        className="text-sm"
-                        style={{ color: colors.text.secondary }}
-                      >
-                        {payout.period}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <p
-                        className="text-lg font-bold"
-                        style={{ color: colors.state.success }}
-                      >
-                        {payout.amount}
-                      </p>
-                      <Chip
-                        size="sm"
-                        color={getStatusColor(payout.status)}
-                        variant="flat"
-                      >
-                        {payout.status}
-                      </Chip>
-                      <Button
-                        size="sm"
-                        variant="flat"
-                        style={{
-                          backgroundColor: colors.state.success + "20",
-                          color: colors.state.success,
-                        }}
-                      >
-                        {t("adminDashboard.finance.process")}
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardBody>
-          </Card>
-        </motion.div>
-      )}
+      {/* Order Detail Modal */}
+      <Modal isOpen={isOrderOpen} onClose={onOrderClose} size="md" scrollBehavior="inside">
+        <ModalContent style={{ backgroundColor: colors.background.light }}>
+          <ModalHeader style={{ color: colors.text.primary }}>
+            Order #{selectedOrder?.orderNo} — Details
+          </ModalHeader>
+          <ModalBody className="pb-6">
+            {selectedOrder && (
+              <div className="space-y-4">
+                <DetailRow label="Status">
+                  <Chip size="sm" variant="flat" color={orderStatusColor(selectedOrder.status)}>
+                    {selectedOrder.status}
+                  </Chip>
+                </DetailRow>
 
-      {/* Overview */}
-      {activeTab === "overview" && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Recent Transactions */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.15 }}
-          >
-            <Card
-              shadow="none"
-              className="border-none"
-              style={{ backgroundColor: colors.background.light }}
-            >
-              <CardBody className="p-5">
-                <h3
-                  className="text-lg font-semibold mb-4"
-                  style={{ color: colors.text.primary }}
-                >
-                  {t("adminDashboard.finance.recentTransactions")}
-                </h3>
-                <div className="space-y-3">
-                  {transactions.slice(0, 4).map((transaction) => (
-                    <div
-                      key={transaction.id}
-                      className="flex items-center justify-between p-3 rounded-xl"
-                      style={{ backgroundColor: colors.background.gray }}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div
-                          className="w-10 h-10 rounded-full flex items-center justify-center"
-                          style={{
-                            backgroundColor:
-                              transaction.type === "refund"
-                                ? colors.state.error + "20"
-                                : colors.state.success + "20",
-                          }}
-                        >
-                          <Receipt
-                            className="w-5 h-5"
-                            style={{
-                              color:
-                                transaction.type === "refund"
-                                  ? colors.state.error
-                                  : colors.state.success,
-                            }}
-                          />
-                        </div>
-                        <div>
-                          <p
-                            className="text-sm font-medium"
-                            style={{ color: colors.text.primary }}
-                          >
-                            {transaction.description}
-                          </p>
-                          <p
-                            className="text-xs"
-                            style={{ color: colors.text.tertiary }}
-                          >
-                            {transaction.user}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p
-                          className="font-medium"
-                          style={{
-                            color: transaction.amount.startsWith("-")
-                              ? colors.state.error
-                              : colors.state.success,
-                          }}
-                        >
-                          {transaction.amount}
-                        </p>
-                        <p
-                          className="text-xs"
-                          style={{ color: colors.text.tertiary }}
-                        >
-                          {transaction.date}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardBody>
-            </Card>
-          </motion.div>
+                <DetailRow label="Student">
+                  <button
+                    className="flex items-center gap-1 font-medium hover:underline"
+                    style={{ color: colors.primary.main }}
+                    onClick={() => { onOrderClose(); navigate(`/admin/students/${selectedOrder.studentId}`); }}
+                  >
+                    {studentMap[selectedOrder.studentId] || selectedOrder.studentId}
+                    <ArrowSquareOut className="w-3.5 h-3.5" />
+                  </button>
+                </DetailRow>
 
-          {/* Pending Payouts Preview */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.15 }}
-          >
-            <Card
-              shadow="none"
-              className="border-none"
-              style={{ backgroundColor: colors.background.light }}
-            >
-              <CardBody className="p-5">
-                <div className="flex items-center justify-between mb-4">
-                  <h3
-                    className="text-lg font-semibold"
-                    style={{ color: colors.text.primary }}
-                  >
-                    {t("adminDashboard.finance.pendingPayouts")}
-                  </h3>
-                  <span
-                    className="px-2 py-1 text-xs font-medium rounded-full"
-                    style={{
-                      backgroundColor: colors.state.warning + "20",
-                      color: colors.state.warning,
-                    }}
-                  >
-                    {pendingPayouts.length}
-                  </span>
-                </div>
-                <div className="space-y-3">
-                  {pendingPayouts.map((payout) => (
-                    <div
-                      key={payout.id}
-                      className="flex items-center justify-between p-3 rounded-xl"
-                      style={{ backgroundColor: colors.background.gray }}
+                {orderMeta.courseId && (
+                  <DetailRow label="Course">
+                    <button
+                      className="flex items-center gap-1 font-medium hover:underline"
+                      style={{ color: colors.primary.main }}
+                      onClick={() => { onOrderClose(); navigate(`/admin/courses/${orderMeta.courseId}`); }}
                     >
-                      <div>
-                        <p
-                          className="font-medium"
-                          style={{ color: colors.text.primary }}
-                        >
-                          {payout.tutor}
-                        </p>
-                        <p
-                          className="text-xs"
-                          style={{ color: colors.text.tertiary }}
-                        >
-                          {payout.period}
-                        </p>
-                      </div>
-                      <p
-                        className="font-bold"
-                        style={{ color: colors.state.success }}
-                      >
-                        {payout.amount}
-                      </p>
+                      {courseMap[orderMeta.courseId] || orderMeta.courseId}
+                      <ArrowSquareOut className="w-3.5 h-3.5" />
+                    </button>
+                  </DetailRow>
+                )}
+
+                {orderMeta.scheduleSlots?.length > 0 && (
+                  <DetailRow label="Schedule">
+                    <div className="space-y-0.5">
+                      {orderMeta.scheduleSlots.map((s, i) => (
+                        <div key={i}>{s.weekday} — {s.startTime.slice(0, 5)} – {s.endTime.slice(0, 5)}</div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              </CardBody>
-            </Card>
-          </motion.div>
-        </div>
-      )}
+                  </DetailRow>
+                )}
+
+                <DetailRow label="Amount">
+                  <span className="font-semibold">{formatAmount(selectedOrder.totalAmount, selectedOrder.currency)}</span>
+                </DetailRow>
+
+                <DetailRow label="Description">{selectedOrder.description || "—"}</DetailRow>
+
+                <DetailRow label="Payment Reference">{selectedOrder.paymentReference || "—"}</DetailRow>
+
+                <DetailRow label="Created At">{formatDate(selectedOrder.createdAt)}</DetailRow>
+                <DetailRow label="Updated At">{formatDate(selectedOrder.updatedAt)}</DetailRow>
+              </div>
+            )}
+          </ModalBody>
+        </ModalContent>
+      </Modal>
+
+      {/* Transaction Detail Modal */}
+      <Modal isOpen={isTxnOpen} onClose={onTxnClose} size="md" scrollBehavior="inside">
+        <ModalContent style={{ backgroundColor: colors.background.light }}>
+          <ModalHeader style={{ color: colors.text.primary }}>
+            Transaction — Order #{selectedTxn?.orderNo}
+          </ModalHeader>
+          <ModalBody className="pb-6">
+            {selectedTxn && (
+              <div className="space-y-4">
+                <DetailRow label="Status">
+                  <Chip size="sm" variant="flat" color={txnStatusColor(selectedTxn.status)}>
+                    {selectedTxn.status}
+                  </Chip>
+                </DetailRow>
+
+                <DetailRow label="Student">
+                  <button
+                    className="flex items-center gap-1 font-medium hover:underline"
+                    style={{ color: colors.primary.main }}
+                    onClick={() => { onTxnClose(); navigate(`/admin/students/${selectedTxn.studentId}`); }}
+                  >
+                    {studentMap[selectedTxn.studentId] || selectedTxn.studentId}
+                    <ArrowSquareOut className="w-3.5 h-3.5" />
+                  </button>
+                </DetailRow>
+
+                {txnOrderMeta.courseId && (
+                  <DetailRow label="Course">
+                    <button
+                      className="flex items-center gap-1 font-medium hover:underline"
+                      style={{ color: colors.primary.main }}
+                      onClick={() => { onTxnClose(); navigate(`/admin/courses/${txnOrderMeta.courseId}`); }}
+                    >
+                      {courseMap[txnOrderMeta.courseId] || txnOrderMeta.courseId}
+                      <ArrowSquareOut className="w-3.5 h-3.5" />
+                    </button>
+                  </DetailRow>
+                )}
+
+                <DetailRow label="Amount">
+                  <span className="font-semibold">{formatAmount(selectedTxn.amount, selectedTxn.currency)}</span>
+                </DetailRow>
+
+                <DetailRow label="Bank Transaction ID">
+                  <span className="font-mono text-xs">{selectedTxn.bankTransactionId || "—"}</span>
+                </DetailRow>
+
+                <DetailRow label="Payment Method">{selectedTxn.paymentMethod || "—"}</DetailRow>
+
+                <DetailRow label="Created At">{formatDate(selectedTxn.createdAt)}</DetailRow>
+                <DetailRow label="Updated At">{formatDate(selectedTxn.updatedAt)}</DetailRow>
+              </div>
+            )}
+          </ModalBody>
+        </ModalContent>
+      </Modal>
     </div>
   );
 };

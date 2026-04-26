@@ -23,7 +23,6 @@ import {
   PencilSimple,
   Bell,
   Lock,
-  CreditCard,
   Shield,
   SignOut,
   CheckCircle,
@@ -175,30 +174,6 @@ const Profile = () => {
     }
   };
 
-  const paymentHistory = [
-    {
-      id: 1,
-      course: "Business English Masterclass",
-      amount: 49.99,
-      date: "Dec 1, 2024",
-      status: "completed",
-    },
-    {
-      id: 2,
-      course: "IELTS Band 7+ Preparation",
-      amount: 79.99,
-      date: "Nov 15, 2024",
-      status: "completed",
-    },
-    {
-      id: 3,
-      course: "English for Beginners",
-      amount: 29.99,
-      date: "Oct 28, 2024",
-      status: "completed",
-    },
-  ];
-
   if (loading) {
     return <ProfileSkeleton />;
   }
@@ -338,17 +313,6 @@ const Profile = () => {
                     <Shield className="w-5 h-5" />
                     <span className="font-medium">
                       {t("studentDashboard.profile.tabs.security")}
-                    </span>
-                  </div>
-                }
-              />
-              <Tab
-                key="payments"
-                title={
-                  <div className="flex items-center gap-2">
-                    <CreditCard className="w-5 h-5" />
-                    <span className="font-medium">
-                      {t("studentDashboard.profile.tabs.payments")}
                     </span>
                   </div>
                 }
@@ -622,65 +586,6 @@ const Profile = () => {
           </Card>
         )}
 
-        {selectedTab === "payments" && (
-          <Card
-            shadow="none"
-            className="border-none"
-            style={{ backgroundColor: colors.background.light }}
-          >
-            <CardBody className="p-6">
-              <h3
-                className="text-lg font-semibold mb-4"
-                style={{ color: colors.text.primary }}
-              >
-                {t("studentDashboard.profile.paymentHistory")}
-              </h3>
-
-              <div className="space-y-3">
-                {paymentHistory.map((payment) => (
-                  <div
-                    key={payment.id}
-                    className="flex items-center justify-between p-4 rounded-xl"
-                    style={{ backgroundColor: colors.background.gray }}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div
-                        className="w-10 h-10 rounded-lg flex items-center justify-center"
-                        style={{ backgroundColor: `${colors.state.success}20` }}
-                      >
-                        <CheckCircle
-                          weight="fill"
-                          className="w-5 h-5"
-                          style={{ color: colors.state.success }}
-                        />
-                      </div>
-                      <div>
-                        <p
-                          className="font-medium"
-                          style={{ color: colors.text.primary }}
-                        >
-                          {payment.course}
-                        </p>
-                        <p
-                          className="text-sm"
-                          style={{ color: colors.text.secondary }}
-                        >
-                          {payment.date}
-                        </p>
-                      </div>
-                    </div>
-                    <p
-                      className="font-semibold"
-                      style={{ color: colors.text.primary }}
-                    >
-                      ${payment.amount}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </CardBody>
-          </Card>
-        )}
       </motion.div>
     </div>
   );

@@ -150,4 +150,16 @@ export const studentApi = {
     const response = await axiosInstance.get("/payments/v1/payos/return", { params });
     return response.data;
   },
+
+  // Get own order history
+  getMyOrders: async (params = {}) => {
+    const response = await axiosInstance.get("/payments/v1/orders", { params });
+    return response.data;
+  },
+
+  // Get order by ID
+  getOrderById: async (orderId) => {
+    const response = await axiosInstance.get(`/payments/v1/order/${orderId}`);
+    return response.data;
+  },
 };

@@ -74,6 +74,7 @@ import NotFound from "../pages/NotFound/NotFound";
 import Test from "../pages/Test/test";
 import TutorHomework from "../pages/TutorDashboard/Homework/Homework";
 import StudentHomework from "../pages/StudentDashboard/Homework/Homework";
+import StudentOrders from "../pages/StudentDashboard/Orders/Orders";
 
 export const router = createBrowserRouter([
   {
@@ -217,6 +218,10 @@ export const router = createBrowserRouter([
       {
         path: "homework",
         element: <StudentHomework />,
+      },
+      {
+        path: "orders",
+        element: <StudentOrders />,
       },
       {
         path: "notifications",

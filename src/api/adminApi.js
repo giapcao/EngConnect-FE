@@ -94,32 +94,25 @@ export const adminApi = {
     return response.data;
   },
 
-  // Financial management
-  getFinancialReports: async (params = {}) => {
-    const response = await axiosInstance.get("/admin/finance/reports", {
-      params,
-    });
+  // Financial management — Payment Orders
+  getPaymentOrders: async (params = {}) => {
+    const response = await axiosInstance.get("/payments/v1/orders", { params });
     return response.data;
   },
 
-  getTransactions: async (params = {}) => {
-    const response = await axiosInstance.get("/admin/finance/transactions", {
-      params,
-    });
+  getPaymentOrderById: async (orderId) => {
+    const response = await axiosInstance.get(`/payments/v1/order/${orderId}`);
     return response.data;
   },
 
-  getTutorPayouts: async (params = {}) => {
-    const response = await axiosInstance.get("/admin/finance/payouts", {
-      params,
-    });
+  // Financial management — Payment Transactions
+  getPaymentTransactions: async (params = {}) => {
+    const response = await axiosInstance.get("/payments/v1", { params });
     return response.data;
   },
 
-  processPayout: async (payoutId) => {
-    const response = await axiosInstance.post(
-      `/admin/finance/payouts/${payoutId}/process`
-    );
+  getPaymentTransactionById: async (id) => {
+    const response = await axiosInstance.get(`/payments/v1/${id}`);
     return response.data;
   },
 
