@@ -49,8 +49,8 @@ const Dashboard = () => {
       const res = await studentApi.getLessons({
         StudentId: user.studentId,
         Status: "Scheduled",
-        "page-size": 5,
-        "sort-params": "StartTime",
+        "page-size": 4,
+        "sort-params": "StartTime-asc",
       });
       setUpcomingLessons(res?.data?.items || []);
     } catch (err) {

@@ -12,6 +12,7 @@ export default function useWebRTC(lessonId, userRole) {
   const [connectionState, setConnectionState] = useState("disconnected");
   const [meetingStatus, setMeetingStatus] = useState(null);
   const [participants, setParticipants] = useState([]);
+  const [remoteMediaState, setRemoteMediaState] = useState({ isAudioEnabled: true, isVideoEnabled: true });
   const [localStream, setLocalStream] = useState(null);
   const [remoteStream, setRemoteStream] = useState(null);
   const [isAudioEnabled, setIsAudioEnabled] = useState(true);
@@ -543,7 +544,23 @@ export default function useWebRTC(lessonId, userRole) {
 
     connection.on("ReceiveOffer", async (data) => {
       console.log("ReceiveOffer from:", data.callerConnectionId);
-      const pc = createPeerConnection(data.callerConnectionId);
+
+      // Ensure the remote peer is tracked in participants (handles "joined after them" case
+      // where we never received their UserJoined event)
+      const callerId = data.callerConnectionId;
+      const alreadyTracked = (p) => p.connectionId === callerId;
+      setParticipants((prev) =>
+        prev.some(alreadyTracked) ? prev : [...prev, { connectionId: callerId }],
+      );
+
+      // Renegotiation (e.g. screen share start/stop): reuse existing PC to preserve the
+      // data channel. Creating a new PC would close it — the offerer never re-creates one.
+      const isRenegotiation =
+        peerRef.current && remoteConnectionIdRef.current === data.callerConnectionId;
+      const pc = isRenegotiation
+        ? peerRef.current
+        : createPeerConnection(data.callerConnectionId);
+
       try {
         await pc.setRemoteDescription(new RTCSessionDescription(data.sdp));
         await flushPendingIceCandidates(pc);
@@ -603,14 +620,13 @@ export default function useWebRTC(lessonId, userRole) {
       setParticipants((prev) =>
         prev.map((p) =>
           p.connectionId === data.connectionId
-            ? {
-                ...p,
-                isAudioEnabled: data.isAudioEnabled,
-                isVideoEnabled: data.isVideoEnabled,
-              }
+            ? { ...p, isAudioEnabled: data.isAudioEnabled, isVideoEnabled: data.isVideoEnabled }
             : p,
         ),
       );
+      if (data.connectionId === remoteConnectionIdRef.current) {
+        setRemoteMediaState({ isAudioEnabled: data.isAudioEnabled, isVideoEnabled: data.isVideoEnabled });
+      }
     });
 
     connection.on("ReceiveChatMessage", (data) => {
@@ -978,6 +994,7 @@ export default function useWebRTC(lessonId, userRole) {
     connectionState,
     meetingStatus,
     participants,
+    remoteMediaState,
     localStream,
     remoteStream,
     isAudioEnabled,

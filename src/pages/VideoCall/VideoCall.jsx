@@ -88,6 +88,7 @@ const VideoCall = () => {
     chatMessages,
     error,
     isDataChannelOpen,
+    remoteMediaState,
     connect,
     disconnect,
     toggleAudio,
@@ -248,68 +249,67 @@ const VideoCall = () => {
     );
   }, [chatMessages, localFileMessages]);
 
-  // Sync whiteboard open/close state across peers so WhiteboardSync is always
-  // mounted on both sides when the whiteboard is active on either side
+  // Ref holding the whiteboard's own message handler (set by WhiteboardPanel via onWbMessage prop).
+  // Using a ref avoids re-registering the master router when the whiteboard mounts/unmounts.
+  const wbMessageHandlerRef = useRef(null);
+
+  // Stable callback passed to WhiteboardPanel instead of raw onDataMessage.
+  // WhiteboardSync calls this to register/unregister its handler without
+  // touching the master router subscription.
+  const registerWbHandler = useCallback((handler) => {
+    wbMessageHandlerRef.current = handler;
+    return () => { wbMessageHandlerRef.current = null; };
+  }, []);
+
+  // ── Single unified data-channel router ────────────────────────────────────
+  // Only ONE onDataMessage subscription exists at all times.  All message types
+  // are dispatched here so none can silently overwrite another handler.
   useEffect(() => {
     const unsub = onDataMessage((rawData) => {
       try {
         const msg = JSON.parse(rawData);
-        if (msg.type === "wb:open") setShowWhiteboard(true);
-        else if (msg.type === "wb:close") setShowWhiteboard(false);
-      } catch {
-        /* ignore */
-      }
-    });
-    return () => unsub();
-  }, [onDataMessage]);
 
-  // Receive files sent via data channel
-  useEffect(() => {
-    const unsub = onDataMessage((rawData) => {
-      try {
-        const msg = JSON.parse(rawData);
-        if (msg.type !== "file:chunk") return;
+        // wb:open — each side opens their board independently; no forced sync.
+        if (msg.type === "wb:open") return;
 
-        const { id, i, n, d } = msg;
-        if (!pendingFileChunksRef.current[id]) {
-          pendingFileChunksRef.current[id] = {
-            parts: new Array(n).fill(null),
-            got: 0,
-            n,
-          };
+        // wb:close — only the tutor's close forces the student to close too.
+        if (msg.type === "wb:close") {
+          if (msg.fromTutor) setShowWhiteboard(false);
+          return;
         }
-        const entry = pendingFileChunksRef.current[id];
-        if (entry.parts[i] === null) {
-          entry.parts[i] = d;
-          entry.got++;
-        }
-        if (entry.got === entry.n) {
-          const payload = entry.parts.join("");
-          delete pendingFileChunksRef.current[id];
-          const fileMsg = JSON.parse(payload);
-          if (fileMsg.type === "file") {
-            const blob = dataURLtoBlob(fileMsg.data);
-            const url = URL.createObjectURL(blob);
-            setLocalFileMessages((prev) => [
-              ...prev,
-              {
-                id: fileMsg.id,
-                name: fileMsg.name,
-                size: fileMsg.size,
-                mimeType: fileMsg.mimeType,
-                url,
-                isMe: false,
-                sentAt: new Date().toISOString(),
-              },
-            ]);
+
+        // file:chunk — P2P file reassembly
+        if (msg.type === "file:chunk") {
+          const { id, i, n, d } = msg;
+          if (!pendingFileChunksRef.current[id]) {
+            pendingFileChunksRef.current[id] = { parts: new Array(n).fill(null), got: 0, n };
           }
+          const entry = pendingFileChunksRef.current[id];
+          if (entry.parts[i] === null) { entry.parts[i] = d; entry.got++; }
+          if (entry.got === entry.n) {
+            const payload = entry.parts.join("");
+            delete pendingFileChunksRef.current[id];
+            const fileMsg = JSON.parse(payload);
+            if (fileMsg.type === "file") {
+              const blob = dataURLtoBlob(fileMsg.data);
+              const url = URL.createObjectURL(blob);
+              setLocalFileMessages((prev) => [
+                ...prev,
+                { id: fileMsg.id, name: fileMsg.name, size: fileMsg.size,
+                  mimeType: fileMsg.mimeType, url, isMe: false,
+                  sentAt: new Date().toISOString() },
+              ]);
+            }
+          }
+          return;
         }
-      } catch {
-        // not a file message — ignore
-      }
+
+        // Everything else (wb:*, wb:chunk, wb:req_sync …) → whiteboard handler
+        wbMessageHandlerRef.current?.(rawData);
+      } catch { /* ignore non-JSON or parse errors */ }
     });
     return () => unsub();
-  }, [onDataMessage]);
+  }, [onDataMessage]); // stable — runs once after mount
 
   // Revoke blob URLs when component unmounts to avoid memory leaks
   useEffect(() => {
@@ -397,11 +397,12 @@ const VideoCall = () => {
     [isDataChannelOpen, sendData],
   );
 
-  // Whiteboard toggle — notify the other peer so their WhiteboardSync also mounts
   const handleToggleWhiteboard = () => {
     const next = !showWhiteboard;
     setShowWhiteboard(next);
-    sendData(JSON.stringify({ type: next ? "wb:open" : "wb:close" }));
+    if (!next && userRole === "Tutor") {
+      sendData(JSON.stringify({ type: "wb:close", fromTutor: true }));
+    }
   };
 
   // Format elapsed seconds as MM:SS or H:MM:SS
@@ -428,9 +429,8 @@ const VideoCall = () => {
     meetingInfo?.sessionTitle ||
     t("videoCall.title");
 
-  const remoteParticipant = participants[0];
-  const remoteAudioEnabled = remoteParticipant?.isAudioEnabled !== false;
-  const remoteVideoEnabled = remoteParticipant?.isVideoEnabled !== false;
+  const remoteAudioEnabled = remoteMediaState.isAudioEnabled;
+  const remoteVideoEnabled = remoteMediaState.isVideoEnabled;
 
   // Connection indicator
   const ConnectionBadge = () => {
@@ -628,7 +628,7 @@ const VideoCall = () => {
               <div className="flex-1 rounded-2xl overflow-hidden bg-white">
                 <WhiteboardPanel
                   sendData={sendData}
-                  onDataMessage={onDataMessage}
+                  onWbMessage={registerWbHandler}
                   isHost={userRole === "Tutor"}
                   isDataChannelOpen={isDataChannelOpen}
                   captureCanvas={whiteboardCaptureRef.current}
@@ -725,36 +725,44 @@ const VideoCall = () => {
                     autoPlay
                     playsInline
                     className="w-full h-full object-cover"
+                    style={{ display: remoteVideoEnabled ? "block" : "none" }}
                   />
-                  {/* Remote status badges (top-right) */}
-                  {(!remoteAudioEnabled || !remoteVideoEnabled) && (
-                    <div className="absolute top-3 right-3 flex gap-1.5">
-                      {!remoteAudioEnabled && (
-                        <div className="flex items-center gap-1 bg-gray-900/80 backdrop-blur px-2 py-1 rounded-full">
-                          <MicrophoneSlash
-                            weight="bold"
-                            className="w-3.5 h-3.5 text-red-400"
-                          />
-                          <span className="text-[11px] text-red-400 font-medium">
-                            {t("videoCall.remoteMuted")}
-                          </span>
-                        </div>
-                      )}
-                      {!remoteVideoEnabled && (
-                        <div className="flex items-center gap-1 bg-gray-900/80 backdrop-blur px-2 py-1 rounded-full">
-                          <VideoCameraSlash
-                            weight="bold"
-                            className="w-3.5 h-3.5 text-amber-400"
-                          />
-                          <span className="text-[11px] text-amber-400 font-medium">
-                            {t("videoCall.remoteCameraOff")}
-                          </span>
-                        </div>
+                  {/* Avatar when remote camera is off */}
+                  {!remoteVideoEnabled && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-gray-800">
+                      <UserCircle weight="fill" className="w-24 h-24 text-gray-600" />
+                      {remoteName && (
+                        <span className="text-gray-300 text-sm font-medium">{remoteName}</span>
                       )}
                     </div>
                   )}
-                  {/* Remote name overlay (bottom-left) */}
-                  {remoteName && (
+                  {/* Remote status badges (top-right) */}
+                  <div className="absolute top-3 right-3 flex gap-1.5">
+                    {!remoteAudioEnabled && (
+                      <div className="flex items-center gap-1 bg-gray-900/80 backdrop-blur px-2 py-1 rounded-full">
+                        <MicrophoneSlash
+                          weight="bold"
+                          className="w-3.5 h-3.5 text-red-400"
+                        />
+                        <span className="text-[11px] text-red-400 font-medium">
+                          {t("videoCall.remoteMuted")}
+                        </span>
+                      </div>
+                    )}
+                    {!remoteVideoEnabled && (
+                      <div className="flex items-center gap-1 bg-gray-900/80 backdrop-blur px-2 py-1 rounded-full">
+                        <VideoCameraSlash
+                          weight="bold"
+                          className="w-3.5 h-3.5 text-amber-400"
+                        />
+                        <span className="text-[11px] text-amber-400 font-medium">
+                          {t("videoCall.remoteCameraOff")}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                  {/* Remote name overlay (bottom-left) — only when video is on */}
+                  {remoteName && remoteVideoEnabled && (
                     <div className="absolute bottom-20 left-4 flex items-center gap-1.5 bg-gray-900/70 backdrop-blur px-3 py-1.5 rounded-full">
                       <div className="w-2 h-2 rounded-full bg-emerald-400" />
                       <span className="text-white text-xs font-medium">

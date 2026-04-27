@@ -181,7 +181,7 @@ function WhiteboardCapture({ captureCanvas }) {
 }
 
 // ── Data-channel sync + permissions ─────────────────────────────────────────
-function WhiteboardSync({ sendData, onDataMessage, isHost, isDataChannelOpen, guestPerms }) {
+function WhiteboardSync({ sendData, onWbMessage, isHost, isDataChannelOpen, guestPerms }) {
   const editor = useEditor();
   const [myPerms, setMyPerms] = useState(isHost ? PERMS_DRAW : PERMS_VIEW);
   const syncedRef = useRef(isHost);
@@ -234,7 +234,7 @@ function WhiteboardSync({ sendData, onDataMessage, isHost, isDataChannelOpen, gu
       }
     };
 
-    const unsub = onDataMessage((rawData) => {
+    const unsub = onWbMessage((rawData) => {
       try {
         const msg = JSON.parse(rawData);
 
@@ -275,7 +275,7 @@ function WhiteboardSync({ sendData, onDataMessage, isHost, isDataChannelOpen, gu
     );
 
     return () => { unsub(); unlisten(); };
-  }, [editor, sendData, onDataMessage, isHost]);
+  }, [editor, sendData, onWbMessage, isHost]);
 
   // When data channel first opens (or whiteboard mounts while channel is already open),
   // push full state to the guest or request it from the host
@@ -306,7 +306,7 @@ const TLDRAW_LICENSE_KEY = import.meta.env.VITE_TLDRAW_LICENSE_KEY;
 // ── Public component ─────────────────────────────────────────────────────────
 export default function WhiteboardPanel({
   sendData,
-  onDataMessage,
+  onWbMessage,
   isHost,
   isDataChannelOpen,
   captureCanvas,
@@ -325,7 +325,7 @@ export default function WhiteboardPanel({
         {captureCanvas && <WhiteboardCapture captureCanvas={captureCanvas} />}
         <WhiteboardSync
           sendData={sendData}
-          onDataMessage={onDataMessage}
+          onWbMessage={onWbMessage}
           isHost={isHost}
           isDataChannelOpen={isDataChannelOpen}
           guestPerms={guestPerms}
