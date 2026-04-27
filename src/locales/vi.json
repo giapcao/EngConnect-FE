@@ -841,6 +841,11 @@
       "newPassword": "Mật khẩu mới",
       "confirmPassword": "Xác nhận mật khẩu",
       "updatePassword": "Cập nhật mật khẩu",
+      "changingPassword": "Đang cập nhật...",
+      "passwordChanged": "Đổi mật khẩu thành công",
+      "passwordChangeFailed": "Đổi mật khẩu thất bại",
+      "invalidPassword": "Mật khẩu hiện tại không đúng",
+      "passwordMismatch": "Mật khẩu mới không khớp",
       "dangerZone": "Vùng nguy hiểm",
       "deleteAccount": "Xóa tài khoản",
       "paymentHistory": "Lịch sử thanh toán"

@@ -843,6 +843,11 @@
       "newPassword": "New Password",
       "confirmPassword": "Confirm Password",
       "updatePassword": "Update Password",
+      "changingPassword": "Updating...",
+      "passwordChanged": "Password changed successfully",
+      "passwordChangeFailed": "Failed to change password",
+      "invalidPassword": "Incorrect current password",
+      "passwordMismatch": "New passwords do not match",
       "dangerZone": "Danger Zone",
       "deleteAccount": "Delete Account",
       "paymentHistory": "Payment History"

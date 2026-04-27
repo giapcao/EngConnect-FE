@@ -5,11 +5,7 @@ import {
   Button,
   Avatar,
   Input,
-  Tabs,
-  Tab,
-  Switch,
   Divider,
-  Spinner,
   addToast,
 } from "@heroui/react";
 import { useTranslation } from "react-i18next";
@@ -21,31 +17,29 @@ import {
   Envelope,
   Camera,
   PencilSimple,
-  Bell,
   Lock,
-  Shield,
-  SignOut,
   CheckCircle,
-  Trophy,
-  BookOpen,
-  Clock,
-  Fire,
-  GraduationCap,
-  BookBookmark,
-  Note,
+  GraduationCapIcon,
+  BookBookmarkIcon,
+  BookOpenIcon,
+  NoteIcon,
+  ArrowRight,
 } from "@phosphor-icons/react";
+import { useNavigate } from "react-router-dom";
 import { studentApi } from "../../../api";
 import { authApi } from "../../../api/authApi";
 import ProfileSkeleton from "../../../components/ProfileSkeleton/ProfileSkeleton";
-import { useDispatch } from "react-redux";
-import { updateUserAvatar, updateUserInfo } from "../../../store";
+import { useDispatch, useSelector } from "react-redux";
+import { updateUserAvatar, updateUserInfo, selectUser } from "../../../store";
 
 const Profile = () => {
   const { t } = useTranslation();
   const colors = useThemeColors();
   const { inputClassNames } = useInputStyles();
   const dispatch = useDispatch();
-  const [selectedTab, setSelectedTab] = useState("profile");
+  const navigate = useNavigate();
+  const user = useSelector(selectUser);
+  const isTutor = !!user?.tutorId;
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -66,14 +60,13 @@ const Profile = () => {
     avatar: "",
   });
 
-  const [notifications, setNotifications] = useState({
-    emailLessons: true,
-    emailHomework: true,
-    emailCommunity: false,
-    pushLessons: true,
-    pushHomework: true,
-    pushCommunity: true,
+  const [passwordData, setPasswordData] = useState({
+    oldPassword: "",
+    newPassword: "",
+    confirmPassword: "",
   });
+  const [passwordError, setPasswordError] = useState("");
+  const [changingPassword, setChangingPassword] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -174,6 +167,40 @@ const Profile = () => {
     }
   };
 
+  const handleChangePassword = async () => {
+    setPasswordError("");
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      setPasswordError(t("studentDashboard.profile.passwordMismatch"));
+      return;
+    }
+    setChangingPassword(true);
+    try {
+      await authApi.changePassword({
+        oldPassword: passwordData.oldPassword,
+        newPassword: passwordData.newPassword,
+      });
+      setPasswordData({
+        oldPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      });
+      addToast({
+        title: t("studentDashboard.profile.passwordChanged"),
+        color: "success",
+        timeout: 3000,
+      });
+    } catch (err) {
+      const errorCode = err?.response?.data?.error?.code;
+      if (errorCode === "User.InvalidPassword") {
+        setPasswordError(t("studentDashboard.profile.invalidPassword"));
+      } else {
+        setPasswordError(t("studentDashboard.profile.passwordChangeFailed"));
+      }
+    } finally {
+      setChangingPassword(false);
+    }
+  };
+
   if (loading) {
     return <ProfileSkeleton />;
   }
@@ -263,13 +290,27 @@ const Profile = () => {
                 )}
               </div>
 
-              {/* Stats hidden */}
+              {/* Become Tutor */}
+              {!isTutor && (
+                <div className="flex-shrink-0 self-center">
+                  <Button
+                    style={{
+                      backgroundColor: colors.primary.main,
+                      color: colors.text.white,
+                    }}
+                    onPress={() => navigate("/become-tutor")}
+                    endContent={<ArrowRight className="w-4 h-4" />}
+                  >
+                    {t("nav.becomeTutor")}
+                  </Button>
+                </div>
+              )}
             </div>
           </CardBody>
         </Card>
       </motion.div>
 
-      {/* Tabs */}
+      {/* Combined Content Card */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -277,315 +318,278 @@ const Profile = () => {
       >
         <Card
           shadow="none"
-          className="border-none rounded-full"
+          className="border-none"
           style={{ backgroundColor: colors.background.light }}
         >
-          <CardBody className="p-2">
-            <Tabs
-              selectedKey={selectedTab}
-              onSelectionChange={setSelectedTab}
-              variant="light"
-              radius="full"
-              classNames={{
-                tabList: "gap-2 w-full p-1",
-                tab: "px-6 h-12",
-              }}
-              style={{
-                "--heroui-hover-opacity": "1",
-              }}
-              color="primary"
-            >
-              <Tab
-                key="profile"
-                title={
-                  <div className="flex items-center gap-2">
-                    <User className="w-5 h-5" />
-                    <span className="font-medium">
-                      {t("studentDashboard.profile.tabs.profile")}
-                    </span>
-                  </div>
-                }
-              />
-              <Tab
-                key="security"
-                title={
-                  <div className="flex items-center gap-2">
-                    <Shield className="w-5 h-5" />
-                    <span className="font-medium">
-                      {t("studentDashboard.profile.tabs.security")}
-                    </span>
-                  </div>
-                }
-              />
-            </Tabs>
-          </CardBody>
-        </Card>
-      </motion.div>
-
-      {/* Tab Content */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.15 }}
-      >
-        {selectedTab === "profile" && (
-          <Card
-            shadow="none"
-            className="border-none"
-            style={{ backgroundColor: colors.background.light }}
-          >
-            <CardBody className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h3
-                  className="text-lg font-semibold"
-                  style={{ color: colors.text.primary }}
-                >
-                  {t("studentDashboard.profile.personalInfo")}
-                </h3>
-                <div className="flex items-center gap-2">
-                  {isEditing && (
-                    <Button
-                      variant="flat"
-                      size="sm"
-                      onPress={() => {
-                        if (originalData) setProfileData(originalData);
-                        setIsEditing(false);
-                      }}
-                    >
-                      {t("logoutModal.cancel")}
-                    </Button>
-                  )}
+          <CardBody className="p-6">
+            {/* ── Personal Information ── */}
+            <div className="flex items-center justify-between mb-6">
+              <h3
+                className="text-lg font-semibold"
+                style={{ color: colors.text.primary }}
+              >
+                {t("studentDashboard.profile.personalInfo")}
+              </h3>
+              <div className="flex items-center gap-2">
+                {isEditing && (
                   <Button
-                    variant={isEditing ? "solid" : "outline"}
+                    variant="flat"
                     size="sm"
-                    startContent={
-                      isEditing ? (
-                        <CheckCircle weight="duotone" className="w-4 h-4" />
-                      ) : (
-                        <PencilSimple weight="duotone" className="w-4 h-4" />
-                      )
-                    }
-                    style={
-                      isEditing
-                        ? {
-                            backgroundColor: colors.primary.main,
-                            color: colors.text.white,
-                          }
-                        : {
-                            backgroundColor:
-                              colors.button.primaryLight.background,
-                            color: colors.button.primaryLight.text,
-                          }
-                    }
-                    isLoading={saving}
                     onPress={() => {
-                      if (isEditing) {
-                        handleSave();
-                      } else {
-                        setIsEditing(true);
-                      }
+                      if (originalData) setProfileData(originalData);
+                      setIsEditing(false);
                     }}
                   >
-                    {isEditing
-                      ? saving
-                        ? t("studentDashboard.profile.saving")
-                        : t("studentDashboard.profile.save")
-                      : t("studentDashboard.profile.edit")}
+                    {t("logoutModal.cancel")}
                   </Button>
-                </div>
-              </div>
-
-              <div className="grid md:grid-cols-2 gap-6">
-                <Input
-                  label={t("studentDashboard.profile.firstName")}
-                  value={profileData.firstName}
-                  isDisabled={!isEditing}
-                  startContent={
-                    <User
-                      className="w-5 h-5"
-                      style={{ color: colors.text.secondary }}
-                    />
-                  }
-                  classNames={inputClassNames}
-                  onValueChange={(value) =>
-                    setProfileData({ ...profileData, firstName: value })
-                  }
-                />
-                <Input
-                  label={t("studentDashboard.profile.lastName")}
-                  value={profileData.lastName}
-                  isDisabled={!isEditing}
-                  startContent={
-                    <User
-                      className="w-5 h-5"
-                      style={{ color: colors.text.secondary }}
-                    />
-                  }
-                  classNames={inputClassNames}
-                  onValueChange={(value) =>
-                    setProfileData({ ...profileData, lastName: value })
-                  }
-                />
-                <Input
-                  label={t("studentDashboard.profile.email")}
-                  value={profileData.email}
-                  isDisabled
-                  startContent={
-                    <Envelope
-                      className="w-5 h-5"
-                      style={{ color: colors.text.secondary }}
-                    />
-                  }
-                  classNames={inputClassNames}
-                />
-                <Input
-                  label={t("studentDashboard.profile.school")}
-                  value={profileData.school}
-                  isDisabled={!isEditing}
-                  startContent={
-                    <GraduationCap
-                      className="w-5 h-5"
-                      style={{ color: colors.text.secondary }}
-                    />
-                  }
-                  classNames={inputClassNames}
-                  onValueChange={(value) =>
-                    setProfileData({ ...profileData, school: value })
-                  }
-                />
-                <Input
-                  label={t("studentDashboard.profile.grade")}
-                  value={profileData.grade}
-                  isDisabled={!isEditing}
-                  startContent={
-                    <BookBookmark
-                      className="w-5 h-5"
-                      style={{ color: colors.text.secondary }}
-                    />
-                  }
-                  classNames={inputClassNames}
-                  onValueChange={(value) =>
-                    setProfileData({ ...profileData, grade: value })
-                  }
-                />
-                <Input
-                  label={t("studentDashboard.profile.class")}
-                  value={profileData.class}
-                  isDisabled={!isEditing}
-                  startContent={
-                    <BookOpen
-                      className="w-5 h-5"
-                      style={{ color: colors.text.secondary }}
-                    />
-                  }
-                  classNames={inputClassNames}
-                  onValueChange={(value) =>
-                    setProfileData({ ...profileData, class: value })
-                  }
-                />
-                <Input
-                  label={t("studentDashboard.profile.notes")}
-                  value={profileData.notes}
-                  isDisabled={!isEditing}
-                  startContent={
-                    <Note
-                      className="w-5 h-5"
-                      style={{ color: colors.text.secondary }}
-                    />
-                  }
-                  classNames={inputClassNames}
-                  onValueChange={(value) =>
-                    setProfileData({ ...profileData, notes: value })
-                  }
-                />
-              </div>
-            </CardBody>
-          </Card>
-        )}
-
-        {selectedTab === "security" && (
-          <Card
-            shadow="none"
-            className="border-none"
-            style={{ backgroundColor: colors.background.light }}
-          >
-            <CardBody className="p-6 space-y-6">
-              <div>
-                <h3
-                  className="text-lg font-semibold mb-4"
-                  style={{ color: colors.text.primary }}
-                >
-                  {t("studentDashboard.profile.changePassword")}
-                </h3>
-                <div className="space-y-4 max-w-md">
-                  <Input
-                    type="password"
-                    label={t("studentDashboard.profile.currentPassword")}
-                    startContent={
-                      <Lock
-                        weight="duotone"
-                        className="w-5 h-5"
-                        style={{ color: colors.text.secondary }}
-                      />
-                    }
-                    classNames={inputClassNames}
-                  />
-                  <Input
-                    type="password"
-                    label={t("studentDashboard.profile.newPassword")}
-                    startContent={
-                      <Lock
-                        weight="duotone"
-                        className="w-5 h-5"
-                        style={{ color: colors.text.secondary }}
-                      />
-                    }
-                    classNames={inputClassNames}
-                  />
-                  <Input
-                    type="password"
-                    label={t("studentDashboard.profile.confirmPassword")}
-                    startContent={
-                      <Lock
-                        weight="duotone"
-                        className="w-5 h-5"
-                        style={{ color: colors.text.secondary }}
-                      />
-                    }
-                    classNames={inputClassNames}
-                  />
-                  <Button
-                    style={{
-                      backgroundColor: colors.primary.main,
-                      color: colors.text.white,
-                    }}
-                  >
-                    {t("studentDashboard.profile.updatePassword")}
-                  </Button>
-                </div>
-              </div>
-
-              <Divider />
-
-              <div>
-                <h3
-                  className="text-lg font-semibold mb-4"
-                  style={{ color: colors.state.error }}
-                >
-                  {t("studentDashboard.profile.dangerZone")}
-                </h3>
+                )}
                 <Button
-                  variant="bordered"
-                  color="danger"
-                  startContent={<SignOut weight="bold" className="w-5 h-5" />}
+                  variant={isEditing ? "solid" : "outline"}
+                  size="sm"
+                  startContent={
+                    isEditing ? (
+                      <CheckCircle weight="duotone" className="w-4 h-4" />
+                    ) : (
+                      <PencilSimple weight="duotone" className="w-4 h-4" />
+                    )
+                  }
+                  style={
+                    isEditing
+                      ? {
+                          backgroundColor: colors.primary.main,
+                          color: colors.text.white,
+                        }
+                      : {
+                          backgroundColor:
+                            colors.button.primaryLight.background,
+                          color: colors.button.primaryLight.text,
+                        }
+                  }
+                  isLoading={saving}
+                  onPress={() => {
+                    if (isEditing) {
+                      handleSave();
+                    } else {
+                      setIsEditing(true);
+                    }
+                  }}
                 >
-                  {t("studentDashboard.profile.deleteAccount")}
+                  {isEditing
+                    ? saving
+                      ? t("studentDashboard.profile.saving")
+                      : t("studentDashboard.profile.save")
+                    : t("studentDashboard.profile.edit")}
                 </Button>
               </div>
-            </CardBody>
-          </Card>
-        )}
+            </div>
 
+            <div className="grid md:grid-cols-2 gap-6">
+              <Input
+                label={t("studentDashboard.profile.firstName")}
+                value={profileData.firstName}
+                isDisabled={!isEditing}
+                startContent={
+                  <User
+                    className="w-5 h-5"
+                    style={{ color: colors.text.secondary }}
+                  />
+                }
+                classNames={inputClassNames}
+                onValueChange={(value) =>
+                  setProfileData({ ...profileData, firstName: value })
+                }
+              />
+              <Input
+                label={t("studentDashboard.profile.lastName")}
+                value={profileData.lastName}
+                isDisabled={!isEditing}
+                startContent={
+                  <User
+                    className="w-5 h-5"
+                    style={{ color: colors.text.secondary }}
+                  />
+                }
+                classNames={inputClassNames}
+                onValueChange={(value) =>
+                  setProfileData({ ...profileData, lastName: value })
+                }
+              />
+              <Input
+                label={t("studentDashboard.profile.email")}
+                value={profileData.email}
+                isDisabled
+                startContent={
+                  <Envelope
+                    className="w-5 h-5"
+                    style={{ color: colors.text.secondary }}
+                  />
+                }
+                classNames={inputClassNames}
+              />
+              <Input
+                label={t("studentDashboard.profile.school")}
+                value={profileData.school}
+                isDisabled={!isEditing}
+                startContent={
+                  <GraduationCapIcon
+                    className="w-5 h-5"
+                    style={{ color: colors.text.secondary }}
+                  />
+                }
+                classNames={inputClassNames}
+                onValueChange={(value) =>
+                  setProfileData({ ...profileData, school: value })
+                }
+              />
+              <Input
+                label={t("studentDashboard.profile.grade")}
+                value={profileData.grade}
+                isDisabled={!isEditing}
+                startContent={
+                  <BookBookmarkIcon
+                    className="w-5 h-5"
+                    style={{ color: colors.text.secondary }}
+                  />
+                }
+                classNames={inputClassNames}
+                onValueChange={(value) =>
+                  setProfileData({ ...profileData, grade: value })
+                }
+              />
+              <Input
+                label={t("studentDashboard.profile.class")}
+                value={profileData.class}
+                isDisabled={!isEditing}
+                startContent={
+                  <BookOpenIcon
+                    className="w-5 h-5"
+                    style={{ color: colors.text.secondary }}
+                  />
+                }
+                classNames={inputClassNames}
+                onValueChange={(value) =>
+                  setProfileData({ ...profileData, class: value })
+                }
+              />
+              <Input
+                label={t("studentDashboard.profile.notes")}
+                value={profileData.notes}
+                isDisabled={!isEditing}
+                startContent={
+                  <NoteIcon
+                    className="w-5 h-5"
+                    style={{ color: colors.text.secondary }}
+                  />
+                }
+                classNames={inputClassNames}
+                onValueChange={(value) =>
+                  setProfileData({ ...profileData, notes: value })
+                }
+              />
+            </div>
+
+            <Divider className="my-8" />
+
+            {/* ── Change Password ── */}
+            <h3
+              className="text-lg font-semibold mb-4"
+              style={{ color: colors.text.primary }}
+            >
+              {t("studentDashboard.profile.changePassword")}
+            </h3>
+            <div className="space-y-4 max-w-md">
+              <Input
+                type="password"
+                label={t("studentDashboard.profile.currentPassword")}
+                value={passwordData.oldPassword}
+                startContent={
+                  <Lock
+                    weight="duotone"
+                    className="w-5 h-5"
+                    style={{ color: colors.text.secondary }}
+                  />
+                }
+                classNames={inputClassNames}
+                onValueChange={(value) => {
+                  setPasswordError("");
+                  setPasswordData((prev) => ({ ...prev, oldPassword: value }));
+                }}
+              />
+              <Input
+                type="password"
+                label={t("studentDashboard.profile.newPassword")}
+                value={passwordData.newPassword}
+                startContent={
+                  <Lock
+                    weight="duotone"
+                    className="w-5 h-5"
+                    style={{ color: colors.text.secondary }}
+                  />
+                }
+                classNames={inputClassNames}
+                onValueChange={(value) => {
+                  setPasswordError("");
+                  setPasswordData((prev) => ({ ...prev, newPassword: value }));
+                }}
+              />
+              <Input
+                type="password"
+                label={t("studentDashboard.profile.confirmPassword")}
+                value={passwordData.confirmPassword}
+                isInvalid={
+                  !!passwordError &&
+                  passwordError ===
+                    t("studentDashboard.profile.passwordMismatch")
+                }
+                errorMessage={
+                  passwordError ===
+                  t("studentDashboard.profile.passwordMismatch")
+                    ? passwordError
+                    : ""
+                }
+                startContent={
+                  <Lock
+                    weight="duotone"
+                    className="w-5 h-5"
+                    style={{ color: colors.text.secondary }}
+                  />
+                }
+                classNames={inputClassNames}
+                onValueChange={(value) => {
+                  setPasswordError("");
+                  setPasswordData((prev) => ({
+                    ...prev,
+                    confirmPassword: value,
+                  }));
+                }}
+              />
+              {passwordError &&
+                passwordError !==
+                  t("studentDashboard.profile.passwordMismatch") && (
+                  <p className="text-sm" style={{ color: colors.state.error }}>
+                    {passwordError}
+                  </p>
+                )}
+              <Button
+                isLoading={changingPassword}
+                isDisabled={
+                  !passwordData.oldPassword ||
+                  !passwordData.newPassword ||
+                  !passwordData.confirmPassword
+                }
+                style={{
+                  backgroundColor: colors.primary.main,
+                  color: colors.text.white,
+                }}
+                onPress={handleChangePassword}
+              >
+                {changingPassword
+                  ? t("studentDashboard.profile.changingPassword")
+                  : t("studentDashboard.profile.updatePassword")}
+              </Button>
+            </div>
+          </CardBody>
+        </Card>
       </motion.div>
     </div>
   );

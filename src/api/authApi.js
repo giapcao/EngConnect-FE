@@ -96,4 +96,10 @@ export const authApi = {
     const response = await axiosInstance.get(`/users/${userId}`);
     return response.data;
   },
+
+  // Change password
+  changePassword: async (data) => {
+    const response = await axiosInstance.patch("/users/change-password", data);
+    return response.data;
+  },
 };
