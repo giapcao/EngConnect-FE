@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
 import { useTranslation } from "react-i18next";
 import {
   Card,
@@ -15,6 +16,7 @@ import {
 } from "@heroui/react";
 import { motion } from "framer-motion";
 import { useThemeColors } from "../../../hooks/useThemeColors";
+import CourseCard from "../../../components/CourseCard/CourseCard";
 import {
   ArrowLeft,
   EnvelopeSimple,
@@ -34,6 +36,7 @@ import {
   Play,
   FileText,
 } from "@phosphor-icons/react";
+import { selectUser } from "../../../store";
 import { studentApi, coursesApi } from "../../../api";
 import LessonDetailModal from "../../../components/LessonDetailModal/LessonDetailModal";
 import VideoModal from "../../../components/VideoModal/VideoModal";
@@ -73,7 +76,8 @@ const buildModulesFromLessons = (lessons, moduleInfoMap) => {
       sessions: modData.sessionOrder.map((sessionId, sessIdx) => {
         const lessonList = modData.sessionLessonsMap[sessionId];
         const sessionInfo =
-          info?.courseSessions?.find((s) => s.courseSessionId === sessionId) || null;
+          info?.courseSessions?.find((s) => s.courseSessionId === sessionId) ||
+          null;
         return {
           sessionId,
           sessionTitle:
@@ -98,7 +102,9 @@ const getPrimaryLesson = (lessons) => {
   );
   if (live) return live;
   const upcoming = [...lessons]
-    .filter((l) => l.status !== "Cancelled" && new Date(l.startTime) >= new Date())
+    .filter(
+      (l) => l.status !== "Cancelled" && new Date(l.startTime) >= new Date(),
+    )
     .sort((a, b) => new Date(a.startTime) - new Date(b.startTime));
   if (upcoming.length > 0) return upcoming[0];
   return lessons[lessons.length - 1];
@@ -118,6 +124,7 @@ const StudentDetail = () => {
   const { t, i18n } = useTranslation();
   const dateLocale = i18n.language === "vi" ? "vi-VN" : "en-US";
   const colors = useThemeColors();
+  const user = useSelector(selectUser);
 
   const [student, setStudent] = useState(null);
   const [enrollments, setEnrollments] = useState([]);
@@ -132,10 +139,22 @@ const StudentDetail = () => {
 
   // Modals
   const [selectedLesson, setSelectedLesson] = useState(null);
-  const { isOpen: isDetailOpen, onOpen: onDetailOpen, onClose: onDetailClose } = useDisclosure();
-  const { isOpen: isVideoOpen, onOpen: onVideoOpen, onOpenChange: onVideoOpenChange } = useDisclosure();
+  const {
+    isOpen: isDetailOpen,
+    onOpen: onDetailOpen,
+    onClose: onDetailClose,
+  } = useDisclosure();
+  const {
+    isOpen: isVideoOpen,
+    onOpen: onVideoOpen,
+    onOpenChange: onVideoOpenChange,
+  } = useDisclosure();
   const [recordingUrl, setRecordingUrl] = useState(null);
-  const { isOpen: isSummaryOpen, onOpen: onSummaryOpen, onClose: onSummaryClose } = useDisclosure();
+  const {
+    isOpen: isSummaryOpen,
+    onOpen: onSummaryOpen,
+    onClose: onSummaryClose,
+  } = useDisclosure();
   const [summaryText, setSummaryText] = useState("");
 
   useEffect(() => {
@@ -229,25 +248,39 @@ const StudentDetail = () => {
 
   const getLessonStatusColor = (status) => {
     switch (status) {
-      case "Scheduled": return colors.primary.main;
-      case "Completed": return colors.state.success;
-      case "Cancelled": return colors.state.error;
-      case "InProgress": return colors.state.warning;
-      case "NoStudent": return colors.state.error;
-      case "NoTutor": return colors.state.error;
-      default: return colors.text.secondary;
+      case "Scheduled":
+        return colors.primary.main;
+      case "Completed":
+        return colors.state.success;
+      case "Cancelled":
+        return colors.state.error;
+      case "InProgress":
+        return colors.state.warning;
+      case "NoStudent":
+        return colors.state.error;
+      case "NoTutor":
+        return colors.state.error;
+      default:
+        return colors.text.secondary;
     }
   };
 
   const getLessonStatusLabel = (status) => {
     switch (status) {
-      case "Scheduled": return t("tutorDashboard.schedule.lessonStatus.scheduled");
-      case "Completed": return t("tutorDashboard.schedule.lessonStatus.completed");
-      case "Cancelled": return t("tutorDashboard.schedule.lessonStatus.cancelled");
-      case "InProgress": return t("tutorDashboard.schedule.lessonStatus.inProgress");
-      case "NoStudent": return t("tutorDashboard.schedule.lessonStatus.noStudent");
-      case "NoTutor": return t("tutorDashboard.schedule.lessonStatus.noTutor");
-      default: return status || "";
+      case "Scheduled":
+        return t("tutorDashboard.schedule.lessonStatus.scheduled");
+      case "Completed":
+        return t("tutorDashboard.schedule.lessonStatus.completed");
+      case "Cancelled":
+        return t("tutorDashboard.schedule.lessonStatus.cancelled");
+      case "InProgress":
+        return t("tutorDashboard.schedule.lessonStatus.inProgress");
+      case "NoStudent":
+        return t("tutorDashboard.schedule.lessonStatus.noStudent");
+      case "NoTutor":
+        return t("tutorDashboard.schedule.lessonStatus.noTutor");
+      default:
+        return status || "";
     }
   };
 
@@ -295,8 +328,19 @@ const StudentDetail = () => {
     onSummaryOpen();
   };
 
-  const inProgressCount = enrollments.filter((e) => e.status === "InProgress").length;
-  const completedCount = enrollments.filter((e) => e.status === "Completed").length;
+  const myEnrollments = enrollments.filter(
+    (e) => e.course?.tutorId === user?.tutorId,
+  );
+  const otherEnrollments = enrollments.filter(
+    (e) => e.course?.tutorId !== user?.tutorId,
+  );
+
+  const inProgressCount = enrollments.filter(
+    (e) => e.status === "InProgress",
+  ).length;
+  const completedCount = enrollments.filter(
+    (e) => e.status === "Completed",
+  ).length;
 
   return (
     <div className="space-y-6">
@@ -311,7 +355,11 @@ const StudentDetail = () => {
 
       {/* Student info card */}
       {loadingStudent ? (
-        <Card shadow="none" className="border-none" style={{ backgroundColor: colors.background.light }}>
+        <Card
+          shadow="none"
+          className="border-none"
+          style={{ backgroundColor: colors.background.light }}
+        >
           <CardBody className="p-8">
             <div className="flex flex-col md:flex-row items-start gap-6">
               <Skeleton className="w-24 h-24 rounded-full flex-shrink-0" />
@@ -328,8 +376,16 @@ const StudentDetail = () => {
           </CardBody>
         </Card>
       ) : student ? (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.15 }}>
-          <Card shadow="none" className="border-none" style={{ backgroundColor: colors.background.light }}>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.15 }}
+        >
+          <Card
+            shadow="none"
+            className="border-none"
+            style={{ backgroundColor: colors.background.light }}
+          >
             <CardBody className="p-8">
               <div className="flex flex-col md:flex-row items-start gap-6">
                 <Avatar
@@ -338,33 +394,60 @@ const StudentDetail = () => {
                   className="w-24 h-24 text-xl flex-shrink-0"
                 />
                 <div className="flex-1 min-w-0">
-                  <h1 className="text-2xl font-bold mb-1" style={{ color: colors.text.primary }}>
+                  <h1
+                    className="text-2xl font-bold mb-1"
+                    style={{ color: colors.text.primary }}
+                  >
                     {student.user?.firstName} {student.user?.lastName}
                   </h1>
                   {student.user?.email && (
                     <div className="flex items-center gap-1.5 mb-4">
-                      <EnvelopeSimple size={18} style={{ color: colors.primary.main }} />
-                      <span className="text-sm" style={{ color: colors.text.secondary }}>
+                      <EnvelopeSimple
+                        size={18}
+                        style={{ color: colors.primary.main }}
+                      />
+                      <span
+                        className="text-sm"
+                        style={{ color: colors.text.secondary }}
+                      >
                         {student.user.email}
                       </span>
                     </div>
                   )}
                   <div className="flex flex-wrap items-center gap-4">
                     <div className="flex items-center gap-1.5">
-                      <BookOpen size={18} style={{ color: colors.primary.main }} />
-                      <span className="text-sm" style={{ color: colors.text.secondary }}>
+                      <BookOpen
+                        size={18}
+                        style={{ color: colors.primary.main }}
+                      />
+                      <span
+                        className="text-sm"
+                        style={{ color: colors.text.secondary }}
+                      >
                         {enrollments.length} {t("studentProfile.totalCourses")}
                       </span>
                     </div>
                     <div className="flex items-center gap-1.5">
-                      <TrendUp size={18} style={{ color: colors.state.warning }} />
-                      <span className="text-sm" style={{ color: colors.text.secondary }}>
+                      <TrendUp
+                        size={18}
+                        style={{ color: colors.state.warning }}
+                      />
+                      <span
+                        className="text-sm"
+                        style={{ color: colors.text.secondary }}
+                      >
                         {inProgressCount} {t("studentProfile.inProgress")}
                       </span>
                     </div>
                     <div className="flex items-center gap-1.5">
-                      <CalendarDots size={18} style={{ color: colors.state.success }} />
-                      <span className="text-sm" style={{ color: colors.text.secondary }}>
+                      <CalendarDots
+                        size={18}
+                        style={{ color: colors.state.success }}
+                      />
+                      <span
+                        className="text-sm"
+                        style={{ color: colors.text.secondary }}
+                      >
                         {completedCount} {t("studentProfile.completed")}
                       </span>
                     </div>
@@ -375,9 +458,15 @@ const StudentDetail = () => {
           </Card>
         </motion.div>
       ) : (
-        <Card shadow="none" className="border-none" style={{ backgroundColor: colors.background.light }}>
+        <Card
+          shadow="none"
+          className="border-none"
+          style={{ backgroundColor: colors.background.light }}
+        >
           <CardBody className="p-8 text-center">
-            <p style={{ color: colors.text.secondary }}>{t("studentProfile.notFound")}</p>
+            <p style={{ color: colors.text.secondary }}>
+              {t("studentProfile.notFound")}
+            </p>
           </CardBody>
         </Card>
       )}
@@ -388,7 +477,10 @@ const StudentDetail = () => {
         animate={{ opacity: 1 }}
         transition={{ duration: 0.15, delay: 0.05 }}
       >
-        <h2 className="text-xl font-bold mb-4" style={{ color: colors.text.primary }}>
+        <h2
+          className="text-xl font-bold mb-1"
+          style={{ color: colors.text.primary }}
+        >
           <BookOpen
             size={22}
             weight="duotone"
@@ -397,11 +489,19 @@ const StudentDetail = () => {
           />
           {t("studentProfile.enrolledCourses")}
         </h2>
+        <p className="text-sm mb-4" style={{ color: colors.text.tertiary }}>
+          {t("studentProfile.enrolledCoursesDesc")}
+        </p>
 
         {loadingEnrollments ? (
           <div className="space-y-3">
             {[...Array(3)].map((_, i) => (
-              <Card key={i} shadow="none" className="border-none" style={{ backgroundColor: colors.background.light }}>
+              <Card
+                key={i}
+                shadow="none"
+                className="border-none"
+                style={{ backgroundColor: colors.background.light }}
+              >
                 <CardBody className="p-4">
                   <div className="flex items-center gap-4">
                     <Skeleton className="w-20 h-14 rounded-lg flex-shrink-0" />
@@ -415,8 +515,12 @@ const StudentDetail = () => {
               </Card>
             ))}
           </div>
-        ) : enrollments.length === 0 ? (
-          <Card shadow="none" className="border-none" style={{ backgroundColor: colors.background.light }}>
+        ) : myEnrollments.length === 0 ? (
+          <Card
+            shadow="none"
+            className="border-none"
+            style={{ backgroundColor: colors.background.light }}
+          >
             <CardBody className="p-6 text-center">
               <p className="text-sm" style={{ color: colors.text.secondary }}>
                 {t("studentProfile.noEnrollments")}
@@ -425,11 +529,13 @@ const StudentDetail = () => {
           </Card>
         ) : (
           <div className="space-y-3">
-            {enrollments.map((enrollment) => {
+            {myEnrollments.map((enrollment) => {
               const progress =
                 enrollment.numsOfSession > 0
                   ? Math.round(
-                      (enrollment.numOfCompleteSession / enrollment.numsOfSession) * 100,
+                      (enrollment.numOfCompleteSession /
+                        enrollment.numsOfSession) *
+                        100,
                     )
                   : 0;
               const statusColor = getStatusColor(enrollment.status);
@@ -467,12 +573,18 @@ const StudentDetail = () => {
                         />
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1 flex-wrap">
-                            <p className="font-semibold truncate" style={{ color: colors.text.primary }}>
+                            <p
+                              className="font-semibold truncate"
+                              style={{ color: colors.text.primary }}
+                            >
                               {enrollment.course?.title}
                             </p>
                             <Chip
                               size="sm"
-                              style={{ backgroundColor: statusColor.bg, color: statusColor.text }}
+                              style={{
+                                backgroundColor: statusColor.bg,
+                                color: statusColor.text,
+                              }}
                             >
                               {enrollment.status === "InProgress"
                                 ? t("studentProfile.inProgress")
@@ -482,13 +594,22 @@ const StudentDetail = () => {
                             </Chip>
                           </div>
                           <div className="flex items-center gap-3 mb-2">
-                            <span className="text-xs" style={{ color: colors.text.tertiary }}>
-                              {enrollment.numOfCompleteSession}/{enrollment.numsOfSession}{" "}
+                            <span
+                              className="text-xs"
+                              style={{ color: colors.text.tertiary }}
+                            >
+                              {enrollment.numOfCompleteSession}/
+                              {enrollment.numsOfSession}{" "}
                               {t("courses.detail.sessionsCompleted")}
                             </span>
                             {enrollment.enrolledAt && (
-                              <span className="text-xs" style={{ color: colors.text.tertiary }}>
-                                {new Date(enrollment.enrolledAt).toLocaleDateString()}
+                              <span
+                                className="text-xs"
+                                style={{ color: colors.text.tertiary }}
+                              >
+                                {new Date(
+                                  enrollment.enrolledAt,
+                                ).toLocaleDateString()}
                               </span>
                             )}
                           </div>
@@ -496,7 +617,11 @@ const StudentDetail = () => {
                             <Progress
                               value={progress}
                               size="sm"
-                              color={enrollment.status === "Completed" ? "success" : "primary"}
+                              color={
+                                enrollment.status === "Completed"
+                                  ? "success"
+                                  : "primary"
+                              }
                               className="flex-1"
                             />
                             <span
@@ -522,9 +647,15 @@ const StudentDetail = () => {
                             </button>
                           </Tooltip>
                           {isExpanded ? (
-                            <CaretUp size={18} style={{ color: colors.text.secondary }} />
+                            <CaretUp
+                              size={18}
+                              style={{ color: colors.text.secondary }}
+                            />
                           ) : (
-                            <CaretDown size={18} style={{ color: colors.text.secondary }} />
+                            <CaretDown
+                              size={18}
+                              style={{ color: colors.text.secondary }}
+                            />
                           )}
                         </div>
                       </div>
@@ -542,7 +673,10 @@ const StudentDetail = () => {
                           <Spinner size="sm" color="primary" />
                         </div>
                       ) : modules.length === 0 ? (
-                        <p className="text-sm text-center py-6" style={{ color: colors.text.tertiary }}>
+                        <p
+                          className="text-sm text-center py-6"
+                          style={{ color: colors.text.tertiary }}
+                        >
                           {t("courses.detail.noSessions")}
                         </p>
                       ) : (
@@ -553,7 +687,10 @@ const StudentDetail = () => {
                               <div className="flex items-center gap-2 mb-2">
                                 <span
                                   className="w-6 h-6 rounded flex items-center justify-center text-xs font-bold flex-shrink-0"
-                                  style={{ backgroundColor: colors.primary.main, color: "#fff" }}
+                                  style={{
+                                    backgroundColor: colors.primary.main,
+                                    color: "#fff",
+                                  }}
                                 >
                                   {modIdx + 1}
                                 </span>
@@ -568,16 +705,21 @@ const StudentDetail = () => {
                               {/* Session cards */}
                               <div className="space-y-2 ml-8">
                                 {mod.sessions.map((sess) => {
-                                  const primary = getPrimaryLesson(sess.lessons);
+                                  const primary = getPrimaryLesson(
+                                    sess.lessons,
+                                  );
                                   const statusColor = primary
                                     ? getLessonStatusColor(primary.status)
                                     : colors.text.tertiary;
                                   const hwList = sess.lessons.flatMap(
                                     (l) => l.lessonHomeworks || [],
                                   );
-                                  const hasRecording = !!primary?.lessonRecord?.recordUrl;
-                                  const hasSummary = !!primary?.lessonScript?.summarizeText;
-                                  const joinable = primary && canJoinLesson(primary);
+                                  const hasRecording =
+                                    !!primary?.lessonRecord?.recordUrl;
+                                  const hasSummary =
+                                    !!primary?.lessonScript?.summarizeText;
+                                  const joinable =
+                                    primary && canJoinLesson(primary);
 
                                   return (
                                     <div
@@ -599,17 +741,24 @@ const StudentDetail = () => {
                                       {/* Top row: icon + title + status */}
                                       <div
                                         className="flex items-start gap-3 px-4 pt-3 pb-2"
-                                        style={{ backgroundColor: colors.background.light }}
+                                        style={{
+                                          backgroundColor:
+                                            colors.background.light,
+                                        }}
                                       >
                                         {/* Status icon */}
                                         <div
                                           className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
-                                          style={{ backgroundColor: `${statusColor}18` }}
+                                          style={{
+                                            backgroundColor: `${statusColor}18`,
+                                          }}
                                         >
                                           {!primary ? (
                                             <Circle
                                               className="w-4 h-4"
-                                              style={{ color: colors.text.tertiary }}
+                                              style={{
+                                                color: colors.text.tertiary,
+                                              }}
                                             />
                                           ) : primary.status === "Completed" ? (
                                             <CheckCircle
@@ -618,7 +767,8 @@ const StudentDetail = () => {
                                               style={{ color: statusColor }}
                                             />
                                           ) : primary.status === "InProgress" ||
-                                            primary.meetingStatus === "Waiting" ? (
+                                            primary.meetingStatus ===
+                                              "Waiting" ? (
                                             <Lightning
                                               weight="fill"
                                               className="w-4 h-4"
@@ -645,9 +795,12 @@ const StudentDetail = () => {
                                           <div className="flex items-start justify-between gap-2 flex-wrap">
                                             <p
                                               className="font-semibold text-sm"
-                                              style={{ color: colors.text.primary }}
+                                              style={{
+                                                color: colors.text.primary,
+                                              }}
                                             >
-                                              {sess.sessionNumber}. {sess.sessionTitle}
+                                              {sess.sessionNumber}.{" "}
+                                              {sess.sessionTitle}
                                             </p>
                                             {primary && (
                                               <Chip
@@ -659,7 +812,9 @@ const StudentDetail = () => {
                                                   fontSize: "10px",
                                                 }}
                                               >
-                                                {getLessonStatusLabel(primary.status)}
+                                                {getLessonStatusLabel(
+                                                  primary.status,
+                                                )}
                                               </Chip>
                                             )}
                                           </div>
@@ -674,16 +829,28 @@ const StudentDetail = () => {
                                               />
                                               <span
                                                 className="text-xs"
-                                                style={{ color: colors.text.secondary }}
+                                                style={{
+                                                  color: colors.text.secondary,
+                                                }}
                                               >
                                                 {formatDate(primary.startTime)}
                                               </span>
-                                              <span style={{ color: colors.text.tertiary }} className="text-xs">·</span>
+                                              <span
+                                                style={{
+                                                  color: colors.text.tertiary,
+                                                }}
+                                                className="text-xs"
+                                              >
+                                                ·
+                                              </span>
                                               <span
                                                 className="text-xs"
-                                                style={{ color: colors.text.secondary }}
+                                                style={{
+                                                  color: colors.text.secondary,
+                                                }}
                                               >
-                                                {formatTime(primary.startTime)} – {formatTime(primary.endTime)}
+                                                {formatTime(primary.startTime)}{" "}
+                                                – {formatTime(primary.endTime)}
                                               </span>
                                             </div>
                                           )}
@@ -693,7 +860,10 @@ const StudentDetail = () => {
                                       {/* Action row */}
                                       <div
                                         className="flex items-center gap-2 px-4 py-2 flex-wrap"
-                                        style={{ backgroundColor: colors.background.gray }}
+                                        style={{
+                                          backgroundColor:
+                                            colors.background.gray,
+                                        }}
                                       >
                                         {/* Homework badge */}
                                         {hwList.length > 0 && (
@@ -704,7 +874,9 @@ const StudentDetail = () => {
                                               <NotePencil
                                                 weight="duotone"
                                                 className="w-3 h-3 ml-0.5"
-                                                style={{ color: colors.primary.main }}
+                                                style={{
+                                                  color: colors.primary.main,
+                                                }}
                                               />
                                             }
                                             style={{
@@ -713,7 +885,10 @@ const StudentDetail = () => {
                                               fontSize: "11px",
                                             }}
                                           >
-                                            {hwList.length} {t("studentDashboard.homework.title")}
+                                            {hwList.length}{" "}
+                                            {t(
+                                              "studentDashboard.homework.title",
+                                            )}
                                           </Chip>
                                         )}
 
@@ -723,24 +898,33 @@ const StudentDetail = () => {
                                             <Button
                                               size="sm"
                                               startContent={
-                                                <VideoCamera weight="fill" className="w-3.5 h-3.5" />
+                                                <VideoCamera
+                                                  weight="fill"
+                                                  className="w-3.5 h-3.5"
+                                                />
                                               }
                                               style={{
                                                 backgroundColor: statusColor,
                                                 color: "#fff",
                                               }}
                                               onPress={() =>
-                                                navigate(`/meeting/${primary.id}`)
+                                                navigate(
+                                                  `/meeting/${primary.id}`,
+                                                )
                                               }
                                             >
-                                              {t("tutorDashboard.dashboard.startLesson")}
+                                              {t(
+                                                "tutorDashboard.dashboard.startLesson",
+                                              )}
                                             </Button>
                                           )}
 
                                           {/* View Recording */}
                                           {hasRecording && (
                                             <Tooltip
-                                              content={t("tutorDashboard.schedule.watchRecording")}
+                                              content={t(
+                                                "tutorDashboard.schedule.watchRecording",
+                                              )}
                                               size="sm"
                                             >
                                               <Button
@@ -753,9 +937,14 @@ const StudentDetail = () => {
                                                   minWidth: "32px",
                                                   height: "32px",
                                                 }}
-                                                onPress={() => openRecording(primary)}
+                                                onPress={() =>
+                                                  openRecording(primary)
+                                                }
                                               >
-                                                <Play weight="fill" className="w-3.5 h-3.5" />
+                                                <Play
+                                                  weight="fill"
+                                                  className="w-3.5 h-3.5"
+                                                />
                                               </Button>
                                             </Tooltip>
                                           )}
@@ -763,7 +952,9 @@ const StudentDetail = () => {
                                           {/* View Summary */}
                                           {hasSummary && (
                                             <Tooltip
-                                              content={t("tutorDashboard.schedule.lessonSummary")}
+                                              content={t(
+                                                "tutorDashboard.schedule.lessonSummary",
+                                              )}
                                               size="sm"
                                             >
                                               <Button
@@ -776,9 +967,14 @@ const StudentDetail = () => {
                                                   minWidth: "32px",
                                                   height: "32px",
                                                 }}
-                                                onPress={() => openSummary(primary)}
+                                                onPress={() =>
+                                                  openSummary(primary)
+                                                }
                                               >
-                                                <FileText weight="duotone" className="w-3.5 h-3.5" />
+                                                <FileText
+                                                  weight="duotone"
+                                                  className="w-3.5 h-3.5"
+                                                />
                                               </Button>
                                             </Tooltip>
                                           )}
@@ -786,7 +982,9 @@ const StudentDetail = () => {
                                           {/* View Detail */}
                                           {primary && (
                                             <Tooltip
-                                              content={t("studentDashboard.myCourses.viewDetails")}
+                                              content={t(
+                                                "studentDashboard.myCourses.viewDetails",
+                                              )}
                                               size="sm"
                                             >
                                               <Button
@@ -799,7 +997,9 @@ const StudentDetail = () => {
                                                   minWidth: "32px",
                                                   height: "32px",
                                                 }}
-                                                onPress={() => openDetail(primary)}
+                                                onPress={() =>
+                                                  openDetail(primary)
+                                                }
                                               >
                                                 <ArrowSquareOut className="w-3.5 h-3.5" />
                                               </Button>
@@ -823,6 +1023,56 @@ const StudentDetail = () => {
           </div>
         )}
       </motion.div>
+
+      {/* Other tutors' courses */}
+      {!loadingEnrollments && otherEnrollments.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.15, delay: 0.1 }}
+        >
+          <h2
+            className="text-xl font-bold mb-1"
+            style={{ color: colors.text.primary }}
+          >
+            <BookOpen
+              size={22}
+              weight="duotone"
+              className="inline-block mr-2 -mt-0.5"
+              style={{ color: colors.text.tertiary }}
+            />
+            {t("studentProfile.otherCourses")}
+          </h2>
+          <p className="text-sm mb-4" style={{ color: colors.text.tertiary }}>
+            {t("studentProfile.otherCoursesDesc")}
+          </p>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {otherEnrollments.map((enrollment) => (
+              <CourseCard
+                key={enrollment.id}
+                course={{
+                  id: enrollment.courseId,
+                  thumbnailUrl: withCDN(enrollment.course?.thumbnailUrl),
+                  title: enrollment.course?.title,
+                  level: enrollment.course?.level,
+                }}
+                showTutorInfo={false}
+                progress={{
+                  completed: enrollment.numOfCompleteSession,
+                  total: enrollment.numsOfSession,
+                }}
+                statusBadge={{
+                  label:
+                    enrollment.status === "InProgress"
+                      ? t("studentProfile.inProgress")
+                      : t("studentProfile.completed"),
+                  color: getStatusColor(enrollment.status).bg,
+                }}
+              />
+            ))}
+          </div>
+        </motion.div>
+      )}
 
       {/* Modals */}
       <LessonDetailModal

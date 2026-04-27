@@ -2483,6 +2483,9 @@
     "inProgress": "Đang học",
     "completed": "Đã hoàn thành",
     "enrolledCourses": "Khóa học đã đăng ký",
+    "enrolledCoursesDesc": "Các khóa học bạn dạy mà học viên này đã đăng ký",
+    "otherCourses": "Khóa học khác đang học",
+    "otherCoursesDesc": "Các khóa học từ gia sư khác mà học viên này đang tham gia",
     "noEnrollments": "Chưa đăng ký khóa học nào.",
     "notFound": "Không tìm thấy hồ sơ học viên."
   }

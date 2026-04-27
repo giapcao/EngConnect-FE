@@ -2486,6 +2486,9 @@
     "inProgress": "In Progress",
     "completed": "Completed",
     "enrolledCourses": "Enrolled Courses",
+    "enrolledCoursesDesc": "Courses you teach that this student is enrolled in",
+    "otherCourses": "Other Enrolled Courses",
+    "otherCoursesDesc": "Courses from other tutors this student is taking",
     "noEnrollments": "No enrolled courses yet.",
     "notFound": "Student profile not found."
   }

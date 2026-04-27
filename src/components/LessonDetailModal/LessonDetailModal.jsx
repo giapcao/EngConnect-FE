@@ -558,9 +558,11 @@ const LessonDetailModal = ({ isOpen, onClose, lesson, role = "tutor" }) => {
 
               {/* Lesson Summary + Quiz — side by side */}
               {(lesson.lessonScript?.summarizeText ||
-                (lesson.lessonScript?.id && role !== "tutor")) && (
+                (lesson.lessonScript?.id &&
+                  role !== "tutor" &&
+                  lesson.status === "Completed")) && (
                 <div
-                  className={`grid gap-3 ${lesson.lessonScript?.summarizeText && lesson.lessonScript?.id && role !== "tutor" ? "grid-cols-2" : "grid-cols-1"}`}
+                  className={`grid gap-3 ${lesson.lessonScript?.summarizeText && lesson.lessonScript?.id && role !== "tutor" && lesson.status === "Completed" ? "grid-cols-2" : "grid-cols-1"}`}
                 >
                   {lesson.lessonScript?.summarizeText && (
                     <div
@@ -593,36 +595,40 @@ const LessonDetailModal = ({ isOpen, onClose, lesson, role = "tutor" }) => {
                     </div>
                   )}
 
-                  {lesson.lessonScript?.id && role !== "tutor" && (
-                    <div
-                      className="flex flex-col items-center gap-2 p-3 rounded-xl cursor-pointer hover:opacity-80 transition-opacity text-center"
-                      style={{
-                        backgroundColor: `${colors.state.warning}10`,
-                        border: `1px solid ${colors.state.warning}25`,
-                      }}
-                      role="button"
-                      tabIndex={0}
-                      onClick={onQuizOpen}
-                      onKeyDown={(e) => e.key === "Enter" && onQuizOpen()}
-                    >
+                  {lesson.lessonScript?.id &&
+                    role !== "tutor" &&
+                    lesson.status === "Completed" && (
                       <div
-                        className="w-9 h-9 rounded-lg flex items-center justify-center"
-                        style={{ backgroundColor: `${colors.state.warning}20` }}
+                        className="flex flex-col items-center gap-2 p-3 rounded-xl cursor-pointer hover:opacity-80 transition-opacity text-center"
+                        style={{
+                          backgroundColor: `${colors.state.warning}10`,
+                          border: `1px solid ${colors.state.warning}25`,
+                        }}
+                        role="button"
+                        tabIndex={0}
+                        onClick={onQuizOpen}
+                        onKeyDown={(e) => e.key === "Enter" && onQuizOpen()}
                       >
-                        <Exam
-                          weight="duotone"
-                          className="w-4 h-4"
-                          style={{ color: colors.state.warning }}
-                        />
+                        <div
+                          className="w-9 h-9 rounded-lg flex items-center justify-center"
+                          style={{
+                            backgroundColor: `${colors.state.warning}20`,
+                          }}
+                        >
+                          <Exam
+                            weight="duotone"
+                            className="w-4 h-4"
+                            style={{ color: colors.state.warning }}
+                          />
+                        </div>
+                        <p
+                          className="text-xs font-semibold"
+                          style={{ color: colors.text.primary }}
+                        >
+                          {t("tutorDashboard.schedule.lessonQuiz")}
+                        </p>
                       </div>
-                      <p
-                        className="text-xs font-semibold"
-                        style={{ color: colors.text.primary }}
-                      >
-                        {t("tutorDashboard.schedule.lessonQuiz")}
-                      </p>
-                    </div>
-                  )}
+                    )}
                 </div>
               )}
             </ModalBody>

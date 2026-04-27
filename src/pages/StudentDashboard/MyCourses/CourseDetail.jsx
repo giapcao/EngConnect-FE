@@ -307,9 +307,13 @@ const StudentMyCourseDetail = () => {
 
   useEffect(() => {
     if (!lessons.length) return;
-    const uniqueModuleIds = [...new Set(lessons.map((l) => l.moduleId).filter(Boolean))];
+    const uniqueModuleIds = [
+      ...new Set(lessons.map((l) => l.moduleId).filter(Boolean)),
+    ];
     if (!uniqueModuleIds.length) return;
-    Promise.all(uniqueModuleIds.map((mid) => coursesApi.getCourseModuleById(mid)))
+    Promise.all(
+      uniqueModuleIds.map((mid) => coursesApi.getCourseModuleById(mid)),
+    )
       .then((results) => {
         const map = {};
         results.forEach((res) => {
@@ -554,7 +558,10 @@ const StudentMyCourseDetail = () => {
       if (!moduleId || !sessionId) return;
       if (!moduleSessionsMap[moduleId]) {
         moduleOrder.push(moduleId);
-        moduleSessionsMap[moduleId] = { sessionOrder: [], sessionLessonsMap: {} };
+        moduleSessionsMap[moduleId] = {
+          sessionOrder: [],
+          sessionLessonsMap: {},
+        };
       }
       const mod = moduleSessionsMap[moduleId];
       if (!mod.sessionLessonsMap[sessionId]) {
@@ -572,12 +579,14 @@ const StudentMyCourseDetail = () => {
         description: info?.description || "",
         sessions: modData.sessionOrder.map((sessionId, sessIdx) => {
           const lessonList = modData.sessionLessonsMap[sessionId];
-          const sessionInfo = info?.courseSessions?.find(
-            (s) => s.courseSessionId === sessionId,
-          ) || null;
+          const sessionInfo =
+            info?.courseSessions?.find(
+              (s) => s.courseSessionId === sessionId,
+            ) || null;
           return {
             sessionId,
-            sessionTitle: sessionInfo?.sessionTitle || lessonList[0]?.sessionTitle || "",
+            sessionTitle:
+              sessionInfo?.sessionTitle || lessonList[0]?.sessionTitle || "",
             sessionDescription: sessionInfo?.sessionDescription || "",
             sessionOutcomes: sessionInfo?.sessionOutcomes || "",
             sessionNumber: sessionInfo?.sessionNumber ?? sessIdx + 1,
@@ -781,7 +790,7 @@ const StudentMyCourseDetail = () => {
         </Tooltip>,
       );
     }
-    if (lesson.lessonScript?.id) {
+    if (lesson.lessonScript?.id && lesson.status === "Completed") {
       actions.push(
         <Tooltip
           key="quiz"
@@ -1364,15 +1373,17 @@ const StudentMyCourseDetail = () => {
                         className="text-sm"
                         style={{ color: colors.text.secondary }}
                       >
-                        {modulesFromLessons.length} {t("courses.detail.modules")} ·{" "}
-                        {totalSessions} {t("courses.detail.sessions")}
+                        {modulesFromLessons.length}{" "}
+                        {t("courses.detail.modules")} · {totalSessions}{" "}
+                        {t("courses.detail.sessions")}
                       </span>
                     </div>
                   </div>
 
                   <div className="space-y-3">
                     {modulesFromLessons.map((mod, idx) => {
-                      const isExpanded = expandedModules[mod.moduleId] ?? idx === 0;
+                      const isExpanded =
+                        expandedModules[mod.moduleId] ?? idx === 0;
                       const { sessions } = mod;
                       const modCompleted = sessions.filter((s) => {
                         const st = getSessionState(s.sessionId);
