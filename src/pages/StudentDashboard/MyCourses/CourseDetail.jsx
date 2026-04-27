@@ -68,6 +68,7 @@ import {
   studentApi,
   lessonHomeworkApi,
 } from "../../../api";
+import useInputStyles from "../../../hooks/useInputStyles";
 
 const formatDuration = (timeStr) => {
   if (!timeStr) return "";
@@ -111,6 +112,7 @@ const StudentMyCourseDetail = () => {
   const colors = useThemeColors();
   const { theme } = useTheme();
   const user = useSelector(selectUser);
+  const { textareaClassNames } = useInputStyles();
 
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -2374,8 +2376,9 @@ const StudentMyCourseDetail = () => {
                           onValueChange={setReviewComment}
                           minRows={3}
                           maxRows={6}
-                          variant="bordered"
-                          classNames={{ inputWrapper: "border-1" }}
+                          size="lg"
+                          variant="flat"
+                          classNames={textareaClassNames}
                           style={{ backgroundColor: colors.background.gray }}
                         />
                       </div>

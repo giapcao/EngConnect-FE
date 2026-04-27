@@ -248,4 +248,19 @@ export const adminApi = {
     });
     return response.data;
   },
+
+  getDashboardSummary: async (params = {}) => {
+    const response = await axiosInstance.get("/admin-dashboard/summary", { params });
+    return response.data;
+  },
+
+  getDashboardFeeds: async (params = {}) => {
+    const response = await axiosInstance.get("/admin-dashboard/feeds", { params });
+    return response.data;
+  },
+
+  getTutorMonthlySalary: async (params = {}) => {
+    const response = await axiosInstance.get("/admin-dashboard/tutor-monthly-salary", { params });
+    return response.data;
+  },
 };
