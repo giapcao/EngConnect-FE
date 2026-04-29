@@ -166,8 +166,11 @@ const ScheduleManagement = () => {
   const [studentPickerTemp, setStudentPickerTemp] = useState(null);
 
   // ── Lesson detail modal ───────────────────────────────────
-  const { isOpen: isDetailOpen, onOpen: onDetailOpen, onClose: onDetailClose } =
-    useDisclosure();
+  const {
+    isOpen: isDetailOpen,
+    onOpen: onDetailOpen,
+    onClose: onDetailClose,
+  } = useDisclosure();
   const [selectedLesson, setSelectedLesson] = useState(null);
 
   // ── Tutor Slots ───────────────────────────────────────────
@@ -248,11 +251,20 @@ const ScheduleManagement = () => {
   const getDateParams = useCallback(() => {
     switch (datePreset) {
       case "today":
-        return { StartTimeFrom: toApiStart(todayStr()), StartTimeTo: toApiEnd(todayStr()) };
+        return {
+          StartTimeFrom: toApiStart(todayStr()),
+          StartTimeTo: toApiEnd(todayStr()),
+        };
       case "week":
-        return { StartTimeFrom: toApiStart(startOfWeekStr()), StartTimeTo: toApiEnd(endOfWeekStr()) };
+        return {
+          StartTimeFrom: toApiStart(startOfWeekStr()),
+          StartTimeTo: toApiEnd(endOfWeekStr()),
+        };
       case "month":
-        return { StartTimeFrom: toApiStart(startOfMonthStr()), StartTimeTo: toApiEnd(endOfMonthStr()) };
+        return {
+          StartTimeFrom: toApiStart(startOfMonthStr()),
+          StartTimeTo: toApiEnd(endOfMonthStr()),
+        };
       case "custom":
         return {
           ...(customFrom && { StartTimeFrom: toApiStart(customFrom) }),
@@ -348,7 +360,9 @@ const ScheduleManagement = () => {
       const items = res?.data?.items || [];
       setSchedules(items);
 
-      const uniqueIds = [...new Set(items.map((s) => s.tutorId).filter(Boolean))];
+      const uniqueIds = [
+        ...new Set(items.map((s) => s.tutorId).filter(Boolean)),
+      ];
       const results = await Promise.allSettled(
         uniqueIds.map((id) => adminApi.getTutorById(id)),
       );
@@ -402,22 +416,31 @@ const ScheduleManagement = () => {
   // ── helpers ────────────────────────────────────────────────
   const getLessonStatusColor = (status) => {
     switch (status) {
-      case "Scheduled": return colors.primary.main;
-      case "InProgress": return colors.state.warning;
-      case "Completed": return colors.state.success;
+      case "Scheduled":
+        return colors.primary.main;
+      case "InProgress":
+        return colors.state.warning;
+      case "Completed":
+        return colors.state.success;
       case "Cancelled":
       case "NoStudent":
-      case "NoTutor": return colors.state.error;
-      default: return colors.text.tertiary;
+      case "NoTutor":
+        return colors.state.error;
+      default:
+        return colors.text.tertiary;
     }
   };
 
   const getSlotStatusColor = (status) => {
     switch (status) {
-      case "Open": return colors.state.success;
-      case "Booked": return colors.primary.main;
-      case "Pending": return colors.state.warning;
-      default: return colors.text.tertiary;
+      case "Open":
+        return colors.state.success;
+      case "Booked":
+        return colors.primary.main;
+      case "Pending":
+        return colors.state.warning;
+      default:
+        return colors.text.tertiary;
     }
   };
 
@@ -439,9 +462,12 @@ const ScheduleManagement = () => {
     return mins >= 60 ? `${Math.floor(mins / 60)}h ${mins % 60}m` : `${mins}m`;
   };
 
-  const lessonLabel = (lesson) => `${lesson.studentFirstName || ""} ${lesson.studentLastName || ""}`.trim();
-  const tutorLabel = (lesson) => `${lesson.tutorFirstName || ""} ${lesson.tutorLastName || ""}`.trim();
-  const tutorName = (t) => t?.user ? `${t.user.firstName || ""} ${t.user.lastName || ""}`.trim() : "";
+  const lessonLabel = (lesson) =>
+    `${lesson.studentFirstName || ""} ${lesson.studentLastName || ""}`.trim();
+  const tutorLabel = (lesson) =>
+    `${lesson.tutorFirstName || ""} ${lesson.tutorLastName || ""}`.trim();
+  const tutorName = (t) =>
+    t?.user ? `${t.user.firstName || ""} ${t.user.lastName || ""}`.trim() : "";
 
   const openPicker = (type) => {
     if (type === "tutor") {
@@ -478,12 +504,17 @@ const ScheduleManagement = () => {
           <div>
             <p
               className="font-medium text-sm line-clamp-1"
-              style={{ color: isLive ? colors.state.warning : colors.text.primary }}
+              style={{
+                color: isLive ? colors.state.warning : colors.text.primary,
+              }}
             >
               {lesson.courseTitle || t("adminDashboard.schedule.nA")}
             </p>
             {lesson.sessionTitle && (
-              <p className="text-xs line-clamp-1" style={{ color: colors.text.secondary }}>
+              <p
+                className="text-xs line-clamp-1"
+                style={{ color: colors.text.secondary }}
+              >
                 {lesson.sessionTitle}
               </p>
             )}
@@ -492,8 +523,15 @@ const ScheduleManagement = () => {
       case "tutor":
         return (
           <div className="flex items-center gap-2">
-            <Avatar src={withCDN(lesson.tutorAvatar)} size="sm" className="flex-shrink-0 w-7 h-7" />
-            <span className="text-sm line-clamp-1" style={{ color: colors.text.primary }}>
+            <Avatar
+              src={withCDN(lesson.tutorAvatar)}
+              size="sm"
+              className="flex-shrink-0 w-7 h-7"
+            />
+            <span
+              className="text-sm line-clamp-1"
+              style={{ color: colors.text.primary }}
+            >
               {tutorLabel(lesson) || t("adminDashboard.schedule.nA")}
             </span>
           </div>
@@ -501,8 +539,15 @@ const ScheduleManagement = () => {
       case "student":
         return (
           <div className="flex items-center gap-2">
-            <Avatar src={withCDN(lesson.studentAvatar)} size="sm" className="flex-shrink-0 w-7 h-7" />
-            <span className="text-sm line-clamp-1" style={{ color: colors.text.primary }}>
+            <Avatar
+              src={withCDN(lesson.studentAvatar)}
+              size="sm"
+              className="flex-shrink-0 w-7 h-7"
+            />
+            <span
+              className="text-sm line-clamp-1"
+              style={{ color: colors.text.primary }}
+            >
               {lessonLabel(lesson) || t("adminDashboard.schedule.nA")}
             </span>
           </div>
@@ -535,7 +580,8 @@ const ScheduleManagement = () => {
                 color: getLessonStatusColor(lesson.status),
               }}
             >
-              {t(`adminDashboard.schedule.lessonStatuses.${lesson.status}`) || lesson.status}
+              {t(`adminDashboard.schedule.lessonStatuses.${lesson.status}`) ||
+                lesson.status}
             </Chip>
           </div>
         );
@@ -545,7 +591,10 @@ const ScheduleManagement = () => {
             isIconOnly
             variant="light"
             size="sm"
-            onPress={() => { setSelectedLesson(lesson); onDetailOpen(); }}
+            onPress={() => {
+              setSelectedLesson(lesson);
+              onDetailOpen();
+            }}
           >
             <Eye className="w-4 h-4" style={{ color: colors.text.secondary }} />
           </Button>
@@ -557,17 +606,48 @@ const ScheduleManagement = () => {
 
   // ── date preset button style ────────────────────────────────
   const presetBtnStyle = (key) => ({
-    backgroundColor: datePreset === key ? colors.primary.main : colors.background.gray,
+    backgroundColor:
+      datePreset === key ? colors.primary.main : colors.background.gray,
     color: datePreset === key ? "#fff" : colors.text.secondary,
   });
 
   // ── overview stats cards ────────────────────────────────────
   const overviewStats = [
-    { label: t("adminDashboard.schedule.stats.totalLessons"), value: statsTotal, icon: CalendarDots, color: colors.primary.main, bg: colors.background.primaryLight },
-    { label: t("adminDashboard.schedule.stats.scheduled"), value: statsScheduled, icon: Hourglass, color: colors.state.warning, bg: `${colors.state.warning}20` },
-    { label: t("adminDashboard.schedule.statsInProgress"), value: statsInProgress, icon: Lightning, color: "#f59e0b", bg: "#f59e0b20" },
-    { label: t("adminDashboard.schedule.stats.completed"), value: statsCompleted, icon: CheckCircle, color: colors.state.success, bg: `${colors.state.success}20` },
-    { label: t("adminDashboard.schedule.stats.cancelled"), value: statsCancelled, icon: XCircle, color: colors.state.error, bg: `${colors.state.error}20` },
+    {
+      label: t("adminDashboard.schedule.stats.totalLessons"),
+      value: statsTotal,
+      icon: CalendarDots,
+      color: colors.primary.main,
+      bg: colors.background.primaryLight,
+    },
+    {
+      label: t("adminDashboard.schedule.stats.scheduled"),
+      value: statsScheduled,
+      icon: Hourglass,
+      color: colors.state.warning,
+      bg: `${colors.state.warning}20`,
+    },
+    {
+      label: t("adminDashboard.schedule.statsInProgress"),
+      value: statsInProgress,
+      icon: Lightning,
+      color: "#f59e0b",
+      bg: "#f59e0b20",
+    },
+    {
+      label: t("adminDashboard.schedule.stats.completed"),
+      value: statsCompleted,
+      icon: CheckCircle,
+      color: colors.state.success,
+      bg: `${colors.state.success}20`,
+    },
+    {
+      label: t("adminDashboard.schedule.stats.cancelled"),
+      value: statsCancelled,
+      icon: XCircle,
+      color: colors.state.error,
+      bg: `${colors.state.error}20`,
+    },
   ];
 
   return (
@@ -578,15 +658,29 @@ const ScheduleManagement = () => {
         animate={{ opacity: 1 }}
         transition={{ duration: 0.15 }}
       >
-        <h1 className="text-2xl lg:text-3xl font-bold mb-1" style={{ color: colors.text.primary }}>
+        <h1
+          className="text-2xl lg:text-3xl font-bold mb-1"
+          style={{ color: colors.text.primary }}
+        >
           {t("adminDashboard.schedule.title")}
         </h1>
-        <p style={{ color: colors.text.secondary }}>{t("adminDashboard.schedule.subtitle")}</p>
+        <p style={{ color: colors.text.secondary }}>
+          {t("adminDashboard.schedule.subtitle")}
+        </p>
       </motion.div>
 
       {/* ── Tabs ── */}
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.15 }}>
-        <Tabs selectedKey={activeTab} onSelectionChange={setActiveTab} color="primary" classNames={{ tabList: "gap-2", tab: "px-4" }}>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.15 }}
+      >
+        <Tabs
+          selectedKey={activeTab}
+          onSelectionChange={setActiveTab}
+          color="primary"
+          classNames={{ tabList: "gap-2", tab: "px-4" }}
+        >
           <Tab
             key="overview"
             title={
@@ -619,22 +713,51 @@ const ScheduleManagement = () => {
 
       {/* ══════════ OVERVIEW TAB ══════════ */}
       {activeTab === "overview" && (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.15 }} className="space-y-6">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.15 }}
+          className="space-y-6"
+        >
           {/* Stats */}
           {statsLoading ? (
-            <div className="flex justify-center py-8"><Spinner size="lg" /></div>
+            <div className="flex justify-center py-8">
+              <Spinner size="lg" />
+            </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
               {overviewStats.map((s, i) => (
-                <Card key={i} shadow="none" className="border-none" style={{ backgroundColor: colors.background.light }}>
+                <Card
+                  key={i}
+                  shadow="none"
+                  className="border-none"
+                  style={{ backgroundColor: colors.background.light }}
+                >
                   <CardBody className="p-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: s.bg }}>
-                        <s.icon className="w-4 h-4" weight="duotone" style={{ color: s.color }} />
+                      <div
+                        className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                        style={{ backgroundColor: s.bg }}
+                      >
+                        <s.icon
+                          className="w-4 h-4"
+                          weight="duotone"
+                          style={{ color: s.color }}
+                        />
                       </div>
                       <div>
-                        <p className="text-xl font-bold" style={{ color: colors.text.primary }}>{s.value.toLocaleString()}</p>
-                        <p className="text-xs" style={{ color: colors.text.secondary }}>{s.label}</p>
+                        <p
+                          className="text-xl font-bold"
+                          style={{ color: colors.text.primary }}
+                        >
+                          {s.value.toLocaleString()}
+                        </p>
+                        <p
+                          className="text-xs"
+                          style={{ color: colors.text.secondary }}
+                        >
+                          {s.label}
+                        </p>
                       </div>
                     </div>
                   </CardBody>
@@ -646,18 +769,34 @@ const ScheduleManagement = () => {
           {/* Upcoming Today + In Progress Now */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {/* Upcoming Today */}
-            <Card shadow="none" className="border-none" style={{ backgroundColor: colors.background.light }}>
+            <Card
+              shadow="none"
+              className="border-none"
+              style={{ backgroundColor: colors.background.light }}
+            >
               <CardBody className="p-5">
                 <div className="flex items-center gap-2 mb-4">
-                  <CalendarDots weight="duotone" className="w-5 h-5" style={{ color: colors.primary.main }} />
-                  <h3 className="font-semibold text-base" style={{ color: colors.text.primary }}>
+                  <CalendarDots
+                    weight="duotone"
+                    className="w-5 h-5"
+                    style={{ color: colors.primary.main }}
+                  />
+                  <h3
+                    className="font-semibold text-base"
+                    style={{ color: colors.text.primary }}
+                  >
                     {t("adminDashboard.schedule.upcomingToday")}
                   </h3>
                 </div>
                 {statsLoading ? (
-                  <div className="flex justify-center py-4"><Spinner size="sm" /></div>
+                  <div className="flex justify-center py-4">
+                    <Spinner size="sm" />
+                  </div>
                 ) : upcomingToday.length === 0 ? (
-                  <p className="text-sm text-center py-4" style={{ color: colors.text.tertiary }}>
+                  <p
+                    className="text-sm text-center py-4"
+                    style={{ color: colors.text.tertiary }}
+                  >
                     {t("adminDashboard.schedule.noUpcomingToday")}
                   </p>
                 ) : (
@@ -667,25 +806,46 @@ const ScheduleManagement = () => {
                         key={lesson.id}
                         className="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:opacity-80 transition-opacity"
                         style={{ backgroundColor: colors.background.gray }}
-                        onClick={() => { setSelectedLesson(lesson); onDetailOpen(); }}
+                        onClick={() => {
+                          setSelectedLesson(lesson);
+                          onDetailOpen();
+                        }}
                       >
                         <div
                           className="w-10 h-10 rounded-xl flex flex-col items-center justify-center flex-shrink-0 text-center"
-                          style={{ backgroundColor: colors.background.primaryLight }}
+                          style={{
+                            backgroundColor: colors.background.primaryLight,
+                          }}
                         >
-                          <span className="text-xs font-bold" style={{ color: colors.primary.main }}>
-                            {new Date(lesson.startTime).toLocaleTimeString(dateLocale, { hour: "2-digit", minute: "2-digit" })}
+                          <span
+                            className="text-xs font-bold"
+                            style={{ color: colors.primary.main }}
+                          >
+                            {new Date(lesson.startTime).toLocaleTimeString(
+                              dateLocale,
+                              { hour: "2-digit", minute: "2-digit" },
+                            )}
                           </span>
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate" style={{ color: colors.text.primary }}>
-                            {lesson.courseTitle || t("adminDashboard.schedule.nA")}
+                          <p
+                            className="text-sm font-medium truncate"
+                            style={{ color: colors.text.primary }}
+                          >
+                            {lesson.courseTitle ||
+                              t("adminDashboard.schedule.nA")}
                           </p>
-                          <p className="text-xs truncate" style={{ color: colors.text.secondary }}>
+                          <p
+                            className="text-xs truncate"
+                            style={{ color: colors.text.secondary }}
+                          >
                             {tutorLabel(lesson)} → {lessonLabel(lesson)}
                           </p>
                         </div>
-                        <Eye size={14} style={{ color: colors.text.tertiary }} />
+                        <Eye
+                          size={14}
+                          style={{ color: colors.text.tertiary }}
+                        />
                       </div>
                     ))}
                   </div>
@@ -694,23 +854,46 @@ const ScheduleManagement = () => {
             </Card>
 
             {/* In Progress Now */}
-            <Card shadow="none" className="border-none" style={{ backgroundColor: colors.background.light }}>
+            <Card
+              shadow="none"
+              className="border-none"
+              style={{ backgroundColor: colors.background.light }}
+            >
               <CardBody className="p-5">
                 <div className="flex items-center gap-2 mb-4">
-                  <span className="w-2.5 h-2.5 rounded-full animate-pulse" style={{ backgroundColor: colors.state.warning }} />
-                  <h3 className="font-semibold text-base" style={{ color: colors.text.primary }}>
+                  <span
+                    className="w-2.5 h-2.5 rounded-full animate-pulse"
+                    style={{ backgroundColor: colors.state.warning }}
+                  />
+                  <h3
+                    className="font-semibold text-base"
+                    style={{ color: colors.text.primary }}
+                  >
                     {t("adminDashboard.schedule.inProgressNow")}
                   </h3>
                   {statsInProgress > 0 && (
-                    <Chip size="sm" className="h-5" style={{ backgroundColor: `${colors.state.warning}20`, color: colors.state.warning, fontSize: "10px" }}>
+                    <Chip
+                      size="sm"
+                      className="h-5"
+                      style={{
+                        backgroundColor: `${colors.state.warning}20`,
+                        color: colors.state.warning,
+                        fontSize: "10px",
+                      }}
+                    >
                       {statsInProgress}
                     </Chip>
                   )}
                 </div>
                 {statsLoading ? (
-                  <div className="flex justify-center py-4"><Spinner size="sm" /></div>
+                  <div className="flex justify-center py-4">
+                    <Spinner size="sm" />
+                  </div>
                 ) : liveNow.length === 0 ? (
-                  <p className="text-sm text-center py-4" style={{ color: colors.text.tertiary }}>
+                  <p
+                    className="text-sm text-center py-4"
+                    style={{ color: colors.text.tertiary }}
+                  >
                     {t("adminDashboard.schedule.noLiveNow")}
                   </p>
                 ) : (
@@ -719,22 +902,46 @@ const ScheduleManagement = () => {
                       <div
                         key={lesson.id}
                         className="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:opacity-80 transition-opacity"
-                        style={{ backgroundColor: `${colors.state.warning}10`, border: `1px solid ${colors.state.warning}30` }}
-                        onClick={() => { setSelectedLesson(lesson); onDetailOpen(); }}
+                        style={{
+                          backgroundColor: `${colors.state.warning}10`,
+                          border: `1px solid ${colors.state.warning}30`,
+                        }}
+                        onClick={() => {
+                          setSelectedLesson(lesson);
+                          onDetailOpen();
+                        }}
                       >
                         <div className="flex -space-x-2">
-                          <Avatar src={withCDN(lesson.tutorAvatar)} size="sm" className="w-7 h-7 border-2 border-white" />
-                          <Avatar src={withCDN(lesson.studentAvatar)} size="sm" className="w-7 h-7 border-2 border-white" />
+                          <Avatar
+                            src={withCDN(lesson.tutorAvatar)}
+                            size="sm"
+                            className="w-7 h-7 border-2 border-white"
+                          />
+                          <Avatar
+                            src={withCDN(lesson.studentAvatar)}
+                            size="sm"
+                            className="w-7 h-7 border-2 border-white"
+                          />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate" style={{ color: colors.text.primary }}>
-                            {lesson.courseTitle || t("adminDashboard.schedule.nA")}
+                          <p
+                            className="text-sm font-medium truncate"
+                            style={{ color: colors.text.primary }}
+                          >
+                            {lesson.courseTitle ||
+                              t("adminDashboard.schedule.nA")}
                           </p>
-                          <p className="text-xs truncate" style={{ color: colors.text.secondary }}>
+                          <p
+                            className="text-xs truncate"
+                            style={{ color: colors.text.secondary }}
+                          >
                             {tutorLabel(lesson)} → {lessonLabel(lesson)}
                           </p>
                         </div>
-                        <Eye size={14} style={{ color: colors.text.tertiary }} />
+                        <Eye
+                          size={14}
+                          style={{ color: colors.text.tertiary }}
+                        />
                       </div>
                     ))}
                   </div>
@@ -749,52 +956,102 @@ const ScheduleManagement = () => {
       {activeTab === "lessons" && (
         <>
           {/* ── Filter row ── */}
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.15 }}>
-            <Card shadow="none" className="border-none" style={{ backgroundColor: colors.background.light }}>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.15 }}
+          >
+            <Card
+              shadow="none"
+              className="border-none"
+              style={{ backgroundColor: colors.background.light }}
+            >
               <CardBody className="p-4 space-y-3">
                 {/* Row 1: search + status + tutor/student pickers */}
                 <div className="flex flex-wrap gap-2 items-center">
                   <div className="flex-1 min-w-[200px]">
                     <Input
-                      placeholder={t("adminDashboard.schedule.searchLessonPlaceholder")}
+                      placeholder={t(
+                        "adminDashboard.schedule.searchLessonPlaceholder",
+                      )}
                       value={lessonSearch}
                       onChange={(e) => setLessonSearch(e.target.value)}
-                      startContent={<MagnifyingGlass className="w-4 h-4" style={{ color: colors.text.secondary }} />}
+                      startContent={
+                        <MagnifyingGlass
+                          className="w-4 h-4"
+                          style={{ color: colors.text.secondary }}
+                        />
+                      }
                       classNames={inputClassNames}
                     />
                   </div>
                   <Dropdown>
                     <DropdownTrigger>
-                      <Button variant="flat" startContent={<Funnel className="w-4 h-4" />} className="flex-shrink-0">
+                      <Button
+                        variant="flat"
+                        startContent={<Funnel className="w-4 h-4" />}
+                        className="flex-shrink-0"
+                      >
                         {t("adminDashboard.schedule.status")}:{" "}
                         {lessonStatusFilter === "all"
                           ? t("adminDashboard.schedule.all")
-                          : t(`adminDashboard.schedule.lessonStatuses.${lessonStatusFilter}`)}
+                          : t(
+                              `adminDashboard.schedule.lessonStatuses.${lessonStatusFilter}`,
+                            )}
                       </Button>
                     </DropdownTrigger>
                     <DropdownMenu
                       selectedKeys={[lessonStatusFilter]}
                       selectionMode="single"
-                      onAction={(k) => { setLessonStatusFilter(k); setLessonPage(1); }}
+                      onAction={(k) => {
+                        setLessonStatusFilter(k);
+                        setLessonPage(1);
+                      }}
                     >
-                      <DropdownItem key="all">{t("adminDashboard.schedule.all")}</DropdownItem>
-                      {["Scheduled", "InProgress", "Completed", "Cancelled", "NoStudent", "NoTutor"].map((s) => (
-                        <DropdownItem key={s}>{t(`adminDashboard.schedule.lessonStatuses.${s}`)}</DropdownItem>
+                      <DropdownItem key="all">
+                        {t("adminDashboard.schedule.all")}
+                      </DropdownItem>
+                      {[
+                        "Scheduled",
+                        "InProgress",
+                        "Completed",
+                        "Cancelled",
+                        "NoStudent",
+                        "NoTutor",
+                      ].map((s) => (
+                        <DropdownItem key={s}>
+                          {t(`adminDashboard.schedule.lessonStatuses.${s}`)}
+                        </DropdownItem>
                       ))}
                     </DropdownMenu>
                   </Dropdown>
 
                   {/* Divider */}
-                  <div className="w-px h-5" style={{ backgroundColor: colors.border.light }} />
+                  <div
+                    className="w-px h-5"
+                    style={{ backgroundColor: colors.border.dark }}
+                  />
 
                   {/* Tutor filter */}
                   {selectedTutor ? (
                     <Chip
                       variant="flat"
-                      onClose={() => { setSelectedTutor(null); setLessonPage(1); }}
-                      startContent={<Avatar src={withCDN(selectedTutor.avatar)} size="sm" className="w-5 h-5" />}
+                      onClose={() => {
+                        setSelectedTutor(null);
+                        setLessonPage(1);
+                      }}
+                      startContent={
+                        <Avatar
+                          src={withCDN(selectedTutor.avatar)}
+                          size="sm"
+                          className="w-5 h-5"
+                        />
+                      }
                       className="h-10 px-2 rounded-xl text-sm"
-                      style={{ backgroundColor: `${colors.primary.main}15`, color: colors.primary.main }}
+                      style={{
+                        backgroundColor: `${colors.primary.main}15`,
+                        color: colors.primary.main,
+                      }}
                     >
                       {selectedTutor.name}
                     </Chip>
@@ -803,7 +1060,10 @@ const ScheduleManagement = () => {
                       variant="flat"
                       startContent={<ChalkboardTeacher className="w-4 h-4" />}
                       className="h-10 rounded-xl text-sm"
-                      style={{ backgroundColor: colors.background.gray, color: colors.text.secondary }}
+                      style={{
+                        backgroundColor: colors.background.gray,
+                        color: colors.text.secondary,
+                      }}
                       onPress={() => openPicker("tutor")}
                     >
                       {t("adminDashboard.schedule.filterByTutor")}
@@ -814,10 +1074,22 @@ const ScheduleManagement = () => {
                   {selectedStudent ? (
                     <Chip
                       variant="flat"
-                      onClose={() => { setSelectedStudent(null); setLessonPage(1); }}
-                      startContent={<Avatar src={withCDN(selectedStudent.avatar)} size="sm" className="w-5 h-5" />}
+                      onClose={() => {
+                        setSelectedStudent(null);
+                        setLessonPage(1);
+                      }}
+                      startContent={
+                        <Avatar
+                          src={withCDN(selectedStudent.avatar)}
+                          size="sm"
+                          className="w-5 h-5"
+                        />
+                      }
                       className="h-10 px-2 rounded-xl text-sm"
-                      style={{ backgroundColor: `${colors.state.success}15`, color: colors.state.success }}
+                      style={{
+                        backgroundColor: `${colors.state.success}15`,
+                        color: colors.state.success,
+                      }}
                     >
                       {selectedStudent.name}
                     </Chip>
@@ -826,7 +1098,10 @@ const ScheduleManagement = () => {
                       variant="flat"
                       startContent={<Users className="w-4 h-4" />}
                       className="h-10 rounded-xl text-sm"
-                      style={{ backgroundColor: colors.background.gray, color: colors.text.secondary }}
+                      style={{
+                        backgroundColor: colors.background.gray,
+                        color: colors.text.secondary,
+                      }}
                       onPress={() => openPicker("student")}
                     >
                       {t("adminDashboard.schedule.filterByStudent")}
@@ -839,16 +1114,28 @@ const ScheduleManagement = () => {
                   {[
                     { key: "all", label: t("adminDashboard.schedule.allTime") },
                     { key: "today", label: t("adminDashboard.schedule.today") },
-                    { key: "week", label: t("adminDashboard.schedule.thisWeek") },
-                    { key: "month", label: t("adminDashboard.schedule.thisMonth") },
-                    { key: "custom", label: t("adminDashboard.schedule.customRange") },
+                    {
+                      key: "week",
+                      label: t("adminDashboard.schedule.thisWeek"),
+                    },
+                    {
+                      key: "month",
+                      label: t("adminDashboard.schedule.thisMonth"),
+                    },
+                    {
+                      key: "custom",
+                      label: t("adminDashboard.schedule.customRange"),
+                    },
                   ].map((p) => (
                     <Button
                       key={p.key}
                       size="sm"
                       variant="flat"
                       style={presetBtnStyle(p.key)}
-                      onPress={() => { setDatePreset(p.key); setLessonPage(1); }}
+                      onPress={() => {
+                        setDatePreset(p.key);
+                        setLessonPage(1);
+                      }}
                     >
                       {p.label}
                     </Button>
@@ -860,17 +1147,31 @@ const ScheduleManagement = () => {
                       <input
                         type="date"
                         value={customFrom}
-                        onChange={(e) => { setCustomFrom(e.target.value); setLessonPage(1); }}
+                        onChange={(e) => {
+                          setCustomFrom(e.target.value);
+                          setLessonPage(1);
+                        }}
                         className="px-2.5 py-1.5 rounded-lg text-sm border"
-                        style={{ backgroundColor: colors.background.gray, color: colors.text.primary, borderColor: colors.border.light }}
+                        style={{
+                          backgroundColor: colors.background.gray,
+                          color: colors.text.primary,
+                          borderColor: colors.border.light,
+                        }}
                       />
                       <span style={{ color: colors.text.tertiary }}>→</span>
                       <input
                         type="date"
                         value={customTo}
-                        onChange={(e) => { setCustomTo(e.target.value); setLessonPage(1); }}
+                        onChange={(e) => {
+                          setCustomTo(e.target.value);
+                          setLessonPage(1);
+                        }}
                         className="px-2.5 py-1.5 rounded-lg text-sm border"
-                        style={{ backgroundColor: colors.background.gray, color: colors.text.primary, borderColor: colors.border.light }}
+                        style={{
+                          backgroundColor: colors.background.gray,
+                          color: colors.text.primary,
+                          borderColor: colors.border.light,
+                        }}
                       />
                     </>
                   )}
@@ -880,7 +1181,11 @@ const ScheduleManagement = () => {
           </motion.div>
 
           {/* ── Lessons table ── */}
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.15 }}>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.15 }}
+          >
             <Card shadow="none" className="border-none" style={tableCardStyle}>
               <CardBody className="p-0">
                 <Table
@@ -940,12 +1245,26 @@ const ScheduleManagement = () => {
       {activeTab === "slots" && (
         <>
           {/* Status filter */}
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.15 }}>
-            <Card shadow="none" className="border-none" style={{ backgroundColor: colors.background.light }}>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.15 }}
+          >
+            <Card
+              shadow="none"
+              className="border-none"
+              style={{ backgroundColor: colors.background.light }}
+            >
               <CardBody className="p-4">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <Funnel className="w-4 h-4 flex-shrink-0" style={{ color: colors.text.secondary }} />
-                  <span className="text-sm" style={{ color: colors.text.secondary }}>
+                  <Funnel
+                    className="w-4 h-4 flex-shrink-0"
+                    style={{ color: colors.text.secondary }}
+                  />
+                  <span
+                    className="text-sm"
+                    style={{ color: colors.text.secondary }}
+                  >
                     {t("adminDashboard.schedule.status")}:
                   </span>
                   {["all", "Open", "Booked", "Pending", "Inactive"].map((s) => (
@@ -954,12 +1273,20 @@ const ScheduleManagement = () => {
                       size="sm"
                       variant="flat"
                       style={{
-                        backgroundColor: scheduleStatusFilter === s ? colors.primary.main : colors.background.gray,
-                        color: scheduleStatusFilter === s ? "#fff" : colors.text.secondary,
+                        backgroundColor:
+                          scheduleStatusFilter === s
+                            ? colors.primary.main
+                            : colors.background.gray,
+                        color:
+                          scheduleStatusFilter === s
+                            ? "#fff"
+                            : colors.text.secondary,
                       }}
                       onPress={() => setScheduleStatusFilter(s)}
                     >
-                      {s === "all" ? t("adminDashboard.schedule.all") : t(`adminDashboard.schedule.scheduleStatuses.${s}`)}
+                      {s === "all"
+                        ? t("adminDashboard.schedule.all")
+                        : t(`adminDashboard.schedule.scheduleStatuses.${s}`)}
                     </Button>
                   ))}
                 </div>
@@ -968,11 +1295,20 @@ const ScheduleManagement = () => {
           </motion.div>
 
           {/* Grouped tutor cards */}
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.15 }}>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.15 }}
+          >
             {schedulesLoading ? (
-              <div className="flex justify-center py-12"><Spinner size="lg" /></div>
+              <div className="flex justify-center py-12">
+                <Spinner size="lg" />
+              </div>
             ) : Object.keys(groupedSlots).length === 0 ? (
-              <p className="text-sm text-center py-8" style={{ color: colors.text.tertiary }}>
+              <p
+                className="text-sm text-center py-8"
+                style={{ color: colors.text.tertiary }}
+              >
                 {t("adminDashboard.schedule.noSchedules")}
               </p>
             ) : (
@@ -980,16 +1316,27 @@ const ScheduleManagement = () => {
                 {Object.entries(groupedSlots).map(([tutorId, slots]) => {
                   const tutor = tutorMap[tutorId];
                   const name = tutorName(tutor) || tutorId.slice(0, 8) + "…";
-                  const bookedCount = slots.filter((s) => s.status === "Booked").length;
-                  const openCount = slots.filter((s) => s.status === "Open").length;
+                  const bookedCount = slots.filter(
+                    (s) => s.status === "Booked",
+                  ).length;
+                  const openCount = slots.filter(
+                    (s) => s.status === "Open",
+                  ).length;
 
                   // Group slots by weekday
                   const byDay = {};
                   WEEKDAYS.forEach((d) => (byDay[d] = []));
-                  slots.forEach((s) => { if (s.weekday && byDay[s.weekday]) byDay[s.weekday].push(s); });
+                  slots.forEach((s) => {
+                    if (s.weekday && byDay[s.weekday]) byDay[s.weekday].push(s);
+                  });
 
                   return (
-                    <Card key={tutorId} shadow="none" className="border-none" style={{ backgroundColor: colors.background.light }}>
+                    <Card
+                      key={tutorId}
+                      shadow="none"
+                      className="border-none"
+                      style={{ backgroundColor: colors.background.light }}
+                    >
                       <CardBody className="p-4">
                         {/* Tutor header */}
                         <div className="flex items-center gap-3 mb-4 flex-wrap">
@@ -1005,22 +1352,50 @@ const ScheduleManagement = () => {
                               type="button"
                               className="font-semibold text-sm hover:underline text-left"
                               style={{ color: colors.primary.main }}
-                              onClick={() => navigate(`/admin/tutors/${tutorId}`)}
+                              onClick={() =>
+                                navigate(`/admin/tutors/${tutorId}`)
+                              }
                             >
                               {name}
                             </button>
                             <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                              <span className="text-xs" style={{ color: colors.text.tertiary }}>
-                                {slots.length} {t("adminDashboard.schedule.totalSlots")}
+                              <span
+                                className="text-xs"
+                                style={{ color: colors.text.tertiary }}
+                              >
+                                {slots.length}{" "}
+                                {t("adminDashboard.schedule.totalSlots")}
                               </span>
                               {openCount > 0 && (
-                                <Chip size="sm" className="h-4" style={{ backgroundColor: `${colors.state.success}20`, color: colors.state.success, fontSize: "10px" }}>
-                                  {openCount} {t("adminDashboard.schedule.scheduleStatuses.Open")}
+                                <Chip
+                                  size="sm"
+                                  className="h-4"
+                                  style={{
+                                    backgroundColor: `${colors.state.success}20`,
+                                    color: colors.state.success,
+                                    fontSize: "10px",
+                                  }}
+                                >
+                                  {openCount}{" "}
+                                  {t(
+                                    "adminDashboard.schedule.scheduleStatuses.Open",
+                                  )}
                                 </Chip>
                               )}
                               {bookedCount > 0 && (
-                                <Chip size="sm" className="h-4" style={{ backgroundColor: `${colors.primary.main}20`, color: colors.primary.main, fontSize: "10px" }}>
-                                  {bookedCount} {t("adminDashboard.schedule.scheduleStatuses.Booked")}
+                                <Chip
+                                  size="sm"
+                                  className="h-4"
+                                  style={{
+                                    backgroundColor: `${colors.primary.main}20`,
+                                    color: colors.primary.main,
+                                    fontSize: "10px",
+                                  }}
+                                >
+                                  {bookedCount}{" "}
+                                  {t(
+                                    "adminDashboard.schedule.scheduleStatuses.Booked",
+                                  )}
                                 </Chip>
                               )}
                             </div>
@@ -1047,24 +1422,43 @@ const ScheduleManagement = () => {
                                     <div
                                       key={slot.id}
                                       className="text-center px-1 py-1 rounded-md"
-                                      style={{ backgroundColor: `${sc}15`, border: `1px solid ${sc}30` }}
+                                      style={{
+                                        backgroundColor: `${sc}15`,
+                                        border: `1px solid ${sc}30`,
+                                      }}
                                     >
-                                      <p className="text-xs font-medium" style={{ color: sc }}>
+                                      <p
+                                        className="text-xs font-medium"
+                                        style={{ color: sc }}
+                                      >
                                         {formatTime(slot.startTime)}
                                       </p>
                                       <p style={{ color: sc, fontSize: "9px" }}>
-                                        {t(`adminDashboard.schedule.scheduleStatuses.${slot.status}`)}
+                                        {t(
+                                          `adminDashboard.schedule.scheduleStatuses.${slot.status}`,
+                                        )}
                                       </p>
                                     </div>
                                   );
                                 })}
                                 {overflow > 0 && (
-                                  <p className="text-center" style={{ color: colors.text.tertiary, fontSize: "10px" }}>
+                                  <p
+                                    className="text-center"
+                                    style={{
+                                      color: colors.text.tertiary,
+                                      fontSize: "10px",
+                                    }}
+                                  >
                                     +{overflow}
                                   </p>
                                 )}
                                 {daySlotsAll.length === 0 && (
-                                  <div className="h-8 rounded-md" style={{ backgroundColor: colors.background.gray }} />
+                                  <div
+                                    className="h-8 rounded-md"
+                                    style={{
+                                      backgroundColor: colors.background.gray,
+                                    }}
+                                  />
                                 )}
                               </div>
                             );
@@ -1091,19 +1485,31 @@ const ScheduleManagement = () => {
             const durationMin = Math.round((endDate - startDate) / 60000);
             return (
               <>
-                <ModalHeader className="flex items-center gap-2" style={{ color: colors.text.primary }}>
+                <ModalHeader
+                  className="flex items-center gap-2"
+                  style={{ color: colors.text.primary }}
+                >
                   <BookOpen weight="duotone" className="w-5 h-5" />
                   {t("adminDashboard.schedule.lessonDetail")}
                 </ModalHeader>
                 <ModalBody className="pb-6">
                   <div className="space-y-4">
                     {/* Course */}
-                    <div className="p-4 rounded-xl" style={{ backgroundColor: colors.background.gray }}>
-                      <p className="font-semibold" style={{ color: colors.text.primary }}>
+                    <div
+                      className="p-4 rounded-xl"
+                      style={{ backgroundColor: colors.background.gray }}
+                    >
+                      <p
+                        className="font-semibold"
+                        style={{ color: colors.text.primary }}
+                      >
                         {lesson.courseTitle || t("adminDashboard.schedule.nA")}
                       </p>
                       {lesson.sessionTitle && (
-                        <p className="text-sm mt-0.5" style={{ color: colors.text.secondary }}>
+                        <p
+                          className="text-sm mt-0.5"
+                          style={{ color: colors.text.secondary }}
+                        >
                           {lesson.sessionTitle}
                         </p>
                       )}
@@ -1111,46 +1517,108 @@ const ScheduleManagement = () => {
 
                     {/* Date + Time */}
                     <div className="grid grid-cols-2 gap-3">
-                      <div className="p-3 rounded-xl" style={{ backgroundColor: colors.background.gray }}>
-                        <p className="text-xs font-semibold flex items-center gap-1 mb-1" style={{ color: colors.text.secondary }}>
+                      <div
+                        className="p-3 rounded-xl"
+                        style={{ backgroundColor: colors.background.gray }}
+                      >
+                        <p
+                          className="text-xs font-semibold flex items-center gap-1 mb-1"
+                          style={{ color: colors.text.secondary }}
+                        >
                           <CalendarDots className="w-3.5 h-3.5" />
                           {t("adminDashboard.schedule.detail.date")}
                         </p>
-                        <p className="text-sm" style={{ color: colors.text.primary }}>
-                          {startDate.toLocaleDateString(dateLocale, { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
+                        <p
+                          className="text-sm"
+                          style={{ color: colors.text.primary }}
+                        >
+                          {startDate.toLocaleDateString(dateLocale, {
+                            weekday: "long",
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                          })}
                         </p>
                       </div>
-                      <div className="p-3 rounded-xl" style={{ backgroundColor: colors.background.gray }}>
-                        <p className="text-xs font-semibold flex items-center gap-1 mb-1" style={{ color: colors.text.secondary }}>
+                      <div
+                        className="p-3 rounded-xl"
+                        style={{ backgroundColor: colors.background.gray }}
+                      >
+                        <p
+                          className="text-xs font-semibold flex items-center gap-1 mb-1"
+                          style={{ color: colors.text.secondary }}
+                        >
                           <Clock className="w-3.5 h-3.5" />
                           {t("adminDashboard.schedule.detail.time")}
                         </p>
-                        <p className="text-sm" style={{ color: colors.text.primary }}>
-                          {startDate.toLocaleTimeString(dateLocale, { hour: "2-digit", minute: "2-digit" })} — {endDate.toLocaleTimeString(dateLocale, { hour: "2-digit", minute: "2-digit" })} ({durationMin}m)
+                        <p
+                          className="text-sm"
+                          style={{ color: colors.text.primary }}
+                        >
+                          {startDate.toLocaleTimeString(dateLocale, {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}{" "}
+                          —{" "}
+                          {endDate.toLocaleTimeString(dateLocale, {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}{" "}
+                          ({durationMin}m)
                         </p>
                       </div>
                     </div>
 
                     {/* Status + Meeting */}
                     <div className="grid grid-cols-2 gap-3">
-                      <div className="p-3 rounded-xl" style={{ backgroundColor: colors.background.gray }}>
-                        <p className="text-xs font-semibold mb-1.5" style={{ color: colors.text.secondary }}>
+                      <div
+                        className="p-3 rounded-xl"
+                        style={{ backgroundColor: colors.background.gray }}
+                      >
+                        <p
+                          className="text-xs font-semibold mb-1.5"
+                          style={{ color: colors.text.secondary }}
+                        >
                           {t("adminDashboard.schedule.detail.lessonStatus")}
                         </p>
-                        <Chip size="sm" variant="flat" style={{ backgroundColor: `${getLessonStatusColor(lesson.status)}20`, color: getLessonStatusColor(lesson.status) }}>
-                          {t(`adminDashboard.schedule.lessonStatuses.${lesson.status}`) || lesson.status}
+                        <Chip
+                          size="sm"
+                          variant="flat"
+                          style={{
+                            backgroundColor: `${getLessonStatusColor(lesson.status)}20`,
+                            color: getLessonStatusColor(lesson.status),
+                          }}
+                        >
+                          {t(
+                            `adminDashboard.schedule.lessonStatuses.${lesson.status}`,
+                          ) || lesson.status}
                         </Chip>
                       </div>
-                      <div className="p-3 rounded-xl" style={{ backgroundColor: colors.background.gray }}>
-                        <p className="text-xs font-semibold mb-1.5" style={{ color: colors.text.secondary }}>
+                      <div
+                        className="p-3 rounded-xl"
+                        style={{ backgroundColor: colors.background.gray }}
+                      >
+                        <p
+                          className="text-xs font-semibold mb-1.5"
+                          style={{ color: colors.text.secondary }}
+                        >
                           {t("adminDashboard.schedule.detail.meetingStatus")}
                         </p>
                         <Chip
                           size="sm"
                           variant="flat"
-                          color={lesson.meetingStatus === "InProgress" ? "success" : lesson.meetingStatus === "Waiting" ? "warning" : lesson.meetingStatus === "Ended" ? "primary" : "default"}
+                          color={
+                            lesson.meetingStatus === "InProgress"
+                              ? "success"
+                              : lesson.meetingStatus === "Waiting"
+                                ? "warning"
+                                : lesson.meetingStatus === "Ended"
+                                  ? "primary"
+                                  : "default"
+                          }
                         >
-                          {lesson.meetingStatus || t("adminDashboard.schedule.nA")}
+                          {lesson.meetingStatus ||
+                            t("adminDashboard.schedule.nA")}
                         </Chip>
                       </div>
                     </div>
@@ -1160,30 +1628,54 @@ const ScheduleManagement = () => {
                       <div
                         className="p-3 rounded-xl flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
                         style={{ backgroundColor: colors.background.gray }}
-                        onClick={() => { if (lesson.tutorId) { onDetailClose(); navigate(`/admin/tutors/${lesson.tutorId}`); } }}
+                        onClick={() => {
+                          if (lesson.tutorId) {
+                            onDetailClose();
+                            navigate(`/admin/tutors/${lesson.tutorId}`);
+                          }
+                        }}
                       >
                         <Avatar src={withCDN(lesson.tutorAvatar)} size="sm" />
                         <div>
-                          <p className="text-xs font-semibold" style={{ color: colors.text.secondary }}>
+                          <p
+                            className="text-xs font-semibold"
+                            style={{ color: colors.text.secondary }}
+                          >
                             {t("adminDashboard.schedule.detail.tutor")}
                           </p>
-                          <p className="text-sm font-medium" style={{ color: colors.text.primary }}>
-                            {tutorLabel(lesson) || t("adminDashboard.schedule.nA")}
+                          <p
+                            className="text-sm font-medium"
+                            style={{ color: colors.text.primary }}
+                          >
+                            {tutorLabel(lesson) ||
+                              t("adminDashboard.schedule.nA")}
                           </p>
                         </div>
                       </div>
                       <div
                         className="p-3 rounded-xl flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
                         style={{ backgroundColor: colors.background.gray }}
-                        onClick={() => { if (lesson.studentId) { onDetailClose(); navigate(`/admin/students/${lesson.studentId}`); } }}
+                        onClick={() => {
+                          if (lesson.studentId) {
+                            onDetailClose();
+                            navigate(`/admin/students/${lesson.studentId}`);
+                          }
+                        }}
                       >
                         <Avatar src={withCDN(lesson.studentAvatar)} size="sm" />
                         <div>
-                          <p className="text-xs font-semibold" style={{ color: colors.text.secondary }}>
+                          <p
+                            className="text-xs font-semibold"
+                            style={{ color: colors.text.secondary }}
+                          >
                             {t("adminDashboard.schedule.detail.student")}
                           </p>
-                          <p className="text-sm font-medium" style={{ color: colors.text.primary }}>
-                            {lessonLabel(lesson) || t("adminDashboard.schedule.nA")}
+                          <p
+                            className="text-sm font-medium"
+                            style={{ color: colors.text.primary }}
+                          >
+                            {lessonLabel(lesson) ||
+                              t("adminDashboard.schedule.nA")}
                           </p>
                         </div>
                       </div>
@@ -1191,15 +1683,31 @@ const ScheduleManagement = () => {
 
                     {/* Recording */}
                     {lesson.lessonRecord?.recordUrl && (
-                      <div className="p-3 rounded-xl flex items-center gap-3" style={{ backgroundColor: colors.background.gray }}>
-                        <VideoCamera weight="duotone" className="w-5 h-5 flex-shrink-0" style={{ color: colors.primary.main }} />
+                      <div
+                        className="p-3 rounded-xl flex items-center gap-3"
+                        style={{ backgroundColor: colors.background.gray }}
+                      >
+                        <VideoCamera
+                          weight="duotone"
+                          className="w-5 h-5 flex-shrink-0"
+                          style={{ color: colors.primary.main }}
+                        />
                         <div>
-                          <p className="text-xs font-semibold" style={{ color: colors.text.secondary }}>
+                          <p
+                            className="text-xs font-semibold"
+                            style={{ color: colors.text.secondary }}
+                          >
                             {t("adminDashboard.schedule.detail.recording")}
                           </p>
                           {lesson.lessonRecord.durationSeconds && (
-                            <p className="text-sm" style={{ color: colors.text.primary }}>
-                              {Math.floor(lesson.lessonRecord.durationSeconds / 60)}m {lesson.lessonRecord.durationSeconds % 60}s
+                            <p
+                              className="text-sm"
+                              style={{ color: colors.text.primary }}
+                            >
+                              {Math.floor(
+                                lesson.lessonRecord.durationSeconds / 60,
+                              )}
+                              m {lesson.lessonRecord.durationSeconds % 60}s
                             </p>
                           )}
                         </div>
@@ -1212,7 +1720,10 @@ const ScheduleManagement = () => {
                         variant="flat"
                         className="w-full"
                         startContent={<BookOpen className="w-4 h-4" />}
-                        onPress={() => { onDetailClose(); navigate(`/admin/courses/${lesson.courseId}`); }}
+                        onPress={() => {
+                          onDetailClose();
+                          navigate(`/admin/courses/${lesson.courseId}`);
+                        }}
                         style={{ color: colors.primary.main }}
                       >
                         {t("adminDashboard.schedule.detail.viewCourse")}
@@ -1227,7 +1738,11 @@ const ScheduleManagement = () => {
       </Modal>
 
       {/* ══════════ TUTOR PICKER MODAL ══════════ */}
-      <Modal isOpen={tutorPickerOpen} onClose={() => setTutorPickerOpen(false)} size="sm">
+      <Modal
+        isOpen={tutorPickerOpen}
+        onClose={() => setTutorPickerOpen(false)}
+        size="sm"
+      >
         <ModalContent style={{ backgroundColor: colors.background.light }}>
           <ModalHeader style={{ color: colors.text.primary }}>
             {t("adminDashboard.schedule.selectTutor")}
@@ -1237,15 +1752,25 @@ const ScheduleManagement = () => {
               placeholder={t("adminDashboard.schedule.searchLessonPlaceholder")}
               value={tutorPickerSearch}
               onChange={(e) => setTutorPickerSearch(e.target.value)}
-              startContent={<MagnifyingGlass className="w-4 h-4" style={{ color: colors.text.secondary }} />}
+              startContent={
+                <MagnifyingGlass
+                  className="w-4 h-4"
+                  style={{ color: colors.text.secondary }}
+                />
+              }
               classNames={inputClassNames}
               autoFocus
             />
             <div className="space-y-1 max-h-64 overflow-y-auto">
               {tutorPickerLoading ? (
-                <div className="flex justify-center py-4"><Spinner size="sm" /></div>
+                <div className="flex justify-center py-4">
+                  <Spinner size="sm" />
+                </div>
               ) : tutorPickerItems.length === 0 ? (
-                <p className="text-xs text-center py-4" style={{ color: colors.text.tertiary }}>
+                <p
+                  className="text-xs text-center py-4"
+                  style={{ color: colors.text.tertiary }}
+                >
                   {t("adminDashboard.schedule.noResultsFound")}
                 </p>
               ) : (
@@ -1261,16 +1786,36 @@ const ScheduleManagement = () => {
                       type="button"
                       className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left hover:opacity-80 transition-opacity"
                       style={{
-                        backgroundColor: isSelected ? `${colors.primary.main}15` : colors.background.gray,
-                        border: isSelected ? `1px solid ${colors.primary.main}40` : "1px solid transparent",
+                        backgroundColor: isSelected
+                          ? `${colors.primary.main}15`
+                          : colors.background.gray,
+                        border: isSelected
+                          ? `1px solid ${colors.primary.main}40`
+                          : "1px solid transparent",
                       }}
-                      onClick={() => setTutorPickerTemp({ id, name, avatar: item.avatar })}
+                      onClick={() =>
+                        setTutorPickerTemp({ id, name, avatar: item.avatar })
+                      }
                     >
-                      <Avatar src={withCDN(item.avatar)} name={name} size="sm" className="flex-shrink-0" />
-                      <span className="flex-1 text-sm font-medium truncate" style={{ color: colors.text.primary }}>
+                      <Avatar
+                        src={withCDN(item.avatar)}
+                        name={name}
+                        size="sm"
+                        className="flex-shrink-0"
+                      />
+                      <span
+                        className="flex-1 text-sm font-medium truncate"
+                        style={{ color: colors.text.primary }}
+                      >
                         {name}
                       </span>
-                      {isSelected && <CheckCircle weight="fill" size={16} style={{ color: colors.primary.main, flexShrink: 0 }} />}
+                      {isSelected && (
+                        <CheckCircle
+                          weight="fill"
+                          size={16}
+                          style={{ color: colors.primary.main, flexShrink: 0 }}
+                        />
+                      )}
                     </button>
                   );
                 })
@@ -1281,7 +1826,12 @@ const ScheduleManagement = () => {
                 size="sm"
                 variant="flat"
                 className="flex-1"
-                onPress={() => { setTutorPickerTemp(null); setSelectedTutor(null); setLessonPage(1); setTutorPickerOpen(false); }}
+                onPress={() => {
+                  setTutorPickerTemp(null);
+                  setSelectedTutor(null);
+                  setLessonPage(1);
+                  setTutorPickerOpen(false);
+                }}
                 startContent={<X size={14} />}
               >
                 {t("adminDashboard.schedule.clearFilter")}
@@ -1301,7 +1851,11 @@ const ScheduleManagement = () => {
       </Modal>
 
       {/* ══════════ STUDENT PICKER MODAL ══════════ */}
-      <Modal isOpen={studentPickerOpen} onClose={() => setStudentPickerOpen(false)} size="sm">
+      <Modal
+        isOpen={studentPickerOpen}
+        onClose={() => setStudentPickerOpen(false)}
+        size="sm"
+      >
         <ModalContent style={{ backgroundColor: colors.background.light }}>
           <ModalHeader style={{ color: colors.text.primary }}>
             {t("adminDashboard.schedule.selectStudent")}
@@ -1311,15 +1865,25 @@ const ScheduleManagement = () => {
               placeholder={t("adminDashboard.schedule.searchLessonPlaceholder")}
               value={studentPickerSearch}
               onChange={(e) => setStudentPickerSearch(e.target.value)}
-              startContent={<MagnifyingGlass className="w-4 h-4" style={{ color: colors.text.secondary }} />}
+              startContent={
+                <MagnifyingGlass
+                  className="w-4 h-4"
+                  style={{ color: colors.text.secondary }}
+                />
+              }
               classNames={inputClassNames}
               autoFocus
             />
             <div className="space-y-1 max-h-64 overflow-y-auto">
               {studentPickerLoading ? (
-                <div className="flex justify-center py-4"><Spinner size="sm" /></div>
+                <div className="flex justify-center py-4">
+                  <Spinner size="sm" />
+                </div>
               ) : studentPickerItems.length === 0 ? (
-                <p className="text-xs text-center py-4" style={{ color: colors.text.tertiary }}>
+                <p
+                  className="text-xs text-center py-4"
+                  style={{ color: colors.text.tertiary }}
+                >
                   {t("adminDashboard.schedule.noResultsFound")}
                 </p>
               ) : (
@@ -1335,16 +1899,36 @@ const ScheduleManagement = () => {
                       type="button"
                       className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left hover:opacity-80 transition-opacity"
                       style={{
-                        backgroundColor: isSelected ? `${colors.state.success}15` : colors.background.gray,
-                        border: isSelected ? `1px solid ${colors.state.success}40` : "1px solid transparent",
+                        backgroundColor: isSelected
+                          ? `${colors.state.success}15`
+                          : colors.background.gray,
+                        border: isSelected
+                          ? `1px solid ${colors.state.success}40`
+                          : "1px solid transparent",
                       }}
-                      onClick={() => setStudentPickerTemp({ id, name, avatar: item.avatar })}
+                      onClick={() =>
+                        setStudentPickerTemp({ id, name, avatar: item.avatar })
+                      }
                     >
-                      <Avatar src={withCDN(item.avatar)} name={name} size="sm" className="flex-shrink-0" />
-                      <span className="flex-1 text-sm font-medium truncate" style={{ color: colors.text.primary }}>
+                      <Avatar
+                        src={withCDN(item.avatar)}
+                        name={name}
+                        size="sm"
+                        className="flex-shrink-0"
+                      />
+                      <span
+                        className="flex-1 text-sm font-medium truncate"
+                        style={{ color: colors.text.primary }}
+                      >
                         {name}
                       </span>
-                      {isSelected && <CheckCircle weight="fill" size={16} style={{ color: colors.state.success, flexShrink: 0 }} />}
+                      {isSelected && (
+                        <CheckCircle
+                          weight="fill"
+                          size={16}
+                          style={{ color: colors.state.success, flexShrink: 0 }}
+                        />
+                      )}
                     </button>
                   );
                 })
@@ -1355,7 +1939,12 @@ const ScheduleManagement = () => {
                 size="sm"
                 variant="flat"
                 className="flex-1"
-                onPress={() => { setStudentPickerTemp(null); setSelectedStudent(null); setLessonPage(1); setStudentPickerOpen(false); }}
+                onPress={() => {
+                  setStudentPickerTemp(null);
+                  setSelectedStudent(null);
+                  setLessonPage(1);
+                  setStudentPickerOpen(false);
+                }}
                 startContent={<X size={14} />}
               >
                 {t("adminDashboard.schedule.clearFilter")}
