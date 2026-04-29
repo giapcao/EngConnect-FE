@@ -196,11 +196,11 @@
   },
   "home": {
     "hero": {
-      "badge": "Nền tảng học tập hỗ trợ AI",
+      "badge": "Nền tảng học tiếng với AI",
       "title": "Thành thạo tiếng Anh với",
       "titleHighlight": "Gia sư chuyên nghiệp",
       "titleEnd": "Toàn cầu",
-      "description": "Kết nối với gia sư được chứng nhận để học 1-1 theo cách riêng của bạn. Học theo tốc độ của bạn với phản hồi hỗ trợ AI và đạt được sự lưu loát nhanh hơn bao giờ hết.",
+      "description": "Kết nối với gia sư được chứng nhận qua video 1-1 trực tiếp. Học theo lộ trình có cấu trúc, theo dõi tiến độ và củng cố mỗi buổi học với tóm tắt và quiz do AI tạo ra.",
       "startLearning": "Bắt đầu học",
       "watchDemo": "Xem Demo",
       "lovedBy": "Được yêu thích bởi hơn 10,000 học viên"
@@ -244,11 +244,11 @@
     },
     "aiSection": {
       "title": "Học thông minh với",
-      "titleHighlight": "Công nghệ AI",
-      "description": "Các công cụ AI tiên tiến của chúng tôi nâng cao trải nghiệm học tập bằng cách cung cấp phản hồi cá nhân hóa, phân tích phát âm và bài tập thích ứng theo tiến độ của bạn.",
-      "feature1": "Phản hồi và sửa phát âm theo thời gian thực",
-      "feature2": "Hỗ trợ bài tập và giải thích bằng AI",
-      "feature3": "Theo dõi tiến độ thông minh và gợi ý cá nhân hóa"
+      "titleHighlight": "Tính năng AI",
+      "description": "EngConnect tích hợp AI trực tiếp vào từng buổi học — giúp bạn ôn lại kiến thức trọng tâm và kiểm tra bản thân dễ dàng hơn.",
+      "feature1": "Tóm tắt buổi học tự động để bạn không bỏ lỡ điểm quan trọng nào",
+      "feature2": "Bộ câu hỏi quiz do AI tạo ra để củng cố kiến thức sau mỗi buổi học",
+      "feature3": "Ôn lại bất cứ lúc nào — tóm tắt và quiz được lưu lại sau mỗi buổi học"
     },
     "videoSection": {
       "title": "Học trực tiếp qua",

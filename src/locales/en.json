@@ -196,11 +196,11 @@
   },
   "home": {
     "hero": {
-      "badge": "AI-Powered Learning Platform",
+      "badge": "English Learning Platform",
       "title": "Master English with",
       "titleHighlight": "Expert Tutors",
       "titleEnd": "Worldwide",
-      "description": "Connect with certified tutors for personalized 1-on-1 lessons. Learn at your own pace with AI-assisted feedback and achieve fluency faster than ever.",
+      "description": "Connect with certified tutors for personalized 1-on-1 video lessons. Study structured courses, track your progress, and reinforce every session with AI-generated summaries and quizzes.",
       "startLearning": "Start Learning",
       "watchDemo": "Watch Demo",
       "lovedBy": "Loved by 10,000+ students"
@@ -244,11 +244,11 @@
     },
     "aiSection": {
       "title": "Learn Smarter with",
-      "titleHighlight": "AI Technology",
-      "description": "Our advanced AI tools enhance your learning experience by providing personalized feedback, pronunciation analysis, and adaptive exercises tailored to your progress.",
-      "feature1": "Real-time pronunciation feedback and correction",
-      "feature2": "AI-powered homework assistance and explanations",
-      "feature3": "Smart progress tracking and personalized recommendations"
+      "titleHighlight": "AI Features",
+      "description": "EngConnect integrates AI directly into your lessons — helping you review key content and test your knowledge without extra effort.",
+      "feature1": "Auto-generated lesson summaries so you never miss key points",
+      "feature2": "AI-created quizzes to reinforce what you learned each session",
+      "feature3": "Review anytime — summaries and quizzes are saved after every lesson"
     },
     "videoSection": {
       "title": "Learn Face-to-Face with",
