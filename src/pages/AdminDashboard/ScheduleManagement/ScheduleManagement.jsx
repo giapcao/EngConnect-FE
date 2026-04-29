@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Card,
@@ -41,13 +41,16 @@ import {
   BookOpen,
   VideoCamera,
   Eye,
-  Export,
   CheckCircle,
   XCircle,
   Hourglass,
-  CalendarCheck,
+  Lightning,
+  ChalkboardTeacher,
+  Users,
+  X,
 } from "@phosphor-icons/react";
 
+// ── constants ──────────────────────────────────────────────
 const CDN_BASE = "https://d20854st1o56hw.cloudfront.net/";
 const withCDN = (url) => {
   if (!url) return undefined;
@@ -55,6 +58,60 @@ const withCDN = (url) => {
   return CDN_BASE + url;
 };
 
+const WEEKDAYS = [
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+  "Sunday",
+];
+const WEEKDAY_SHORT = {
+  Monday: "Mon",
+  Tuesday: "Tue",
+  Wednesday: "Wed",
+  Thursday: "Thu",
+  Friday: "Fri",
+  Saturday: "Sat",
+  Sunday: "Sun",
+};
+
+// ── date helpers ────────────────────────────────────────────
+const toLocalDateStr = (d) => {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+};
+const toApiStart = (dateStr) => `${dateStr}T00:00:00Z`;
+const toApiEnd = (dateStr) => `${dateStr}T23:59:59Z`;
+
+const todayStr = () => toLocalDateStr(new Date());
+const startOfWeekStr = () => {
+  const d = new Date();
+  const day = d.getDay();
+  d.setDate(d.getDate() - (day === 0 ? 6 : day - 1));
+  return toLocalDateStr(d);
+};
+const endOfWeekStr = () => {
+  const d = new Date();
+  const day = d.getDay();
+  d.setDate(d.getDate() - (day === 0 ? 6 : day - 1) + 6);
+  return toLocalDateStr(d);
+};
+const startOfMonthStr = () => {
+  const d = new Date();
+  d.setDate(1);
+  return toLocalDateStr(d);
+};
+const endOfMonthStr = () => {
+  const d = new Date();
+  d.setMonth(d.getMonth() + 1, 0);
+  return toLocalDateStr(d);
+};
+
+// ── component ───────────────────────────────────────────────
 const ScheduleManagement = () => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
@@ -63,9 +120,19 @@ const ScheduleManagement = () => {
   const { tableCardStyle, tableClassNames } = useTableStyles();
   const dateLocale = i18n.language === "vi" ? "vi-VN" : "en-US";
 
-  const [activeTab, setActiveTab] = useState("lessons");
+  const [activeTab, setActiveTab] = useState("overview");
 
-  // ─── Lessons state ───
+  // ── Overview / Stats ─────────────────────────────────────
+  const [statsLoading, setStatsLoading] = useState(true);
+  const [statsTotal, setStatsTotal] = useState(0);
+  const [statsScheduled, setStatsScheduled] = useState(0);
+  const [statsInProgress, setStatsInProgress] = useState(0);
+  const [statsCompleted, setStatsCompleted] = useState(0);
+  const [statsCancelled, setStatsCancelled] = useState(0);
+  const [liveNow, setLiveNow] = useState([]);
+  const [upcomingToday, setUpcomingToday] = useState([]);
+
+  // ── Lessons ──────────────────────────────────────────────
   const [lessons, setLessons] = useState([]);
   const [lessonsLoading, setLessonsLoading] = useState(false);
   const [lessonSearch, setLessonSearch] = useState("");
@@ -75,85 +142,67 @@ const ScheduleManagement = () => {
   const [lessonTotalPages, setLessonTotalPages] = useState(1);
   const lessonPageSize = 10;
 
-  // Lesson stats
-  const [totalLessons, setTotalLessons] = useState(0);
-  const [scheduledCount, setScheduledCount] = useState(0);
-  const [completedCount, setCompletedCount] = useState(0);
-  const [cancelledCount, setCancelledCount] = useState(0);
+  // Date filter
+  const [datePreset, setDatePreset] = useState("all");
+  const [customFrom, setCustomFrom] = useState("");
+  const [customTo, setCustomTo] = useState("");
 
-  // Lesson detail modal
-  const {
-    isOpen: isDetailOpen,
-    onOpen: onDetailOpen,
-    onClose: onDetailClose,
-  } = useDisclosure();
+  // Tutor/Student picker filters
+  const [selectedTutor, setSelectedTutor] = useState(null); // { id, name, avatar }
+  const [selectedStudent, setSelectedStudent] = useState(null);
+
+  // ── Tutor picker modal ────────────────────────────────────
+  const [tutorPickerOpen, setTutorPickerOpen] = useState(false);
+  const [tutorPickerSearch, setTutorPickerSearch] = useState("");
+  const [tutorPickerItems, setTutorPickerItems] = useState([]);
+  const [tutorPickerLoading, setTutorPickerLoading] = useState(false);
+  const [tutorPickerTemp, setTutorPickerTemp] = useState(null);
+
+  // ── Student picker modal ──────────────────────────────────
+  const [studentPickerOpen, setStudentPickerOpen] = useState(false);
+  const [studentPickerSearch, setStudentPickerSearch] = useState("");
+  const [studentPickerItems, setStudentPickerItems] = useState([]);
+  const [studentPickerLoading, setStudentPickerLoading] = useState(false);
+  const [studentPickerTemp, setStudentPickerTemp] = useState(null);
+
+  // ── Lesson detail modal ───────────────────────────────────
+  const { isOpen: isDetailOpen, onOpen: onDetailOpen, onClose: onDetailClose } =
+    useDisclosure();
   const [selectedLesson, setSelectedLesson] = useState(null);
 
-  // ─── Tutor Schedules state ───
+  // ── Tutor Slots ───────────────────────────────────────────
   const [schedules, setSchedules] = useState([]);
   const [schedulesLoading, setSchedulesLoading] = useState(false);
-  const [scheduleSearch, setScheduleSearch] = useState("");
-  const [debouncedScheduleSearch, setDebouncedScheduleSearch] = useState("");
   const [scheduleStatusFilter, setScheduleStatusFilter] = useState("all");
-  const [schedulePage, setSchedulePage] = useState(1);
-  const [scheduleTotalPages, setScheduleTotalPages] = useState(1);
-  const schedulePageSize = 10;
   const [tutorMap, setTutorMap] = useState({});
 
-  // Debounce lesson search
+  // ── debounce lesson search ────────────────────────────────
   useEffect(() => {
-    const timer = setTimeout(() => {
+    const t = setTimeout(() => {
       setDebouncedLessonSearch(lessonSearch);
       setLessonPage(1);
     }, 500);
-    return () => clearTimeout(timer);
+    return () => clearTimeout(t);
   }, [lessonSearch]);
 
-  // Debounce schedule search
+  // ── fetch overview stats + live + upcoming ────────────────
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedScheduleSearch(scheduleSearch);
-      setSchedulePage(1);
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [scheduleSearch]);
-
-  // Fetch lessons
-  const fetchLessons = useCallback(async () => {
-    setLessonsLoading(true);
-    try {
-      const params = {
-        page: lessonPage,
-        "page-size": lessonPageSize,
-      };
-      if (lessonStatusFilter !== "all") params.Status = lessonStatusFilter;
-      if (debouncedLessonSearch) params["search-term"] = debouncedLessonSearch;
-
-      const res = await studentApi.getLessons(params);
-      const data = res?.data;
-      setLessons(data?.items || []);
-      setLessonTotalPages(data?.totalPages || 1);
-    } catch {
-      setLessons([]);
-    } finally {
-      setLessonsLoading(false);
-    }
-  }, [lessonPage, lessonPageSize, lessonStatusFilter, debouncedLessonSearch]);
-
-  useEffect(() => {
-    if (activeTab === "lessons") fetchLessons();
-  }, [fetchLessons, activeTab]);
-
-  // Fetch lesson stats
-  useEffect(() => {
-    const fetchStats = async () => {
+    const fetchOverview = async () => {
+      setStatsLoading(true);
       try {
-        const [allRes, scheduledRes, completedRes, cancelledRes] =
-          await Promise.all([
+        const todayFrom = toApiStart(todayStr());
+        const todayTo = toApiEnd(todayStr());
+        const [allR, schR, liveR, compR, canR, upcomingR] =
+          await Promise.allSettled([
             studentApi.getLessons({ "page-size": 1, page: 1 }),
             studentApi.getLessons({
               Status: "Scheduled",
               "page-size": 1,
+              page: 1,
+            }),
+            studentApi.getLessons({
+              Status: "InProgress",
+              "page-size": 10,
               page: 1,
             }),
             studentApi.getLessons({
@@ -166,48 +215,146 @@ const ScheduleManagement = () => {
               "page-size": 1,
               page: 1,
             }),
+            studentApi.getLessons({
+              Status: "Scheduled",
+              StartTimeFrom: todayFrom,
+              StartTimeTo: todayTo,
+              "page-size": 10,
+              page: 1,
+            }),
           ]);
-        setTotalLessons(allRes?.data?.totalItems || 0);
-        setScheduledCount(scheduledRes?.data?.totalItems || 0);
-        setCompletedCount(completedRes?.data?.totalItems || 0);
-        setCancelledCount(cancelledRes?.data?.totalItems || 0);
-      } catch {
-        // stats non-critical
+        if (allR.status === "fulfilled")
+          setStatsTotal(allR.value?.data?.totalItems || 0);
+        if (schR.status === "fulfilled")
+          setStatsScheduled(schR.value?.data?.totalItems || 0);
+        if (liveR.status === "fulfilled") {
+          setStatsInProgress(liveR.value?.data?.totalItems || 0);
+          setLiveNow(liveR.value?.data?.items || []);
+        }
+        if (compR.status === "fulfilled")
+          setStatsCompleted(compR.value?.data?.totalItems || 0);
+        if (canR.status === "fulfilled")
+          setStatsCancelled(canR.value?.data?.totalItems || 0);
+        if (upcomingR.status === "fulfilled")
+          setUpcomingToday(upcomingR.value?.data?.items || []);
+      } finally {
+        setStatsLoading(false);
       }
     };
-    fetchStats();
+    fetchOverview();
   }, []);
 
-  // Fetch tutor schedules
+  // ── date range params ─────────────────────────────────────
+  const getDateParams = useCallback(() => {
+    switch (datePreset) {
+      case "today":
+        return { StartTimeFrom: toApiStart(todayStr()), StartTimeTo: toApiEnd(todayStr()) };
+      case "week":
+        return { StartTimeFrom: toApiStart(startOfWeekStr()), StartTimeTo: toApiEnd(endOfWeekStr()) };
+      case "month":
+        return { StartTimeFrom: toApiStart(startOfMonthStr()), StartTimeTo: toApiEnd(endOfMonthStr()) };
+      case "custom":
+        return {
+          ...(customFrom && { StartTimeFrom: toApiStart(customFrom) }),
+          ...(customTo && { StartTimeTo: toApiEnd(customTo) }),
+        };
+      default:
+        return {};
+    }
+  }, [datePreset, customFrom, customTo]);
+
+  // ── fetch lessons ─────────────────────────────────────────
+  const fetchLessons = useCallback(async () => {
+    setLessonsLoading(true);
+    try {
+      const params = {
+        page: lessonPage,
+        "page-size": lessonPageSize,
+        ...getDateParams(),
+      };
+      if (lessonStatusFilter !== "all") params.Status = lessonStatusFilter;
+      if (debouncedLessonSearch) params["search-term"] = debouncedLessonSearch;
+      if (selectedTutor) params.TutorId = selectedTutor.id;
+      if (selectedStudent) params.StudentId = selectedStudent.id;
+
+      const res = await studentApi.getLessons(params);
+      const data = res?.data;
+      setLessons(data?.items || []);
+      setLessonTotalPages(data?.totalPages || 1);
+    } catch {
+      setLessons([]);
+    } finally {
+      setLessonsLoading(false);
+    }
+  }, [
+    lessonPage,
+    lessonPageSize,
+    lessonStatusFilter,
+    debouncedLessonSearch,
+    selectedTutor,
+    selectedStudent,
+    getDateParams,
+  ]);
+
+  useEffect(() => {
+    if (activeTab === "lessons") fetchLessons();
+  }, [fetchLessons, activeTab]);
+
+  // ── fetch tutor picker ────────────────────────────────────
+  useEffect(() => {
+    if (!tutorPickerOpen) return;
+    setTutorPickerLoading(true);
+    const timer = setTimeout(async () => {
+      try {
+        const res = await adminApi.getAllTutors({
+          "search-term": tutorPickerSearch,
+          "page-size": 8,
+          page: 1,
+        });
+        setTutorPickerItems(res?.data?.items || []);
+      } finally {
+        setTutorPickerLoading(false);
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [tutorPickerSearch, tutorPickerOpen]);
+
+  // ── fetch student picker ──────────────────────────────────
+  useEffect(() => {
+    if (!studentPickerOpen) return;
+    setStudentPickerLoading(true);
+    const timer = setTimeout(async () => {
+      try {
+        const res = await adminApi.getAllStudents({
+          "search-term": studentPickerSearch,
+          "page-size": 8,
+          page: 1,
+        });
+        setStudentPickerItems(res?.data?.items || []);
+      } finally {
+        setStudentPickerLoading(false);
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [studentPickerSearch, studentPickerOpen]);
+
+  // ── fetch tutor slots ─────────────────────────────────────
   const fetchSchedules = useCallback(async () => {
     setSchedulesLoading(true);
     try {
-      const params = {
-        page: schedulePage,
-        "page-size": schedulePageSize,
-      };
+      const params = { page: 1, "page-size": 100 };
       if (scheduleStatusFilter !== "all") params.Status = scheduleStatusFilter;
-      if (debouncedScheduleSearch)
-        params["search-term"] = debouncedScheduleSearch;
-
       const res = await tutorApi.getTutorSchedules(params);
-      const data = res?.data;
-      const items = data?.items || [];
+      const items = res?.data?.items || [];
       setSchedules(items);
-      setScheduleTotalPages(data?.totalPages || 1);
 
-      // Fetch tutor details for unique tutorIds
-      const uniqueTutorIds = [
-        ...new Set(items.map((s) => s.tutorId).filter(Boolean)),
-      ];
-      const tutorResults = await Promise.allSettled(
-        uniqueTutorIds.map((id) => adminApi.getTutorById(id)),
+      const uniqueIds = [...new Set(items.map((s) => s.tutorId).filter(Boolean))];
+      const results = await Promise.allSettled(
+        uniqueIds.map((id) => adminApi.getTutorById(id)),
       );
       const map = {};
-      tutorResults.forEach((result, idx) => {
-        if (result.status === "fulfilled") {
-          map[uniqueTutorIds[idx]] = result.value?.data;
-        }
+      results.forEach((r, i) => {
+        if (r.status === "fulfilled") map[uniqueIds[i]] = r.value?.data;
       });
       setTutorMap((prev) => ({ ...prev, ...map }));
     } catch {
@@ -215,57 +362,68 @@ const ScheduleManagement = () => {
     } finally {
       setSchedulesLoading(false);
     }
-  }, [
-    schedulePage,
-    schedulePageSize,
-    scheduleStatusFilter,
-    debouncedScheduleSearch,
-  ]);
+  }, [scheduleStatusFilter]);
 
   useEffect(() => {
-    if (activeTab === "schedules") fetchSchedules();
+    if (activeTab === "slots") fetchSchedules();
   }, [fetchSchedules, activeTab]);
 
-  // ─── Helpers ───
+  // ── grouped slots ──────────────────────────────────────────
+  const groupedSlots = useMemo(() => {
+    const map = {};
+    schedules.forEach((s) => {
+      if (!s.tutorId) return;
+      if (!map[s.tutorId]) map[s.tutorId] = [];
+      map[s.tutorId].push(s);
+    });
+    return map;
+  }, [schedules]);
+
+  // ── lesson table columns ───────────────────────────────────
+  const lessonCols = useMemo(
+    () =>
+      [
+        { key: "course", label: t("adminDashboard.schedule.table.course") },
+        !selectedTutor && {
+          key: "tutor",
+          label: t("adminDashboard.schedule.table.tutor"),
+        },
+        !selectedStudent && {
+          key: "student",
+          label: t("adminDashboard.schedule.table.student"),
+        },
+        { key: "dateTime", label: t("adminDashboard.schedule.table.dateTime") },
+        { key: "status", label: t("adminDashboard.schedule.table.status") },
+        { key: "actions", label: "" },
+      ].filter(Boolean),
+    [selectedTutor, selectedStudent, t],
+  );
+
+  // ── helpers ────────────────────────────────────────────────
   const getLessonStatusColor = (status) => {
     switch (status) {
-      case "Scheduled":
-        return "primary";
-      case "InProgress":
-        return "warning";
-      case "Completed":
-        return "success";
+      case "Scheduled": return colors.primary.main;
+      case "InProgress": return colors.state.warning;
+      case "Completed": return colors.state.success;
       case "Cancelled":
-        return "danger";
       case "NoStudent":
-        return "danger";
-      case "NoTutor":
-        return "danger";
-      default:
-        return "default";
+      case "NoTutor": return colors.state.error;
+      default: return colors.text.tertiary;
     }
   };
 
-  const getScheduleStatusColor = (status) => {
+  const getSlotStatusColor = (status) => {
     switch (status) {
-      case "Open":
-        return "success";
-      case "Booked":
-        return "primary";
-      case "Pending":
-        return "warning";
-      case "Inactive":
-        return "default";
-      default:
-        return "default";
+      case "Open": return colors.state.success;
+      case "Booked": return colors.primary.main;
+      case "Pending": return colors.state.warning;
+      default: return colors.text.tertiary;
     }
   };
 
   const formatDateTime = (dateStr) => {
     if (!dateStr) return "";
-    const d = new Date(dateStr);
-    return d.toLocaleDateString(dateLocale, {
-      year: "numeric",
+    return new Date(dateStr).toLocaleDateString(dateLocale, {
       month: "short",
       day: "numeric",
       hour: "2-digit",
@@ -273,264 +431,456 @@ const ScheduleManagement = () => {
     });
   };
 
-  const formatTime = (timeStr) => timeStr?.slice(0, 5) || "";
+  const formatTime = (s) => s?.slice(0, 5) || "";
 
-  const formatDuration = (startStr, endStr) => {
-    if (!startStr || !endStr) return "";
-    const mins = Math.round((new Date(endStr) - new Date(startStr)) / 60000);
-    if (mins >= 60) return `${Math.floor(mins / 60)}h ${mins % 60}m`;
-    return `${mins}m`;
+  const formatDuration = (start, end) => {
+    if (!start || !end) return "";
+    const mins = Math.round((new Date(end) - new Date(start)) / 60000);
+    return mins >= 60 ? `${Math.floor(mins / 60)}h ${mins % 60}m` : `${mins}m`;
   };
 
-  const studentFullName = (lesson) =>
-    [lesson.studentFirstName, lesson.studentLastName]
-      .filter(Boolean)
-      .join(" ") || t("adminDashboard.schedule.nA");
+  const lessonLabel = (lesson) => `${lesson.studentFirstName || ""} ${lesson.studentLastName || ""}`.trim();
+  const tutorLabel = (lesson) => `${lesson.tutorFirstName || ""} ${lesson.tutorLastName || ""}`.trim();
+  const tutorName = (t) => t?.user ? `${t.user.firstName || ""} ${t.user.lastName || ""}`.trim() : "";
 
-  const tutorFullName = (lesson) =>
-    [lesson.tutorFirstName, lesson.tutorLastName].filter(Boolean).join(" ") ||
-    t("adminDashboard.schedule.nA");
-
-  const handleViewLesson = (lesson) => {
-    setSelectedLesson(lesson);
-    onDetailOpen();
+  const openPicker = (type) => {
+    if (type === "tutor") {
+      setTutorPickerTemp(selectedTutor);
+      setTutorPickerSearch("");
+      setTutorPickerItems([]);
+      setTutorPickerOpen(true);
+    } else {
+      setStudentPickerTemp(selectedStudent);
+      setStudentPickerSearch("");
+      setStudentPickerItems([]);
+      setStudentPickerOpen(true);
+    }
   };
 
-  // Stats
-  const lessonStats = [
-    {
-      icon: CalendarDots,
-      label: t("adminDashboard.schedule.stats.totalLessons"),
-      value: totalLessons.toLocaleString(),
-      color: colors.primary.main,
-      bg: colors.background.primaryLight,
-    },
-    {
-      icon: Hourglass,
-      label: t("adminDashboard.schedule.stats.scheduled"),
-      value: scheduledCount.toLocaleString(),
-      color: colors.state.warning,
-      bg: `${colors.state.warning}20`,
-    },
-    {
-      icon: CheckCircle,
-      label: t("adminDashboard.schedule.stats.completed"),
-      value: completedCount.toLocaleString(),
-      color: colors.state.success,
-      bg: `${colors.state.success}20`,
-    },
-    {
-      icon: XCircle,
-      label: t("adminDashboard.schedule.stats.cancelled"),
-      value: cancelledCount.toLocaleString(),
-      color: colors.state.error,
-      bg: `${colors.state.error}20`,
-    },
+  const confirmTutorPicker = () => {
+    setSelectedTutor(tutorPickerTemp);
+    setLessonPage(1);
+    setTutorPickerOpen(false);
+  };
+
+  const confirmStudentPicker = () => {
+    setSelectedStudent(studentPickerTemp);
+    setLessonPage(1);
+    setStudentPickerOpen(false);
+  };
+
+  // ── render lesson cell ──────────────────────────────────────
+  const renderLessonCell = (lesson, key) => {
+    const isLive = lesson.status === "InProgress";
+    switch (key) {
+      case "course":
+        return (
+          <div>
+            <p
+              className="font-medium text-sm line-clamp-1"
+              style={{ color: isLive ? colors.state.warning : colors.text.primary }}
+            >
+              {lesson.courseTitle || t("adminDashboard.schedule.nA")}
+            </p>
+            {lesson.sessionTitle && (
+              <p className="text-xs line-clamp-1" style={{ color: colors.text.secondary }}>
+                {lesson.sessionTitle}
+              </p>
+            )}
+          </div>
+        );
+      case "tutor":
+        return (
+          <div className="flex items-center gap-2">
+            <Avatar src={withCDN(lesson.tutorAvatar)} size="sm" className="flex-shrink-0 w-7 h-7" />
+            <span className="text-sm line-clamp-1" style={{ color: colors.text.primary }}>
+              {tutorLabel(lesson) || t("adminDashboard.schedule.nA")}
+            </span>
+          </div>
+        );
+      case "student":
+        return (
+          <div className="flex items-center gap-2">
+            <Avatar src={withCDN(lesson.studentAvatar)} size="sm" className="flex-shrink-0 w-7 h-7" />
+            <span className="text-sm line-clamp-1" style={{ color: colors.text.primary }}>
+              {lessonLabel(lesson) || t("adminDashboard.schedule.nA")}
+            </span>
+          </div>
+        );
+      case "dateTime":
+        return (
+          <div>
+            <p className="text-sm" style={{ color: colors.text.primary }}>
+              {formatDateTime(lesson.startTime)}
+            </p>
+            <p className="text-xs" style={{ color: colors.text.tertiary }}>
+              {formatDuration(lesson.startTime, lesson.endTime)}
+            </p>
+          </div>
+        );
+      case "status":
+        return (
+          <div className="flex items-center gap-1.5">
+            {isLive && (
+              <span
+                className="w-2 h-2 rounded-full flex-shrink-0 animate-pulse"
+                style={{ backgroundColor: colors.state.warning }}
+              />
+            )}
+            <Chip
+              size="sm"
+              variant="flat"
+              style={{
+                backgroundColor: `${getLessonStatusColor(lesson.status)}20`,
+                color: getLessonStatusColor(lesson.status),
+              }}
+            >
+              {t(`adminDashboard.schedule.lessonStatuses.${lesson.status}`) || lesson.status}
+            </Chip>
+          </div>
+        );
+      case "actions":
+        return (
+          <Button
+            isIconOnly
+            variant="light"
+            size="sm"
+            onPress={() => { setSelectedLesson(lesson); onDetailOpen(); }}
+          >
+            <Eye className="w-4 h-4" style={{ color: colors.text.secondary }} />
+          </Button>
+        );
+      default:
+        return null;
+    }
+  };
+
+  // ── date preset button style ────────────────────────────────
+  const presetBtnStyle = (key) => ({
+    backgroundColor: datePreset === key ? colors.primary.main : colors.background.gray,
+    color: datePreset === key ? "#fff" : colors.text.secondary,
+  });
+
+  // ── overview stats cards ────────────────────────────────────
+  const overviewStats = [
+    { label: t("adminDashboard.schedule.stats.totalLessons"), value: statsTotal, icon: CalendarDots, color: colors.primary.main, bg: colors.background.primaryLight },
+    { label: t("adminDashboard.schedule.stats.scheduled"), value: statsScheduled, icon: Hourglass, color: colors.state.warning, bg: `${colors.state.warning}20` },
+    { label: t("adminDashboard.schedule.statsInProgress"), value: statsInProgress, icon: Lightning, color: "#f59e0b", bg: "#f59e0b20" },
+    { label: t("adminDashboard.schedule.stats.completed"), value: statsCompleted, icon: CheckCircle, color: colors.state.success, bg: `${colors.state.success}20` },
+    { label: t("adminDashboard.schedule.stats.cancelled"), value: statsCancelled, icon: XCircle, color: colors.state.error, bg: `${colors.state.error}20` },
   ];
 
   return (
     <div className="space-y-6">
-      {/* Page Header */}
+      {/* ── Header ── */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.15 }}
-        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
       >
-        <div>
-          <h1
-            className="text-2xl lg:text-3xl font-bold mb-1"
-            style={{ color: colors.text.primary }}
-          >
-            {t("adminDashboard.schedule.title")}
-          </h1>
-          <p style={{ color: colors.text.secondary }}>
-            {t("adminDashboard.schedule.subtitle")}
-          </p>
-        </div>
+        <h1 className="text-2xl lg:text-3xl font-bold mb-1" style={{ color: colors.text.primary }}>
+          {t("adminDashboard.schedule.title")}
+        </h1>
+        <p style={{ color: colors.text.secondary }}>{t("adminDashboard.schedule.subtitle")}</p>
       </motion.div>
 
-      {/* Stats Grid */}
-      {/* <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        {lessonStats.map((stat, index) => (
-          <motion.div
-            key={index}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.15 }}
-          >
-            <Card
-              shadow="none"
-              className="border-none"
-              style={{ backgroundColor: colors.background.light }}
-            >
-              <CardBody className="p-4">
-                <div className="flex items-center gap-3">
-                  <div
-                    className="w-10 h-10 rounded-xl flex items-center justify-center"
-                    style={{ backgroundColor: stat.bg }}
-                  >
-                    <stat.icon
-                      className="w-5 h-5"
-                      weight="duotone"
-                      style={{ color: stat.color }}
-                    />
-                  </div>
-                  <div>
-                    <p
-                      className="text-xl font-bold"
-                      style={{ color: colors.text.primary }}
-                    >
-                      {stat.value}
-                    </p>
-                    <p
-                      className="text-xs"
-                      style={{ color: colors.text.secondary }}
-                    >
-                      {stat.label}
-                    </p>
-                  </div>
-                </div>
-              </CardBody>
-            </Card>
-          </motion.div>
-        ))}
-      </div> */}
-
-      {/* Tabs */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.15 }}
-      >
-        <Tabs
-          selectedKey={activeTab}
-          onSelectionChange={setActiveTab}
-          color="primary"
-          classNames={{ tabList: "gap-2", tab: "px-4" }}
-        >
+      {/* ── Tabs ── */}
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.15 }}>
+        <Tabs selectedKey={activeTab} onSelectionChange={setActiveTab} color="primary" classNames={{ tabList: "gap-2", tab: "px-4" }}>
+          <Tab
+            key="overview"
+            title={
+              <div className="flex items-center gap-2">
+                <CalendarDots weight="duotone" className="w-4 h-4" />
+                <span>{t("adminDashboard.schedule.overviewTab")}</span>
+              </div>
+            }
+          />
           <Tab
             key="lessons"
             title={
               <div className="flex items-center gap-2">
-                <BookOpen weight="duotone" className="w-5 h-5" />
+                <BookOpen weight="duotone" className="w-4 h-4" />
                 <span>{t("adminDashboard.schedule.lessonsTab")}</span>
               </div>
             }
           />
           <Tab
-            key="schedules"
+            key="slots"
             title={
               <div className="flex items-center gap-2">
-                <CalendarDots weight="duotone" className="w-5 h-5" />
-                <span>{t("adminDashboard.schedule.schedulesTab")}</span>
+                <ChalkboardTeacher weight="duotone" className="w-4 h-4" />
+                <span>{t("adminDashboard.schedule.tutorSlotsTab")}</span>
               </div>
             }
           />
         </Tabs>
       </motion.div>
 
-      {/* ════════════ LESSONS TAB ════════════ */}
+      {/* ══════════ OVERVIEW TAB ══════════ */}
+      {activeTab === "overview" && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.15 }} className="space-y-6">
+          {/* Stats */}
+          {statsLoading ? (
+            <div className="flex justify-center py-8"><Spinner size="lg" /></div>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+              {overviewStats.map((s, i) => (
+                <Card key={i} shadow="none" className="border-none" style={{ backgroundColor: colors.background.light }}>
+                  <CardBody className="p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: s.bg }}>
+                        <s.icon className="w-4 h-4" weight="duotone" style={{ color: s.color }} />
+                      </div>
+                      <div>
+                        <p className="text-xl font-bold" style={{ color: colors.text.primary }}>{s.value.toLocaleString()}</p>
+                        <p className="text-xs" style={{ color: colors.text.secondary }}>{s.label}</p>
+                      </div>
+                    </div>
+                  </CardBody>
+                </Card>
+              ))}
+            </div>
+          )}
+
+          {/* Upcoming Today + In Progress Now */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {/* Upcoming Today */}
+            <Card shadow="none" className="border-none" style={{ backgroundColor: colors.background.light }}>
+              <CardBody className="p-5">
+                <div className="flex items-center gap-2 mb-4">
+                  <CalendarDots weight="duotone" className="w-5 h-5" style={{ color: colors.primary.main }} />
+                  <h3 className="font-semibold text-base" style={{ color: colors.text.primary }}>
+                    {t("adminDashboard.schedule.upcomingToday")}
+                  </h3>
+                </div>
+                {statsLoading ? (
+                  <div className="flex justify-center py-4"><Spinner size="sm" /></div>
+                ) : upcomingToday.length === 0 ? (
+                  <p className="text-sm text-center py-4" style={{ color: colors.text.tertiary }}>
+                    {t("adminDashboard.schedule.noUpcomingToday")}
+                  </p>
+                ) : (
+                  <div className="space-y-2">
+                    {upcomingToday.map((lesson) => (
+                      <div
+                        key={lesson.id}
+                        className="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:opacity-80 transition-opacity"
+                        style={{ backgroundColor: colors.background.gray }}
+                        onClick={() => { setSelectedLesson(lesson); onDetailOpen(); }}
+                      >
+                        <div
+                          className="w-10 h-10 rounded-xl flex flex-col items-center justify-center flex-shrink-0 text-center"
+                          style={{ backgroundColor: colors.background.primaryLight }}
+                        >
+                          <span className="text-xs font-bold" style={{ color: colors.primary.main }}>
+                            {new Date(lesson.startTime).toLocaleTimeString(dateLocale, { hour: "2-digit", minute: "2-digit" })}
+                          </span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate" style={{ color: colors.text.primary }}>
+                            {lesson.courseTitle || t("adminDashboard.schedule.nA")}
+                          </p>
+                          <p className="text-xs truncate" style={{ color: colors.text.secondary }}>
+                            {tutorLabel(lesson)} → {lessonLabel(lesson)}
+                          </p>
+                        </div>
+                        <Eye size={14} style={{ color: colors.text.tertiary }} />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardBody>
+            </Card>
+
+            {/* In Progress Now */}
+            <Card shadow="none" className="border-none" style={{ backgroundColor: colors.background.light }}>
+              <CardBody className="p-5">
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="w-2.5 h-2.5 rounded-full animate-pulse" style={{ backgroundColor: colors.state.warning }} />
+                  <h3 className="font-semibold text-base" style={{ color: colors.text.primary }}>
+                    {t("adminDashboard.schedule.inProgressNow")}
+                  </h3>
+                  {statsInProgress > 0 && (
+                    <Chip size="sm" className="h-5" style={{ backgroundColor: `${colors.state.warning}20`, color: colors.state.warning, fontSize: "10px" }}>
+                      {statsInProgress}
+                    </Chip>
+                  )}
+                </div>
+                {statsLoading ? (
+                  <div className="flex justify-center py-4"><Spinner size="sm" /></div>
+                ) : liveNow.length === 0 ? (
+                  <p className="text-sm text-center py-4" style={{ color: colors.text.tertiary }}>
+                    {t("adminDashboard.schedule.noLiveNow")}
+                  </p>
+                ) : (
+                  <div className="space-y-2">
+                    {liveNow.map((lesson) => (
+                      <div
+                        key={lesson.id}
+                        className="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:opacity-80 transition-opacity"
+                        style={{ backgroundColor: `${colors.state.warning}10`, border: `1px solid ${colors.state.warning}30` }}
+                        onClick={() => { setSelectedLesson(lesson); onDetailOpen(); }}
+                      >
+                        <div className="flex -space-x-2">
+                          <Avatar src={withCDN(lesson.tutorAvatar)} size="sm" className="w-7 h-7 border-2 border-white" />
+                          <Avatar src={withCDN(lesson.studentAvatar)} size="sm" className="w-7 h-7 border-2 border-white" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate" style={{ color: colors.text.primary }}>
+                            {lesson.courseTitle || t("adminDashboard.schedule.nA")}
+                          </p>
+                          <p className="text-xs truncate" style={{ color: colors.text.secondary }}>
+                            {tutorLabel(lesson)} → {lessonLabel(lesson)}
+                          </p>
+                        </div>
+                        <Eye size={14} style={{ color: colors.text.tertiary }} />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardBody>
+            </Card>
+          </div>
+        </motion.div>
+      )}
+
+      {/* ══════════ LESSONS TAB ══════════ */}
       {activeTab === "lessons" && (
         <>
-          {/* Filters */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.15 }}
-          >
-            <Card
-              shadow="none"
-              className="border-none"
-              style={{ backgroundColor: colors.background.light }}
-            >
-              <CardBody className="p-4">
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <Input
-                    type="text"
-                    placeholder={t(
-                      "adminDashboard.schedule.searchLessonPlaceholder",
-                    )}
-                    value={lessonSearch}
-                    onChange={(e) => setLessonSearch(e.target.value)}
-                    startContent={
-                      <MagnifyingGlass
-                        className="w-4 h-4"
-                        style={{ color: colors.text.secondary }}
-                      />
-                    }
-                    classNames={inputClassNames}
-                    className="flex-1"
-                  />
-                  <div className="flex gap-2">
-                    <Dropdown>
-                      <DropdownTrigger>
-                        <Button
-                          variant="flat"
-                          startContent={<Funnel className="w-4 h-4" />}
-                        >
-                          {t("adminDashboard.schedule.status")}:{" "}
-                          {lessonStatusFilter === "all"
-                            ? t("adminDashboard.schedule.all")
-                            : t(
-                                `adminDashboard.schedule.lessonStatuses.${lessonStatusFilter}`,
-                              )}
-                        </Button>
-                      </DropdownTrigger>
-                      <DropdownMenu
-                        aria-label="Lesson status filter"
-                        onAction={(key) => {
-                          setLessonStatusFilter(key);
-                          setLessonPage(1);
-                        }}
-                        selectedKeys={[lessonStatusFilter]}
-                        selectionMode="single"
-                      >
-                        <DropdownItem key="all">
-                          {t("adminDashboard.schedule.all")}
-                        </DropdownItem>
-                        <DropdownItem key="Scheduled">
-                          {t(
-                            "adminDashboard.schedule.lessonStatuses.Scheduled",
-                          )}
-                        </DropdownItem>
-                        <DropdownItem key="InProgress">
-                          {t(
-                            "adminDashboard.schedule.lessonStatuses.InProgress",
-                          )}
-                        </DropdownItem>
-                        <DropdownItem key="Completed">
-                          {t(
-                            "adminDashboard.schedule.lessonStatuses.Completed",
-                          )}
-                        </DropdownItem>
-                        <DropdownItem key="Cancelled">
-                          {t(
-                            "adminDashboard.schedule.lessonStatuses.Cancelled",
-                          )}
-                        </DropdownItem>
-                        <DropdownItem key="NoStudent">
-                          {t(
-                            "adminDashboard.schedule.lessonStatuses.NoStudent",
-                          )}
-                        </DropdownItem>
-                        <DropdownItem key="NoTutor">
-                          {t("adminDashboard.schedule.lessonStatuses.NoTutor")}
-                        </DropdownItem>
-                      </DropdownMenu>
-                    </Dropdown>
+          {/* ── Filter row ── */}
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.15 }}>
+            <Card shadow="none" className="border-none" style={{ backgroundColor: colors.background.light }}>
+              <CardBody className="p-4 space-y-3">
+                {/* Row 1: search + status + tutor/student pickers */}
+                <div className="flex flex-wrap gap-2 items-center">
+                  <div className="flex-1 min-w-[200px]">
+                    <Input
+                      placeholder={t("adminDashboard.schedule.searchLessonPlaceholder")}
+                      value={lessonSearch}
+                      onChange={(e) => setLessonSearch(e.target.value)}
+                      startContent={<MagnifyingGlass className="w-4 h-4" style={{ color: colors.text.secondary }} />}
+                      classNames={inputClassNames}
+                    />
                   </div>
+                  <Dropdown>
+                    <DropdownTrigger>
+                      <Button variant="flat" startContent={<Funnel className="w-4 h-4" />} className="flex-shrink-0">
+                        {t("adminDashboard.schedule.status")}:{" "}
+                        {lessonStatusFilter === "all"
+                          ? t("adminDashboard.schedule.all")
+                          : t(`adminDashboard.schedule.lessonStatuses.${lessonStatusFilter}`)}
+                      </Button>
+                    </DropdownTrigger>
+                    <DropdownMenu
+                      selectedKeys={[lessonStatusFilter]}
+                      selectionMode="single"
+                      onAction={(k) => { setLessonStatusFilter(k); setLessonPage(1); }}
+                    >
+                      <DropdownItem key="all">{t("adminDashboard.schedule.all")}</DropdownItem>
+                      {["Scheduled", "InProgress", "Completed", "Cancelled", "NoStudent", "NoTutor"].map((s) => (
+                        <DropdownItem key={s}>{t(`adminDashboard.schedule.lessonStatuses.${s}`)}</DropdownItem>
+                      ))}
+                    </DropdownMenu>
+                  </Dropdown>
+
+                  {/* Divider */}
+                  <div className="w-px h-5" style={{ backgroundColor: colors.border.light }} />
+
+                  {/* Tutor filter */}
+                  {selectedTutor ? (
+                    <Chip
+                      variant="flat"
+                      onClose={() => { setSelectedTutor(null); setLessonPage(1); }}
+                      startContent={<Avatar src={withCDN(selectedTutor.avatar)} size="sm" className="w-5 h-5" />}
+                      className="h-10 px-2 rounded-xl text-sm"
+                      style={{ backgroundColor: `${colors.primary.main}15`, color: colors.primary.main }}
+                    >
+                      {selectedTutor.name}
+                    </Chip>
+                  ) : (
+                    <Button
+                      variant="flat"
+                      startContent={<ChalkboardTeacher className="w-4 h-4" />}
+                      className="h-10 rounded-xl text-sm"
+                      style={{ backgroundColor: colors.background.gray, color: colors.text.secondary }}
+                      onPress={() => openPicker("tutor")}
+                    >
+                      {t("adminDashboard.schedule.filterByTutor")}
+                    </Button>
+                  )}
+
+                  {/* Student filter */}
+                  {selectedStudent ? (
+                    <Chip
+                      variant="flat"
+                      onClose={() => { setSelectedStudent(null); setLessonPage(1); }}
+                      startContent={<Avatar src={withCDN(selectedStudent.avatar)} size="sm" className="w-5 h-5" />}
+                      className="h-10 px-2 rounded-xl text-sm"
+                      style={{ backgroundColor: `${colors.state.success}15`, color: colors.state.success }}
+                    >
+                      {selectedStudent.name}
+                    </Chip>
+                  ) : (
+                    <Button
+                      variant="flat"
+                      startContent={<Users className="w-4 h-4" />}
+                      className="h-10 rounded-xl text-sm"
+                      style={{ backgroundColor: colors.background.gray, color: colors.text.secondary }}
+                      onPress={() => openPicker("student")}
+                    >
+                      {t("adminDashboard.schedule.filterByStudent")}
+                    </Button>
+                  )}
+                </div>
+
+                {/* Row 2: date presets */}
+                <div className="flex flex-wrap gap-2 items-center">
+                  {[
+                    { key: "all", label: t("adminDashboard.schedule.allTime") },
+                    { key: "today", label: t("adminDashboard.schedule.today") },
+                    { key: "week", label: t("adminDashboard.schedule.thisWeek") },
+                    { key: "month", label: t("adminDashboard.schedule.thisMonth") },
+                    { key: "custom", label: t("adminDashboard.schedule.customRange") },
+                  ].map((p) => (
+                    <Button
+                      key={p.key}
+                      size="sm"
+                      variant="flat"
+                      style={presetBtnStyle(p.key)}
+                      onPress={() => { setDatePreset(p.key); setLessonPage(1); }}
+                    >
+                      {p.label}
+                    </Button>
+                  ))}
+
+                  {/* Custom date inputs */}
+                  {datePreset === "custom" && (
+                    <>
+                      <input
+                        type="date"
+                        value={customFrom}
+                        onChange={(e) => { setCustomFrom(e.target.value); setLessonPage(1); }}
+                        className="px-2.5 py-1.5 rounded-lg text-sm border"
+                        style={{ backgroundColor: colors.background.gray, color: colors.text.primary, borderColor: colors.border.light }}
+                      />
+                      <span style={{ color: colors.text.tertiary }}>→</span>
+                      <input
+                        type="date"
+                        value={customTo}
+                        onChange={(e) => { setCustomTo(e.target.value); setLessonPage(1); }}
+                        className="px-2.5 py-1.5 rounded-lg text-sm border"
+                        style={{ backgroundColor: colors.background.gray, color: colors.text.primary, borderColor: colors.border.light }}
+                      />
+                    </>
+                  )}
                 </div>
               </CardBody>
             </Card>
           </motion.div>
 
-          {/* Lessons Table */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.15 }}
-          >
+          {/* ── Lessons table ── */}
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.15 }}>
             <Card shadow="none" className="border-none" style={tableCardStyle}>
               <CardBody className="p-0">
                 <Table
@@ -553,27 +903,9 @@ const ScheduleManagement = () => {
                   }
                 >
                   <TableHeader>
-                    <TableColumn>
-                      {t("adminDashboard.schedule.table.course")}
-                    </TableColumn>
-                    <TableColumn>
-                      {t("adminDashboard.schedule.table.tutor")}
-                    </TableColumn>
-                    <TableColumn>
-                      {t("adminDashboard.schedule.table.student")}
-                    </TableColumn>
-                    <TableColumn>
-                      {t("adminDashboard.schedule.table.dateTime")}
-                    </TableColumn>
-                    <TableColumn>
-                      {t("adminDashboard.schedule.table.duration")}
-                    </TableColumn>
-                    <TableColumn>
-                      {t("adminDashboard.schedule.table.status")}
-                    </TableColumn>
-                    <TableColumn>
-                      {t("adminDashboard.schedule.table.actions")}
-                    </TableColumn>
+                    {lessonCols.map((col) => (
+                      <TableColumn key={col.key}>{col.label}</TableColumn>
+                    ))}
                   </TableHeader>
                   <TableBody
                     isLoading={lessonsLoading}
@@ -581,94 +913,19 @@ const ScheduleManagement = () => {
                     emptyContent={t("adminDashboard.schedule.noLessons")}
                   >
                     {lessons.map((lesson) => (
-                      <TableRow key={lesson.id}>
-                        <TableCell>
-                          <p
-                            className="font-medium text-sm line-clamp-1"
-                            style={{ color: colors.text.primary }}
-                          >
-                            {lesson.courseTitle ||
-                              t("adminDashboard.schedule.nA")}
-                          </p>
-                          {lesson.sessionTitle && (
-                            <p
-                              className="text-xs line-clamp-1"
-                              style={{ color: colors.text.secondary }}
-                            >
-                              {lesson.sessionTitle}
-                            </p>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <Avatar
-                              src={withCDN(lesson.tutorAvatar)}
-                              size="sm"
-                              className="flex-shrink-0"
-                            />
-                            <p
-                              className="text-sm line-clamp-1"
-                              style={{ color: colors.text.primary }}
-                            >
-                              {tutorFullName(lesson)}
-                            </p>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <Avatar
-                              src={withCDN(lesson.studentAvatar)}
-                              size="sm"
-                              className="flex-shrink-0"
-                            />
-                            <p
-                              className="text-sm line-clamp-1"
-                              style={{ color: colors.text.primary }}
-                            >
-                              {studentFullName(lesson)}
-                            </p>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <p
-                            className="text-sm"
-                            style={{ color: colors.text.primary }}
-                          >
-                            {formatDateTime(lesson.startTime)}
-                          </p>
-                        </TableCell>
-                        <TableCell>
-                          <span
-                            className="text-sm"
-                            style={{ color: colors.text.secondary }}
-                          >
-                            {formatDuration(lesson.startTime, lesson.endTime)}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          <Chip
-                            size="sm"
-                            color={getLessonStatusColor(lesson.status)}
-                            variant="flat"
-                          >
-                            {t(
-                              `adminDashboard.schedule.lessonStatuses.${lesson.status}`,
-                            ) || lesson.status}
-                          </Chip>
-                        </TableCell>
-                        <TableCell>
-                          <Button
-                            isIconOnly
-                            variant="light"
-                            size="sm"
-                            onPress={() => handleViewLesson(lesson)}
-                          >
-                            <Eye
-                              className="w-5 h-5"
-                              style={{ color: colors.text.secondary }}
-                            />
-                          </Button>
-                        </TableCell>
+                      <TableRow
+                        key={lesson.id}
+                        style={
+                          lesson.status === "InProgress"
+                            ? { backgroundColor: `${colors.state.warning}08` }
+                            : {}
+                        }
+                      >
+                        {lessonCols.map((col) => (
+                          <TableCell key={col.key}>
+                            {renderLessonCell(lesson, col.key)}
+                          </TableCell>
+                        ))}
                       </TableRow>
                     ))}
                   </TableBody>
@@ -679,205 +936,151 @@ const ScheduleManagement = () => {
         </>
       )}
 
-      {/* ════════════ SCHEDULES TAB ════════════ */}
-      {activeTab === "schedules" && (
+      {/* ══════════ TUTOR SLOTS TAB ══════════ */}
+      {activeTab === "slots" && (
         <>
-          {/* Filters */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.15 }}
-          >
-            <Card
-              shadow="none"
-              className="border-none"
-              style={{ backgroundColor: colors.background.light }}
-            >
+          {/* Status filter */}
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.15 }}>
+            <Card shadow="none" className="border-none" style={{ backgroundColor: colors.background.light }}>
               <CardBody className="p-4">
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <Input
-                    type="text"
-                    placeholder={t(
-                      "adminDashboard.schedule.searchSchedulePlaceholder",
-                    )}
-                    value={scheduleSearch}
-                    onChange={(e) => setScheduleSearch(e.target.value)}
-                    startContent={
-                      <MagnifyingGlass
-                        className="w-4 h-4"
-                        style={{ color: colors.text.secondary }}
-                      />
-                    }
-                    classNames={inputClassNames}
-                    className="flex-1"
-                  />
-                  <div className="flex gap-2">
-                    <Dropdown>
-                      <DropdownTrigger>
-                        <Button
-                          variant="flat"
-                          startContent={<Funnel className="w-4 h-4" />}
-                        >
-                          {t("adminDashboard.schedule.status")}:{" "}
-                          {scheduleStatusFilter === "all"
-                            ? t("adminDashboard.schedule.all")
-                            : t(
-                                `adminDashboard.schedule.scheduleStatuses.${scheduleStatusFilter}`,
-                              )}
-                        </Button>
-                      </DropdownTrigger>
-                      <DropdownMenu
-                        aria-label="Schedule status filter"
-                        onAction={(key) => {
-                          setScheduleStatusFilter(key);
-                          setSchedulePage(1);
-                        }}
-                        selectedKeys={[scheduleStatusFilter]}
-                        selectionMode="single"
-                      >
-                        <DropdownItem key="all">
-                          {t("adminDashboard.schedule.all")}
-                        </DropdownItem>
-                        <DropdownItem key="Open">
-                          {t("adminDashboard.schedule.scheduleStatuses.Open")}
-                        </DropdownItem>
-                        <DropdownItem key="Booked">
-                          {t("adminDashboard.schedule.scheduleStatuses.Booked")}
-                        </DropdownItem>
-                        <DropdownItem key="Pending">
-                          {t(
-                            "adminDashboard.schedule.scheduleStatuses.Pending",
-                          )}
-                        </DropdownItem>
-                        <DropdownItem key="Inactive">
-                          {t(
-                            "adminDashboard.schedule.scheduleStatuses.Inactive",
-                          )}
-                        </DropdownItem>
-                      </DropdownMenu>
-                    </Dropdown>
-                  </div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Funnel className="w-4 h-4 flex-shrink-0" style={{ color: colors.text.secondary }} />
+                  <span className="text-sm" style={{ color: colors.text.secondary }}>
+                    {t("adminDashboard.schedule.status")}:
+                  </span>
+                  {["all", "Open", "Booked", "Pending", "Inactive"].map((s) => (
+                    <Button
+                      key={s}
+                      size="sm"
+                      variant="flat"
+                      style={{
+                        backgroundColor: scheduleStatusFilter === s ? colors.primary.main : colors.background.gray,
+                        color: scheduleStatusFilter === s ? "#fff" : colors.text.secondary,
+                      }}
+                      onPress={() => setScheduleStatusFilter(s)}
+                    >
+                      {s === "all" ? t("adminDashboard.schedule.all") : t(`adminDashboard.schedule.scheduleStatuses.${s}`)}
+                    </Button>
+                  ))}
                 </div>
               </CardBody>
             </Card>
           </motion.div>
 
-          {/* Schedules Table */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.15 }}
-          >
-            <Card shadow="none" className="border-none" style={tableCardStyle}>
-              <CardBody className="p-0">
-                <Table
-                  aria-label="Tutor schedules table"
-                  classNames={tableClassNames}
-                  bottomContent={
-                    scheduleTotalPages > 1 ? (
-                      <div className="flex w-full justify-center py-4">
-                        <Pagination
-                          isCompact
-                          showControls
-                          showShadow
-                          color="primary"
-                          page={schedulePage}
-                          total={scheduleTotalPages}
-                          onChange={(p) => setSchedulePage(p)}
-                        />
-                      </div>
-                    ) : null
-                  }
-                >
-                  <TableHeader>
-                    <TableColumn>
-                      {t("adminDashboard.schedule.table.tutor")}
-                    </TableColumn>
-                    <TableColumn>
-                      {t("adminDashboard.schedule.table.weekday")}
-                    </TableColumn>
-                    <TableColumn>
-                      {t("adminDashboard.schedule.table.time")}
-                    </TableColumn>
-                    <TableColumn>
-                      {t("adminDashboard.schedule.table.status")}
-                    </TableColumn>
-                  </TableHeader>
-                  <TableBody
-                    isLoading={schedulesLoading}
-                    loadingContent={<Spinner size="lg" />}
-                    emptyContent={t("adminDashboard.schedule.noSchedules")}
-                  >
-                    {schedules.map((schedule) => (
-                      <TableRow key={schedule.id}>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <Avatar
-                              src={withCDN(tutorMap[schedule.tutorId]?.avatar)}
-                              size="sm"
-                              className="flex-shrink-0"
-                            />
-                            <div>
-                              <p
-                                className="font-medium text-sm"
-                                style={{ color: colors.text.primary }}
-                              >
-                                {[
-                                  tutorMap[schedule.tutorId]?.user?.firstName,
-                                  tutorMap[schedule.tutorId]?.user?.lastName,
-                                ]
-                                  .filter(Boolean)
-                                  .join(" ") || t("adminDashboard.schedule.nA")}
-                              </p>
+          {/* Grouped tutor cards */}
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.15 }}>
+            {schedulesLoading ? (
+              <div className="flex justify-center py-12"><Spinner size="lg" /></div>
+            ) : Object.keys(groupedSlots).length === 0 ? (
+              <p className="text-sm text-center py-8" style={{ color: colors.text.tertiary }}>
+                {t("adminDashboard.schedule.noSchedules")}
+              </p>
+            ) : (
+              <div className="space-y-3">
+                {Object.entries(groupedSlots).map(([tutorId, slots]) => {
+                  const tutor = tutorMap[tutorId];
+                  const name = tutorName(tutor) || tutorId.slice(0, 8) + "…";
+                  const bookedCount = slots.filter((s) => s.status === "Booked").length;
+                  const openCount = slots.filter((s) => s.status === "Open").length;
+
+                  // Group slots by weekday
+                  const byDay = {};
+                  WEEKDAYS.forEach((d) => (byDay[d] = []));
+                  slots.forEach((s) => { if (s.weekday && byDay[s.weekday]) byDay[s.weekday].push(s); });
+
+                  return (
+                    <Card key={tutorId} shadow="none" className="border-none" style={{ backgroundColor: colors.background.light }}>
+                      <CardBody className="p-4">
+                        {/* Tutor header */}
+                        <div className="flex items-center gap-3 mb-4 flex-wrap">
+                          <Avatar
+                            src={withCDN(tutor?.avatar)}
+                            name={name}
+                            size="md"
+                            className="flex-shrink-0 cursor-pointer"
+                            onClick={() => navigate(`/admin/tutors/${tutorId}`)}
+                          />
+                          <div className="flex-1 min-w-0">
+                            <button
+                              type="button"
+                              className="font-semibold text-sm hover:underline text-left"
+                              style={{ color: colors.primary.main }}
+                              onClick={() => navigate(`/admin/tutors/${tutorId}`)}
+                            >
+                              {name}
+                            </button>
+                            <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                              <span className="text-xs" style={{ color: colors.text.tertiary }}>
+                                {slots.length} {t("adminDashboard.schedule.totalSlots")}
+                              </span>
+                              {openCount > 0 && (
+                                <Chip size="sm" className="h-4" style={{ backgroundColor: `${colors.state.success}20`, color: colors.state.success, fontSize: "10px" }}>
+                                  {openCount} {t("adminDashboard.schedule.scheduleStatuses.Open")}
+                                </Chip>
+                              )}
+                              {bookedCount > 0 && (
+                                <Chip size="sm" className="h-4" style={{ backgroundColor: `${colors.primary.main}20`, color: colors.primary.main, fontSize: "10px" }}>
+                                  {bookedCount} {t("adminDashboard.schedule.scheduleStatuses.Booked")}
+                                </Chip>
+                              )}
                             </div>
                           </div>
-                        </TableCell>
-                        <TableCell>
-                          <span style={{ color: colors.text.primary }}>
-                            {schedule.weekday
-                              ? t(
-                                  `adminDashboard.schedule.days.${schedule.weekday.toLowerCase()}`,
-                                )
-                              : t("adminDashboard.schedule.nA")}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-1">
-                            <Clock
-                              className="w-4 h-4"
-                              style={{ color: colors.text.secondary }}
-                            />
-                            <span
-                              className="text-sm"
-                              style={{ color: colors.text.primary }}
-                            >
-                              {formatTime(schedule.startTime)} —{" "}
-                              {formatTime(schedule.endTime)}
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Chip
-                            size="sm"
-                            color={getScheduleStatusColor(schedule.status)}
-                            variant="flat"
-                          >
-                            {t(
-                              `adminDashboard.schedule.scheduleStatuses.${schedule.status}`,
-                            ) || schedule.status}
-                          </Chip>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardBody>
-            </Card>
+                        </div>
+
+                        {/* Weekly grid */}
+                        <div className="grid grid-cols-7 gap-1.5">
+                          {WEEKDAYS.map((day) => {
+                            const daySlotsAll = byDay[day];
+                            const daySlots = daySlotsAll.slice(0, 3);
+                            const overflow = daySlotsAll.length - 3;
+                            return (
+                              <div key={day} className="flex flex-col gap-1">
+                                <p
+                                  className="text-center text-xs font-semibold mb-1"
+                                  style={{ color: colors.text.tertiary }}
+                                >
+                                  {WEEKDAY_SHORT[day]}
+                                </p>
+                                {daySlots.map((slot) => {
+                                  const sc = getSlotStatusColor(slot.status);
+                                  return (
+                                    <div
+                                      key={slot.id}
+                                      className="text-center px-1 py-1 rounded-md"
+                                      style={{ backgroundColor: `${sc}15`, border: `1px solid ${sc}30` }}
+                                    >
+                                      <p className="text-xs font-medium" style={{ color: sc }}>
+                                        {formatTime(slot.startTime)}
+                                      </p>
+                                      <p style={{ color: sc, fontSize: "9px" }}>
+                                        {t(`adminDashboard.schedule.scheduleStatuses.${slot.status}`)}
+                                      </p>
+                                    </div>
+                                  );
+                                })}
+                                {overflow > 0 && (
+                                  <p className="text-center" style={{ color: colors.text.tertiary, fontSize: "10px" }}>
+                                    +{overflow}
+                                  </p>
+                                )}
+                                {daySlotsAll.length === 0 && (
+                                  <div className="h-8 rounded-md" style={{ backgroundColor: colors.background.gray }} />
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </CardBody>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
           </motion.div>
         </>
       )}
 
-      {/* ════════════ Lesson Detail Modal ════════════ */}
+      {/* ══════════ LESSON DETAIL MODAL ══════════ */}
       <Modal isOpen={isDetailOpen} onClose={onDetailClose} size="xl">
         <ModalContent style={{ backgroundColor: colors.background.light }}>
           {() => {
@@ -886,195 +1089,101 @@ const ScheduleManagement = () => {
             const startDate = new Date(lesson.startTime);
             const endDate = new Date(lesson.endTime);
             const durationMin = Math.round((endDate - startDate) / 60000);
-
             return (
               <>
-                <ModalHeader
-                  className="flex items-center gap-2"
-                  style={{ color: colors.text.primary }}
-                >
+                <ModalHeader className="flex items-center gap-2" style={{ color: colors.text.primary }}>
                   <BookOpen weight="duotone" className="w-5 h-5" />
                   {t("adminDashboard.schedule.lessonDetail")}
                 </ModalHeader>
                 <ModalBody className="pb-6">
-                  <div className="space-y-5">
-                    {/* Course info */}
-                    <div
-                      className="p-4 rounded-xl"
-                      style={{ backgroundColor: colors.background.gray }}
-                    >
-                      <p
-                        className="font-semibold mb-1"
-                        style={{ color: colors.text.primary }}
-                      >
+                  <div className="space-y-4">
+                    {/* Course */}
+                    <div className="p-4 rounded-xl" style={{ backgroundColor: colors.background.gray }}>
+                      <p className="font-semibold" style={{ color: colors.text.primary }}>
                         {lesson.courseTitle || t("adminDashboard.schedule.nA")}
                       </p>
                       {lesson.sessionTitle && (
-                        <p
-                          className="text-sm"
-                          style={{ color: colors.text.secondary }}
-                        >
+                        <p className="text-sm mt-0.5" style={{ color: colors.text.secondary }}>
                           {lesson.sessionTitle}
                         </p>
                       )}
                     </div>
 
-                    {/* Date & Time */}
-                    <div className="grid grid-cols-2 gap-4">
-                      <div
-                        className="p-3 rounded-xl"
-                        style={{ backgroundColor: colors.background.gray }}
-                      >
-                        <p
-                          className="text-xs font-semibold flex items-center gap-1 mb-1"
-                          style={{ color: colors.text.secondary }}
-                        >
+                    {/* Date + Time */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="p-3 rounded-xl" style={{ backgroundColor: colors.background.gray }}>
+                        <p className="text-xs font-semibold flex items-center gap-1 mb-1" style={{ color: colors.text.secondary }}>
                           <CalendarDots className="w-3.5 h-3.5" />
                           {t("adminDashboard.schedule.detail.date")}
                         </p>
-                        <p
-                          className="text-sm"
-                          style={{ color: colors.text.primary }}
-                        >
-                          {startDate.toLocaleDateString(dateLocale, {
-                            weekday: "long",
-                            year: "numeric",
-                            month: "long",
-                            day: "numeric",
-                          })}
+                        <p className="text-sm" style={{ color: colors.text.primary }}>
+                          {startDate.toLocaleDateString(dateLocale, { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
                         </p>
                       </div>
-                      <div
-                        className="p-3 rounded-xl"
-                        style={{ backgroundColor: colors.background.gray }}
-                      >
-                        <p
-                          className="text-xs font-semibold flex items-center gap-1 mb-1"
-                          style={{ color: colors.text.secondary }}
-                        >
+                      <div className="p-3 rounded-xl" style={{ backgroundColor: colors.background.gray }}>
+                        <p className="text-xs font-semibold flex items-center gap-1 mb-1" style={{ color: colors.text.secondary }}>
                           <Clock className="w-3.5 h-3.5" />
                           {t("adminDashboard.schedule.detail.time")}
                         </p>
-                        <p
-                          className="text-sm"
-                          style={{ color: colors.text.primary }}
-                        >
-                          {startDate.toLocaleTimeString(dateLocale, {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}{" "}
-                          —{" "}
-                          {endDate.toLocaleTimeString(dateLocale, {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}{" "}
-                          ({durationMin}m)
+                        <p className="text-sm" style={{ color: colors.text.primary }}>
+                          {startDate.toLocaleTimeString(dateLocale, { hour: "2-digit", minute: "2-digit" })} — {endDate.toLocaleTimeString(dateLocale, { hour: "2-digit", minute: "2-digit" })} ({durationMin}m)
                         </p>
                       </div>
                     </div>
 
-                    {/* Status & Meeting */}
-                    <div className="grid grid-cols-2 gap-4">
-                      <div
-                        className="p-3 rounded-xl"
-                        style={{ backgroundColor: colors.background.gray }}
-                      >
-                        <p
-                          className="text-xs font-semibold mb-1"
-                          style={{ color: colors.text.secondary }}
-                        >
+                    {/* Status + Meeting */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="p-3 rounded-xl" style={{ backgroundColor: colors.background.gray }}>
+                        <p className="text-xs font-semibold mb-1.5" style={{ color: colors.text.secondary }}>
                           {t("adminDashboard.schedule.detail.lessonStatus")}
                         </p>
-                        <Chip
-                          size="sm"
-                          color={getLessonStatusColor(lesson.status)}
-                          variant="flat"
-                        >
-                          {t(
-                            `adminDashboard.schedule.lessonStatuses.${lesson.status}`,
-                          ) || lesson.status}
+                        <Chip size="sm" variant="flat" style={{ backgroundColor: `${getLessonStatusColor(lesson.status)}20`, color: getLessonStatusColor(lesson.status) }}>
+                          {t(`adminDashboard.schedule.lessonStatuses.${lesson.status}`) || lesson.status}
                         </Chip>
                       </div>
-                      <div
-                        className="p-3 rounded-xl"
-                        style={{ backgroundColor: colors.background.gray }}
-                      >
-                        <p
-                          className="text-xs font-semibold mb-1"
-                          style={{ color: colors.text.secondary }}
-                        >
+                      <div className="p-3 rounded-xl" style={{ backgroundColor: colors.background.gray }}>
+                        <p className="text-xs font-semibold mb-1.5" style={{ color: colors.text.secondary }}>
                           {t("adminDashboard.schedule.detail.meetingStatus")}
                         </p>
                         <Chip
                           size="sm"
-                          color={
-                            lesson.meetingStatus === "InProgress"
-                              ? "success"
-                              : lesson.meetingStatus === "Waiting"
-                                ? "warning"
-                                : lesson.meetingStatus === "Ended"
-                                  ? "primary"
-                                  : "default"
-                          }
                           variant="flat"
+                          color={lesson.meetingStatus === "InProgress" ? "success" : lesson.meetingStatus === "Waiting" ? "warning" : lesson.meetingStatus === "Ended" ? "primary" : "default"}
                         >
-                          {lesson.meetingStatus ||
-                            t("adminDashboard.schedule.nA")}
+                          {lesson.meetingStatus || t("adminDashboard.schedule.nA")}
                         </Chip>
                       </div>
                     </div>
 
-                    {/* Tutor & Student */}
-                    <div className="grid grid-cols-2 gap-4">
+                    {/* Tutor + Student */}
+                    <div className="grid grid-cols-2 gap-3">
                       <div
                         className="p-3 rounded-xl flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
                         style={{ backgroundColor: colors.background.gray }}
-                        onClick={() => {
-                          if (lesson.tutorId) {
-                            onDetailClose();
-                            navigate(`/admin/tutors/${lesson.tutorId}`);
-                          }
-                        }}
+                        onClick={() => { if (lesson.tutorId) { onDetailClose(); navigate(`/admin/tutors/${lesson.tutorId}`); } }}
                       >
                         <Avatar src={withCDN(lesson.tutorAvatar)} size="sm" />
                         <div>
-                          <p
-                            className="text-xs font-semibold"
-                            style={{ color: colors.text.secondary }}
-                          >
+                          <p className="text-xs font-semibold" style={{ color: colors.text.secondary }}>
                             {t("adminDashboard.schedule.detail.tutor")}
                           </p>
-                          <p
-                            className="text-sm font-medium"
-                            style={{ color: colors.text.primary }}
-                          >
-                            {tutorFullName(lesson)}
+                          <p className="text-sm font-medium" style={{ color: colors.text.primary }}>
+                            {tutorLabel(lesson) || t("adminDashboard.schedule.nA")}
                           </p>
                         </div>
                       </div>
                       <div
                         className="p-3 rounded-xl flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
                         style={{ backgroundColor: colors.background.gray }}
-                        onClick={() => {
-                          if (lesson.studentId) {
-                            onDetailClose();
-                            navigate(`/admin/students/${lesson.studentId}`);
-                          }
-                        }}
+                        onClick={() => { if (lesson.studentId) { onDetailClose(); navigate(`/admin/students/${lesson.studentId}`); } }}
                       >
                         <Avatar src={withCDN(lesson.studentAvatar)} size="sm" />
                         <div>
-                          <p
-                            className="text-xs font-semibold"
-                            style={{ color: colors.text.secondary }}
-                          >
+                          <p className="text-xs font-semibold" style={{ color: colors.text.secondary }}>
                             {t("adminDashboard.schedule.detail.student")}
                           </p>
-                          <p
-                            className="text-sm font-medium"
-                            style={{ color: colors.text.primary }}
-                          >
-                            {studentFullName(lesson)}
+                          <p className="text-sm font-medium" style={{ color: colors.text.primary }}>
+                            {lessonLabel(lesson) || t("adminDashboard.schedule.nA")}
                           </p>
                         </div>
                       </div>
@@ -1082,47 +1191,28 @@ const ScheduleManagement = () => {
 
                     {/* Recording */}
                     {lesson.lessonRecord?.recordUrl && (
-                      <div
-                        className="p-3 rounded-xl flex items-center gap-3"
-                        style={{ backgroundColor: colors.background.gray }}
-                      >
-                        <VideoCamera
-                          weight="duotone"
-                          className="w-5 h-5"
-                          style={{ color: colors.primary.main }}
-                        />
-                        <div className="flex-1">
-                          <p
-                            className="text-xs font-semibold"
-                            style={{ color: colors.text.secondary }}
-                          >
+                      <div className="p-3 rounded-xl flex items-center gap-3" style={{ backgroundColor: colors.background.gray }}>
+                        <VideoCamera weight="duotone" className="w-5 h-5 flex-shrink-0" style={{ color: colors.primary.main }} />
+                        <div>
+                          <p className="text-xs font-semibold" style={{ color: colors.text.secondary }}>
                             {t("adminDashboard.schedule.detail.recording")}
                           </p>
                           {lesson.lessonRecord.durationSeconds && (
-                            <p
-                              className="text-sm"
-                              style={{ color: colors.text.primary }}
-                            >
-                              {Math.floor(
-                                lesson.lessonRecord.durationSeconds / 60,
-                              )}
-                              m {lesson.lessonRecord.durationSeconds % 60}s
+                            <p className="text-sm" style={{ color: colors.text.primary }}>
+                              {Math.floor(lesson.lessonRecord.durationSeconds / 60)}m {lesson.lessonRecord.durationSeconds % 60}s
                             </p>
                           )}
                         </div>
                       </div>
                     )}
 
-                    {/* Navigate to course */}
+                    {/* View course */}
                     {lesson.courseId && (
                       <Button
                         variant="flat"
                         className="w-full"
                         startContent={<BookOpen className="w-4 h-4" />}
-                        onPress={() => {
-                          onDetailClose();
-                          navigate(`/admin/courses/${lesson.courseId}`);
-                        }}
+                        onPress={() => { onDetailClose(); navigate(`/admin/courses/${lesson.courseId}`); }}
                         style={{ color: colors.primary.main }}
                       >
                         {t("adminDashboard.schedule.detail.viewCourse")}
@@ -1133,6 +1223,154 @@ const ScheduleManagement = () => {
               </>
             );
           }}
+        </ModalContent>
+      </Modal>
+
+      {/* ══════════ TUTOR PICKER MODAL ══════════ */}
+      <Modal isOpen={tutorPickerOpen} onClose={() => setTutorPickerOpen(false)} size="sm">
+        <ModalContent style={{ backgroundColor: colors.background.light }}>
+          <ModalHeader style={{ color: colors.text.primary }}>
+            {t("adminDashboard.schedule.selectTutor")}
+          </ModalHeader>
+          <ModalBody className="pb-5 space-y-3">
+            <Input
+              placeholder={t("adminDashboard.schedule.searchLessonPlaceholder")}
+              value={tutorPickerSearch}
+              onChange={(e) => setTutorPickerSearch(e.target.value)}
+              startContent={<MagnifyingGlass className="w-4 h-4" style={{ color: colors.text.secondary }} />}
+              classNames={inputClassNames}
+              autoFocus
+            />
+            <div className="space-y-1 max-h-64 overflow-y-auto">
+              {tutorPickerLoading ? (
+                <div className="flex justify-center py-4"><Spinner size="sm" /></div>
+              ) : tutorPickerItems.length === 0 ? (
+                <p className="text-xs text-center py-4" style={{ color: colors.text.tertiary }}>
+                  {t("adminDashboard.schedule.noResultsFound")}
+                </p>
+              ) : (
+                tutorPickerItems.map((item) => {
+                  const name = item.user
+                    ? `${item.user.firstName || ""} ${item.user.lastName || ""}`.trim()
+                    : item.tutorId || "";
+                  const id = item.tutorId || item.id;
+                  const isSelected = tutorPickerTemp?.id === id;
+                  return (
+                    <button
+                      key={id}
+                      type="button"
+                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left hover:opacity-80 transition-opacity"
+                      style={{
+                        backgroundColor: isSelected ? `${colors.primary.main}15` : colors.background.gray,
+                        border: isSelected ? `1px solid ${colors.primary.main}40` : "1px solid transparent",
+                      }}
+                      onClick={() => setTutorPickerTemp({ id, name, avatar: item.avatar })}
+                    >
+                      <Avatar src={withCDN(item.avatar)} name={name} size="sm" className="flex-shrink-0" />
+                      <span className="flex-1 text-sm font-medium truncate" style={{ color: colors.text.primary }}>
+                        {name}
+                      </span>
+                      {isSelected && <CheckCircle weight="fill" size={16} style={{ color: colors.primary.main, flexShrink: 0 }} />}
+                    </button>
+                  );
+                })
+              )}
+            </div>
+            <div className="flex gap-2 pt-1">
+              <Button
+                size="sm"
+                variant="flat"
+                className="flex-1"
+                onPress={() => { setTutorPickerTemp(null); setSelectedTutor(null); setLessonPage(1); setTutorPickerOpen(false); }}
+                startContent={<X size={14} />}
+              >
+                {t("adminDashboard.schedule.clearFilter")}
+              </Button>
+              <Button
+                size="sm"
+                className="flex-1"
+                isDisabled={!tutorPickerTemp}
+                style={{ backgroundColor: colors.primary.main, color: "#fff" }}
+                onPress={confirmTutorPicker}
+              >
+                {t("adminDashboard.schedule.applyFilter")}
+              </Button>
+            </div>
+          </ModalBody>
+        </ModalContent>
+      </Modal>
+
+      {/* ══════════ STUDENT PICKER MODAL ══════════ */}
+      <Modal isOpen={studentPickerOpen} onClose={() => setStudentPickerOpen(false)} size="sm">
+        <ModalContent style={{ backgroundColor: colors.background.light }}>
+          <ModalHeader style={{ color: colors.text.primary }}>
+            {t("adminDashboard.schedule.selectStudent")}
+          </ModalHeader>
+          <ModalBody className="pb-5 space-y-3">
+            <Input
+              placeholder={t("adminDashboard.schedule.searchLessonPlaceholder")}
+              value={studentPickerSearch}
+              onChange={(e) => setStudentPickerSearch(e.target.value)}
+              startContent={<MagnifyingGlass className="w-4 h-4" style={{ color: colors.text.secondary }} />}
+              classNames={inputClassNames}
+              autoFocus
+            />
+            <div className="space-y-1 max-h-64 overflow-y-auto">
+              {studentPickerLoading ? (
+                <div className="flex justify-center py-4"><Spinner size="sm" /></div>
+              ) : studentPickerItems.length === 0 ? (
+                <p className="text-xs text-center py-4" style={{ color: colors.text.tertiary }}>
+                  {t("adminDashboard.schedule.noResultsFound")}
+                </p>
+              ) : (
+                studentPickerItems.map((item) => {
+                  const name = item.user
+                    ? `${item.user.firstName || ""} ${item.user.lastName || ""}`.trim()
+                    : item.studentId || "";
+                  const id = item.studentId || item.id;
+                  const isSelected = studentPickerTemp?.id === id;
+                  return (
+                    <button
+                      key={id}
+                      type="button"
+                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left hover:opacity-80 transition-opacity"
+                      style={{
+                        backgroundColor: isSelected ? `${colors.state.success}15` : colors.background.gray,
+                        border: isSelected ? `1px solid ${colors.state.success}40` : "1px solid transparent",
+                      }}
+                      onClick={() => setStudentPickerTemp({ id, name, avatar: item.avatar })}
+                    >
+                      <Avatar src={withCDN(item.avatar)} name={name} size="sm" className="flex-shrink-0" />
+                      <span className="flex-1 text-sm font-medium truncate" style={{ color: colors.text.primary }}>
+                        {name}
+                      </span>
+                      {isSelected && <CheckCircle weight="fill" size={16} style={{ color: colors.state.success, flexShrink: 0 }} />}
+                    </button>
+                  );
+                })
+              )}
+            </div>
+            <div className="flex gap-2 pt-1">
+              <Button
+                size="sm"
+                variant="flat"
+                className="flex-1"
+                onPress={() => { setStudentPickerTemp(null); setSelectedStudent(null); setLessonPage(1); setStudentPickerOpen(false); }}
+                startContent={<X size={14} />}
+              >
+                {t("adminDashboard.schedule.clearFilter")}
+              </Button>
+              <Button
+                size="sm"
+                className="flex-1"
+                isDisabled={!studentPickerTemp}
+                style={{ backgroundColor: colors.state.success, color: "#fff" }}
+                onPress={confirmStudentPicker}
+              >
+                {t("adminDashboard.schedule.applyFilter")}
+              </Button>
+            </div>
+          </ModalBody>
         </ModalContent>
       </Modal>
     </div>
