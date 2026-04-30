@@ -1652,6 +1652,11 @@
       "continueCourse": "Continue Creating",
       "pendingEditLocked": "This course is under review and cannot be edited. Please wait for the admin to approve or reject it.",
       "publishedEditLocked": "Published courses cannot be edited. Please contact admin if changes are required.",
+      "publishedHasStudents": "This course has active enrollments and cannot be edited.",
+      "publishedNoStudents": "Set this course to Inactive first to enable editing.",
+      "inactiveToEdit": "Set to Inactive",
+      "inactiveConfirmTitle": "Set course to Inactive?",
+      "inactiveConfirmMessage": "This will hide the course from public listings. You can then edit and republish it when ready.",
       "resources": {
         "label": "Resources",
         "loading": "Loading resources...",

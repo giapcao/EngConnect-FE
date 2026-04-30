@@ -119,6 +119,10 @@ const TutorCourseDetail = () => {
   });
   const [addingResource, setAddingResource] = useState(false);
 
+  // Inactive course state
+  const [inactivingCourse, setInactivingCourse] = useState(false);
+  const [inactiveConfirmOpen, setInactiveConfirmOpen] = useState(false);
+
   // Schedule state
   const [courseLessons, setCourseLessons] = useState([]);
   const [lessonsLoading, setLessonsLoading] = useState(true);
@@ -396,6 +400,20 @@ const TutorCourseDetail = () => {
     }
   };
 
+  const handleInactiveCourse = async () => {
+    setInactivingCourse(true);
+    try {
+      await coursesApi.inactiveCourse(id);
+      const res = await coursesApi.getCourseById(id);
+      setCourse(res.data);
+      setInactiveConfirmOpen(false);
+    } catch (err) {
+      console.error("Failed to inactive course:", err);
+    } finally {
+      setInactivingCourse(false);
+    }
+  };
+
   const getResourceIcon = (type) => {
     const t = (type || "").toLowerCase();
     if (t === "video")
@@ -468,8 +486,10 @@ const TutorCourseDetail = () => {
         ? t("courses.detail.incompleteNoSessions")
         : "";
 
-  // Only Draft and Inactive courses can be edited
-  const canEdit = statusLower === "draft" || statusLower === "inactive";
+  // Only Draft and Inactive (with no active enrollments) courses can be edited
+  const canEdit =
+    statusLower === "draft" ||
+    (statusLower === "inactive" && !course.isEnrollment);
 
   // Schedule helpers
   const now = new Date();
@@ -604,6 +624,18 @@ const TutorCourseDetail = () => {
                 {t("tutorDashboard.myCourses.editCourse")}
               </Button>
             )
+          ) : statusLower === "published" && !course.isEnrollment ? (
+            <Button
+              variant="flat"
+              startContent={<WarningCircle size={18} />}
+              onPress={() => setInactiveConfirmOpen(true)}
+              style={{
+                backgroundColor: `${colors.state.warning}20`,
+                color: colors.state.warning,
+              }}
+            >
+              {t("courses.detail.inactiveToEdit")}
+            </Button>
           ) : null}
         </div>
       </motion.div>
@@ -624,21 +656,43 @@ const TutorCourseDetail = () => {
         </motion.div>
       )}
 
-      {/* Non-editable status alert */}
-      {!canEdit && (
+      {/* Non-editable status alerts */}
+      {!canEdit && statusLower === "pending" && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.15 }}
         >
           <Alert
-            color={statusLower === "pending" ? "warning" : "primary"}
+            color="warning"
             variant="flat"
-            title={
-              statusLower === "pending"
-                ? t("courses.detail.pendingEditLocked")
-                : t("courses.detail.publishedEditLocked")
-            }
+            title={t("courses.detail.pendingEditLocked")}
+          />
+        </motion.div>
+      )}
+      {!canEdit && statusLower === "published" && course.isEnrollment && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.15 }}
+        >
+          <Alert
+            color="primary"
+            variant="flat"
+            title={t("courses.detail.publishedHasStudents")}
+          />
+        </motion.div>
+      )}
+      {!canEdit && statusLower === "published" && !course.isEnrollment && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.15 }}
+        >
+          <Alert
+            color="warning"
+            variant="flat"
+            title={t("courses.detail.publishedNoStudents")}
           />
         </motion.div>
       )}
@@ -1375,20 +1429,34 @@ const TutorCourseDetail = () => {
                               <div
                                 key={lesson.id}
                                 className="flex items-center gap-3 p-3 rounded-xl"
-                                style={{ backgroundColor: colors.background.gray }}
+                                style={{
+                                  backgroundColor: colors.background.gray,
+                                }}
                               >
                                 {(() => {
-                                  const { hhmm, period } = formatLessonTimeBadge(lesson.startTime);
+                                  const { hhmm, period } =
+                                    formatLessonTimeBadge(lesson.startTime);
                                   return (
                                     <div
                                       className="w-12 h-10 rounded-lg flex flex-col items-center justify-center flex-shrink-0 px-1"
-                                      style={{ backgroundColor: `${colors.primary.main}15` }}
+                                      style={{
+                                        backgroundColor: `${colors.primary.main}15`,
+                                      }}
                                     >
-                                      <span className="text-xs font-bold leading-none" style={{ color: colors.primary.main }}>
+                                      <span
+                                        className="text-xs font-bold leading-none"
+                                        style={{ color: colors.primary.main }}
+                                      >
                                         {hhmm}
                                       </span>
                                       {period && (
-                                        <span className="text-[9px] font-medium leading-none mt-0.5" style={{ color: colors.primary.main, opacity: 0.75 }}>
+                                        <span
+                                          className="text-[9px] font-medium leading-none mt-0.5"
+                                          style={{
+                                            color: colors.primary.main,
+                                            opacity: 0.75,
+                                          }}
+                                        >
                                           {period}
                                         </span>
                                       )}
@@ -1399,26 +1467,54 @@ const TutorCourseDetail = () => {
                                   className="flex-1 min-w-0 cursor-pointer hover:opacity-70 transition-opacity"
                                   onClick={() => setSelectedLesson(lesson)}
                                 >
-                                  <p className="text-sm font-medium truncate" style={{ color: colors.text.primary }}>
+                                  <p
+                                    className="text-sm font-medium truncate"
+                                    style={{ color: colors.text.primary }}
+                                  >
                                     {lesson.sessionTitle || lesson.courseTitle}
                                   </p>
-                                  <p className="text-xs mt-0.5" style={{ color: colors.text.tertiary }}>
-                                    {formatLessonTime(lesson.startTime)} — {formatLessonTime(lesson.endTime)}
+                                  <p
+                                    className="text-xs mt-0.5"
+                                    style={{ color: colors.text.tertiary }}
+                                  >
+                                    {formatLessonTime(lesson.startTime)} —{" "}
+                                    {formatLessonTime(lesson.endTime)}
                                     {lesson.studentFirstName && (
-                                      <span> · {lesson.studentFirstName} {lesson.studentLastName}</span>
+                                      <span>
+                                        {" "}
+                                        · {lesson.studentFirstName}{" "}
+                                        {lesson.studentLastName}
+                                      </span>
                                     )}
                                   </p>
                                 </div>
                                 <div className="flex items-center gap-3 shrink-0">
-                                  <Chip size="sm" className="text-xs" style={{ backgroundColor: statusStyle.bg, color: statusStyle.color }}>
+                                  <Chip
+                                    size="sm"
+                                    className="text-xs"
+                                    style={{
+                                      backgroundColor: statusStyle.bg,
+                                      color: statusStyle.color,
+                                    }}
+                                  >
                                     {getLessonStatusLabel(lesson.status)}
                                   </Chip>
                                   {canJoinLesson(lesson) && (
                                     <Button
                                       size="sm"
-                                      startContent={<VideoCamera weight="fill" className="w-3.5 h-3.5" />}
-                                      onPress={() => navigate(`/meeting/${lesson.id}`)}
-                                      style={{ backgroundColor: colors.primary.main, color: "#fff" }}
+                                      startContent={
+                                        <VideoCamera
+                                          weight="fill"
+                                          className="w-3.5 h-3.5"
+                                        />
+                                      }
+                                      onPress={() =>
+                                        navigate(`/meeting/${lesson.id}`)
+                                      }
+                                      style={{
+                                        backgroundColor: colors.primary.main,
+                                        color: "#fff",
+                                      }}
                                     >
                                       {t("tutorDashboard.schedule.joinLesson")}
                                     </Button>
@@ -1449,43 +1545,89 @@ const TutorCourseDetail = () => {
                               <div
                                 key={lesson.id}
                                 className="flex items-center gap-3 p-3 rounded-xl"
-                                style={{ backgroundColor: colors.background.gray }}
+                                style={{
+                                  backgroundColor: colors.background.gray,
+                                }}
                               >
                                 <div
                                   className="w-12 h-12 rounded-lg flex flex-col items-center justify-center flex-shrink-0"
-                                  style={{ backgroundColor: `${colors.primary.main}15` }}
+                                  style={{
+                                    backgroundColor: `${colors.primary.main}15`,
+                                  }}
                                 >
-                                  <span className="text-sm font-bold leading-none" style={{ color: colors.primary.main }}>
+                                  <span
+                                    className="text-sm font-bold leading-none"
+                                    style={{ color: colors.primary.main }}
+                                  >
                                     {new Date(lesson.startTime).getDate()}
                                   </span>
-                                  <span className="mt-0.5" style={{ color: colors.primary.main, fontSize: "10px" }}>
-                                    {new Date(lesson.startTime).toLocaleDateString(dateLocale, { month: "short" })}
+                                  <span
+                                    className="mt-0.5"
+                                    style={{
+                                      color: colors.primary.main,
+                                      fontSize: "10px",
+                                    }}
+                                  >
+                                    {new Date(
+                                      lesson.startTime,
+                                    ).toLocaleDateString(dateLocale, {
+                                      month: "short",
+                                    })}
                                   </span>
                                 </div>
                                 <div
                                   className="flex-1 min-w-0 cursor-pointer hover:opacity-70 transition-opacity"
                                   onClick={() => setSelectedLesson(lesson)}
                                 >
-                                  <p className="text-sm font-medium truncate" style={{ color: colors.text.primary }}>
+                                  <p
+                                    className="text-sm font-medium truncate"
+                                    style={{ color: colors.text.primary }}
+                                  >
                                     {lesson.sessionTitle || lesson.courseTitle}
                                   </p>
-                                  <p className="text-xs mt-0.5" style={{ color: colors.text.tertiary }}>
-                                    {formatLessonDate(lesson.startTime)} · {formatLessonTime(lesson.startTime)} — {formatLessonTime(lesson.endTime)}
+                                  <p
+                                    className="text-xs mt-0.5"
+                                    style={{ color: colors.text.tertiary }}
+                                  >
+                                    {formatLessonDate(lesson.startTime)} ·{" "}
+                                    {formatLessonTime(lesson.startTime)} —{" "}
+                                    {formatLessonTime(lesson.endTime)}
                                     {lesson.studentFirstName && (
-                                      <span> · {lesson.studentFirstName} {lesson.studentLastName}</span>
+                                      <span>
+                                        {" "}
+                                        · {lesson.studentFirstName}{" "}
+                                        {lesson.studentLastName}
+                                      </span>
                                     )}
                                   </p>
                                 </div>
                                 <div className="flex items-center gap-3 shrink-0">
-                                  <Chip size="sm" className="text-xs" style={{ backgroundColor: statusStyle.bg, color: statusStyle.color }}>
+                                  <Chip
+                                    size="sm"
+                                    className="text-xs"
+                                    style={{
+                                      backgroundColor: statusStyle.bg,
+                                      color: statusStyle.color,
+                                    }}
+                                  >
                                     {getLessonStatusLabel(lesson.status)}
                                   </Chip>
                                   {canJoinLesson(lesson) && (
                                     <Button
                                       size="sm"
-                                      startContent={<VideoCamera weight="fill" className="w-3.5 h-3.5" />}
-                                      onPress={() => navigate(`/meeting/${lesson.id}`)}
-                                      style={{ backgroundColor: colors.primary.main, color: "#fff" }}
+                                      startContent={
+                                        <VideoCamera
+                                          weight="fill"
+                                          className="w-3.5 h-3.5"
+                                        />
+                                      }
+                                      onPress={() =>
+                                        navigate(`/meeting/${lesson.id}`)
+                                      }
+                                      style={{
+                                        backgroundColor: colors.primary.main,
+                                        color: "#fff",
+                                      }}
                                     >
                                       {t("tutorDashboard.schedule.joinLesson")}
                                     </Button>
@@ -2113,6 +2255,44 @@ const TutorCourseDetail = () => {
                   }}
                 >
                   {t("common.add")}
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
+
+      {/* Inactive Course Confirm Modal */}
+      <Modal
+        isOpen={inactiveConfirmOpen}
+        onOpenChange={setInactiveConfirmOpen}
+        size="sm"
+      >
+        <ModalContent style={{ backgroundColor: colors.background.light }}>
+          {(onClose) => (
+            <>
+              <ModalHeader style={{ color: colors.text.primary }}>
+                {t("courses.detail.inactiveConfirmTitle")}
+              </ModalHeader>
+              <ModalBody>
+                <p className="text-sm" style={{ color: colors.text.secondary }}>
+                  {t("courses.detail.inactiveConfirmMessage")}
+                </p>
+              </ModalBody>
+              <ModalFooter>
+                <Button variant="flat" onPress={onClose}>
+                  {t("common.cancel")}
+                </Button>
+                <Button
+                  variant="flat"
+                  isLoading={inactivingCourse}
+                  onPress={handleInactiveCourse}
+                  style={{
+                    backgroundColor: `${colors.state.warning}20`,
+                    color: colors.state.warning,
+                  }}
+                >
+                  {t("courses.detail.inactiveToEdit")}
                 </Button>
               </ModalFooter>
             </>

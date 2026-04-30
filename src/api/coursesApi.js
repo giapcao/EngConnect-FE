@@ -59,6 +59,12 @@ export const coursesApi = {
     return response.data;
   },
 
+  // Set course to inactive (tutor)
+  inactiveCourse: async (courseId) => {
+    const response = await axiosInstance.patch(`/courses/${courseId}/inactive`);
+    return response.data;
+  },
+
   // Create new course (multipart/form-data for file uploads)
   createCourse: async (courseData) => {
     const formData = new FormData();
