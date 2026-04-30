@@ -40,6 +40,8 @@ const Dashboard = () => {
   const [lessonsLoading, setLessonsLoading] = useState(true);
   const [recentStudents, setRecentStudents] = useState([]);
   const [recentStudentsLoading, setRecentStudentsLoading] = useState(true);
+  const [recentReviews, setRecentReviews] = useState([]);
+  const [recentReviewsLoading, setRecentReviewsLoading] = useState(true);
 
   const fetchUpcomingLessons = useCallback(async () => {
     if (!user?.tutorId) return;
@@ -135,24 +137,54 @@ const Dashboard = () => {
     },
   ];
 
-  const recentReviews = [
-    {
-      id: 1,
-      student: "Nguyen Van A",
-      avatar: "https://i.pravatar.cc/150?u=student1",
-      rating: 5,
-      comment: "Excellent teacher! Very patient and clear explanations.",
-      date: "2 days ago",
-    },
-    {
-      id: 2,
-      student: "Tran Thi B",
-      avatar: "https://i.pravatar.cc/150?u=student2",
-      rating: 5,
-      comment: "Great lesson structure and helpful feedback.",
-      date: "1 week ago",
-    },
-  ];
+  useEffect(() => {
+    if (!user?.tutorId) return;
+    const fetchRecentReviews = async () => {
+      try {
+        const res = await coursesApi.getCourseReviews({
+          TutorId: user.tutorId,
+          page: 1,
+          "page-size": 5,
+          "sort-params": "CreatedAt-desc",
+        });
+        const items = res?.data?.items || [];
+        const enriched = await Promise.all(
+          items.map(async (review) => {
+            const [studentRes, enrollmentRes] = await Promise.allSettled([
+              studentApi.getStudentById(review.studentId),
+              coursesApi.getCourseEnrollmentById(review.enrollmentId),
+            ]);
+            const s =
+              studentRes.status === "fulfilled" ? studentRes.value?.data : null;
+            const enrollment =
+              enrollmentRes.status === "fulfilled"
+                ? enrollmentRes.value?.data
+                : null;
+            return {
+              id: review.id,
+              studentName: s
+                ? `${s.user?.firstName || ""} ${s.user?.lastName || ""}`.trim() ||
+                  s.user?.userName
+                : "Student",
+              studentAvatar: s?.avatar || null,
+              rating: review.rating,
+              comment: review.comment || "",
+              courseTitle: enrollment?.course?.title || "",
+              courseId: enrollment?.courseId || review.courseId,
+              isAnonymous: review.isAnonymous,
+              createdAt: review.createdAt,
+            };
+          }),
+        );
+        setRecentReviews(enriched);
+      } catch {
+        setRecentReviews([]);
+      } finally {
+        setRecentReviewsLoading(false);
+      }
+    };
+    fetchRecentReviews();
+  }, [user?.tutorId]);
 
   return (
     <div className="space-y-6">
@@ -575,47 +607,90 @@ const Dashboard = () => {
                 </h2>
 
                 <div className="space-y-4">
-                  {recentReviews.map((review) => (
-                    <div
-                      key={review.id}
-                      className="p-3 rounded-xl"
-                      style={{ backgroundColor: colors.background.gray }}
-                    >
-                      <div className="flex items-center gap-2 mb-2">
-                        <Avatar src={review.avatar} size="sm" />
-                        <div className="flex-1">
-                          <p
-                            className="font-medium text-sm"
-                            style={{ color: colors.text.primary }}
-                          >
-                            {review.student}
-                          </p>
-                          <div className="flex items-center gap-1">
-                            {[...Array(review.rating)].map((_, i) => (
-                              <Star
-                                key={i}
-                                weight="fill"
-                                className="w-3 h-3"
-                                style={{ color: colors.state.warning }}
-                              />
-                            ))}
-                          </div>
-                        </div>
-                        <span
-                          className="text-xs"
-                          style={{ color: colors.text.tertiary }}
-                        >
-                          {review.date}
-                        </span>
-                      </div>
-                      <p
-                        className="text-sm"
-                        style={{ color: colors.text.secondary }}
-                      >
-                        "{review.comment}"
-                      </p>
+                  {recentReviewsLoading ? (
+                    <div className="flex justify-center py-4">
+                      <span style={{ color: colors.text.tertiary }}>...</span>
                     </div>
-                  ))}
+                  ) : recentReviews.length === 0 ? (
+                    <p
+                      className="text-sm text-center py-4"
+                      style={{ color: colors.text.tertiary }}
+                    >
+                      {t("tutorDashboard.dashboard.noReviews")}
+                    </p>
+                  ) : (
+                    recentReviews.map((review) => (
+                      <div
+                        key={review.id}
+                        className="p-3 rounded-xl"
+                        style={{ backgroundColor: colors.background.gray }}
+                      >
+                        <div className="flex items-center gap-2 mb-2">
+                          <Avatar
+                            src={review.studentAvatar}
+                            name={review.isAnonymous ? "?" : review.studentName}
+                            size="sm"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <p
+                              className="font-medium text-sm truncate"
+                              style={{ color: colors.text.primary }}
+                            >
+                              {review.isAnonymous
+                                ? t("tutorDashboard.dashboard.anonymous")
+                                : review.studentName}
+                            </p>
+                            <div className="flex items-center gap-1">
+                              {[...Array(5)].map((_, i) => (
+                                <Star
+                                  key={i}
+                                  weight={
+                                    i < review.rating ? "fill" : "regular"
+                                  }
+                                  className="w-3 h-3"
+                                  style={{
+                                    color:
+                                      i < review.rating
+                                        ? colors.state.warning
+                                        : colors.border.light,
+                                  }}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                          <span
+                            className="text-xs flex-shrink-0"
+                            style={{ color: colors.text.tertiary }}
+                          >
+                            {new Date(review.createdAt).toLocaleDateString(
+                              undefined,
+                              { month: "short", day: "numeric" },
+                            )}
+                          </span>
+                        </div>
+                        {review.courseTitle && (
+                          <button
+                            type="button"
+                            className="text-xs font-medium mb-1 hover:underline truncate block max-w-full text-left"
+                            style={{ color: colors.primary.main }}
+                            onClick={() =>
+                              navigate(`/tutor/courses/${review.courseId}`)
+                            }
+                          >
+                            {review.courseTitle}
+                          </button>
+                        )}
+                        {review.comment && (
+                          <p
+                            className="text-sm"
+                            style={{ color: colors.text.secondary }}
+                          >
+                            &quot;{review.comment}&quot;
+                          </p>
+                        )}
+                      </div>
+                    ))
+                  )}
                 </div>
               </CardBody>
             </Card>

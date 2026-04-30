@@ -924,6 +924,8 @@
       "basedOn": "based on",
       "reviews": "reviews",
       "recentReviews": "Recent Reviews",
+      "noReviews": "No reviews yet",
+      "anonymous": "Anonymous",
       "viewAll": "View All",
       "start": "Start"
     },

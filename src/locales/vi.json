@@ -922,6 +922,8 @@
       "basedOn": "dựa trên",
       "reviews": "đánh giá",
       "recentReviews": "Đánh giá gần đây",
+      "noReviews": "Chưa có đánh giá nào",
+      "anonymous": "Ẩn danh",
       "viewAll": "Xem tất cả",
       "start": "Bắt đầu"
     },
