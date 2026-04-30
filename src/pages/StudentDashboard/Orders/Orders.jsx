@@ -120,7 +120,7 @@ const Orders = () => {
       const params = {
         page,
         "page-size": PAGE_SIZE,
-        "sort-params": "OrderNo-asc",
+        //"sort-params": "OrderNo-asc",
         StudentId: user.studentId,
       };
       if (statusFilter !== "All") params.Status = statusFilter;

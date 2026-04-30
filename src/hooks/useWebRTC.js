@@ -375,7 +375,10 @@ export default function useWebRTC(lessonId, userRole) {
           mimeType: "video/webm",
         });
         recorderRef.current = recorder;
-        chunkCountRef.current = 0;
+        // Resume from previous session's count (tutor may have reconnected after a disconnect).
+        // Timestamps use Date.now() so they stay monotonically increasing across sessions.
+        const sessionKey = `rec_cnt_${lessonId}`;
+        chunkCountRef.current = Number.parseInt(sessionStorage.getItem(sessionKey) || "0", 10);
         chunkTimestampRef.current = 0;
         pendingUploadsRef.current = [];
 
@@ -385,6 +388,7 @@ export default function useWebRTC(lessonId, userRole) {
             const ts = Math.max(now, chunkTimestampRef.current + 1);
             chunkTimestampRef.current = ts;
             chunkCountRef.current += 1;
+            sessionStorage.setItem(sessionKey, String(chunkCountRef.current));
 
             const uploadPromise = meetingApi
               .uploadRecordingChunk(lessonId, ts, event.data)
@@ -495,18 +499,13 @@ export default function useWebRTC(lessonId, userRole) {
         return [...prev, data];
       });
 
-      const shouldCreateOffer =
-        userRole === "Tutor" ||
-        (connection.connectionId &&
-          data.connectionId &&
-          connection.connectionId < data.connectionId);
-
-      if (!shouldCreateOffer) {
-        console.log("Skip offer creation for", data.connectionId);
-        return;
-      }
-
-      // Create peer and send offer to the new user
+      // Whoever is already in the room when UserJoined fires is always the offerer.
+      // The original connectionId tiebreaker broke reconnects: when the tutor rejoins,
+      // the student receives UserJoined but the tutor never gets UserJoined for the
+      // existing student, so the tiebreaker could silently skip offer creation and
+      // leave both sides waiting. Since UserJoined only fires for the person already
+      // in the room (the newcomer gets RoomJoined, not UserJoined for others), there
+      // is no glare risk in the normal or reconnect flows.
       const pc = createPeerConnection(data.connectionId);
 
       // Offerer creates the data channel BEFORE creating the offer
@@ -887,6 +886,7 @@ export default function useWebRTC(lessonId, userRole) {
   // End meeting (tutor only) — flush recording before signaling
   const endMeeting = useCallback(async () => {
     await stopRecording();
+    sessionStorage.removeItem(`rec_cnt_${lessonId}`);
     if (hubRef.current) {
       try {
         await hubRef.current.invoke(

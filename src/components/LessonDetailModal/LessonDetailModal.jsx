@@ -158,7 +158,11 @@ const LessonDetailModal = ({ isOpen, onClose, lesson, role = "tutor" }) => {
 
   const canJoinLesson = (l) =>
     l.meetingStatus === "InProgress" ||
-    (l.meetingStatus === "Waiting" && l.status !== "Completed");
+    (l.status !== "Completed" &&
+      l.status !== "NoStudent" &&
+      l.status !== "NoTutor" &&
+      l.status !== "Cancelled" &&
+      l.meetingStatus !== "Ended");
 
   const studentFullName = (l) =>
     [l.studentFirstName, l.studentLastName].filter(Boolean).join(" ");
