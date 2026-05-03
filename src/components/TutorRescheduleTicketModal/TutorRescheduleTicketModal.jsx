@@ -85,7 +85,7 @@ export default function TutorRescheduleTicketModal({
         createdBy: userId,
         subject: autoSubject,
         description: buildDescription(),
-        type: "Other",
+        type: "Reschedule",
       });
       onSuccess?.();
       handleClose();

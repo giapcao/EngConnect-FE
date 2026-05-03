@@ -713,7 +713,25 @@
         "confirm": "Confirm Selection",
         "errorSelect": "Please select a time option",
         "errorConfirm": "Failed to confirm. Please try again.",
-        "pendingSection": "{{count}} reschedule offer(s) waiting for your response"
+        "pendingSection": "{{count}} reschedule offer(s) waiting for your response",
+        "requestTitle": "Request a Reschedule",
+        "requestBtn": "Request Reschedule",
+        "requestPendingChip": "Request Pending",
+        "requestAvailableSlots": "Available time slots",
+        "requestLoadingSlots": "Loading available slots...",
+        "requestNoSlots": "No available slots in the reschedule window",
+        "requestNote": "Note to tutor (optional) — tell your tutor why you need to reschedule...",
+        "requestSend": "Send Request",
+        "requestError": "Failed to submit. Please try again.",
+        "requestErrorNoTime": "Please select a time slot",
+        "requestHistory": "Previous requests",
+        "requestHasPending": "You already have a pending request — submitting again will create another",
+        "requestStatusPending": "Pending",
+        "requestStatusApproved": "Approved",
+        "requestStatusRejected": "Rejected",
+        "myRequestsTab": "My Requests",
+        "noRequests": "You haven't sent any reschedule requests yet",
+        "requestProposed": "Proposed time"
       }
     },
     "homework": {
@@ -1275,6 +1293,42 @@
         "ticketFieldReason": "Reason",
         "ticketSend": "Send Request",
         "ticketError": "Failed to send request. Please try again."
+      },
+      "studentRequestsTab": "Requests",
+      "noStudentRequests": "No pending reschedule requests",
+      "studentRequest": {
+        "originalTime": "Original:",
+        "proposedTime": "Proposed:",
+        "studentNote": "Note:",
+        "approve": "Approve",
+        "reject": "Reject",
+        "rejectNotePlaceholder": "Reason for rejection (optional)...",
+        "confirmReject": "Confirm Reject",
+        "cancelAction": "Cancel"
+      },
+      "panel": {
+        "offersBtn": "My Reschedule Offers",
+        "studentRequestsBtn": "Reschedule Requests",
+        "ticketsBtn": "Reschedule Tickets",
+        "noOffers": "No reschedule offers sent",
+        "noTickets": "No reschedule tickets filed",
+        "requestStatus": {
+          "Pending": "Pending",
+          "Approved": "Approved",
+          "Rejected": "Rejected"
+        },
+        "offerStatus": {
+          "PendingStudentChoice": "Awaiting student",
+          "Accepted": "Accepted",
+          "Rejected": "Rejected",
+          "Expired": "Expired"
+        },
+        "ticketStatus": {
+          "Open": "Open",
+          "InProgress": "In Progress",
+          "Resolved": "Resolved",
+          "Closed": "Closed"
+        }
       }
     },
     "students": {
@@ -1878,6 +1932,9 @@
       "Question": "Question",
       "FeatureRequest": "Feature Request",
       "Billing": "Billing",
+      "Payout": "Payout",
+      "Refund": "Refund",
+      "Reschedule": "Reschedule",
       "Other": "Other"
     },
     "statuses": {
@@ -2451,6 +2508,9 @@
         "Question": "Question",
         "FeatureRequest": "Feature Request",
         "Billing": "Billing",
+        "Payout": "Payout",
+        "Refund": "Refund",
+        "Reschedule": "Reschedule",
         "Other": "Other"
       },
       "statuses": {

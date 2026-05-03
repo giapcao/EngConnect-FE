@@ -711,7 +711,25 @@
         "confirm": "Xác nhận lựa chọn",
         "errorSelect": "Vui lòng chọn một khung giờ",
         "errorConfirm": "Xác nhận thất bại. Vui lòng thử lại.",
-        "pendingSection": "{{count}} đề xuất đổi lịch đang chờ phản hồi"
+        "pendingSection": "{{count}} đề xuất đổi lịch đang chờ phản hồi",
+        "requestTitle": "Yêu cầu đổi lịch",
+        "requestBtn": "Yêu cầu đổi lịch",
+        "requestPendingChip": "Đang chờ duyệt",
+        "requestAvailableSlots": "Khung giờ trống",
+        "requestLoadingSlots": "Đang tải khung giờ...",
+        "requestNoSlots": "Không có khung giờ trống trong cửa sổ đổi lịch",
+        "requestNote": "Ghi chú cho gia sư (không bắt buộc) — cho gia sư biết lý do bạn muốn đổi lịch...",
+        "requestSend": "Gửi yêu cầu",
+        "requestError": "Gửi yêu cầu thất bại. Vui lòng thử lại.",
+        "requestErrorNoTime": "Vui lòng chọn khung giờ",
+        "requestHistory": "Yêu cầu trước đó",
+        "requestHasPending": "Bạn đã có yêu cầu đang chờ duyệt — gửi thêm sẽ tạo yêu cầu mới",
+        "requestStatusPending": "Chờ duyệt",
+        "requestStatusApproved": "Đã duyệt",
+        "requestStatusRejected": "Đã từ chối",
+        "myRequestsTab": "Yêu cầu của tôi",
+        "noRequests": "Bạn chưa gửi yêu cầu đổi lịch nào",
+        "requestProposed": "Thời gian đề xuất"
       }
     },
     "homework": {
@@ -1273,6 +1291,42 @@
         "ticketFieldReason": "Lý do",
         "ticketSend": "Gửi yêu cầu",
         "ticketError": "Gửi yêu cầu thất bại. Vui lòng thử lại."
+      },
+      "studentRequestsTab": "Yêu cầu",
+      "noStudentRequests": "Không có yêu cầu đổi lịch nào",
+      "studentRequest": {
+        "originalTime": "Lịch gốc:",
+        "proposedTime": "Đề xuất:",
+        "studentNote": "Ghi chú:",
+        "approve": "Chấp nhận",
+        "reject": "Từ chối",
+        "rejectNotePlaceholder": "Lý do từ chối (không bắt buộc)...",
+        "confirmReject": "Xác nhận từ chối",
+        "cancelAction": "Hủy"
+      },
+      "panel": {
+        "offersBtn": "Đề xuất đổi lịch",
+        "studentRequestsBtn": "Yêu cầu đổi lịch",
+        "ticketsBtn": "Phiếu đổi lịch",
+        "noOffers": "Chưa gửi đề xuất đổi lịch nào",
+        "noTickets": "Chưa tạo phiếu hỗ trợ nào",
+        "requestStatus": {
+          "Pending": "Chờ duyệt",
+          "Approved": "Đã duyệt",
+          "Rejected": "Đã từ chối"
+        },
+        "offerStatus": {
+          "PendingStudentChoice": "Chờ học viên chọn",
+          "Accepted": "Đã chấp nhận",
+          "Rejected": "Đã từ chối",
+          "Expired": "Hết hạn"
+        },
+        "ticketStatus": {
+          "Open": "Mở",
+          "InProgress": "Đang xử lý",
+          "Resolved": "Đã giải quyết",
+          "Closed": "Đã đóng"
+        }
       }
     },
     "students": {
@@ -1876,6 +1930,9 @@
       "Question": "Câu hỏi",
       "FeatureRequest": "Yêu cầu tính năng",
       "Billing": "Thanh toán",
+      "Payout": "Thanh toán gia sư",
+      "Refund": "Hoàn tiền",
+      "Reschedule": "Đổi lịch",
       "Other": "Khác"
     },
     "statuses": {
@@ -2448,6 +2505,9 @@
         "Question": "Câu hỏi",
         "FeatureRequest": "Yêu cầu tính năng",
         "Billing": "Thanh toán",
+        "Payout": "Thanh toán gia sư",
+        "Refund": "Hoàn tiền",
+        "Reschedule": "Đổi lịch",
         "Other": "Khác"
       },
       "statuses": {

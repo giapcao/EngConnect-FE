@@ -60,6 +60,9 @@ const TICKET_TYPES = [
   "Question",
   "FeatureRequest",
   "Billing",
+  "Payout",
+  "Refund",
+  "Reschedule",
   "Other",
 ];
 
@@ -75,6 +78,9 @@ const TYPE_COLORS = {
   Question: "primary",
   FeatureRequest: "secondary",
   Billing: "success",
+  Payout: "success",
+  Refund: "warning",
+  Reschedule: "secondary",
   Other: "default",
 };
 
@@ -349,7 +355,7 @@ const HelpSupport = () => {
                   >
                     {t("helpSupport.detail.description")}
                   </p>
-                  <p style={{ color: colors.text.primary }}>
+                  <p className="whitespace-pre-wrap" style={{ color: colors.text.primary }}>
                     {selectedTicket.description}
                   </p>
                 </div>
