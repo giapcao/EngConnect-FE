@@ -166,7 +166,8 @@
       "bio": "Giới thiệu",
       "MonthExperience": "Kinh nghiệm",
       "cv": "CV",
-      "video": "Video giới thiệu"
+      "video": "Video giới thiệu",
+      "bank": "Ngân hàng"
     },
     "profileSection": "Thông tin hồ sơ",
     "saveProfile": "Lưu hồ sơ",
@@ -192,7 +193,22 @@
     "firstNamePlaceholder": "Tên",
     "lastName": "Họ",
     "lastNamePlaceholder": "Họ",
-    "avatarHint": "Nhấn để thay đổi ảnh đại diện"
+    "avatarHint": "Nhấn để thay đổi ảnh đại diện",
+    "bankSection": "Tài khoản ngân hàng",
+    "bankCode": "Ngân hàng",
+    "bankCodePlaceholder": "Chọn ngân hàng của bạn",
+    "bankAccountNumber": "Số tài khoản",
+    "bankAccountNumberPlaceholder": "Nhập số tài khoản",
+    "bankAccountName": "Tên chủ tài khoản",
+    "bankAccountNamePlaceholder": "Nhập tên chủ tài khoản",
+    "password": "Mật khẩu tài khoản",
+    "passwordPlaceholder": "Nhập mật khẩu để xác nhận",
+    "saveBank": "Lưu thông tin ngân hàng",
+    "bankSaved": "Đã lưu thông tin ngân hàng thành công",
+    "bankSaveFailed": "Lưu thông tin ngân hàng thất bại",
+    "bankInvalidPassword": "Mật khẩu không hợp lệ. Vui lòng thử lại.",
+    "bankValidationFailed": "Không thể tra cứu tài khoản ngân hàng. Vui lòng kiểm tra lại thông tin.",
+    "bankModalTitle": "Chọn ngân hàng"
   },
   "home": {
     "hero": {

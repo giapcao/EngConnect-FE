@@ -8,6 +8,10 @@ import {
   Spinner,
   Avatar,
   addToast,
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
 } from "@heroui/react";
 import { useTranslation } from "react-i18next";
 import * as MotionLib from "framer-motion";
@@ -28,7 +32,205 @@ import {
   SealCheck,
   Camera,
   Eye,
+  Bank,
+  CaretDown,
 } from "@phosphor-icons/react";
+
+const BANK_LIST = [
+  {
+    name: "Vietcombank",
+    code: "VCB",
+    logo: "https://api.vietqr.io/img/VCB.png",
+  },
+  {
+    name: "VietinBank",
+    code: "CTG",
+    logo: "https://api.vietqr.io/img/CTG.png",
+  },
+  {
+    name: "Techcombank",
+    code: "TCB",
+    logo: "https://api.vietqr.io/img/TCB.png",
+  },
+  { name: "BIDV", code: "BIDV", logo: "https://api.vietqr.io/img/BIDV.png" },
+  {
+    name: "Agribank",
+    code: "VARB",
+    logo: "https://api.vietqr.io/img/VARB.png",
+  },
+  { name: "NCB", code: "NVB", logo: "https://api.vietqr.io/img/NVB.png" },
+  { name: "Sacombank", code: "STB", logo: "https://api.vietqr.io/img/STB.png" },
+  { name: "ACB", code: "ACB", logo: "https://api.vietqr.io/img/ACB.png" },
+  { name: "MB Bank", code: "MB", logo: "https://api.vietqr.io/img/MB.png" },
+  { name: "TPBank", code: "TPB", logo: "https://api.vietqr.io/img/TPB.png" },
+  {
+    name: "Shinhan Bank VN",
+    code: "SVB",
+    logo: "https://api.vietqr.io/img/SVB.png",
+  },
+  { name: "VIB", code: "VIB", logo: "https://api.vietqr.io/img/VIB.png" },
+  { name: "VPBank", code: "VPB", logo: "https://api.vietqr.io/img/VPB.png" },
+  { name: "SHB", code: "SHB", logo: "https://api.vietqr.io/img/SHB.png" },
+  { name: "Eximbank", code: "EIB", logo: "https://api.vietqr.io/img/EIB.png" },
+  {
+    name: "BaoViet Bank",
+    code: "BVB",
+    logo: "https://api.vietqr.io/img/BVB.png",
+  },
+  {
+    name: "Viet Capital Bank",
+    code: "VCCB",
+    logo: "https://api.vietqr.io/img/VCCB.png",
+  },
+  { name: "SCB", code: "SCB", logo: "https://api.vietqr.io/img/SCB.png" },
+  { name: "VRB", code: "VRB", logo: "https://api.vietqr.io/img/VRB.png" },
+  { name: "ABBank", code: "ABB", logo: "https://api.vietqr.io/img/ABB.png" },
+  {
+    name: "PVcomBank",
+    code: "PVCB",
+    logo: "https://api.vietqr.io/img/PVCB.png",
+  },
+  { name: "OceanBank", code: "OJB", logo: "https://api.vietqr.io/img/OJB.png" },
+  {
+    name: "Nam A Bank",
+    code: "NAB",
+    logo: "https://api.vietqr.io/img/NAB.png",
+  },
+  { name: "HDBank", code: "HDB", logo: "https://api.vietqr.io/img/HDB.png" },
+  { name: "VietBank", code: "VB", logo: "https://api.vietqr.io/img/VB.png" },
+  { name: "CFC", code: "CFC", logo: "https://api.vietqr.io/img/CFC.png" },
+  {
+    name: "Public Bank VN",
+    code: "PBVN",
+    logo: "https://api.vietqr.io/img/PBVN.png",
+  },
+  {
+    name: "Hong Leong Bank VN",
+    code: "HLB",
+    logo: "https://api.vietqr.io/img/HLB.png",
+  },
+  { name: "PG Bank", code: "PGB", logo: "https://api.vietqr.io/img/PGB.png" },
+  {
+    name: "CO-OP Bank",
+    code: "COB",
+    logo: "https://api.vietqr.io/img/COB.png",
+  },
+  {
+    name: "CIMB Bank VN",
+    code: "CIMB",
+    logo: "https://api.vietqr.io/img/CIMB.png",
+  },
+  {
+    name: "Indovina Bank",
+    code: "IVB",
+    logo: "https://api.vietqr.io/img/IVB.png",
+  },
+  {
+    name: "DongA Bank",
+    code: "DAB",
+    logo: "https://api.vietqr.io/img/DAB.png",
+  },
+  { name: "GPBank", code: "GPB", logo: "https://api.vietqr.io/img/GPB.png" },
+  { name: "VietABank", code: "VAB", logo: "https://api.vietqr.io/img/VAB.png" },
+  {
+    name: "Saigon Bank",
+    code: "SGB",
+    logo: "https://api.vietqr.io/img/SGB.png",
+  },
+  { name: "MSB", code: "MSB", logo: "https://api.vietqr.io/img/MSB.png" },
+  {
+    name: "LienVietPostBank",
+    code: "LPB",
+    logo: "https://api.vietqr.io/img/LPB.png",
+  },
+  {
+    name: "KienlongBank",
+    code: "KLB",
+    logo: "https://api.vietqr.io/img/KLB.png",
+  },
+  {
+    name: "IBK Hanoi",
+    code: "IBKHN",
+    logo: "https://api.vietqr.io/img/IBKHN.png",
+  },
+  {
+    name: "Woori Bank VN",
+    code: "WOO",
+    logo: "https://api.vietqr.io/img/WOO.png",
+  },
+  { name: "SeABank", code: "SEAB", logo: "https://api.vietqr.io/img/SEAB.png" },
+  {
+    name: "UOB Vietnam",
+    code: "UOB",
+    logo: "https://api.vietqr.io/img/UOB.png",
+  },
+  { name: "OCB", code: "OCB", logo: "https://api.vietqr.io/img/OCB.png" },
+  {
+    name: "Mirae Asset Finance",
+    code: "MAFC",
+    logo: "https://api.vietqr.io/img/MAFC.png",
+  },
+  {
+    name: "KEB Hana HCM",
+    code: "KEBHANAHCM",
+    logo: "https://api.vietqr.io/img/KEBHANAHCM.png",
+  },
+  {
+    name: "KEB Hana Hanoi",
+    code: "KEBHANAHN",
+    logo: "https://api.vietqr.io/img/KEBHANAHN.png",
+  },
+  {
+    name: "Standard Chartered VN",
+    code: "STANDARD",
+    logo: "https://api.vietqr.io/img/STANDARD.png",
+  },
+  {
+    name: "Cake by VPBank",
+    code: "CAKE",
+    logo: "https://api.vietqr.io/img/CAKE.png",
+  },
+  {
+    name: "Ubank by VPBank",
+    code: "Ubank",
+    logo: "https://api.vietqr.io/img/Ubank.png",
+  },
+  {
+    name: "Nonghyup Bank HN",
+    code: "NonghyupBankHN",
+    logo: "https://api.vietqr.io/img/NonghyupBankHN.png",
+  },
+  {
+    name: "KB Kookmin Hanoi",
+    code: "KBHN",
+    logo: "https://api.vietqr.io/img/KBHN.png",
+  },
+  {
+    name: "KB Kookmin HCM",
+    code: "KBHCM",
+    logo: "https://api.vietqr.io/img/KBHCM.png",
+  },
+  {
+    name: "DBS Bank HCM",
+    code: "DBSHCM",
+    logo: "https://api.vietqr.io/img/DBSHCM.png",
+  },
+  {
+    name: "CBBank",
+    code: "CBBank",
+    logo: "https://api.vietqr.io/img/CBBank.png",
+  },
+  {
+    name: "Kasikorn Bank HCM",
+    code: "KBankHCM",
+    logo: "https://api.vietqr.io/img/KBankHCM.png",
+  },
+  {
+    name: "HSBC Vietnam",
+    code: "HSBC",
+    logo: "https://api.vietqr.io/img/HSBC.png",
+  },
+];
 
 const TutorOnboarding = () => {
   const { t } = useTranslation();
@@ -46,6 +248,16 @@ const TutorOnboarding = () => {
   const [videoUploading, setVideoUploading] = useState(false);
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [introVideoOpen, setIntroVideoOpen] = useState(false);
+
+  const [bankForm, setBankForm] = useState({
+    bankCode: "",
+    bankAccountNumber: "",
+    bankAccountName: "",
+    password: "",
+  });
+  const [bankSelectOpen, setBankSelectOpen] = useState(false);
+  const [bankSaving, setBankSaving] = useState(false);
+  const [bankError, setBankError] = useState("");
 
   const [formData, setFormData] = useState({
     firstName: "",
@@ -79,6 +291,12 @@ const TutorOnboarding = () => {
               ? String(p.monthExperience)
               : "",
         });
+        setBankForm((prev) => ({
+          bankCode: p.bankCode || "",
+          bankAccountNumber: p.bankAccountNumber || "",
+          bankAccountName: p.bankAccountName || "",
+          password: prev.password,
+        }));
       }
     } catch (err) {
       console.error("Failed to fetch tutor profile:", err);
@@ -104,6 +322,14 @@ const TutorOnboarding = () => {
     },
     { key: "cv", done: !!tutorProfile?.cvUrl },
     { key: "video", done: !!tutorProfile?.introVideoUrl },
+    {
+      key: "bank",
+      done: !!(
+        tutorProfile?.bankCode &&
+        tutorProfile?.bankAccountNumber &&
+        tutorProfile?.bankAccountName
+      ),
+    },
   ];
   const completedSteps = steps.filter((s) => s.done).length;
   const progressPercent = (completedSteps / steps.length) * 100;
@@ -229,6 +455,35 @@ const TutorOnboarding = () => {
       addToast({ title: t("tutorOnboarding.submitFailed"), color: "danger" });
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleSaveBankInfo = async () => {
+    setBankError("");
+    setBankSaving(true);
+    try {
+      const data = await tutorApi.updateBankInfo({
+        bankCode: bankForm.bankCode,
+        bankAccountNumber: bankForm.bankAccountNumber.trim(),
+        bankAccountName: bankForm.bankAccountName.trim(),
+        password: bankForm.password,
+      });
+      if (data.isSuccess) {
+        await fetchProfile();
+        setBankForm((prev) => ({ ...prev, password: "" }));
+        addToast({ title: t("tutorOnboarding.bankSaved"), color: "success" });
+      }
+    } catch (err) {
+      const errorCode = err.response?.data?.error?.code;
+      if (errorCode === "User.InvalidPassword") {
+        setBankError(t("tutorOnboarding.bankInvalidPassword"));
+      } else if (errorCode === "Validation.Failed") {
+        setBankError(t("tutorOnboarding.bankValidationFailed"));
+      } else {
+        setBankError(t("tutorOnboarding.bankSaveFailed"));
+      }
+    } finally {
+      setBankSaving(false);
     }
   };
 
@@ -793,6 +1048,184 @@ const TutorOnboarding = () => {
           </motion.div>
         </div>
 
+        {/* Bank Information */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.18 }}
+          className="p-5 sm:p-6 rounded-2xl mb-6 sm:mb-8"
+          style={cardStyle}
+        >
+          <div className="flex items-center gap-2.5 mb-5">
+            <div
+              className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+              style={{ backgroundColor: colors.background.primaryLight }}
+            >
+              <Bank
+                weight="duotone"
+                className="w-4.5 h-4.5"
+                style={{ color: colors.primary.main }}
+              />
+            </div>
+            <h2
+              className="text-base sm:text-lg font-semibold flex-1"
+              style={{ color: colors.text.primary }}
+            >
+              {t("tutorOnboarding.bankSection")}
+            </h2>
+            {tutorProfile?.bankCode &&
+              tutorProfile?.bankAccountNumber &&
+              tutorProfile?.bankAccountName && (
+                <CheckCircle
+                  weight="fill"
+                  className="w-5 h-5 shrink-0"
+                  style={{ color: colors.state.success }}
+                />
+              )}
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Bank selector */}
+            <div className="sm:col-span-2">
+              <label
+                className="block text-sm font-medium mb-1.5"
+                style={{ color: colors.text.primary }}
+              >
+                {t("tutorOnboarding.bankCode")}
+              </label>
+              <button
+                type="button"
+                onClick={() => setBankSelectOpen(true)}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border transition-colors text-left"
+                style={{
+                  backgroundColor: colors.background.card,
+                  borderColor: colors.border.medium,
+                  color: bankForm.bankCode
+                    ? colors.text.primary
+                    : colors.text.tertiary,
+                }}
+              >
+                {bankForm.bankCode ? (
+                  <>
+                    <img
+                      src={`https://api.vietqr.io/img/${bankForm.bankCode}.png`}
+                      alt={bankForm.bankCode}
+                      className="w-20 h-7 object-contain"
+                      onError={(e) => {
+                        e.target.style.display = "none";
+                      }}
+                    />
+                    <span className="flex-1 text-sm font-medium">
+                      {BANK_LIST.find((b) => b.code === bankForm.bankCode)
+                        ?.name ?? bankForm.bankCode}
+                    </span>
+                  </>
+                ) : (
+                  <span className="flex-1 text-sm">
+                    {t("tutorOnboarding.bankCodePlaceholder")}
+                  </span>
+                )}
+                <CaretDown className="w-4 h-4 shrink-0" />
+              </button>
+            </div>
+
+            {/* Account number */}
+            <div>
+              <label
+                className="block text-sm font-medium mb-1.5"
+                style={{ color: colors.text.primary }}
+              >
+                {t("tutorOnboarding.bankAccountNumber")}
+              </label>
+              <Input
+                variant="flat"
+                size="lg"
+                value={bankForm.bankAccountNumber}
+                onChange={(e) =>
+                  setBankForm((p) => ({
+                    ...p,
+                    bankAccountNumber: e.target.value,
+                  }))
+                }
+                placeholder={t("tutorOnboarding.bankAccountNumberPlaceholder")}
+                classNames={inputClassNames}
+              />
+            </div>
+
+            {/* Account name */}
+            <div>
+              <label
+                className="block text-sm font-medium mb-1.5"
+                style={{ color: colors.text.primary }}
+              >
+                {t("tutorOnboarding.bankAccountName")}
+              </label>
+              <Input
+                variant="flat"
+                size="lg"
+                value={bankForm.bankAccountName}
+                onChange={(e) =>
+                  setBankForm((p) => ({
+                    ...p,
+                    bankAccountName: e.target.value,
+                  }))
+                }
+                placeholder={t("tutorOnboarding.bankAccountNamePlaceholder")}
+                classNames={inputClassNames}
+              />
+            </div>
+
+            {/* Password confirmation */}
+            <div className="sm:col-span-2">
+              <label
+                className="block text-sm font-medium mb-1.5"
+                style={{ color: colors.text.primary }}
+              >
+                {t("tutorOnboarding.password")}
+              </label>
+              <Input
+                type="password"
+                variant="flat"
+                size="lg"
+                value={bankForm.password}
+                onChange={(e) =>
+                  setBankForm((p) => ({ ...p, password: e.target.value }))
+                }
+                placeholder={t("tutorOnboarding.passwordPlaceholder")}
+                classNames={inputClassNames}
+              />
+            </div>
+          </div>
+
+          {bankError && (
+            <p
+              className="mt-3 text-sm font-medium"
+              style={{ color: colors.state.error }}
+            >
+              {bankError}
+            </p>
+          )}
+
+          <Button
+            className="w-full mt-4 font-medium"
+            size="lg"
+            isLoading={bankSaving}
+            isDisabled={
+              !bankForm.bankCode ||
+              !bankForm.bankAccountNumber.trim() ||
+              !bankForm.bankAccountName.trim() ||
+              !bankForm.password
+            }
+            onPress={handleSaveBankInfo}
+            style={{
+              backgroundColor: colors.primary.main,
+              color: colors.text.white,
+            }}
+          >
+            {t("tutorOnboarding.saveBank")}
+          </Button>
+        </motion.div>
+
         {/* Submit for Verification */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -821,6 +1254,12 @@ const TutorOnboarding = () => {
               size="lg"
               className="font-semibold text-sm sm:text-base sm:px-8 w-full sm:w-auto shrink-0"
               isLoading={submitting}
+              isDisabled={
+                !tutorProfile?.bankCode ||
+                !tutorProfile?.bankBin ||
+                !tutorProfile?.bankAccountNumber ||
+                !tutorProfile?.bankAccountName
+              }
               onPress={handleSubmitVerification}
               style={{
                 backgroundColor: colors.primary.main,
@@ -839,6 +1278,62 @@ const TutorOnboarding = () => {
         onOpenChange={setIntroVideoOpen}
         videoUrl={tutorProfile?.introVideoUrl}
       />
+
+      {/* Bank Selection Modal */}
+      <Modal
+        isOpen={bankSelectOpen}
+        onOpenChange={setBankSelectOpen}
+        size="2xl"
+        scrollBehavior="inside"
+      >
+        <ModalContent style={{ backgroundColor: colors.background.card }}>
+          <ModalHeader style={{ color: colors.text.primary }}>
+            {t("tutorOnboarding.bankModalTitle")}
+          </ModalHeader>
+          <ModalBody className="pb-6">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+              {BANK_LIST.map((bank) => (
+                <button
+                  key={bank.code}
+                  type="button"
+                  onClick={() => {
+                    setBankForm((p) => ({ ...p, bankCode: bank.code }));
+                    setBankSelectOpen(false);
+                  }}
+                  className="flex flex-col items-center gap-2.5 p-3 rounded-xl border transition-all hover:scale-[1.02]"
+                  style={{
+                    backgroundColor:
+                      bankForm.bankCode === bank.code
+                        ? `${colors.primary.main}18`
+                        : colors.background.gray,
+                    borderColor:
+                      bankForm.bankCode === bank.code
+                        ? colors.primary.main
+                        : "transparent",
+                  }}
+                >
+                  <div className="w-full h-12 flex items-center justify-center">
+                    <img
+                      src={bank.logo}
+                      alt={bank.name}
+                      className="max-w-full max-h-full object-contain"
+                      onError={(e) => {
+                        e.target.style.display = "none";
+                      }}
+                    />
+                  </div>
+                  <span
+                    className="text-xs text-center leading-tight font-medium line-clamp-2 w-full"
+                    style={{ color: colors.text.primary }}
+                  >
+                    {bank.name}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </ModalBody>
+        </ModalContent>
+      </Modal>
     </div>
   );
 };

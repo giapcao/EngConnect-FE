@@ -166,7 +166,8 @@
       "bio": "Bio",
       "MonthExperience": "Experience",
       "cv": "CV",
-      "video": "Intro Video"
+      "video": "Intro Video",
+      "bank": "Bank Info"
     },
     "profileSection": "Profile Information",
     "saveProfile": "Save Profile",
@@ -192,7 +193,22 @@
     "firstNamePlaceholder": "First name",
     "lastName": "Last Name",
     "lastNamePlaceholder": "Last name",
-    "avatarHint": "Click to change your photo"
+    "avatarHint": "Click to change your photo",
+    "bankSection": "Bank Account",
+    "bankCode": "Bank",
+    "bankCodePlaceholder": "Select your bank",
+    "bankAccountNumber": "Account Number",
+    "bankAccountNumberPlaceholder": "Enter account number",
+    "bankAccountName": "Account Holder Name",
+    "bankAccountNamePlaceholder": "Enter account holder name",
+    "password": "Account Password",
+    "passwordPlaceholder": "Enter your password to confirm",
+    "saveBank": "Save Bank Information",
+    "bankSaved": "Bank information saved successfully",
+    "bankSaveFailed": "Failed to save bank information",
+    "bankInvalidPassword": "Incorrect password. Please try again.",
+    "bankValidationFailed": "Could not verify this bank account. Please check your details.",
+    "bankModalTitle": "Select Your Bank"
   },
   "home": {
     "hero": {

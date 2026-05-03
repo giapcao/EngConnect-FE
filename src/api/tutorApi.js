@@ -140,6 +140,12 @@ export const tutorApi = {
     return response.data;
   },
 
+  // Update bank information
+  updateBankInfo: async (bankData) => {
+    const response = await axiosInstance.patch("/tutors/bank", bankData);
+    return response.data;
+  },
+
   // ---- Tutor Schedules ----
 
   // Get tutor schedules (list)
