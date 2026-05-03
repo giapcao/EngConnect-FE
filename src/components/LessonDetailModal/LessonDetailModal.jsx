@@ -25,6 +25,8 @@ import {
   SpinnerGap,
   Exam,
   ArrowRight,
+  ArrowCounterClockwise,
+  Warning,
 } from "@phosphor-icons/react";
 import { coursesApi } from "../../api";
 import VideoModal from "../VideoModal/VideoModal";
@@ -43,17 +45,30 @@ const getLessonBlockColor = (status) => {
     case "Scheduled":
       return { bg: "#DCFCE7", border: "#22C55E", text: "#166534" };
     case "InProgress":
+    case "Reschedule":
       return { bg: "#FEF3C7", border: "#F59E0B", text: "#92400E" };
     case "Completed":
+    case "Settle":
       return { bg: "#DBEAFE", border: "#3B82F6", text: "#1E40AF" };
     case "Cancelled":
+    case "NoStudent":
+    case "NoTutor":
+    case "Refund":
       return { bg: "#FEE2E2", border: "#EF4444", text: "#991B1B" };
     default:
       return { bg: "#F3F4F6", border: "#9CA3AF", text: "#374151" };
   }
 };
 
-const LessonDetailModal = ({ isOpen, onClose, lesson, role = "tutor" }) => {
+const LessonDetailModal = ({
+  isOpen,
+  onClose,
+  lesson,
+  role = "tutor",
+  onReschedule,
+  rescheduleDeadline,
+  hasPendingOffer,
+}) => {
   const { t, i18n } = useTranslation();
   const colors = useThemeColors();
   const navigate = useNavigate();
@@ -123,15 +138,29 @@ const LessonDetailModal = ({ isOpen, onClose, lesson, role = "tutor" }) => {
   };
 
   const getLessonStatusLabel = (status) => {
+    const ns = isStudentView
+      ? "studentDashboard.schedule"
+      : "tutorDashboard.schedule.lessonStatus";
     switch (status) {
       case "Scheduled":
-        return t("tutorDashboard.schedule.lessonStatus.scheduled");
+        return t(`${ns}.scheduled`);
       case "Completed":
-        return t("tutorDashboard.schedule.lessonStatus.completed");
+      case "Settle":
+        return t(`${ns}.completed`);
       case "Cancelled":
-        return t("tutorDashboard.schedule.lessonStatus.cancelled");
+        return t(`${ns}.cancelled`);
+      case "Refund":
+        return t(`${ns}.refund`);
       case "InProgress":
-        return t("tutorDashboard.schedule.lessonStatus.inProgress");
+        return t(`${ns}.inProgress`);
+      case "NoStudent":
+        return t(`${ns}.noStudent`);
+      case "NoTutor":
+        return t(`${ns}.noTutor`);
+      case "Reschedule":
+        return isStudentView
+          ? t("studentDashboard.schedule.rescheduleStatus")
+          : t("tutorDashboard.schedule.lessonStatus.reschedule");
       default:
         return status || "";
     }
@@ -159,9 +188,12 @@ const LessonDetailModal = ({ isOpen, onClose, lesson, role = "tutor" }) => {
   const canJoinLesson = (l) =>
     l.meetingStatus === "InProgress" ||
     (l.status !== "Completed" &&
+      l.status !== "Settle" &&
       l.status !== "NoStudent" &&
       l.status !== "NoTutor" &&
       l.status !== "Cancelled" &&
+      l.status !== "Refund" &&
+      l.status !== "Reschedule" &&
       l.meetingStatus !== "Ended");
 
   const studentFullName = (l) =>
@@ -635,11 +667,79 @@ const LessonDetailModal = ({ isOpen, onClose, lesson, role = "tutor" }) => {
                     )}
                 </div>
               )}
+              {/* Reschedule deadline — NoTutor */}
+              {rescheduleDeadline && (
+                <div
+                  className="flex items-center gap-2 p-3 rounded-xl"
+                  style={{
+                    backgroundColor: `${rescheduleDeadline < new Date() ? colors.state.error : colors.state.warning}12`,
+                    border: `1px solid ${rescheduleDeadline < new Date() ? colors.state.error : colors.state.warning}30`,
+                  }}
+                >
+                  {rescheduleDeadline < new Date() ? (
+                    <Warning
+                      weight="fill"
+                      className="w-4 h-4 flex-shrink-0"
+                      style={{ color: colors.state.error }}
+                    />
+                  ) : (
+                    <Clock
+                      weight="duotone"
+                      className="w-4 h-4 flex-shrink-0"
+                      style={{ color: colors.state.warning }}
+                    />
+                  )}
+                  <span
+                    className="text-sm"
+                    style={{
+                      color:
+                        rescheduleDeadline < new Date()
+                          ? colors.state.error
+                          : colors.state.warning,
+                    }}
+                  >
+                    {rescheduleDeadline < new Date()
+                      ? t("tutorDashboard.schedule.reschedule.deadlinePassed")
+                      : t("tutorDashboard.schedule.reschedule.deadlineUntil", {
+                          date: rescheduleDeadline.toLocaleString(dateLocale, {
+                            month: "short",
+                            day: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          }),
+                        })}
+                  </span>
+                </div>
+              )}
             </ModalBody>
             <ModalFooter>
               <Button variant="light" onPress={onClose}>
                 {t("tutorDashboard.schedule.cancel")}
               </Button>
+              {onReschedule &&
+                (hasPendingOffer ? (
+                  <Chip
+                    size="sm"
+                    className="h-9 px-3"
+                    style={{
+                      backgroundColor: `${colors.state.warning}20`,
+                      color: colors.state.warning,
+                    }}
+                  >
+                    {t("tutorDashboard.schedule.reschedule.pendingChip")}
+                  </Chip>
+                ) : (
+                  <Button
+                    variant="flat"
+                    startContent={
+                      <ArrowCounterClockwise weight="bold" className="w-4 h-4" />
+                    }
+                    onPress={onReschedule}
+                    style={{ color: colors.primary.main }}
+                  >
+                    {t("tutorDashboard.schedule.reschedule.proposeBtn")}
+                  </Button>
+                ))}
               {canJoinLesson(lesson) && (
                 <Button
                   style={{

@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate, Link } from "react-router-dom";
 import { selectUser } from "../../../store";
-import { tutorApi, studentApi, coursesApi } from "../../../api";
+import { tutorApi, studentApi, coursesApi, rescheduleApi } from "../../../api";
 import {
   Card,
   CardBody,
@@ -45,10 +45,13 @@ import {
   FileText,
   LinkSimple,
   SpinnerGap,
+  ArrowCounterClockwise,
 } from "@phosphor-icons/react";
 import calendarIllustration from "../../../assets/illustrations/calendar.avif";
 import VideoModal from "../../../components/VideoModal/VideoModal";
 import LessonDetailModal from "../../../components/LessonDetailModal/LessonDetailModal";
+import TutorRescheduleOfferModal from "../../../components/TutorRescheduleOfferModal/TutorRescheduleOfferModal";
+import TutorRescheduleTicketModal from "../../../components/TutorRescheduleTicketModal/TutorRescheduleTicketModal";
 
 const WEEKDAYS = [
   "Monday",
@@ -131,6 +134,21 @@ const Schedule = () => {
   } = useDisclosure();
   const [videoUrl, setVideoUrl] = useState("");
 
+  // Reschedule offer modal (Scheduled lessons)
+  const {
+    isOpen: isRescheduleOpen,
+    onOpen: onRescheduleOpen,
+    onClose: onRescheduleClose,
+  } = useDisclosure();
+  // Reschedule ticket modal (NoTutor lessons)
+  const {
+    isOpen: isTicketOpen,
+    onOpen: onTicketOpen,
+    onClose: onTicketClose,
+  } = useDisclosure();
+  const [rescheduleLesson, setRescheduleLesson] = useState(null);
+  const [rescheduleOffers, setRescheduleOffers] = useState([]);
+
   const allTimeOptions = [];
   for (let h = 6; h <= 22; h++) {
     for (let m = 0; m < 60; m += 30) {
@@ -181,6 +199,23 @@ const Schedule = () => {
   useEffect(() => {
     fetchLessons();
   }, [fetchLessons]);
+
+  const fetchRescheduleOffers = useCallback(async () => {
+    if (!user?.tutorId) return;
+    try {
+      const res = await rescheduleApi.getOffers({
+        TutorId: user.tutorId,
+        "page-size": 200,
+      });
+      setRescheduleOffers(res?.data?.items || []);
+    } catch {
+      // silently ignore
+    }
+  }, [user?.tutorId]);
+
+  useEffect(() => {
+    fetchRescheduleOffers();
+  }, [fetchRescheduleOffers]);
 
   useEffect(() => {
     const interval = setInterval(() => setCurrentTime(new Date()), 60000);
@@ -304,15 +339,18 @@ const Schedule = () => {
       case "Scheduled":
         return colors.primary.main;
       case "Completed":
+      case "Settle":
         return colors.state.success;
       case "Cancelled":
+      case "Refund":
         return colors.state.error;
       case "InProgress":
         return colors.state.warning;
       case "NoStudent":
-        return colors.state.error;
       case "NoTutor":
         return colors.state.error;
+      case "Reschedule":
+        return colors.state.warning;
       default:
         return colors.text.secondary;
     }
@@ -323,15 +361,20 @@ const Schedule = () => {
       case "Scheduled":
         return t("tutorDashboard.schedule.lessonStatus.scheduled");
       case "Completed":
+      case "Settle":
         return t("tutorDashboard.schedule.lessonStatus.completed");
       case "Cancelled":
         return t("tutorDashboard.schedule.lessonStatus.cancelled");
+      case "Refund":
+        return t("tutorDashboard.schedule.lessonStatus.refund");
       case "InProgress":
         return t("tutorDashboard.schedule.lessonStatus.inProgress");
       case "NoStudent":
         return t("tutorDashboard.schedule.lessonStatus.noStudent");
       case "NoTutor":
         return t("tutorDashboard.schedule.lessonStatus.noTutor");
+      case "Reschedule":
+        return t("tutorDashboard.schedule.lessonStatus.reschedule");
       default:
         return status || "";
     }
@@ -367,9 +410,12 @@ const Schedule = () => {
   const canJoinLesson = (lesson) =>
     lesson.meetingStatus === "InProgress" ||
     (lesson.status !== "Completed" &&
+      lesson.status !== "Settle" &&
       lesson.status !== "NoStudent" &&
       lesson.status !== "NoTutor" &&
       lesson.status !== "Cancelled" &&
+      lesson.status !== "Refund" &&
+      lesson.status !== "Reschedule" &&
       lesson.meetingStatus !== "Ended");
 
   const handleOpenLessonDetail = (lesson) => {
@@ -394,6 +440,39 @@ const Schedule = () => {
         color: colors.state.success,
       };
     return null;
+  };
+
+  const getRescheduleDeadline = (noTutorLesson) => {
+    const next = lessons
+      .filter(
+        (l) =>
+          l.studentId === noTutorLesson.studentId &&
+          new Date(l.startTime) > new Date(noTutorLesson.startTime) &&
+          l.status === "Scheduled",
+      )
+      .sort((a, b) => new Date(a.startTime) - new Date(b.startTime))[0];
+    if (!next) return null;
+    return new Date(new Date(next.startTime).getTime() - 24 * 60 * 60 * 1000);
+  };
+
+  const canProposeReschedule = (lesson) => {
+    if (lesson.status === "Reschedule") return true;
+    if (lesson.status !== "Scheduled") return false;
+    return (new Date(lesson.startTime) - new Date()) / (1000 * 60 * 60) > 24;
+  };
+
+  const hasPendingOffer = (lesson) =>
+    rescheduleOffers.some(
+      (o) => o.lessonId === lesson.id && o.status === "PendingStudentChoice",
+    );
+
+  const handleOpenReschedule = (lesson) => {
+    setRescheduleLesson(lesson);
+    if (lesson.status === "NoTutor") {
+      onTicketOpen();
+    } else {
+      onRescheduleOpen();
+    }
   };
 
   const formatRecordDuration = (seconds) => {
@@ -476,11 +555,15 @@ const Schedule = () => {
       case "InProgress":
         return { bg: `${colors.state.warning}25`, border: colors.state.warning, text: colors.state.warning };
       case "Completed":
+      case "Settle":
         return { bg: `${colors.primary.main}25`, border: colors.primary.main, text: colors.primary.main };
       case "Cancelled":
       case "NoStudent":
       case "NoTutor":
+      case "Refund":
         return { bg: `${colors.state.error}25`, border: colors.state.error, text: colors.state.error };
+      case "Reschedule":
+        return { bg: `${colors.state.warning}25`, border: colors.state.warning, text: colors.state.warning };
       default:
         return { bg: colors.background.gray, border: colors.border.medium, text: colors.text.secondary };
     }
@@ -1091,9 +1174,12 @@ const Schedule = () => {
                     {[
                       "Scheduled",
                       "InProgress",
+                      "Reschedule",
                       "Completed",
                       "NoStudent",
                       "NoTutor",
+                      "Cancelled",
+                      "Refund",
                     ].map((status) => (
                       <div key={status} className="flex items-center gap-1.5">
                         <div
@@ -1289,6 +1375,27 @@ const Schedule = () => {
                                       {meetingInfo.label}
                                     </span>
                                   )}
+                                  {(lesson.status === "NoTutor" || lesson.status === "Reschedule") && (() => {
+                                    const deadline = getRescheduleDeadline(lesson);
+                                    if (!deadline) return null;
+                                    const isPast = deadline < new Date();
+                                    return (
+                                      <span
+                                        className="text-[11px] flex items-center gap-1 mt-1"
+                                        style={{ color: isPast ? colors.state.error : colors.state.warning }}
+                                      >
+                                        <Clock weight="duotone" className="w-3 h-3" />
+                                        {isPast
+                                          ? t("tutorDashboard.schedule.reschedule.deadlinePassed")
+                                          : t("tutorDashboard.schedule.reschedule.deadlineUntil", {
+                                              date: deadline.toLocaleString(dateLocale, {
+                                                month: "short", day: "numeric",
+                                                hour: "2-digit", minute: "2-digit",
+                                              }),
+                                            })}
+                                      </span>
+                                    );
+                                  })()}
                                 </div>
                               </div>
                               <div className="flex items-center gap-2 mt-2">
@@ -1329,6 +1436,41 @@ const Schedule = () => {
                                   </Button>
                                 )}
                               </div>
+                              {canProposeReschedule(lesson) && (
+                                <div className="mt-2">
+                                  {hasPendingOffer(lesson) ? (
+                                    <Chip
+                                      size="sm"
+                                      className="w-full justify-center h-7"
+                                      style={{
+                                        backgroundColor: `${colors.state.warning}20`,
+                                        color: colors.state.warning,
+                                        fontSize: "11px",
+                                      }}
+                                    >
+                                      {t("tutorDashboard.schedule.reschedule.pendingChip")}
+                                    </Chip>
+                                  ) : (
+                                    <Button
+                                      size="sm"
+                                      variant="flat"
+                                      className="w-full"
+                                      startContent={
+                                        <ArrowCounterClockwise
+                                          weight="duotone"
+                                          className="w-3.5 h-3.5"
+                                        />
+                                      }
+                                      onPress={(e) => {
+                                        e.stopPropagation?.();
+                                        handleOpenReschedule(lesson);
+                                      }}
+                                    >
+                                      {t("tutorDashboard.schedule.reschedule.proposeBtn")}
+                                    </Button>
+                                  )}
+                                </div>
+                              )}
                             </div>
                           );
                         })}
@@ -1438,6 +1580,24 @@ const Schedule = () => {
                                       {meetingInfo.label}
                                     </span>
                                   )}
+                                  {(lesson.status === "NoTutor" || lesson.status === "Reschedule") && (() => {
+                                    const deadline = getRescheduleDeadline(lesson);
+                                    if (!deadline) return null;
+                                    const isPast = deadline < new Date();
+                                    return (
+                                      <span className="text-[11px] flex items-center gap-1 mt-1"
+                                        style={{ color: isPast ? colors.state.error : colors.state.warning }}>
+                                        <Clock weight="duotone" className="w-3 h-3" />
+                                        {isPast
+                                          ? t("tutorDashboard.schedule.reschedule.deadlinePassed")
+                                          : t("tutorDashboard.schedule.reschedule.deadlineUntil", {
+                                              date: deadline.toLocaleString(dateLocale, {
+                                                month: "short", day: "numeric", hour: "2-digit", minute: "2-digit"
+                                              })
+                                            })}
+                                      </span>
+                                    );
+                                  })()}
                                 </div>
                               </div>
                               <div className="flex items-center gap-2 mt-2">
@@ -1464,6 +1624,33 @@ const Schedule = () => {
                                   </Button>
                                 )}
                               </div>
+                              {canProposeReschedule(lesson) && (
+                                <div className="mt-2">
+                                  {hasPendingOffer(lesson) ? (
+                                    <Chip
+                                      size="sm"
+                                      className="w-full justify-center h-7"
+                                      style={{
+                                        backgroundColor: `${colors.state.warning}20`,
+                                        color: colors.state.warning,
+                                        fontSize: "11px",
+                                      }}
+                                    >
+                                      {t("tutorDashboard.schedule.reschedule.pendingChip")}
+                                    </Chip>
+                                  ) : (
+                                    <Button
+                                      size="sm"
+                                      variant="flat"
+                                      className="w-full"
+                                      startContent={<ArrowCounterClockwise weight="duotone" className="w-3.5 h-3.5" />}
+                                      onPress={() => handleOpenReschedule(lesson)}
+                                    >
+                                      {t("tutorDashboard.schedule.reschedule.proposeBtn")}
+                                    </Button>
+                                  )}
+                                </div>
+                              )}
                             </div>
                           );
                         })}
@@ -1611,12 +1798,53 @@ const Schedule = () => {
         isOpen={isLessonDetailOpen}
         onClose={onLessonDetailClose}
         lesson={selectedLesson}
+        onReschedule={
+          selectedLesson &&
+          (canProposeReschedule(selectedLesson) ||
+            selectedLesson.status === "NoTutor")
+            ? () => {
+                onLessonDetailClose();
+                handleOpenReschedule(selectedLesson);
+              }
+            : undefined
+        }
+        rescheduleDeadline={
+          selectedLesson?.status === "NoTutor" ||
+          selectedLesson?.status === "Reschedule"
+            ? getRescheduleDeadline(selectedLesson)
+            : null
+        }
+        hasPendingOffer={
+          selectedLesson ? hasPendingOffer(selectedLesson) : false
+        }
       />
 
       <VideoModal
         isOpen={isVideoOpen}
         onOpenChange={onVideoOpenChange}
         videoUrl={videoUrl}
+      />
+
+      <TutorRescheduleOfferModal
+        lesson={rescheduleLesson}
+        isOpen={isRescheduleOpen}
+        onClose={onRescheduleClose}
+        tutorId={user?.tutorId}
+        onSuccess={() => {
+          fetchRescheduleOffers();
+          fetchLessons();
+        }}
+      />
+
+      <TutorRescheduleTicketModal
+        lesson={rescheduleLesson}
+        isOpen={isTicketOpen}
+        onClose={onTicketClose}
+        userId={user?.userId}
+        rescheduleDeadline={
+          rescheduleLesson ? getRescheduleDeadline(rescheduleLesson) : null
+        }
+        onSuccess={fetchLessons}
       />
     </div>
   );

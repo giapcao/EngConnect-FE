@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { selectUser } from "../../../store";
-import { studentApi } from "../../../api";
+import { studentApi, rescheduleApi } from "../../../api";
 import {
   Card,
   CardBody,
@@ -29,9 +29,12 @@ import {
   BookOpen,
   Circle,
   Eye,
+  ArrowCounterClockwise,
+  Warning,
 } from "@phosphor-icons/react";
 import calendarIllustration from "../../../assets/illustrations/calendar.avif";
 import LessonDetailModal from "../../../components/LessonDetailModal/LessonDetailModal";
+import StudentRescheduleAcceptModal from "../../../components/StudentRescheduleAcceptModal/StudentRescheduleAcceptModal";
 
 const WEEKDAYS = [
   "Monday",
@@ -83,6 +86,16 @@ const Schedule = () => {
   } = useDisclosure();
   const [selectedLesson, setSelectedLesson] = useState(null);
 
+  // Reschedule accept modal
+  const {
+    isOpen: isRescheduleOpen,
+    onOpen: onRescheduleOpen,
+    onClose: onRescheduleClose,
+  } = useDisclosure();
+  const [rescheduleOffer, setRescheduleOffer] = useState(null);
+  const [rescheduleLesson, setRescheduleLesson] = useState(null);
+  const [offersByLesson, setOffersByLesson] = useState({});
+
   const fetchLessons = useCallback(async () => {
     if (!user?.studentId) return;
     try {
@@ -104,6 +117,28 @@ const Schedule = () => {
   useEffect(() => {
     fetchLessons();
   }, [fetchLessons]);
+
+  const fetchOffers = useCallback(async () => {
+    if (!user?.studentId) return;
+    try {
+      const res = await rescheduleApi.getOffers({
+        StudentId: user.studentId,
+        "page-size": 200,
+      });
+      const items = res?.data?.items || [];
+      const map = {};
+      items.forEach((offer) => {
+        if (!map[offer.lessonId]) map[offer.lessonId] = offer;
+      });
+      setOffersByLesson(map);
+    } catch {
+      // silently ignore
+    }
+  }, [user?.studentId]);
+
+  useEffect(() => {
+    fetchOffers();
+  }, [fetchOffers]);
 
   useEffect(() => {
     const interval = setInterval(() => setCurrentTime(new Date()), 60000);
@@ -138,11 +173,21 @@ const Schedule = () => {
 
   const canJoinLesson = (lesson) =>
     lesson.meetingStatus === "InProgress" ||
-    (lesson.meetingStatus === "Waiting" && lesson.status !== "Completed");
+    (lesson.meetingStatus === "Waiting" &&
+      lesson.status !== "Completed" &&
+      lesson.status !== "Settle" &&
+      lesson.status !== "Reschedule" &&
+      lesson.status !== "Refund");
 
   const handleOpenLessonDetail = (lesson) => {
     setSelectedLesson(lesson);
     onLessonDetailOpen();
+  };
+
+  const handleOpenReschedule = (lesson, offer) => {
+    setRescheduleLesson(lesson);
+    setRescheduleOffer(offer);
+    onRescheduleOpen();
   };
 
   const formatLessonTime = (dateStr) => {
@@ -158,15 +203,20 @@ const Schedule = () => {
       case "Scheduled":
         return t("studentDashboard.schedule.scheduled");
       case "Completed":
+      case "Settle":
         return t("studentDashboard.schedule.completed");
       case "Cancelled":
         return t("studentDashboard.schedule.cancelled");
+      case "Refund":
+        return t("studentDashboard.schedule.refund");
       case "InProgress":
         return t("studentDashboard.schedule.inProgress");
       case "NoStudent":
         return t("studentDashboard.schedule.noStudent");
       case "NoTutor":
         return t("studentDashboard.schedule.noTutor");
+      case "Reschedule":
+        return t("studentDashboard.schedule.rescheduleStatus");
       default:
         return status || "";
     }
@@ -261,11 +311,15 @@ const Schedule = () => {
       case "InProgress":
         return { bg: `${colors.state.warning}25`, border: colors.state.warning, text: colors.state.warning };
       case "Completed":
+      case "Settle":
         return { bg: `${colors.primary.main}25`, border: colors.primary.main, text: colors.primary.main };
       case "Cancelled":
       case "NoStudent":
       case "NoTutor":
+      case "Refund":
         return { bg: `${colors.state.error}25`, border: colors.state.error, text: colors.state.error };
+      case "Reschedule":
+        return { bg: `${colors.state.warning}25`, border: colors.state.warning, text: colors.state.warning };
       default:
         return { bg: colors.background.gray, border: colors.border.medium, text: colors.text.secondary };
     }
@@ -679,6 +733,84 @@ const Schedule = () => {
               style={{ backgroundColor: colors.background.light }}
             >
               <CardBody className="p-4">
+                {/* Pending reschedule offers */}
+                {(() => {
+                  const pending = Object.values(offersByLesson).filter(
+                    (o) => o.status === "PendingStudentChoice",
+                  );
+                  if (pending.length === 0) return null;
+                  return (
+                    <div className="mb-4 space-y-2">
+                      <p
+                        className="text-xs font-semibold flex items-center gap-1.5"
+                        style={{ color: colors.state.warning }}
+                      >
+                        <Warning weight="fill" className="w-3.5 h-3.5" />
+                        {t("studentDashboard.schedule.reschedule.pendingSection", {
+                          count: pending.length,
+                        })}
+                      </p>
+                      {pending.map((offer) => {
+                        const lesson = lessons.find(
+                          (l) => l.id === offer.lessonId,
+                        );
+                        if (!lesson) return null;
+                        return (
+                          <div
+                            key={offer.id}
+                            className="p-3 rounded-xl"
+                            style={{
+                              backgroundColor: `${colors.state.warning}08`,
+                              border: `1px solid ${colors.state.warning}30`,
+                            }}
+                          >
+                            <p
+                              className="text-sm font-medium truncate"
+                              style={{ color: colors.text.primary }}
+                            >
+                              {lesson.courseTitle || lesson.sessionTitle}
+                            </p>
+                            <p
+                              className="text-xs mt-0.5 flex items-center gap-1"
+                              style={{ color: colors.text.secondary }}
+                            >
+                              <Clock weight="duotone" className="w-3 h-3" />
+                              {new Date(lesson.startTime).toLocaleDateString(
+                                i18n.language === "vi" ? "vi-VN" : "en-US",
+                                { month: "short", day: "numeric" },
+                              )}
+                            </p>
+                            <Button
+                              size="sm"
+                              className="w-full mt-2"
+                              startContent={
+                                <ArrowCounterClockwise
+                                  weight="bold"
+                                  className="w-3.5 h-3.5"
+                                />
+                              }
+                              style={{
+                                backgroundColor: `${colors.state.warning}20`,
+                                color: colors.state.warning,
+                                border: `1px solid ${colors.state.warning}40`,
+                              }}
+                              onPress={() =>
+                                handleOpenReschedule(lesson, offer)
+                              }
+                            >
+                              {t("studentDashboard.schedule.reschedule.viewPending")}
+                            </Button>
+                          </div>
+                        );
+                      })}
+                      <div
+                        className="border-b"
+                        style={{ borderColor: colors.border.light }}
+                      />
+                    </div>
+                  );
+                })()}
+
                 <Tabs
                   selectedKey={sidebarView}
                   onSelectionChange={setSidebarView}
@@ -873,6 +1005,40 @@ const Schedule = () => {
                                 </Button>
                               )}
                             </div>
+                            {offersByLesson[lesson.id] && (
+                              <div className="mt-2">
+                                <Button
+                                  size="sm"
+                                  variant="flat"
+                                  className="w-full"
+                                  startContent={
+                                    <ArrowCounterClockwise
+                                      weight="duotone"
+                                      className="w-3.5 h-3.5"
+                                    />
+                                  }
+                                  style={
+                                    offersByLesson[lesson.id].status === "PendingStudentChoice"
+                                      ? {
+                                          backgroundColor: `${colors.state.warning}15`,
+                                          color: colors.state.warning,
+                                          border: `1px solid ${colors.state.warning}30`,
+                                        }
+                                      : {}
+                                  }
+                                  onPress={() =>
+                                    handleOpenReschedule(
+                                      lesson,
+                                      offersByLesson[lesson.id],
+                                    )
+                                  }
+                                >
+                                  {offersByLesson[lesson.id].status === "PendingStudentChoice"
+                                    ? t("studentDashboard.schedule.reschedule.viewPending")
+                                    : t("studentDashboard.schedule.reschedule.viewBtn")}
+                                </Button>
+                              </div>
+                            )}
                           </div>
                         );
                       })}
@@ -891,6 +1057,18 @@ const Schedule = () => {
         onClose={onLessonDetailClose}
         lesson={selectedLesson}
         role="student"
+      />
+
+      <StudentRescheduleAcceptModal
+        offer={rescheduleOffer}
+        lesson={rescheduleLesson}
+        isOpen={isRescheduleOpen}
+        onClose={onRescheduleClose}
+        studentId={user?.studentId}
+        onSuccess={() => {
+          fetchOffers();
+          fetchLessons();
+        }}
       />
     </div>
   );
