@@ -22,10 +22,7 @@ import {
   Envelope,
   Camera,
   PencilSimple,
-  Bell,
   Lock,
-  CreditCard,
-  Shield,
   SignOut,
   CheckCircle,
   Star,
@@ -36,7 +33,12 @@ import {
   VideoCamera,
   Upload,
   SealCheck,
+  Bank,
+  CaretDown,
 } from "@phosphor-icons/react";
+import BankSelectModal, {
+  BANK_LIST,
+} from "../../../components/BankSelectModal/BankSelectModal";
 import { tutorApi } from "../../../api/tutorApi";
 import { authApi } from "../../../api/authApi";
 import ProfileSkeleton from "../../../components/ProfileSkeleton/ProfileSkeleton";
@@ -79,6 +81,18 @@ const Profile = () => {
   const videoInputRef = useRef(null);
   const avatarInputRef = useRef(null);
   const [avatarUploading, setAvatarUploading] = useState(false);
+
+  const [bankForm, setBankForm] = useState({
+    bankCode: "",
+    bankAccountNumber: "",
+    bankAccountName: "",
+    password: "",
+  });
+  const [bankSelectOpen, setBankSelectOpen] = useState(false);
+  const [bankSaving, setBankSaving] = useState(false);
+  const [bankError, setBankError] = useState("");
+  const [isBankEditing, setIsBankEditing] = useState(false);
+  const [originalBankForm, setOriginalBankForm] = useState(null);
 
   // Auto-select verification tab when unverified
   const isUnverified = tutorProfile?.verifiedStatus === "Unverified";
@@ -134,6 +148,12 @@ const Profile = () => {
         };
         setEditData(snapshot);
         setOriginalEditData(snapshot);
+        setBankForm((prev) => ({
+          bankCode: p.bankCode || "",
+          bankAccountNumber: p.bankAccountNumber || "",
+          bankAccountName: p.bankAccountName || "",
+          password: prev.password,
+        }));
       }
     } catch (err) {
       console.error("Failed to fetch tutor profile:", err);
@@ -244,6 +264,39 @@ const Profile = () => {
     } finally {
       setVideoUploading(false);
       if (videoInputRef.current) videoInputRef.current.value = "";
+    }
+  };
+
+  const handleSaveBankInfo = async () => {
+    setBankError("");
+    setBankSaving(true);
+    try {
+      const data = await tutorApi.updateBankInfo({
+        bankCode: bankForm.bankCode,
+        bankAccountNumber: bankForm.bankAccountNumber.trim(),
+        bankAccountName: bankForm.bankAccountName.trim(),
+        password: bankForm.password,
+      });
+      if (data.isSuccess) {
+        await fetchTutorProfile();
+        setBankForm((prev) => ({ ...prev, password: "" }));
+        setIsBankEditing(false);
+        addToast({
+          title: t("tutorOnboarding.bankSaved"),
+          color: "success",
+        });
+      }
+    } catch (err) {
+      const errorCode = err.response?.data?.error?.code;
+      if (errorCode === "User.InvalidPassword") {
+        setBankError(t("tutorOnboarding.bankInvalidPassword"));
+      } else if (errorCode === "Validation.Failed") {
+        setBankError(t("tutorOnboarding.bankValidationFailed"));
+      } else {
+        setBankError(t("tutorOnboarding.bankSaveFailed"));
+      }
+    } finally {
+      setBankSaving(false);
     }
   };
 
@@ -509,12 +562,12 @@ const Profile = () => {
                 }
               />
               <Tab
-                key="certifications"
+                key="bankAccount"
                 title={
                   <div className="flex items-center gap-2">
-                    <Certificate className="w-5 h-5" />
+                    <Bank className="w-5 h-5" />
                     <span className="font-medium">
-                      {t("tutorDashboard.profile.tabs.certifications")}
+                      {t("tutorDashboard.profile.tabs.bankAccount")}
                     </span>
                   </div>
                 }
@@ -721,55 +774,251 @@ const Profile = () => {
           </Card>
         )}
 
-        {selectedTab === "certifications" && (
-          <div className="grid md:grid-cols-2 gap-4">
-            {certifications.map((cert, index) => (
-              <motion.div
-                key={cert.id}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.15 }}
-              >
-                <Card
-                  shadow="none"
-                  className="border-none"
-                  style={{ backgroundColor: colors.background.light }}
+        {selectedTab === "bankAccount" && (
+          <Card
+            shadow="none"
+            className="border-none"
+            style={{ backgroundColor: colors.background.light }}
+          >
+            <CardBody className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-2.5">
+                  <div
+                    className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+                    style={{ backgroundColor: colors.background.primaryLight }}
+                  >
+                    <Bank
+                      weight="duotone"
+                      className="w-4.5 h-4.5"
+                      style={{ color: colors.primary.main }}
+                    />
+                  </div>
+                  <h3
+                    className="text-lg font-semibold"
+                    style={{ color: colors.text.primary }}
+                  >
+                    {t("tutorOnboarding.bankSection")}
+                  </h3>
+                  {!isBankEditing &&
+                    tutorProfile?.bankCode &&
+                    tutorProfile?.bankAccountNumber &&
+                    tutorProfile?.bankAccountName && (
+                      <CheckCircle
+                        weight="fill"
+                        className="w-5 h-5"
+                        style={{ color: colors.state.success }}
+                      />
+                    )}
+                </div>
+                {isBankEditing ? (
+                  <div className="flex gap-2">
+                    <Button
+                      variant="solid"
+                      size="sm"
+                      isLoading={bankSaving}
+                      isDisabled={
+                        !bankForm.bankCode ||
+                        !bankForm.bankAccountNumber.trim() ||
+                        !bankForm.bankAccountName.trim() ||
+                        !bankForm.password
+                      }
+                      startContent={
+                        !bankSaving && (
+                          <CheckCircle weight="duotone" className="w-4 h-4" />
+                        )
+                      }
+                      style={{
+                        backgroundColor: colors.primary.main,
+                        color: colors.text.white,
+                      }}
+                      onPress={handleSaveBankInfo}
+                    >
+                      {t("tutorDashboard.profile.save")}
+                    </Button>
+                    <Button
+                      variant="flat"
+                      size="sm"
+                      isDisabled={bankSaving}
+                      style={{
+                        backgroundColor: colors.background.gray,
+                        color: colors.text.secondary,
+                      }}
+                      onPress={() => {
+                        setBankForm(originalBankForm);
+                        setBankError("");
+                        setIsBankEditing(false);
+                      }}
+                    >
+                      {t("tutorDashboard.profile.cancel")}
+                    </Button>
+                  </div>
+                ) : (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    startContent={
+                      <PencilSimple weight="duotone" className="w-4 h-4" />
+                    }
+                    style={{
+                      backgroundColor: colors.button.primaryLight.background,
+                      color: colors.button.primaryLight.text,
+                    }}
+                    onPress={() => {
+                      setOriginalBankForm(bankForm);
+                      setIsBankEditing(true);
+                    }}
+                  >
+                    {t("tutorDashboard.profile.edit")}
+                  </Button>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Bank selector */}
+                <div className="sm:col-span-2">
+                  <label
+                    className="block text-sm font-medium mb-1.5"
+                    style={{ color: colors.text.primary }}
+                  >
+                    {t("tutorOnboarding.bankCode")}
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => isBankEditing && setBankSelectOpen(true)}
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border transition-colors text-left"
+                    style={{
+                      backgroundColor: colors.background.gray,
+                      borderColor: colors.border.light,
+                      color: bankForm.bankCode
+                        ? colors.text.primary
+                        : colors.text.tertiary,
+                      cursor: isBankEditing ? "pointer" : "default",
+                      opacity: isBankEditing ? 1 : 0.7,
+                    }}
+                  >
+                    {bankForm.bankCode ? (
+                      <>
+                        <img
+                          src={`https://api.vietqr.io/img/${bankForm.bankCode}.png`}
+                          alt={bankForm.bankCode}
+                          className="w-20 h-7 object-contain"
+                          onError={(e) => {
+                            e.target.style.display = "none";
+                          }}
+                        />
+                        <span className="flex-1 text-sm font-medium">
+                          {BANK_LIST.find((b) => b.code === bankForm.bankCode)
+                            ?.name ?? bankForm.bankCode}
+                        </span>
+                      </>
+                    ) : (
+                      <span className="flex-1 text-sm">
+                        {t("tutorOnboarding.bankCodePlaceholder")}
+                      </span>
+                    )}
+                    {isBankEditing && (
+                      <CaretDown className="w-4 h-4 shrink-0" />
+                    )}
+                  </button>
+                </div>
+
+                {/* Account number */}
+                <div>
+                  <label
+                    className="block text-sm font-medium mb-1.5"
+                    style={{ color: colors.text.primary }}
+                  >
+                    {t("tutorOnboarding.bankAccountNumber")}
+                  </label>
+                  <Input
+                    variant="flat"
+                    size="lg"
+                    value={bankForm.bankAccountNumber}
+                    isDisabled={!isBankEditing}
+                    onChange={(e) =>
+                      setBankForm((p) => ({
+                        ...p,
+                        bankAccountNumber: e.target.value,
+                      }))
+                    }
+                    placeholder={t(
+                      "tutorOnboarding.bankAccountNumberPlaceholder",
+                    )}
+                    classNames={inputClassNames}
+                  />
+                </div>
+
+                {/* Account name */}
+                <div>
+                  <label
+                    className="block text-sm font-medium mb-1.5"
+                    style={{ color: colors.text.primary }}
+                  >
+                    {t("tutorOnboarding.bankAccountName")}
+                  </label>
+                  <Input
+                    variant="flat"
+                    size="lg"
+                    value={bankForm.bankAccountName}
+                    isDisabled={!isBankEditing}
+                    onChange={(e) =>
+                      setBankForm((p) => ({
+                        ...p,
+                        bankAccountName: e.target.value,
+                      }))
+                    }
+                    placeholder={t(
+                      "tutorOnboarding.bankAccountNamePlaceholder",
+                    )}
+                    classNames={inputClassNames}
+                  />
+                </div>
+
+                {/* Password confirmation — only shown while editing */}
+                {isBankEditing && (
+                  <div className="sm:col-span-2">
+                    <label
+                      className="block text-sm font-medium mb-1.5"
+                      style={{ color: colors.text.primary }}
+                    >
+                      {t("tutorOnboarding.password")}
+                    </label>
+                    <Input
+                      type="password"
+                      variant="flat"
+                      size="lg"
+                      value={bankForm.password}
+                      onChange={(e) =>
+                        setBankForm((p) => ({ ...p, password: e.target.value }))
+                      }
+                      placeholder={t("tutorOnboarding.passwordPlaceholder")}
+                      classNames={inputClassNames}
+                    />
+                  </div>
+                )}
+              </div>
+
+              {isBankEditing && bankError && (
+                <p
+                  className="mt-3 text-sm font-medium"
+                  style={{ color: colors.state.error }}
                 >
-                  <CardBody className="p-5">
-                    <div className="flex items-center gap-4">
-                      <div
-                        className="w-14 h-14 rounded-xl flex items-center justify-center text-2xl"
-                        style={{ backgroundColor: colors.background.gray }}
-                      >
-                        {cert.icon}
-                      </div>
-                      <div>
-                        <h4
-                          className="font-semibold"
-                          style={{ color: colors.text.primary }}
-                        >
-                          {cert.title}
-                        </h4>
-                        <p
-                          className="text-sm"
-                          style={{ color: colors.text.secondary }}
-                        >
-                          {cert.issuer}
-                        </p>
-                        <p
-                          className="text-xs mt-1"
-                          style={{ color: colors.text.tertiary }}
-                        >
-                          {cert.date}
-                        </p>
-                      </div>
-                    </div>
-                  </CardBody>
-                </Card>
-              </motion.div>
-            ))}
-          </div>
+                  {bankError}
+                </p>
+              )}
+            </CardBody>
+          </Card>
         )}
+
+        <BankSelectModal
+          isOpen={bankSelectOpen}
+          onOpenChange={setBankSelectOpen}
+          selectedBankCode={bankForm.bankCode}
+          onSelect={(bank) => {
+            setBankForm((p) => ({ ...p, bankCode: bank.code }));
+            setBankSelectOpen(false);
+          }}
+        />
 
         {selectedTab === "notifications" && (
           <Card
