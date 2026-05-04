@@ -35,6 +35,7 @@ import { selectUser } from "../../../store";
 import { supportApi } from "../../../api/supportApi";
 import { tutorApi } from "../../../api/tutorApi";
 import { studentApi } from "../../../api/studentApi";
+import { paymentApi } from "../../../api/paymentApi";
 import AdminLessonDetailModal from "../../../components/AdminLessonDetailModal/AdminLessonDetailModal";
 // eslint-disable-next-line no-unused-vars
 import { motion } from "framer-motion";
@@ -50,6 +51,8 @@ import {
   EnvelopeSimple,
   ArrowCounterClockwise,
   CheckCircle,
+  Wallet,
+  Bank,
 } from "@phosphor-icons/react";
 
 const TICKET_TYPES = [
@@ -117,6 +120,15 @@ const SupportTickets = () => {
   const [rescheduleLesson, setRescheduleLesson] = useState(null);
   const [rescheduleLessonLoading, setRescheduleLessonLoading] = useState(false);
   const [isLessonDetailOpen, setIsLessonDetailOpen] = useState(false);
+
+  // Payout approval
+  const [payoutTutorId, setPayoutTutorId] = useState(null);
+  const [payoutSummary, setPayoutSummary] = useState(null);
+  const [payoutSummaryLoading, setPayoutSummaryLoading] = useState(false);
+  const [payoutPasswordOpen, setPayoutPasswordOpen] = useState(false);
+  const [payoutPassword, setPayoutPassword] = useState("");
+  const [processingPayout, setProcessingPayout] = useState(false);
+  const [payoutError, setPayoutError] = useState("");
 
   // Delete modal
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -194,6 +206,8 @@ const SupportTickets = () => {
     setView("detail");
     setDetailLoading(true);
     setRescheduleLesson(null);
+    setPayoutTutorId(null);
+    setPayoutSummary(null);
     try {
       const res = await supportApi.getTicketById(ticket.id);
       if (res.isSuccess) {
@@ -208,6 +222,20 @@ const SupportTickets = () => {
               .then((r) => setRescheduleLesson(r?.data ?? null))
               .catch(() => {})
               .finally(() => setRescheduleLessonLoading(false));
+          }
+        }
+        // Auto-fetch tutor earning summary for Payout tickets
+        if (res.data.type === "Payout") {
+          const match = res.data.description?.match(/\[TutorId\]:\s*([0-9a-f-]{36})/i);
+          if (match) {
+            const tid = match[1];
+            setPayoutTutorId(tid);
+            setPayoutSummaryLoading(true);
+            paymentApi
+              .getTotalEarning({ TutorId: tid })
+              .then((r) => setPayoutSummary(r?.data?.singleTutor ?? null))
+              .catch(() => {})
+              .finally(() => setPayoutSummaryLoading(false));
           }
         }
       }
@@ -279,6 +307,42 @@ const SupportTickets = () => {
       addToast({ title: t("adminDashboard.supportTickets.reschedule.approveFailed"), color: "danger" });
     } finally {
       setApprovingReschedule(false);
+    }
+  };
+
+  const handleApprovePayout = async () => {
+    if (!payoutTutorId || !payoutPassword) {
+      setPayoutError(t("adminDashboard.supportTickets.payout.passwordRequired"));
+      return;
+    }
+    setProcessingPayout(true);
+    setPayoutError("");
+    try {
+      await paymentApi.createManualPayout({
+        tutorId: payoutTutorId,
+        password: payoutPassword,
+      });
+      await supportApi.updateTicketStatus(selectedTicket.id, "InProgress");
+      setSelectedTicket((prev) => ({ ...prev, status: "InProgress" }));
+      setPayoutPasswordOpen(false);
+      setPayoutPassword("");
+      fetchTickets();
+      addToast({
+        title: t("adminDashboard.supportTickets.payout.approveSuccess"),
+        color: "success",
+      });
+    } catch (err) {
+      const code = err?.response?.data?.error?.code;
+      if (code === "User.InvalidPassword") {
+        setPayoutError(t("adminDashboard.supportTickets.payout.invalidPassword"));
+      } else {
+        setPayoutError(
+          err?.response?.data?.error?.message ||
+            t("adminDashboard.supportTickets.payout.approveFailed"),
+        );
+      }
+    } finally {
+      setProcessingPayout(false);
     }
   };
 
@@ -520,6 +584,81 @@ const SupportTickets = () => {
                         style={{ backgroundColor: colors.state.warning, color: "#fff" }}
                       >
                         {t("adminDashboard.supportTickets.reschedule.approveBtn")}
+                      </Button>
+                    )}
+                  </CardBody>
+                </Card>
+              </motion.div>
+            )}
+
+            {/* Payout Approval Action */}
+            {selectedTicket.type === "Payout" && (
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.15 }}>
+                <Card shadow="none" className="border-none" style={{ backgroundColor: colors.background.light }}>
+                  <CardBody className="p-6 space-y-4">
+                    <div className="flex items-center gap-2">
+                      <Wallet weight="duotone" className="w-5 h-5" style={{ color: colors.state.success }} />
+                      <h3 className="text-base font-semibold" style={{ color: colors.text.primary }}>
+                        {t("adminDashboard.supportTickets.payout.title")}
+                      </h3>
+                    </div>
+
+                    {/* Tutor balance summary */}
+                    {payoutSummaryLoading ? (
+                      <div className="space-y-2">
+                        <Skeleton className="h-5 w-1/2 rounded-lg" />
+                        <Skeleton className="h-4 w-1/3 rounded-lg" />
+                      </div>
+                    ) : payoutSummary ? (
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="p-3 rounded-xl" style={{ backgroundColor: `${colors.primary.main}10`, border: `1px solid ${colors.primary.main}25` }}>
+                          <p className="text-xs flex items-center gap-1" style={{ color: colors.text.secondary }}>
+                            <Wallet weight="duotone" className="w-3.5 h-3.5" />
+                            {t("adminDashboard.supportTickets.payout.availableBalance")}
+                          </p>
+                          <p className="text-xl font-bold mt-1" style={{ color: colors.primary.main }}>
+                            {new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND", maximumFractionDigits: 0 }).format(payoutSummary.availableBalance || 0)}
+                          </p>
+                        </div>
+                        <div className="p-3 rounded-xl" style={{ backgroundColor: colors.background.gray }}>
+                          <p className="text-xs" style={{ color: colors.text.secondary }}>
+                            {t("adminDashboard.supportTickets.payout.totalNet")}
+                          </p>
+                          <p className="text-base font-semibold mt-1" style={{ color: colors.text.primary }}>
+                            {new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND", maximumFractionDigits: 0 }).format(payoutSummary.totalNetAmount || 0)}
+                          </p>
+                          <p className="text-[10px] mt-0.5" style={{ color: colors.text.tertiary }}>
+                            {payoutSummary.earningCount} {t("adminDashboard.supportTickets.payout.earnings")}
+                          </p>
+                        </div>
+                      </div>
+                    ) : null}
+
+                    {/* Hint */}
+                    <p className="text-sm" style={{ color: colors.text.secondary }}>
+                      {t("adminDashboard.supportTickets.payout.hint")}
+                    </p>
+
+                    {/* Action */}
+                    {selectedTicket.status === "InProgress" || selectedTicket.status === "Resolved" || selectedTicket.status === "Closed" ? (
+                      <div className="flex items-center gap-2 p-3 rounded-xl" style={{ backgroundColor: `${colors.state.success}12`, border: `1px solid ${colors.state.success}30` }}>
+                        <CheckCircle weight="fill" className="w-4 h-4" style={{ color: colors.state.success }} />
+                        <p className="text-sm" style={{ color: colors.state.success }}>
+                          {t("adminDashboard.supportTickets.payout.alreadyProcessed")}
+                        </p>
+                      </div>
+                    ) : (
+                      <Button
+                        startContent={<Bank weight="duotone" className="w-4 h-4" />}
+                        isDisabled={!payoutTutorId || !payoutSummary?.availableBalance}
+                        onPress={() => {
+                          setPayoutPassword("");
+                          setPayoutError("");
+                          setPayoutPasswordOpen(true);
+                        }}
+                        style={{ backgroundColor: colors.state.success, color: "#fff" }}
+                      >
+                        {t("adminDashboard.supportTickets.payout.processBtn")}
                       </Button>
                     )}
                   </CardBody>
@@ -821,6 +960,75 @@ const SupportTickets = () => {
         onClose={() => setIsLessonDetailOpen(false)}
         lesson={rescheduleLesson}
       />
+
+      {/* Payout Password Confirmation Modal */}
+      <Modal
+        isOpen={payoutPasswordOpen}
+        onOpenChange={(open) => {
+          if (!processingPayout) {
+            setPayoutPasswordOpen(open);
+            if (!open) {
+              setPayoutPassword("");
+              setPayoutError("");
+            }
+          }
+        }}
+        size="sm"
+      >
+        <ModalContent style={{ backgroundColor: colors.background.light }}>
+          <ModalHeader className="flex items-center gap-2" style={{ color: colors.text.primary }}>
+            <Wallet weight="duotone" className="w-5 h-5" style={{ color: colors.state.success }} />
+            {t("adminDashboard.supportTickets.payout.confirmTitle")}
+          </ModalHeader>
+          <ModalBody>
+            <div className="space-y-3">
+              <p className="text-sm" style={{ color: colors.text.secondary }}>
+                {t("adminDashboard.supportTickets.payout.confirmHint")}
+              </p>
+              {payoutSummary?.availableBalance > 0 && (
+                <div className="p-3 rounded-xl text-center" style={{ backgroundColor: `${colors.state.success}10`, border: `1px solid ${colors.state.success}25` }}>
+                  <p className="text-xs" style={{ color: colors.text.secondary }}>
+                    {t("adminDashboard.supportTickets.payout.amountToPay")}
+                  </p>
+                  <p className="text-xl font-bold mt-1" style={{ color: colors.state.success }}>
+                    {new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND", maximumFractionDigits: 0 }).format(payoutSummary.availableBalance)}
+                  </p>
+                </div>
+              )}
+              <Input
+                type="password"
+                label={t("adminDashboard.supportTickets.payout.adminPassword")}
+                placeholder={t("adminDashboard.supportTickets.payout.passwordPlaceholder")}
+                value={payoutPassword}
+                onValueChange={setPayoutPassword}
+                classNames={inputClassNames}
+              />
+              {payoutError && (
+                <p className="text-sm" style={{ color: colors.state.error }}>
+                  {payoutError}
+                </p>
+              )}
+            </div>
+          </ModalBody>
+          <ModalFooter>
+            <Button
+              variant="light"
+              isDisabled={processingPayout}
+              onPress={() => setPayoutPasswordOpen(false)}
+            >
+              {t("logoutModal.cancel")}
+            </Button>
+            <Button
+              isLoading={processingPayout}
+              isDisabled={!payoutPassword}
+              onPress={handleApprovePayout}
+              style={{ backgroundColor: colors.state.success, color: "#fff" }}
+            >
+              {t("adminDashboard.supportTickets.payout.confirmBtn")}
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
       </div>
     );
   }

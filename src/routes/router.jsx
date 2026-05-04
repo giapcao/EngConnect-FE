@@ -57,6 +57,7 @@ import AdminCourseVerification from "../pages/AdminDashboard/CourseManagement/Co
 import AdminCategories from "../pages/AdminDashboard/CourseManagement/CategoryManagement";
 import AdminAnalytics from "../pages/AdminDashboard/AnalyticsReports/AnalyticsReports";
 import AdminFinance from "../pages/AdminDashboard/FinancialManagement/FinancialManagement";
+import AdminPayroll from "../pages/AdminDashboard/PayrollManagement/PayrollManagement";
 import AdminSupportTickets from "../pages/AdminDashboard/SupportTickets/SupportTickets";
 import AdminScheduleManagement from "../pages/AdminDashboard/ScheduleManagement/ScheduleManagement";
 import AdminCourseDetail from "../pages/AdminDashboard/CourseManagement/CourseDetail";
@@ -356,6 +357,10 @@ export const router = createBrowserRouter([
       {
         path: "schedule",
         element: <AdminScheduleManagement />,
+      },
+      {
+        path: "payroll",
+        element: <AdminPayroll />,
       },
     ],
   },

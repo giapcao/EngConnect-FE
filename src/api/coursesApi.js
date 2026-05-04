@@ -262,9 +262,9 @@ export const coursesApi = {
     return response.data;
   },
 
-  // Remove a resource from a session (using the join-table id from sessionsResources)
-  removeSessionResource: async (sessionResourceId) => {
-    const response = await axiosInstance.delete(`/sessions-resources/${sessionResourceId}`);
+  // Remove a resource from a session
+  removeSessionResource: async (courseSessionId, courseResourceId) => {
+    const response = await axiosInstance.delete(`/sessions-resources/${courseSessionId}/${courseResourceId}`);
     return response.data;
   },
 

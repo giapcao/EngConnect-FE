@@ -177,4 +177,10 @@ export const tutorApi = {
     const response = await axiosInstance.delete(`/tutor-schedules/${id}`);
     return response.data;
   },
+
+  // Get my courses session time (for schedule slot duration options)
+  getMyCoursesSessionTime: async (params = {}) => {
+    const response = await axiosInstance.get("/tutors/my-courses/session-time", { params });
+    return response.data;
+  },
 };

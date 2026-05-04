@@ -7,5 +7,6 @@ export { supportApi } from "./supportApi";
 export { meetingApi } from "./meetingApi";
 export { lessonHomeworkApi } from "./lessonHomeworkApi";
 export { rescheduleApi } from "./rescheduleApi";
+export { paymentApi } from "./paymentApi";
 export { overlapsApi } from "./overlapsApi";
 export { default as axiosInstance } from "./axiosConfig";

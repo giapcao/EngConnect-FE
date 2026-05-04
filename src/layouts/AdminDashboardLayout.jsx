@@ -44,6 +44,7 @@ import {
   Tag,
   Ticket,
   CalendarDots,
+  Wallet,
 } from "@phosphor-icons/react";
 
 const AdminDashboardLayout = () => {
@@ -126,6 +127,11 @@ const AdminDashboardLayout = () => {
       path: "/admin/finance",
       label: t("adminDashboard.nav.finance"),
       icon: CurrencyDollar,
+    },
+    {
+      path: "/admin/payroll",
+      label: t("adminDashboard.nav.payroll"),
+      icon: Wallet,
     },
     {
       path: "/admin/support-tickets",

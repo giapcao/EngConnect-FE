@@ -54,7 +54,7 @@ const getLessonBlockColor = (status) => {
     case "Reschedule":
       return { bg: "#FEF3C7", border: "#F59E0B", text: "#92400E" };
     case "Completed":
-    case "Settle":
+    case "Settled":
       return { bg: "#DBEAFE", border: "#3B82F6", text: "#1E40AF" };
     case "Cancelled":
     case "NoStudent":
@@ -218,7 +218,7 @@ const LessonDetailModal = ({
       case "Scheduled":
         return t(`${ns}.scheduled`);
       case "Completed":
-      case "Settle":
+      case "Settled":
         return t(`${ns}.completed`);
       case "Cancelled":
         return t(`${ns}.cancelled`);
@@ -261,7 +261,7 @@ const LessonDetailModal = ({
   const canJoinLesson = (l) =>
     l.meetingStatus === "InProgress" ||
     (l.status !== "Completed" &&
-      l.status !== "Settle" &&
+      l.status !== "Settled" &&
       l.status !== "NoStudent" &&
       l.status !== "NoTutor" &&
       l.status !== "Cancelled" &&
@@ -862,8 +862,9 @@ const LessonDetailModal = ({
                 </Button>
               )}
               {/* Student: request reschedule */}
-              {internalCanRequestReschedule && !internalPendingOffer && (
-                internalPendingRequest ? (
+              {internalCanRequestReschedule &&
+                !internalPendingOffer &&
+                (internalPendingRequest ? (
                   <Chip
                     size="sm"
                     className="h-9 px-3"
@@ -890,8 +891,7 @@ const LessonDetailModal = ({
                   >
                     {t("studentDashboard.schedule.reschedule.requestBtn")}
                   </Button>
-                )
-              )}
+                ))}
               {canJoinLesson(lesson) && (
                 <Button
                   style={{

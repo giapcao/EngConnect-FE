@@ -19,6 +19,8 @@ import {
   Select,
   SelectItem,
   Spinner,
+  Tabs,
+  Tab,
 } from "@heroui/react";
 import { motion } from "framer-motion";
 import { useThemeColors } from "../../../hooks/useThemeColors";
@@ -55,6 +57,15 @@ import {
 import { coursesApi, tutorApi, studentApi } from "../../../api";
 import { selectUser } from "../../../store";
 import useInputStyles from "../../../hooks/useInputStyles";
+
+const CDN_BASE = "https://d20854st1o56hw.cloudfront.net/";
+const buildResourceUrl = (url) => {
+  if (!url) return "#";
+  const doubled = CDN_BASE + CDN_BASE;
+  if (url.startsWith(doubled)) return CDN_BASE + url.slice(doubled.length);
+  if (url.startsWith("http")) return url;
+  return CDN_BASE + url;
+};
 
 const formatDuration = (timeStr) => {
   if (!timeStr) return "";
@@ -108,7 +119,7 @@ const TutorCourseDetail = () => {
   const [editResourceModal, setEditResourceModal] = useState(false);
   const [editResourceData, setEditResourceData] = useState(null);
   const [savingResource, setSavingResource] = useState(false);
-  const [removeResourceId, setRemoveResourceId] = useState(null);
+  const [removeResourceId, setRemoveResourceId] = useState(null); // { sessionId, resourceId }
   const [removingResource, setRemovingResource] = useState(false);
   const [addResourceModal, setAddResourceModal] = useState(false);
   const [addResourceSessionId, setAddResourceSessionId] = useState(null);
@@ -118,6 +129,11 @@ const TutorCourseDetail = () => {
     file: null,
   });
   const [addingResource, setAddingResource] = useState(false);
+  const [addResourceMode, setAddResourceMode] = useState("new"); // "new" | "reuse"
+  const [reuseResources, setReuseResources] = useState([]);
+  const [reuseResourcesLoading, setReuseResourcesLoading] = useState(false);
+  const [reuseSearch, setReuseSearch] = useState("");
+  const [selectedReuseId, setSelectedReuseId] = useState(null);
 
   // Inactive course state
   const [inactivingCourse, setInactivingCourse] = useState(false);
@@ -347,11 +363,16 @@ const TutorCourseDetail = () => {
     if (!removeResourceId) return;
     setRemovingResource(true);
     try {
-      await coursesApi.removeSessionResource(removeResourceId);
+      await coursesApi.removeSessionResource(
+        removeResourceId.sessionId,
+        removeResourceId.resourceId,
+      );
       setSessionResources((prev) => {
         const next = { ...prev };
         for (const key in next) {
-          next[key] = next[key].filter((r) => r.id !== removeResourceId);
+          next[key] = next[key].filter(
+            (r) => r.id !== removeResourceId.resourceId,
+          );
         }
         return next;
       });
@@ -366,7 +387,54 @@ const TutorCourseDetail = () => {
   const openAddResource = (sessionId) => {
     setAddResourceSessionId(sessionId);
     setAddResourceData({ title: "", resourceType: "", file: null });
+    setAddResourceMode("new");
+    setReuseResources([]);
+    setReuseSearch("");
+    setSelectedReuseId(null);
     setAddResourceModal(true);
+  };
+
+  const loadReuseResources = async (sessionId) => {
+    setReuseResourcesLoading(true);
+    try {
+      const res = await coursesApi.getCourseResourcesByTutor({
+        CourseSessionId: sessionId,
+        "page-size": 100,
+      });
+      setReuseResources(res?.data?.items || []);
+    } catch {
+      setReuseResources([]);
+    } finally {
+      setReuseResourcesLoading(false);
+    }
+  };
+
+  const handleAddReuse = async () => {
+    if (!selectedReuseId || !addResourceSessionId) return;
+    setAddingResource(true);
+    try {
+      const res = await coursesApi.addSessionResource({
+        courseSessionId: addResourceSessionId,
+        courseResources: [{ courseResourceId: selectedReuseId }],
+      });
+      if (res.isSuccess) {
+        const refreshed = await coursesApi.getAllCourseResources({
+          CourseSessionId: addResourceSessionId,
+          "page-size": 100,
+        });
+        if (refreshed.isSuccess) {
+          setSessionResources((prev) => ({
+            ...prev,
+            [addResourceSessionId]: refreshed.data.items || [],
+          }));
+        }
+        setAddResourceModal(false);
+      }
+    } catch {
+      // silent
+    } finally {
+      setAddingResource(false);
+    }
   };
 
   const handleAddResource = async () => {
@@ -1309,7 +1377,12 @@ const TutorCourseDetail = () => {
                                                             )}
                                                             onClick={() =>
                                                               setRemoveResourceId(
-                                                                res.id,
+                                                                {
+                                                                  sessionId:
+                                                                    sessId,
+                                                                  resourceId:
+                                                                    res.id,
+                                                                },
                                                               )
                                                             }
                                                           >
@@ -2166,96 +2239,248 @@ const TutorCourseDetail = () => {
                 {t("courses.detail.resources.addTitle")}
               </ModalHeader>
               <ModalBody className="space-y-4">
-                <Input
-                  label={t("courses.detail.resources.fieldTitle")}
-                  value={addResourceData.title}
-                  onValueChange={(v) =>
-                    setAddResourceData((prev) => ({ ...prev, title: v }))
-                  }
-                  classNames={inputClassNames}
-                  isRequired
-                />
-                <Select
-                  label={t("courses.detail.resources.fieldType")}
-                  classNames={selectClassNames}
-                  selectedKeys={
-                    addResourceData.resourceType
-                      ? [addResourceData.resourceType]
-                      : []
-                  }
-                  onSelectionChange={(keys) =>
-                    setAddResourceData((prev) => ({
-                      ...prev,
-                      resourceType: [...keys][0] || "",
-                    }))
-                  }
+                {/* Mode toggle */}
+                <Tabs
+                  selectedKey={addResourceMode}
+                  onSelectionChange={(key) => {
+                    setAddResourceMode(key);
+                    if (
+                      key === "reuse" &&
+                      reuseResources.length === 0 &&
+                      !reuseResourcesLoading
+                    ) {
+                      loadReuseResources(addResourceSessionId);
+                    }
+                  }}
+                  fullWidth
+                  size="sm"
+                  color="primary"
                 >
-                  {[
-                    "Document",
-                    "Video",
-                    "Slide",
-                    "Audio",
-                    "Homework",
-                    "Exercise",
-                    "PracticeExam",
-                    "Reference",
-                    "Other",
-                  ].map((type) => (
-                    <SelectItem key={type}>{type}</SelectItem>
-                  ))}
-                </Select>
-                <div>
-                  <p
-                    className="text-sm font-medium mb-2"
-                    style={{ color: colors.text.primary }}
-                  >
-                    {t("courses.detail.resources.fieldFile")}
-                  </p>
-                  <label
-                    className="flex items-center gap-3 p-3 rounded-xl border-2 border-dashed cursor-pointer"
-                    style={{ borderColor: colors.border.light }}
-                  >
-                    <FileText
-                      className="w-5 h-5"
-                      style={{ color: colors.text.tertiary }}
+                  <Tab
+                    key="new"
+                    title={t("courses.detail.resources.newResource")}
+                  />
+                  <Tab
+                    key="reuse"
+                    title={t("courses.detail.resources.reuseExisting")}
+                  />
+                </Tabs>
+
+                {addResourceMode === "new" ? (
+                  <>
+                    <Input
+                      label={t("courses.detail.resources.fieldTitle")}
+                      value={addResourceData.title}
+                      onValueChange={(v) =>
+                        setAddResourceData((prev) => ({ ...prev, title: v }))
+                      }
+                      classNames={inputClassNames}
+                      isRequired
                     />
-                    <span
-                      className="text-sm"
-                      style={{ color: colors.text.secondary }}
-                    >
-                      {addResourceData.file
-                        ? addResourceData.file.name
-                        : t("courses.detail.resources.noFileChosen")}
-                    </span>
-                    <input
-                      type="file"
-                      className="hidden"
-                      onChange={(e) =>
+                    <Select
+                      label={t("courses.detail.resources.fieldType")}
+                      classNames={selectClassNames}
+                      selectedKeys={
+                        addResourceData.resourceType
+                          ? [addResourceData.resourceType]
+                          : []
+                      }
+                      onSelectionChange={(keys) =>
                         setAddResourceData((prev) => ({
                           ...prev,
-                          file: e.target.files?.[0] || null,
+                          resourceType: [...keys][0] || "",
                         }))
                       }
+                    >
+                      {[
+                        "Document",
+                        "Video",
+                        "Slide",
+                        "Audio",
+                        "Homework",
+                        "Exercise",
+                        "PracticeExam",
+                        "Reference",
+                        "Other",
+                      ].map((type) => (
+                        <SelectItem key={type}>{type}</SelectItem>
+                      ))}
+                    </Select>
+                    <div>
+                      <p
+                        className="text-sm font-medium mb-2"
+                        style={{ color: colors.text.primary }}
+                      >
+                        {t("courses.detail.resources.fieldFile")}
+                      </p>
+                      <label
+                        className="flex items-center gap-3 p-3 rounded-xl border-2 border-dashed cursor-pointer"
+                        style={{ borderColor: colors.border.light }}
+                      >
+                        <FileText
+                          className="w-5 h-5"
+                          style={{ color: colors.text.tertiary }}
+                        />
+                        <span
+                          className="text-sm"
+                          style={{ color: colors.text.secondary }}
+                        >
+                          {addResourceData.file
+                            ? addResourceData.file.name
+                            : t("courses.detail.resources.noFileChosen")}
+                        </span>
+                        <input
+                          type="file"
+                          className="hidden"
+                          onChange={(e) =>
+                            setAddResourceData((prev) => ({
+                              ...prev,
+                              file: e.target.files?.[0] || null,
+                            }))
+                          }
+                        />
+                      </label>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <Input
+                      placeholder={t(
+                        "courses.detail.resources.searchResources",
+                      )}
+                      value={reuseSearch}
+                      onValueChange={setReuseSearch}
+                      classNames={inputClassNames}
+                      isClearable
+                      onClear={() => setReuseSearch("")}
                     />
-                  </label>
-                </div>
+                    <div
+                      className="space-y-1.5 max-h-60 overflow-y-auto"
+                      style={{ minHeight: "80px" }}
+                    >
+                      {reuseResourcesLoading ? (
+                        <div className="flex justify-center py-4">
+                          <Spinner size="sm" />
+                        </div>
+                      ) : reuseResources.filter(
+                          (r) =>
+                            !reuseSearch ||
+                            r.title
+                              ?.toLowerCase()
+                              .includes(reuseSearch.toLowerCase()),
+                        ).length === 0 ? (
+                        <p
+                          className="text-sm text-center py-4"
+                          style={{ color: colors.text.tertiary }}
+                        >
+                          {t("courses.detail.resources.noExistingResources")}
+                        </p>
+                      ) : (
+                        reuseResources
+                          .filter(
+                            (r) =>
+                              !reuseSearch ||
+                              r.title
+                                ?.toLowerCase()
+                                .includes(reuseSearch.toLowerCase()),
+                          )
+                          .map((r) => (
+                            <div
+                              key={r.id}
+                              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border transition-colors cursor-pointer"
+                              style={{
+                                borderColor:
+                                  selectedReuseId === r.id
+                                    ? colors.primary.main
+                                    : colors.border.light,
+                                backgroundColor:
+                                  selectedReuseId === r.id
+                                    ? colors.background.gray
+                                    : colors.background.gray,
+                              }}
+                              onClick={() =>
+                                setSelectedReuseId(
+                                  selectedReuseId === r.id ? null : r.id,
+                                )
+                              }
+                            >
+                              <span className="flex-shrink-0">
+                                {getResourceIcon(r.resourceType)}
+                              </span>
+                              <div className="flex-1 min-w-0">
+                                <p
+                                  className="text-sm font-medium truncate"
+                                  style={{ color: colors.text.primary }}
+                                >
+                                  {r.title}
+                                </p>
+                                <p
+                                  className="text-xs"
+                                  style={{ color: colors.text.tertiary }}
+                                >
+                                  {r.resourceType}
+                                </p>
+                              </div>
+                              {r.url && (
+                                <a
+                                  href={buildResourceUrl(r.url)}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  title={t("courses.detail.resources.open")}
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="flex-shrink-0 flex items-center"
+                                >
+                                  <ArrowSquareOut
+                                    size={15}
+                                    style={{ color: colors.primary.main }}
+                                  />
+                                </a>
+                              )}
+                              {selectedReuseId === r.id && (
+                                <Check
+                                  size={16}
+                                  weight="bold"
+                                  style={{ color: colors.primary.main }}
+                                />
+                              )}
+                            </div>
+                          ))
+                      )}
+                    </div>
+                  </>
+                )}
               </ModalBody>
               <ModalFooter>
                 <Button variant="flat" onPress={onClose}>
                   {t("common.cancel")}
                 </Button>
-                <Button
-                  color="primary"
-                  isLoading={addingResource}
-                  isDisabled={!addResourceData.title.trim()}
-                  onPress={handleAddResource}
-                  style={{
-                    backgroundColor: colors.primary.main,
-                    color: colors.text.white,
-                  }}
-                >
-                  {t("common.add")}
-                </Button>
+                {addResourceMode === "new" ? (
+                  <Button
+                    color="primary"
+                    isLoading={addingResource}
+                    isDisabled={!addResourceData.title.trim()}
+                    onPress={handleAddResource}
+                    style={{
+                      backgroundColor: colors.primary.main,
+                      color: colors.text.white,
+                    }}
+                  >
+                    {t("common.add")}
+                  </Button>
+                ) : (
+                  <Button
+                    color="primary"
+                    isLoading={addingResource}
+                    isDisabled={!selectedReuseId}
+                    onPress={handleAddReuse}
+                    style={{
+                      backgroundColor: colors.primary.main,
+                      color: colors.text.white,
+                    }}
+                  >
+                    {t("common.add")}
+                  </Button>
+                )}
               </ModalFooter>
             </>
           )}

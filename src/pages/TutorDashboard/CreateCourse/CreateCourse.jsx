@@ -748,7 +748,7 @@ const CreateCourse = () => {
     if (!resourceId) return;
     setDeletingResourceKey(`${sessionId}|${resourceIdx}`);
     try {
-      await coursesApi.removeSessionResource(resourceId);
+      await coursesApi.removeSessionResource(sessionId, resourceId);
       setResources((prev) => {
         const arr = (prev[sessionId] || []).filter((_, i) => i !== resourceIdx);
         return { ...prev, [sessionId]: arr };
@@ -3951,24 +3951,6 @@ const CreateCourse = () => {
                                 )}
                               </h3>
                               <div className="flex items-center gap-1">
-                                {isExisting && !isEditingRes && (
-                                  <Button
-                                    isIconOnly
-                                    variant="light"
-                                    size="sm"
-                                    onPress={() =>
-                                      startEditResource(
-                                        activeSessionForResources,
-                                        index,
-                                      )
-                                    }
-                                    title={t(
-                                      "tutorDashboard.createCourse.editItem",
-                                    )}
-                                  >
-                                    <PencilSimple className="w-4 h-4" />
-                                  </Button>
-                                )}
                                 {isExisting && !isEditingRes && (
                                   <Button
                                     isIconOnly
