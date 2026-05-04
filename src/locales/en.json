@@ -881,7 +881,7 @@
       "avatarUpdateFailed": "Failed to update avatar",
       "profileUpdated": "Profile updated successfully",
       "profileUpdateFailed": "Failed to update profile",
-      "emailNotifications": "Email Notifications",
+      "bankDescription": "Provide your bank account details for refunds when applicable.",
       "pushNotifications": "Push Notifications",
       "lessonReminders": "Lesson Reminders",
       "lessonRemindersDesc": "Get notified before your scheduled lessons",
@@ -1603,6 +1603,7 @@
       "dangerZone": "Danger Zone",
       "deleteAccount": "Delete Account",
       "recentEarnings": "Recent Earnings",
+      "bankDescription": "This bank account is used for monthly payouts of your course revenue and for processing withdrawal requests.",
       "verification": {
         "status": "Verification Status",
         "statuses": {

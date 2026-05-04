@@ -879,7 +879,7 @@
       "avatarUpdateFailed": "Cập nhật ảnh đại diện thất bại",
       "profileUpdated": "Cập nhật hồ sơ thành công",
       "profileUpdateFailed": "Cập nhật hồ sơ thất bại",
-      "emailNotifications": "Thông báo Email",
+      "bankDescription": "Cung cấp thông tin tài khoản ngân hàng để nhận hoàn tiền khi cần thiết.",
       "pushNotifications": "Thông báo đẩy",
       "lessonReminders": "Nhắc nhở buổi học",
       "lessonRemindersDesc": "Nhận thông báo trước buổi học",
@@ -1601,6 +1601,7 @@
       "dangerZone": "Vùng nguy hiểm",
       "deleteAccount": "Xóa tài khoản",
       "recentEarnings": "Thu nhập gần đây",
+      "bankDescription": "Tài khoản ngân hàng này được dùng để nhận lương hàng tháng từ doanh thu khóa học và xử lý các yêu cầu rút tiền.",
       "verification": {
         "status": "Trạng thái xác minh",
         "statuses": {

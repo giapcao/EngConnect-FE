@@ -162,4 +162,10 @@ export const studentApi = {
     const response = await axiosInstance.get(`/payments/v1/order/${orderId}`);
     return response.data;
   },
+
+  // Update student bank info
+  updateBankInfo: async (data) => {
+    const response = await axiosInstance.patch("/students/bank", data);
+    return response.data;
+  },
 };

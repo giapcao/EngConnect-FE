@@ -873,6 +873,10 @@ const Profile = () => {
                 )}
               </div>
 
+              <p className="text-sm" style={{ color: colors.text.secondary }}>
+                {t("tutorDashboard.profile.bankDescription")}
+              </p>
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* Bank selector */}
                 <div className="sm:col-span-2">
