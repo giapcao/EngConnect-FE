@@ -2492,7 +2492,7 @@
       "updatedAt": "Updated",
       "actions": "Actions",
       "viewDetail": "View Details",
-      "deleteTicket": "Delete Ticket",
+      "deleteTicket": "Delete",
       "deleteConfirm": "Are you sure you want to delete this ticket?",
       "deleteSuccess": "Ticket deleted successfully",
       "deleteFailed": "Failed to delete ticket",
@@ -2518,6 +2518,15 @@
         "unknownUser": "Unknown user",
         "roleTutor": "Tutor",
         "roleStudent": "Student"
+      },
+      "reschedule": {
+        "title": "Reschedule Approval",
+        "hint": "Set the lesson status to Reschedule so the tutor can assign a new time slot.",
+        "approveBtn": "Approve Reschedule",
+        "alreadyApproved": "Reschedule approved — lesson status updated",
+        "approveSuccess": "Lesson status set to Reschedule",
+        "approveFailed": "Failed to update lesson status",
+        "lessonIdNotFound": "Could not find Lesson ID in ticket description"
       },
       "types": {
         "Error": "Error",

@@ -145,6 +145,12 @@ export const studentApi = {
     return response.data;
   },
 
+  // Update lesson status (admin)
+  updateLessonStatus: async (id, status) => {
+    const response = await axiosInstance.patch(`/lessons/${id}/status`, { id, status });
+    return response.data;
+  },
+
   // Verify PayOS payment return
   verifyPayosReturn: async (params) => {
     const response = await axiosInstance.get("/payments/v1/payos/return", { params });

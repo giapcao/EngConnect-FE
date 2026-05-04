@@ -572,39 +572,6 @@ const Profile = () => {
                   </div>
                 }
               />
-              {/* <Tab
-                key="notifications"
-                title={
-                  <div className="flex items-center gap-2">
-                    <Bell className="w-5 h-5" />
-                    <span className="font-medium">
-                      {t("tutorDashboard.profile.tabs.notifications")}
-                    </span>
-                  </div>
-                }
-              />
-              <Tab
-                key="security"
-                title={
-                  <div className="flex items-center gap-2">
-                    <Shield className="w-5 h-5" />
-                    <span className="font-medium">
-                      {t("tutorDashboard.profile.tabs.security")}
-                    </span>
-                  </div>
-                }
-              />
-              <Tab
-                key="earnings"
-                title={
-                  <div className="flex items-center gap-2">
-                    <CreditCard className="w-5 h-5" />
-                    <span className="font-medium">
-                      {t("tutorDashboard.profile.tabs.earnings")}
-                    </span>
-                  </div>
-                }
-              /> */}
               <Tab
                 key="verification"
                 title={

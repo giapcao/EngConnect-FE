@@ -2516,6 +2516,15 @@
         "roleTutor": "Gia sư",
         "roleStudent": "Học viên"
       },
+      "reschedule": {
+        "title": "Duyệt đổi lịch",
+        "hint": "Đặt trạng thái buổi học thành Reschedule để gia sư có thể xếp lịch mới.",
+        "approveBtn": "Duyệt đổi lịch",
+        "alreadyApproved": "Đã duyệt — trạng thái buổi học đã cập nhật",
+        "approveSuccess": "Đã đặt trạng thái buổi học thành Reschedule",
+        "approveFailed": "Cập nhật trạng thái buổi học thất bại",
+        "lessonIdNotFound": "Không tìm thấy Lesson ID trong mô tả phiếu"
+      },
       "types": {
         "Error": "Lỗi",
         "TechnicalIssue": "Sự cố kỹ thuật",

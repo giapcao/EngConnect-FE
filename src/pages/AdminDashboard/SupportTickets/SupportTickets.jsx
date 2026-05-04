@@ -17,10 +17,6 @@ import {
   TableBody,
   TableRow,
   TableCell,
-  Dropdown,
-  DropdownTrigger,
-  DropdownMenu,
-  DropdownItem,
   Modal,
   ModalContent,
   ModalHeader,
@@ -35,11 +31,11 @@ import { useNavigate } from "react-router-dom";
 import { useThemeColors } from "../../../hooks/useThemeColors";
 import useInputStyles from "../../../hooks/useInputStyles";
 import useTableStyles from "../../../hooks/useTableStyles";
-import useDropdownStyles from "../../../hooks/useDropdownStyles";
 import { selectUser } from "../../../store";
 import { supportApi } from "../../../api/supportApi";
 import { tutorApi } from "../../../api/tutorApi";
 import { studentApi } from "../../../api/studentApi";
+import AdminLessonDetailModal from "../../../components/AdminLessonDetailModal/AdminLessonDetailModal";
 // eslint-disable-next-line no-unused-vars
 import { motion } from "framer-motion";
 import {
@@ -47,12 +43,13 @@ import {
   PaperPlaneTilt,
   MagnifyingGlass,
   ChatCircleDots,
-  DotsThreeVertical,
   Eye,
   Trash,
   UserCircle,
   ShieldCheck,
   EnvelopeSimple,
+  ArrowCounterClockwise,
+  CheckCircle,
 } from "@phosphor-icons/react";
 
 const TICKET_TYPES = [
@@ -92,7 +89,6 @@ const SupportTickets = () => {
   const colors = useThemeColors();
   const { inputClassNames, selectClassNames } = useInputStyles();
   const { tableCardStyle, tableClassNames } = useTableStyles();
-  const { dropdownClassNames } = useDropdownStyles();
   const user = useSelector(selectUser);
   const navigate = useNavigate();
   const messagesEndRef = useRef(null);
@@ -115,6 +111,12 @@ const SupportTickets = () => {
   const [senderLoading, setSenderLoading] = useState(false);
   const [messageText, setMessageText] = useState("");
   const [sending, setSending] = useState(false);
+
+  // Reschedule approval
+  const [approvingReschedule, setApprovingReschedule] = useState(false);
+  const [rescheduleLesson, setRescheduleLesson] = useState(null);
+  const [rescheduleLessonLoading, setRescheduleLessonLoading] = useState(false);
+  const [isLessonDetailOpen, setIsLessonDetailOpen] = useState(false);
 
   // Delete modal
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -191,12 +193,23 @@ const SupportTickets = () => {
   const openDetail = async (ticket) => {
     setView("detail");
     setDetailLoading(true);
+    setRescheduleLesson(null);
     try {
       const res = await supportApi.getTicketById(ticket.id);
       if (res.isSuccess) {
         setSelectedTicket(res.data);
-        // Use createdBy from the ticket itself — reliable even when there are no messages yet
         resolveSender(res.data.createdBy);
+        // Auto-fetch lesson for Reschedule tickets
+        if (res.data.type === "Reschedule") {
+          const match = res.data.description?.match(/Lesson ID:\s*([0-9a-f-]{36})/i);
+          if (match) {
+            setRescheduleLessonLoading(true);
+            studentApi.getLessonById(match[1])
+              .then((r) => setRescheduleLesson(r?.data ?? null))
+              .catch(() => {})
+              .finally(() => setRescheduleLessonLoading(false));
+          }
+        }
       }
     } catch {
       addToast({ title: "Failed to load ticket", color: "danger" });
@@ -244,6 +257,28 @@ const SupportTickets = () => {
         title: t("adminDashboard.supportTickets.updateStatusFailed"),
         color: "danger",
       });
+    }
+  };
+
+  const handleApproveReschedule = async () => {
+    if (!selectedTicket) return;
+    const match = selectedTicket.description?.match(/Lesson ID:\s*([0-9a-f-]{36})/i);
+    if (!match) {
+      addToast({ title: t("adminDashboard.supportTickets.reschedule.lessonIdNotFound"), color: "danger" });
+      return;
+    }
+    const lessonId = match[1];
+    setApprovingReschedule(true);
+    try {
+      await studentApi.updateLessonStatus(lessonId, "Reschedule");
+      await supportApi.updateTicketStatus(selectedTicket.id, "InProgress");
+      setSelectedTicket((prev) => ({ ...prev, status: "InProgress" }));
+      fetchTickets();
+      addToast({ title: t("adminDashboard.supportTickets.reschedule.approveSuccess"), color: "success" });
+    } catch {
+      addToast({ title: t("adminDashboard.supportTickets.reschedule.approveFailed"), color: "danger" });
+    } finally {
+      setApprovingReschedule(false);
     }
   };
 
@@ -408,6 +443,89 @@ const SupportTickets = () => {
                 </CardBody>
               </Card>
             </motion.div>
+
+            {/* Reschedule Approval Action */}
+            {selectedTicket.type === "Reschedule" && (
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.15 }}>
+                <Card shadow="none" className="border-none" style={{ backgroundColor: colors.background.light }}>
+                  <CardBody className="p-6 space-y-4">
+                    {/* Header */}
+                    <div className="flex items-center gap-2">
+                      <ArrowCounterClockwise weight="duotone" className="w-5 h-5" style={{ color: colors.state.warning }} />
+                      <h3 className="text-base font-semibold" style={{ color: colors.text.primary }}>
+                        {t("adminDashboard.supportTickets.reschedule.title")}
+                      </h3>
+                    </div>
+
+                    {/* Lesson Detail */}
+                    {rescheduleLessonLoading ? (
+                      <div className="space-y-2">
+                        <Skeleton className="h-5 w-2/3 rounded-lg" />
+                        <Skeleton className="h-4 w-1/2 rounded-lg" />
+                        <Skeleton className="h-4 w-1/3 rounded-lg" />
+                      </div>
+                    ) : rescheduleLesson ? (
+                      <div
+                        className="p-3 rounded-xl flex items-center justify-between gap-3 cursor-pointer hover:opacity-80 transition-opacity"
+                        style={{ backgroundColor: colors.background.gray }}
+                        onClick={() => setIsLessonDetailOpen(true)}
+                      >
+                        <div className="min-w-0">
+                          <p className="font-semibold text-sm truncate" style={{ color: colors.text.primary }}>
+                            {rescheduleLesson.courseTitle || rescheduleLesson.sessionTitle}
+                          </p>
+                          <p className="text-xs mt-0.5" style={{ color: colors.text.secondary }}>
+                            {new Date(rescheduleLesson.startTime).toLocaleString(i18n.language === "vi" ? "vi-VN" : "en-US", { weekday: "short", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                            {" – "}
+                            {new Date(rescheduleLesson.endTime).toLocaleTimeString(i18n.language === "vi" ? "vi-VN" : "en-US", { hour: "2-digit", minute: "2-digit" })}
+                          </p>
+                        </div>
+                        <Chip size="sm" variant="flat"
+                          style={{
+                            backgroundColor: rescheduleLesson.status === "NoTutor" ? `${colors.state.error}15` : `${colors.state.warning}15`,
+                            color: rescheduleLesson.status === "NoTutor" ? colors.state.error : colors.state.warning,
+                            flexShrink: 0,
+                          }}
+                        >
+                          {rescheduleLesson.status}
+                        </Chip>
+                      </div>
+                    ) : null}
+
+                    {/* Hint */}
+                    <p className="text-sm" style={{ color: colors.text.secondary }}>
+                      {t("adminDashboard.supportTickets.reschedule.hint")}
+                    </p>
+
+                    {/* Action */}
+                    {selectedTicket.status === "Resolved" || selectedTicket.status === "Closed" ? (
+                      <div className="flex items-center gap-2 p-3 rounded-xl" style={{ backgroundColor: `${colors.state.success}12`, border: `1px solid ${colors.state.success}30` }}>
+                        <CheckCircle weight="fill" className="w-4 h-4" style={{ color: colors.state.success }} />
+                        <p className="text-sm" style={{ color: colors.state.success }}>
+                          {t("adminDashboard.supportTickets.reschedule.alreadyApproved")}
+                        </p>
+                      </div>
+                    ) : selectedTicket.status === "InProgress" ? (
+                      <div className="flex items-center gap-2 p-3 rounded-xl" style={{ backgroundColor: `${colors.state.success}12`, border: `1px solid ${colors.state.success}30` }}>
+                        <CheckCircle weight="fill" className="w-4 h-4" style={{ color: colors.state.success }} />
+                        <p className="text-sm" style={{ color: colors.state.success }}>
+                          {t("adminDashboard.supportTickets.reschedule.alreadyApproved")}
+                        </p>
+                      </div>
+                    ) : (
+                      <Button
+                        isLoading={approvingReschedule}
+                        onPress={handleApproveReschedule}
+                        startContent={!approvingReschedule && <ArrowCounterClockwise weight="bold" className="w-4 h-4" />}
+                        style={{ backgroundColor: colors.state.warning, color: "#fff" }}
+                      >
+                        {t("adminDashboard.supportTickets.reschedule.approveBtn")}
+                      </Button>
+                    )}
+                  </CardBody>
+                </Card>
+              </motion.div>
+            )}
 
             {/* Sender Info */}
             <motion.div
@@ -697,6 +815,12 @@ const SupportTickets = () => {
             </motion.div>
           </>
         ) : null}
+
+      <AdminLessonDetailModal
+        isOpen={isLessonDetailOpen}
+        onClose={() => setIsLessonDetailOpen(false)}
+        lesson={rescheduleLesson}
+      />
       </div>
     );
   }
@@ -878,37 +1002,35 @@ const SupportTickets = () => {
                       </span>
                     </TableCell>
                     <TableCell>
-                      <Dropdown classNames={dropdownClassNames}>
-                        <DropdownTrigger>
-                          <Button isIconOnly size="sm" variant="light">
-                            <DotsThreeVertical
-                              className="w-5 h-5"
-                              style={{ color: colors.text.secondary }}
-                            />
-                          </Button>
-                        </DropdownTrigger>
-                        <DropdownMenu aria-label="Ticket actions">
-                          <DropdownItem
-                            key="view"
-                            startContent={<Eye className="w-4 h-4" />}
-                            onPress={() => openDetail(ticket)}
-                          >
-                            {t("adminDashboard.supportTickets.viewDetail")}
-                          </DropdownItem>
-                          <DropdownItem
-                            key="delete"
-                            color="danger"
-                            className="text-danger"
-                            startContent={<Trash className="w-4 h-4" />}
-                            onPress={() => {
-                              setDeleteId(ticket.id);
-                              setDeleteOpen(true);
-                            }}
-                          >
-                            {t("adminDashboard.supportTickets.deleteTicket")}
-                          </DropdownItem>
-                        </DropdownMenu>
-                      </Dropdown>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          size="sm"
+                          variant="flat"
+                          startContent={<Eye className="w-4 h-4" />}
+                          onPress={() => openDetail(ticket)}
+                          style={{
+                            backgroundColor: `${colors.primary.main}15`,
+                            color: colors.primary.main,
+                          }}
+                        >
+                          {t("adminDashboard.supportTickets.viewDetail")}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="flat"
+                          startContent={<Trash className="w-4 h-4" />}
+                          onPress={() => {
+                            setDeleteId(ticket.id);
+                            setDeleteOpen(true);
+                          }}
+                          style={{
+                            backgroundColor: `${colors.state.error}15`,
+                            color: colors.state.error,
+                          }}
+                        >
+                          {t("adminDashboard.supportTickets.deleteTicket")}
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}

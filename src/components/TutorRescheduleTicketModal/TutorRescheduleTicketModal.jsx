@@ -42,13 +42,18 @@ export default function TutorRescheduleTicketModal({
   if (!lesson) return null;
 
   const lessonTitle = lesson.courseTitle || lesson.sessionTitle || "Lesson";
-  const lessonDate = new Date(lesson.startTime).toLocaleString(dateLocale, {
+  const lessonStart = new Date(lesson.startTime).toLocaleString(dateLocale, {
     weekday: "short",
     month: "short",
     day: "numeric",
     hour: "2-digit",
     minute: "2-digit",
   });
+  const lessonEnd = new Date(lesson.endTime).toLocaleTimeString(dateLocale, {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+  const lessonDate = `${lessonStart} – ${lessonEnd}`;
   const durationMin = Math.round(
     (new Date(lesson.endTime) - new Date(lesson.startTime)) / 60000,
   );
