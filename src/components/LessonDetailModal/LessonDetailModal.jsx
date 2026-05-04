@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useSelector } from "react-redux";
 import {
   Modal,
   ModalContent,
@@ -28,8 +29,13 @@ import {
   ArrowCounterClockwise,
   Warning,
 } from "@phosphor-icons/react";
-import { coursesApi } from "../../api";
+import { coursesApi, rescheduleApi } from "../../api";
+import { selectUser } from "../../store";
 import VideoModal from "../VideoModal/VideoModal";
+import TutorRescheduleOfferModal from "../TutorRescheduleOfferModal/TutorRescheduleOfferModal";
+import TutorRescheduleTicketModal from "../TutorRescheduleTicketModal/TutorRescheduleTicketModal";
+import StudentRescheduleAcceptModal from "../StudentRescheduleAcceptModal/StudentRescheduleAcceptModal";
+import StudentRescheduleRequestModal from "../StudentRescheduleRequestModal/StudentRescheduleRequestModal";
 import LessonSummaryModal from "../LessonSummaryModal/LessonSummaryModal";
 import LessonQuizModal from "../LessonQuizModal/LessonQuizModal";
 
@@ -68,6 +74,7 @@ const LessonDetailModal = ({
   onReschedule,
   rescheduleDeadline,
   hasPendingOffer,
+  onRefresh,
 }) => {
   const { t, i18n } = useTranslation();
   const colors = useThemeColors();
@@ -75,8 +82,34 @@ const LessonDetailModal = ({
   const dateLocale = i18n.language === "vi" ? "vi-VN" : "en-US";
   const isStudentView = role === "student";
 
+  const user = useSelector(selectUser);
+
   const [lessonExtra, setLessonExtra] = useState(null);
   const [lessonExtraLoading, setLessonExtraLoading] = useState(false);
+
+  const [rescheduleOffers, setRescheduleOffers] = useState([]);
+  const [rescheduleRequests, setRescheduleRequests] = useState([]);
+
+  const {
+    isOpen: isOfferOpen,
+    onOpen: onOfferOpen,
+    onClose: onOfferClose,
+  } = useDisclosure();
+  const {
+    isOpen: isTicketOpen,
+    onOpen: onTicketOpen,
+    onClose: onTicketClose,
+  } = useDisclosure();
+  const {
+    isOpen: isAcceptOpen,
+    onOpen: onAcceptOpen,
+    onClose: onAcceptClose,
+  } = useDisclosure();
+  const {
+    isOpen: isRequestOpen,
+    onOpen: onRequestOpen,
+    onClose: onRequestClose,
+  } = useDisclosure();
 
   const {
     isOpen: isVideoOpen,
@@ -96,6 +129,46 @@ const LessonDetailModal = ({
     onOpen: onQuizOpen,
     onClose: onQuizClose,
   } = useDisclosure();
+
+  const fetchRescheduleData = useCallback(async () => {
+    if (!lesson || !isOpen) return;
+    try {
+      if (!isStudentView && user?.tutorId) {
+        const res = await rescheduleApi.getOffers({
+          TutorId: user.tutorId,
+          "page-size": 200,
+        });
+        setRescheduleOffers(res?.data?.items || []);
+      } else if (isStudentView && user?.studentId) {
+        const [offersRes, requestsRes] = await Promise.allSettled([
+          rescheduleApi.getOffers({
+            StudentId: user.studentId,
+            "page-size": 200,
+          }),
+          rescheduleApi.getRequests({
+            StudentId: user.studentId,
+            "page-size": 200,
+          }),
+        ]);
+        setRescheduleOffers(
+          offersRes.status === "fulfilled"
+            ? offersRes.value?.data?.items || []
+            : [],
+        );
+        setRescheduleRequests(
+          requestsRes.status === "fulfilled"
+            ? requestsRes.value?.data?.items || []
+            : [],
+        );
+      }
+    } catch {
+      // silently ignore
+    }
+  }, [lesson, isOpen, isStudentView, user?.tutorId, user?.studentId]);
+
+  useEffect(() => {
+    fetchRescheduleData();
+  }, [fetchRescheduleData]);
 
   useEffect(() => {
     if (!lesson || !isOpen) {
@@ -231,6 +304,40 @@ const LessonDetailModal = ({
   const meetingInfo = getMeetingStatusInfo(lesson);
   const hasRecording = lesson.lessonRecord?.recordUrl;
   const recordDuration = lesson.lessonRecord?.durationSeconds;
+
+  // Reschedule computed state
+  const internalShowTutorReschedule =
+    !isStudentView &&
+    (lesson.status === "Reschedule" ||
+      lesson.status === "NoTutor" ||
+      (lesson.status === "Scheduled" &&
+        (new Date(lesson.startTime) - new Date()) / (1000 * 60 * 60) > 24));
+
+  const internalHasPendingOffer = rescheduleOffers.some(
+    (o) => o.lessonId === lesson.id && o.status === "PendingStudentChoice",
+  );
+
+  const internalPendingOffer = isStudentView
+    ? rescheduleOffers.find(
+        (o) => o.lessonId === lesson.id && o.status === "PendingStudentChoice",
+      ) || null
+    : null;
+
+  const internalCanRequestReschedule =
+    isStudentView &&
+    lesson.status === "Scheduled" &&
+    new Date(lesson.startTime) - new Date() > 24 * 60 * 60 * 1000;
+
+  const internalPendingRequest = isStudentView
+    ? rescheduleRequests.find(
+        (r) => r.lessonId === lesson.id && r.status === "Pending",
+      ) || null
+    : null;
+
+  const handleInternalReschedule = () => {
+    if (lesson.status === "NoTutor") onTicketOpen();
+    else onOfferOpen();
+  };
 
   return (
     <>
@@ -563,15 +670,12 @@ const LessonDetailModal = ({
                     >
                       {t("tutorDashboard.schedule.recordingAvailable")}
                     </p>
-                    {recordDuration && (
-                      <p
-                        className="text-xs"
-                        style={{ color: colors.text.tertiary }}
-                      >
-                        {Math.floor(recordDuration / 60)}:
-                        {String(recordDuration % 60).padStart(2, "0")} min
-                      </p>
-                    )}
+                    <p
+                      className="text-xs"
+                      style={{ color: colors.text.tertiary }}
+                    >
+                      {t("tutorDashboard.schedule.recordingAutoDelete")}
+                    </p>
                   </div>
                   <Button
                     size="sm"
@@ -716,8 +820,9 @@ const LessonDetailModal = ({
               <Button variant="light" onPress={onClose}>
                 {t("tutorDashboard.schedule.cancel")}
               </Button>
-              {onReschedule &&
-                (hasPendingOffer ? (
+              {/* Tutor: propose reschedule or show pending chip */}
+              {internalShowTutorReschedule &&
+                (internalHasPendingOffer ? (
                   <Chip
                     size="sm"
                     className="h-9 px-3"
@@ -732,14 +837,61 @@ const LessonDetailModal = ({
                   <Button
                     variant="flat"
                     startContent={
-                      <ArrowCounterClockwise weight="bold" className="w-4 h-4" />
+                      <ArrowCounterClockwise
+                        weight="bold"
+                        className="w-4 h-4"
+                      />
                     }
-                    onPress={onReschedule}
+                    onPress={handleInternalReschedule}
                     style={{ color: colors.primary.main }}
                   >
                     {t("tutorDashboard.schedule.reschedule.proposeBtn")}
                   </Button>
                 ))}
+              {/* Student: accept tutor offer */}
+              {internalPendingOffer && (
+                <Button
+                  variant="flat"
+                  startContent={
+                    <ArrowCounterClockwise weight="bold" className="w-4 h-4" />
+                  }
+                  onPress={onAcceptOpen}
+                  style={{ color: colors.state.warning }}
+                >
+                  {t("studentDashboard.schedule.reschedule.viewPending")}
+                </Button>
+              )}
+              {/* Student: request reschedule */}
+              {internalCanRequestReschedule && !internalPendingOffer && (
+                internalPendingRequest ? (
+                  <Chip
+                    size="sm"
+                    className="h-9 px-3"
+                    style={{
+                      backgroundColor: `${colors.state.warning}20`,
+                      color: colors.state.warning,
+                    }}
+                  >
+                    {t(
+                      "studentDashboard.schedule.reschedule.requestPendingChip",
+                    )}
+                  </Chip>
+                ) : (
+                  <Button
+                    variant="flat"
+                    startContent={
+                      <ArrowCounterClockwise
+                        weight="bold"
+                        className="w-4 h-4"
+                      />
+                    }
+                    onPress={onRequestOpen}
+                    style={{ color: colors.primary.main }}
+                  >
+                    {t("studentDashboard.schedule.reschedule.requestBtn")}
+                  </Button>
+                )
+              )}
               {canJoinLesson(lesson) && (
                 <Button
                   style={{
@@ -782,6 +934,56 @@ const LessonDetailModal = ({
         isOpen={isQuizOpen}
         onClose={onQuizClose}
         lessonScriptId={lesson?.lessonScript?.id}
+      />
+
+      <TutorRescheduleOfferModal
+        lesson={lesson}
+        isOpen={isOfferOpen}
+        onClose={onOfferClose}
+        tutorId={user?.tutorId}
+        onSuccess={() => {
+          onOfferClose();
+          fetchRescheduleData();
+          onRefresh?.();
+        }}
+      />
+
+      <TutorRescheduleTicketModal
+        lesson={lesson}
+        isOpen={isTicketOpen}
+        onClose={onTicketClose}
+        userId={user?.userId}
+        rescheduleDeadline={rescheduleDeadline}
+        onSuccess={() => {
+          onTicketClose();
+          fetchRescheduleData();
+          onRefresh?.();
+        }}
+      />
+
+      <StudentRescheduleAcceptModal
+        offer={internalPendingOffer}
+        lesson={lesson}
+        isOpen={isAcceptOpen}
+        onClose={onAcceptClose}
+        studentId={user?.studentId}
+        onSuccess={() => {
+          onAcceptClose();
+          fetchRescheduleData();
+          onRefresh?.();
+        }}
+      />
+
+      <StudentRescheduleRequestModal
+        lesson={lesson}
+        isOpen={isRequestOpen}
+        onClose={onRequestClose}
+        studentId={user?.studentId}
+        onSuccess={() => {
+          onRequestClose();
+          fetchRescheduleData();
+          onRefresh?.();
+        }}
       />
     </>
   );

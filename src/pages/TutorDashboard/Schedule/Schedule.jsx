@@ -1949,25 +1949,16 @@ const Schedule = () => {
         isOpen={isLessonDetailOpen}
         onClose={onLessonDetailClose}
         lesson={selectedLesson}
-        onReschedule={
-          selectedLesson &&
-          (canProposeReschedule(selectedLesson) ||
-            selectedLesson.status === "NoTutor")
-            ? () => {
-                onLessonDetailClose();
-                handleOpenReschedule(selectedLesson);
-              }
-            : undefined
-        }
         rescheduleDeadline={
           selectedLesson?.status === "NoTutor" ||
           selectedLesson?.status === "Reschedule"
             ? getRescheduleDeadline(selectedLesson)
             : null
         }
-        hasPendingOffer={
-          selectedLesson ? hasPendingOffer(selectedLesson) : false
-        }
+        onRefresh={() => {
+          fetchRescheduleOffers();
+          fetchLessons();
+        }}
       />
 
       <VideoModal

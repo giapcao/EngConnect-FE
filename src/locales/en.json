@@ -589,7 +589,9 @@
       "viewAll": "View All",
       "lessonsCompleted": "lessons",
       "daysCompleted": "days",
-      "keepItUp": "Keep it up! You're almost there."
+      "keepItUp": "Keep it up! You're almost there.",
+      "upcomingHomework": "Upcoming Homework",
+      "noUpcomingHomework": "No pending homework"
     },
     "browseCourses": {
       "title": "Browse Courses",
@@ -714,6 +716,7 @@
       "rescheduleStatus": "Rescheduling",
       "watchRecording": "Watch Recording",
       "recordingAvailable": "Recording available",
+      "recordingAutoDelete": "This recording will be automatically deleted 90 days after the course is completed or expired.",
       "viewDetail": "View Details",
       "noLessonsToday": "No lessons today",
       "reschedule": {
@@ -1237,6 +1240,7 @@
       "meetingInProgress": "In Session",
       "watchRecording": "Watch Recording",
       "recordingAvailable": "Recording available",
+      "recordingAutoDelete": "This recording will be automatically deleted 90 days after the course is completed or expired.",
       "upcomingSidebarTab": "Upcoming",
       "noUpcoming": "No upcoming lessons",
       "dateLabel": "Date",
@@ -1406,6 +1410,7 @@
       "lesson": "Lesson",
       "dueDate": "Due",
       "noDueDate": "No deadline",
+      "overdue": "Overdue",
       "maxScore": "Max score",
       "score": "Score",
       "resource": "Resource",

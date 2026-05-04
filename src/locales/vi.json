@@ -587,7 +587,9 @@
       "viewAll": "Xem tất cả",
       "lessonsCompleted": "bài học",
       "daysCompleted": "ngày",
-      "keepItUp": "Tiếp tục phát huy! Bạn sắp đạt mục tiêu."
+      "keepItUp": "Tiếp tục phát huy! Bạn sắp đạt mục tiêu.",
+      "upcomingHomework": "Bài tập sắp đến hạn",
+      "noUpcomingHomework": "Không có bài tập nào đang chờ"
     },
     "browseCourses": {
       "title": "Tìm khóa học",
@@ -712,6 +714,7 @@
       "rescheduleStatus": "Đang đổi lịch",
       "watchRecording": "Xem bản ghi",
       "recordingAvailable": "Có bản ghi",
+      "recordingAutoDelete": "Bản ghi này sẽ tự động bị xóa sau 90 ngày kể từ khi khóa học hoàn thành hoặc hết hạn.",
       "viewDetail": "Xem chi tiết",
       "noLessonsToday": "Hôm nay không có buổi học",
       "reschedule": {
@@ -1235,6 +1238,7 @@
       "meetingInProgress": "Đang học",
       "watchRecording": "Xem bản ghi",
       "recordingAvailable": "Có bản ghi",
+      "recordingAutoDelete": "Bản ghi này sẽ tự động bị xóa sau 90 ngày kể từ khi khóa học hoàn thành hoặc hết hạn.",
       "upcomingSidebarTab": "Sắp tới",
       "noUpcoming": "Không có buổi học sắp tới",
       "dateLabel": "Ngày",
@@ -1404,6 +1408,7 @@
       "lesson": "Buổi học",
       "dueDate": "Hạn",
       "noDueDate": "Không có hạn",
+      "overdue": "Quá hạn",
       "maxScore": "Điểm tối đa",
       "score": "Điểm",
       "resource": "Tài liệu",

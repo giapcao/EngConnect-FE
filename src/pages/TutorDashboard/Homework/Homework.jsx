@@ -782,7 +782,7 @@ const Homework = () => {
             src={toDoIllustration}
             alt="Empty"
             draggable={false}
-            className="w-48 h-48 object-contain opacity-90"
+            className="w-68 h-68 object-contain opacity-90"
           />
           <h3
             className="text-lg font-semibold"

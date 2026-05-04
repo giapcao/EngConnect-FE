@@ -5,24 +5,21 @@ import { useTranslation } from "react-i18next";
 import { useThemeColors } from "../../../hooks/useThemeColors";
 import { motion } from "framer-motion";
 import {
-  BookOpen,
   Clock,
-  Trophy,
   CalendarCheck,
   Play,
   ArrowRight,
-  Fire,
-  Target,
   TrendUp,
-  Star,
+  ClipboardText,
 } from "@phosphor-icons/react";
 import IllustrationImage from "../../../assets/illustrations/morning.avif";
 import calendarIllustration from "../../../assets/illustrations/calendar.avif";
 import chillIllustration from "../../../assets/illustrations/chill.avif";
+import toDoIllustration from "../../../assets/illustrations/to-do.avif";
 import { useSelector } from "react-redux";
 import { selectUser } from "../../../store";
 import { useNavigate } from "react-router-dom";
-import { studentApi, coursesApi } from "../../../api";
+import { studentApi, coursesApi, lessonHomeworkApi } from "../../../api";
 
 const CDN_BASE = "https://d20854st1o56hw.cloudfront.net/";
 const withCDN = (url) => {
@@ -41,6 +38,8 @@ const Dashboard = () => {
   const [lessonsLoading, setLessonsLoading] = useState(true);
   const [coursesInProgress, setCoursesInProgress] = useState([]);
   const [coursesLoading, setCoursesLoading] = useState(true);
+  const [upcomingHomework, setUpcomingHomework] = useState([]);
+  const [homeworkLoading, setHomeworkLoading] = useState(true);
 
   const fetchUpcomingLessons = useCallback(async () => {
     if (!user?.studentId) return;
@@ -57,6 +56,24 @@ const Dashboard = () => {
       console.error("Failed to fetch upcoming lessons:", err);
     } finally {
       setLessonsLoading(false);
+    }
+  }, [user?.studentId]);
+
+  const fetchUpcomingHomework = useCallback(async () => {
+    if (!user?.studentId) return;
+    try {
+      setHomeworkLoading(true);
+      const res = await lessonHomeworkApi.getHomeworks({
+        StudentId: user.studentId,
+        Status: "Assigned",
+        "sort-params": "dueAt-asc",
+        "page-size": 5,
+      });
+      setUpcomingHomework(res?.data?.items || []);
+    } catch (err) {
+      console.error("Failed to fetch upcoming homework:", err);
+    } finally {
+      setHomeworkLoading(false);
     }
   }, [user?.studentId]);
 
@@ -80,7 +97,8 @@ const Dashboard = () => {
   useEffect(() => {
     fetchUpcomingLessons();
     fetchCoursesInProgress();
-  }, [fetchUpcomingLessons, fetchCoursesInProgress]);
+    fetchUpcomingHomework();
+  }, [fetchUpcomingLessons, fetchCoursesInProgress, fetchUpcomingHomework]);
 
   const formatLessonTime = (dateStr) => {
     if (!dateStr) return "";
@@ -100,61 +118,6 @@ const Dashboard = () => {
       return t("studentDashboard.dashboard.tomorrow");
     return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
   };
-
-  const stats = [
-    {
-      icon: BookOpen,
-      label: t("studentDashboard.dashboard.stats.coursesEnrolled"),
-      value: "5",
-      color: colors.primary.main,
-      bg: colors.background.primaryLight,
-    },
-    {
-      icon: Clock,
-      label: t("studentDashboard.dashboard.stats.hoursLearned"),
-      value: "48",
-      color: colors.state.warning,
-      bg: `${colors.state.warning}20`,
-    },
-    {
-      icon: Trophy,
-      label: t("studentDashboard.dashboard.stats.certificatesEarned"),
-      value: "2",
-      color: colors.state.success,
-      bg: `${colors.state.success}20`,
-    },
-    {
-      icon: Fire,
-      label: t("studentDashboard.dashboard.stats.streak"),
-      value: "7",
-      color: colors.state.error,
-      bg: `${colors.state.error}20`,
-    },
-  ];
-
-  const recentAchievements = [
-    {
-      id: 1,
-      title: "First Lesson",
-      description: "Completed your first lesson",
-      icon: Star,
-      date: "2 days ago",
-    },
-    {
-      id: 2,
-      title: "7 Day Streak",
-      description: "Learned for 7 days in a row",
-      icon: Fire,
-      date: "Today",
-    },
-    {
-      id: 3,
-      title: "Quiz Master",
-      description: "Scored 100% on a quiz",
-      icon: Target,
-      date: "Yesterday",
-    },
-  ];
 
   return (
     <div className="space-y-6">
@@ -501,9 +464,8 @@ const Dashboard = () => {
           </motion.div>
         </div>
 
-        {/* Right Column - Achievements & Quick Actions */}
+        {/* Right Column - Upcoming Homework */}
         <div className="space-y-6">
-          {/* Weekly Goal */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -515,127 +477,145 @@ const Dashboard = () => {
               style={{ backgroundColor: colors.background.light }}
             >
               <CardBody className="p-6">
-                <h2
-                  className="text-lg font-semibold mb-4"
-                  style={{ color: colors.text.primary }}
-                >
-                  <Target
-                    weight="duotone"
-                    className="w-5 h-5 inline-block mr-2"
-                    style={{ color: colors.state.warning }}
-                  />
-                  {t("studentDashboard.dashboard.weeklyGoal")}
-                </h2>
-
-                <div className="text-center mb-4">
-                  <div className="relative w-32 h-32 mx-auto">
-                    <svg className="w-full h-full transform -rotate-90">
-                      <circle
-                        cx="64"
-                        cy="64"
-                        r="56"
-                        stroke={colors.background.gray}
-                        strokeWidth="12"
-                        fill="none"
-                      />
-                      <circle
-                        cx="64"
-                        cy="64"
-                        r="56"
-                        stroke={colors.primary.main}
-                        strokeWidth="12"
-                        fill="none"
-                        strokeLinecap="round"
-                        strokeDasharray={`${(5 / 7) * 352} 352`}
-                      />
-                    </svg>
-                    <div className="absolute inset-0 flex flex-col items-center justify-center">
-                      <span
-                        className="text-3xl font-bold"
-                        style={{ color: colors.text.primary }}
-                      >
-                        5/7
-                      </span>
-                      <span
-                        className="text-xs"
-                        style={{ color: colors.text.secondary }}
-                      >
-                        {t("studentDashboard.dashboard.daysCompleted")}
-                      </span>
-                    </div>
-                  </div>
+                <div className="flex items-center justify-between mb-4">
+                  <h2
+                    className="text-lg font-semibold"
+                    style={{ color: colors.text.primary }}
+                  >
+                    <ClipboardText
+                      weight="duotone"
+                      className="w-5 h-5 inline-block mr-2"
+                      style={{ color: colors.state.warning }}
+                    />
+                    {t("studentDashboard.dashboard.upcomingHomework")}
+                  </h2>
+                  <Button
+                    variant="light"
+                    size="sm"
+                    endContent={<ArrowRight className="w-4 h-4" />}
+                    style={{ color: colors.primary.main }}
+                    onPress={() => navigate("/student/homework")}
+                  >
+                    {t("studentDashboard.dashboard.viewAll")}
+                  </Button>
                 </div>
 
-                <p
-                  className="text-center text-sm"
-                  style={{ color: colors.text.secondary }}
-                >
-                  {t("studentDashboard.dashboard.keepItUp")}
-                </p>
-              </CardBody>
-            </Card>
-          </motion.div>
-
-          {/* Recent Achievements */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.15 }}
-          >
-            <Card
-              shadow="none"
-              className="border-none"
-              style={{ backgroundColor: colors.background.light }}
-            >
-              <CardBody className="p-6">
-                <h2
-                  className="text-lg font-semibold mb-4"
-                  style={{ color: colors.text.primary }}
-                >
-                  <Trophy
-                    weight="duotone"
-                    className="w-5 h-5 inline-block mr-2"
-                    style={{ color: colors.state.warning }}
-                  />
-                  {t("studentDashboard.dashboard.recentAchievements")}
-                </h2>
-
-                <div className="space-y-3">
-                  {recentAchievements.map((achievement) => (
-                    <div
-                      key={achievement.id}
-                      className="flex items-center gap-3 p-3 rounded-xl"
-                      style={{ backgroundColor: colors.background.gray }}
-                    >
+                {homeworkLoading ? (
+                  <div className="space-y-3">
+                    {[1, 2, 3].map((i) => (
                       <div
-                        className="w-10 h-10 rounded-full flex items-center justify-center"
-                        style={{
-                          backgroundColor: `${colors.state.warning}20`,
-                        }}
+                        key={i}
+                        className="flex items-center gap-3 p-3 rounded-xl animate-pulse"
+                        style={{ backgroundColor: colors.background.gray }}
                       >
-                        <achievement.icon
-                          weight="duotone"
-                          className="w-5 h-5"
-                          style={{ color: colors.state.warning }}
-                        />
+                        <div className="w-8 h-8 rounded-full bg-default-200 flex-shrink-0" />
+                        <div className="flex-1 space-y-2">
+                          <div className="h-3.5 w-3/4 rounded bg-default-200" />
+                          <div className="h-3 w-1/2 rounded bg-default-200" />
+                        </div>
+                        <div className="h-5 w-16 rounded-full bg-default-200" />
                       </div>
-                      <div className="flex-1">
-                        <p
-                          className="font-medium text-sm"
-                          style={{ color: colors.text.primary }}
+                    ))}
+                  </div>
+                ) : upcomingHomework.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-6">
+                    <img
+                      src={toDoIllustration}
+                      alt="No homework"
+                      draggable={false}
+                      className="w-40 object-contain"
+                    />
+                    <p
+                      className="text-sm mt-2"
+                      style={{ color: colors.text.secondary }}
+                    >
+                      {t("studentDashboard.dashboard.noUpcomingHomework")}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {upcomingHomework.map((hw) => {
+                      const due = (() => {
+                        if (!hw.dueAt)
+                          return {
+                            label: t("studentDashboard.homework.noDueDate"),
+                            color: colors.text.tertiary,
+                          };
+                        const diffMs =
+                          new Date(hw.dueAt).getTime() - Date.now();
+                        const diffDays = Math.ceil(
+                          diffMs / (1000 * 60 * 60 * 24),
+                        );
+                        if (diffMs < 0)
+                          return {
+                            label: t("studentDashboard.homework.overdue"),
+                            color: colors.state.error,
+                          };
+                        if (diffDays === 0)
+                          return {
+                            label: t("studentDashboard.homework.dueToday"),
+                            color: colors.state.error,
+                          };
+                        if (diffDays === 1)
+                          return {
+                            label: t("studentDashboard.homework.dueTomorrow"),
+                            color: colors.state.warning,
+                          };
+                        return {
+                          label: `${diffDays} ${t("studentDashboard.homework.daysLeft")}`,
+                          color:
+                            diffDays <= 3
+                              ? colors.state.warning
+                              : colors.state.success,
+                        };
+                      })();
+
+                      return (
+                        <div
+                          key={hw.id}
+                          className="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:opacity-80 transition-opacity"
+                          style={{ backgroundColor: colors.background.gray }}
+                          onClick={() => navigate("/student/homework")}
                         >
-                          {achievement.title}
-                        </p>
-                        <p
-                          className="text-xs"
-                          style={{ color: colors.text.secondary }}
-                        >
-                          {achievement.date}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                          <div
+                            className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+                            style={{ backgroundColor: `${due.color}20` }}
+                          >
+                            <Clock
+                              weight="bold"
+                              className="w-4 h-4"
+                              style={{ color: due.color }}
+                            />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p
+                              className="font-medium text-sm truncate"
+                              style={{ color: colors.text.primary }}
+                            >
+                              {hw.title ||
+                                hw.sessionTitle ||
+                                t("studentDashboard.homework.title")}
+                            </p>
+                            {hw.courseTitle && (
+                              <p
+                                className="text-xs truncate"
+                                style={{ color: colors.text.secondary }}
+                              >
+                                {hw.courseTitle}
+                              </p>
+                            )}
+                          </div>
+                          <span
+                            className="text-xs font-semibold whitespace-nowrap flex-shrink-0"
+                            style={{ color: due.color }}
+                          >
+                            {due.label}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </CardBody>
             </Card>
           </motion.div>

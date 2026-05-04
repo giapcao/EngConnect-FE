@@ -1228,6 +1228,11 @@ const Schedule = () => {
         onClose={onLessonDetailClose}
         lesson={selectedLesson}
         role="student"
+        onRefresh={() => {
+          fetchOffers();
+          fetchStudentRequests();
+          fetchLessons();
+        }}
       />
 
       <StudentRescheduleAcceptModal
