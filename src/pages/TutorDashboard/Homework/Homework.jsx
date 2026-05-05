@@ -105,8 +105,13 @@ const getFileTypeIcon = (url, className, style) => {
 const Homework = () => {
   const { t, i18n } = useTranslation();
   const colors = useThemeColors();
-  const { inputClassNames, textareaClassNames, selectClassNames } =
-    useInputStyles();
+  const {
+    inputClassNames,
+    textareaClassNames,
+    selectClassNames,
+    filterInputClassNames,
+    filterTabsClassNames,
+  } = useInputStyles();
   const navigate = useNavigate();
   const locale = i18n.language === "vi" ? "vi-VN" : "en-US";
   const user = useSelector(selectUser);
@@ -743,7 +748,7 @@ const Homework = () => {
               style={{ color: colors.text.tertiary }}
             />
           }
-          classNames={{ inputWrapper: "shadow-none", ...inputClassNames }}
+          classNames={filterInputClassNames}
           className="max-w-xs"
         />
         <Tabs
@@ -751,7 +756,7 @@ const Homework = () => {
           onSelectionChange={setSelectedTab}
           variant="solid"
           color="primary"
-          classNames={{ tabList: "gap-2", tab: "px-4" }}
+          classNames={filterTabsClassNames}
         >
           <Tab key="all" title={t("tutorDashboard.homework.filter.all")} />
           <Tab

@@ -93,7 +93,7 @@ const CourseDetail = () => {
         const params = user?.studentId ? { studentId: user.studentId } : {};
         const res = await coursesApi.getCourseById(id, params);
         setCourse(res.data);
-        setIsEnrolled(res.data?.isEnrollment === true);
+        setIsEnrolled(!!user?.studentId && res.data?.isEnrollment === true);
         if (res.data?.tutorId) {
           try {
             const tutorRes = await tutorApi.getTutorById(res.data.tutorId);

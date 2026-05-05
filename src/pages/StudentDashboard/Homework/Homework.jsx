@@ -121,7 +121,8 @@ const computeDueInfo = (dueAt, t) => {
 const Homework = () => {
   const { t, i18n } = useTranslation();
   const colors = useThemeColors();
-  const { inputClassNames } = useInputStyles();
+  const { inputClassNames, filterInputClassNames, filterTabsClassNames } =
+    useInputStyles();
   const navigate = useNavigate();
   const locale = i18n.language === "vi" ? "vi-VN" : "en-US";
   const user = useSelector(selectUser);
@@ -390,15 +391,15 @@ const Homework = () => {
               style={{ color: colors.text.tertiary }}
             />
           }
-          classNames={{ inputWrapper: "shadow-none", ...inputClassNames }}
+          classNames={filterInputClassNames}
           className="max-w-xs"
         />
         <Tabs
           selectedKey={selectedTab}
           onSelectionChange={setSelectedTab}
           variant="solid"
-          color="primary"
-          classNames={{ tabList: "gap-2", tab: "px-4" }}
+          color="solid"
+          classNames={filterTabsClassNames}
         >
           <Tab key="all" title={t("studentDashboard.homework.filter.all")} />
           <Tab

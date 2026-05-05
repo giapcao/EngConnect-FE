@@ -4,6 +4,7 @@ import {
   Button,
   Avatar,
   Badge,
+  Chip,
   Input,
   Dropdown,
   DropdownTrigger,
@@ -40,7 +41,9 @@ import {
   NotePencil,
   Wallet,
   CreditCard,
+  GraduationCap,
 } from "@phosphor-icons/react";
+import { BookOpenIcon } from "@phosphor-icons/react/dist/ssr";
 
 const DashboardLayout = () => {
   const { t } = useTranslation();
@@ -102,20 +105,34 @@ const DashboardLayout = () => {
       >
         {/* Main Header Row */}
         <div className="px-4 lg:px-8 py-3 flex items-center justify-between relative">
-          {/* Logo */}
-          <Link
-            to="/"
-            className="flex items-center gap-2 no-underline flex-shrink-0"
-          >
-            <img
-              src={logoImage}
-              alt="EngConnect"
-              draggable={false}
-              onDragStart={(e) => e.preventDefault()}
-              onContextMenu={(e) => e.preventDefault()}
-              className="h-10 w-auto"
-            />
-          </Link>
+          {/* Logo + Role chip */}
+          <div className="flex items-center gap-2.5 flex-shrink-0">
+            <Link to="/" className="flex items-center no-underline">
+              <img
+                src={logoImage}
+                alt="EngConnect"
+                draggable={false}
+                onDragStart={(e) => e.preventDefault()}
+                onContextMenu={(e) => e.preventDefault()}
+                className="h-10 w-auto"
+              />
+            </Link>
+            <Chip
+              size="lg"
+              startContent={
+                <BookOpenIcon weight="fill" className="w-3.5 h-3.5" />
+              }
+              style={{
+                backgroundColor: `${colors.primary.main}18`,
+                color: colors.primary.main,
+                border: `1px solid ${colors.primary.main}40`,
+                fontSize: "14px",
+                fontWeight: 600,
+              }}
+            >
+              {t("studentDashboard.role")}
+            </Chip>
+          </div>
 
           {/* Search Bar - Desktop */}
           <div className="hidden lg:flex absolute left-1/2 transform -translate-x-1/2 w-full max-w-2xl px-4">

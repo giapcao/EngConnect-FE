@@ -6,6 +6,7 @@ import { Input, Spinner, Chip, Tabs, Tab } from "@heroui/react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { useThemeColors } from "../../../hooks/useThemeColors";
+import useInputStyles from "../../../hooks/useInputStyles";
 import { motion } from "framer-motion";
 import { MagnifyingGlass } from "@phosphor-icons/react";
 import CourseCard from "../../../components/CourseCard/CourseCard";
@@ -15,6 +16,7 @@ import searchIllustration from "../../../assets/illustrations/search.avif";
 const MyCourses = () => {
   const { t } = useTranslation();
   const colors = useThemeColors();
+  const { filterInputClassNames, filterTabsClassNames } = useInputStyles();
   const navigate = useNavigate();
   const user = useSelector(selectUser);
 
@@ -111,8 +113,7 @@ const MyCourses = () => {
               style={{ color: colors.text.tertiary }}
             />
           }
-          classNames={{ inputWrapper: "shadow-none" }}
-          style={{ backgroundColor: colors.background.light }}
+          classNames={filterInputClassNames}
           className="max-w-xs"
         />
 
@@ -120,7 +121,7 @@ const MyCourses = () => {
           selectedKey={selectedTab}
           onSelectionChange={setSelectedTab}
           color="primary"
-          classNames={{ tabList: "gap-2", tab: "px-4" }}
+          classNames={filterTabsClassNames}
         >
           <Tab key="all" title={t("studentDashboard.myCourses.all")} />
           <Tab

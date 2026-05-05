@@ -12,7 +12,7 @@ import { coursesApi } from "../../../api";
 const BrowseCourses = () => {
   const { t } = useTranslation();
   const colors = useThemeColors();
-  const { selectClassNames } = useInputStyles();
+  const { selectClassNames, filterInputClassNames } = useInputStyles();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedLevel, setSelectedLevel] = useState("all");
@@ -113,9 +113,7 @@ const BrowseCourses = () => {
               style={{ color: colors.text.secondary }}
             />
           }
-          classNames={{
-            inputWrapper: `bg-white dark:bg-slate-900`,
-          }}
+          classNames={filterInputClassNames}
           className="flex-1"
         />
 

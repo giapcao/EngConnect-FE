@@ -37,7 +37,33 @@ const useInputStyles = () => {
     listbox: isDark ? "!text-gray-200" : "",
   };
 
-  return { inputClassNames, textareaClassNames, selectClassNames };
+  // For filter/search rows (search input + tabs combo in dashboard pages)
+  const filterInputClassNames = {
+    label: isDark ? "!text-gray-300" : "",
+    inputWrapper: `!shadow-none !transition-colors !duration-200 ${
+      isDark
+        ? "!bg-[#0F172A] !border-[#1E293B] hover:!bg-[#1E293B] data-[hover=true]:!bg-[#1E293B] group-data-[focus=true]:!bg-[#0F172A]"
+        : "!bg-[#F3F4F6] !border-transparent hover:!bg-[#E9EAEC]"
+    }`,
+    input: isDark
+      ? "!text-gray-200 placeholder:!text-gray-500"
+      : "!text-gray-700 placeholder:!text-gray-400",
+  };
+
+  // For filter tabs (variant="solid") paired with filterInputClassNames
+  const filterTabsClassNames = {
+    tabList: `gap-1 p-1 ${isDark ? "!bg-[#0F172A]" : "!bg-[#F3F4F6]"}`,
+    tab: "px-4",
+    //cursor: isDark ? "!bg-[#1E293B]" : "!bg-white",
+  };
+
+  return {
+    inputClassNames,
+    textareaClassNames,
+    selectClassNames,
+    filterInputClassNames,
+    filterTabsClassNames,
+  };
 };
 
 export default useInputStyles;

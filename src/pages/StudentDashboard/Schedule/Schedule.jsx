@@ -31,6 +31,7 @@ import {
   Eye,
   ArrowCounterClockwise,
   Warning,
+  CheckCircle,
 } from "@phosphor-icons/react";
 import calendarIllustration from "../../../assets/illustrations/calendar.avif";
 import LessonDetailModal from "../../../components/LessonDetailModal/LessonDetailModal";
@@ -96,6 +97,7 @@ const Schedule = () => {
   const [rescheduleOffer, setRescheduleOffer] = useState(null);
   const [rescheduleLesson, setRescheduleLesson] = useState(null);
   const [offersByLesson, setOffersByLesson] = useState({});
+  const [allOffers, setAllOffers] = useState([]);
 
   // Reschedule request modal (student → tutor)
   const {
@@ -137,6 +139,10 @@ const Schedule = () => {
         "page-size": 200,
       });
       const items = res?.data?.items || [];
+      const sorted = [...items].sort(
+        (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
+      );
+      setAllOffers(sorted);
       const map = {};
       items.forEach((offer) => {
         if (!map[offer.lessonId]) map[offer.lessonId] = offer;
@@ -209,6 +215,7 @@ const Schedule = () => {
         .sort((a, b) => new Date(a.startTime) - new Date(b.startTime)),
     [lessons, todayStr],
   );
+
 
   const tutorFullName = (lesson) =>
     [lesson.tutorFirstName, lesson.tutorLastName].filter(Boolean).join(" ");
@@ -811,92 +818,90 @@ const Schedule = () => {
               style={{ backgroundColor: colors.background.light }}
             >
               <CardBody className="p-4">
-                {/* Pending reschedule offers */}
+                {/* Reschedule action buttons */}
                 {(() => {
-                  const pending = Object.values(offersByLesson).filter(
+                  const pendingOffers = Object.values(offersByLesson).filter(
                     (o) => o.status === "PendingStudentChoice",
                   );
-                  if (pending.length === 0) return null;
+                  const pendingRequests = allStudentRequests.filter(
+                    (r) => r.status === "Pending",
+                  );
+                  const buttons = [
+                    {
+                      key: "offers",
+                      label: t(
+                        "studentDashboard.schedule.reschedule.tutorOfferedBtn",
+                      ),
+                      badge: pendingOffers.length,
+                      badgeColor: colors.state.warning,
+                      btnBg: `${colors.state.warning}18`,
+                      btnColor: colors.state.warning,
+                    },
+                    {
+                      key: "requests",
+                      label: t(
+                        "studentDashboard.schedule.reschedule.myRequestBtn",
+                      ),
+                      badge: pendingRequests.length,
+                      badgeColor: colors.primary.main,
+                      btnBg: `${colors.primary.main}18`,
+                      btnColor: colors.primary.main,
+                    },
+                  ];
                   return (
-                    <div className="mb-4 space-y-2">
-                      <p
-                        className="text-xs font-semibold flex items-center gap-1.5"
-                        style={{ color: colors.state.warning }}
-                      >
-                        <Warning weight="fill" className="w-3.5 h-3.5" />
-                        {t(
-                          "studentDashboard.schedule.reschedule.pendingSection",
-                          {
-                            count: pending.length,
-                          },
-                        )}
-                      </p>
-                      {pending.map((offer) => {
-                        const lesson = lessons.find(
-                          (l) => l.id === offer.lessonId,
-                        );
-                        if (!lesson) return null;
-                        return (
-                          <div
-                            key={offer.id}
-                            className="p-3 rounded-xl"
-                            style={{
-                              backgroundColor: `${colors.state.warning}08`,
-                              border: `1px solid ${colors.state.warning}30`,
-                            }}
-                          >
-                            <p
-                              className="text-sm font-medium truncate"
-                              style={{ color: colors.text.primary }}
-                            >
-                              {lesson.courseTitle || lesson.sessionTitle}
-                            </p>
-                            <p
-                              className="text-xs mt-0.5 flex items-center gap-1"
-                              style={{ color: colors.text.secondary }}
-                            >
-                              <Clock weight="duotone" className="w-3 h-3" />
-                              {new Date(lesson.startTime).toLocaleDateString(
-                                i18n.language === "vi" ? "vi-VN" : "en-US",
-                                { month: "short", day: "numeric" },
-                              )}
-                            </p>
+                    <div className="flex items-center gap-2 mb-4">
+                      {buttons.map(
+                        ({ key, label, badge, badgeColor, btnBg, btnColor }) => (
+                          <div key={key} className="relative">
                             <Button
                               size="sm"
-                              className="w-full mt-2"
+                              variant="flat"
+                              className="text-xs h-8 px-3"
+                              style={{
+                                backgroundColor:
+                                  sidebarView === key ? btnBg : undefined,
+                                color: sidebarView === key ? btnColor : undefined,
+                              }}
                               startContent={
                                 <ArrowCounterClockwise
-                                  weight="bold"
+                                  weight="duotone"
                                   className="w-3.5 h-3.5"
                                 />
                               }
-                              style={{
-                                backgroundColor: `${colors.state.warning}20`,
-                                color: colors.state.warning,
-                                border: `1px solid ${colors.state.warning}40`,
-                              }}
                               onPress={() =>
-                                handleOpenReschedule(lesson, offer)
+                                setSidebarView(
+                                  sidebarView === key ? "today" : key,
+                                )
                               }
                             >
-                              {t(
-                                "studentDashboard.schedule.reschedule.viewPending",
-                              )}
+                              {label}
                             </Button>
+                            {badge > 0 && (
+                              <span
+                                className="absolute -top-1.5 -right-1.5 min-w-[16px] h-[16px] rounded-full text-[10px] font-bold flex items-center justify-center px-1"
+                                style={{
+                                  backgroundColor: badgeColor,
+                                  color: "#fff",
+                                  zIndex: 10,
+                                }}
+                              >
+                                {badge}
+                              </span>
+                            )}
                           </div>
-                        );
-                      })}
-                      <div
-                        className="border-b"
-                        style={{ borderColor: colors.border.light }}
-                      />
+                        ),
+                      )}
                     </div>
                   );
                 })()}
 
                 <Tabs
-                  selectedKey={sidebarView}
-                  onSelectionChange={setSidebarView}
+                  selectedKey={
+                    sidebarView === "offers" || sidebarView === "requests"
+                      ? "today"
+                      : sidebarView
+                  }
+                  onSelectionChange={(key) => setSidebarView(key)}
                   variant="solid"
                   fullWidth
                   className="mb-4"
@@ -942,172 +947,233 @@ const Schedule = () => {
                       </div>
                     }
                   />
-                  <Tab
-                    key="requests"
-                    title={
-                      <div className="flex items-center gap-1.5 text-xs">
-                        <ArrowCounterClockwise
-                          weight="duotone"
-                          className="w-3.5 h-3.5"
-                        />
-                        <span>
-                          {t(
-                            "studentDashboard.schedule.reschedule.myRequestsTab",
-                          )}
-                        </span>
-                        {allStudentRequests.filter(
-                          (r) => r.status === "Pending",
-                        ).length > 0 && (
-                          <Chip
-                            size="sm"
-                            variant="flat"
-                            color="warning"
-                            className="h-4 min-w-4 text-[10px]"
-                          >
-                            {
-                              allStudentRequests.filter(
-                                (r) => r.status === "Pending",
-                              ).length
-                            }
-                          </Chip>
-                        )}
-                      </div>
-                    }
-                  />
                 </Tabs>
 
-                {sidebarView === "requests" ? (
+                {sidebarView === "offers" ? (
+                  /* Pending tutor offers list */
                   <div className="space-y-3 max-h-[600px] overflow-y-auto">
-                    {allStudentRequests.length === 0 ? (
+                    {Object.values(offersByLesson).filter(
+                      (o) => o.status === "PendingStudentChoice",
+                    ).length === 0 ? (
                       <p
                         className="text-sm text-center py-6"
                         style={{ color: colors.text.tertiary }}
                       >
-                        {t("studentDashboard.schedule.reschedule.noRequests")}
+                        {t(
+                          "studentDashboard.schedule.reschedule.noOffersPending",
+                        )}
                       </p>
                     ) : (
-                      allStudentRequests.map((req) => {
-                        const lesson = lessons.find(
-                          (l) => l.id === req.lessonId,
-                        );
-                        const statusColor =
-                          req.status === "Approved"
-                            ? colors.state.success
-                            : req.status === "Rejected"
-                              ? colors.state.error
-                              : colors.state.warning;
-                        return (
-                          <div
-                            key={req.id}
-                            className="p-3 rounded-xl space-y-2"
-                            style={{
-                              backgroundColor: `${statusColor}0a`,
-                              border: `1px solid ${statusColor}25`,
-                            }}
-                          >
-                            <div className="flex items-start justify-between gap-2">
+                      Object.values(offersByLesson)
+                        .filter((o) => o.status === "PendingStudentChoice")
+                        .map((offer) => {
+                          const lesson = lessons.find(
+                            (l) => l.id === offer.lessonId,
+                          );
+                          return (
+                            <div
+                              key={offer.id}
+                              className="p-3 rounded-xl space-y-2"
+                              style={{
+                                backgroundColor: `${colors.state.warning}08`,
+                                border: `1px solid ${colors.state.warning}30`,
+                              }}
+                            >
                               <p
                                 className="font-semibold text-sm truncate"
                                 style={{ color: colors.text.primary }}
                               >
                                 {lesson?.courseTitle ||
                                   lesson?.sessionTitle ||
-                                  req.lessonId.slice(0, 8)}
+                                  "—"}
                               </p>
-                              <Chip
+                              {lesson && (
+                                <p
+                                  className="text-xs flex items-center gap-1"
+                                  style={{ color: colors.text.secondary }}
+                                >
+                                  <Clock weight="duotone" className="w-3 h-3" />
+                                  {new Date(lesson.startTime).toLocaleString(
+                                    dateLocale,
+                                    {
+                                      month: "short",
+                                      day: "numeric",
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                    },
+                                  )}
+                                </p>
+                              )}
+                              <p
+                                className="text-xs"
+                                style={{ color: colors.text.tertiary }}
+                              >
+                                {t(
+                                  "studentDashboard.schedule.reschedule.optionsProposed",
+                                  { count: offer.options?.length || 0 },
+                                )}
+                              </p>
+                              {offer.tutorNote && (
+                                <p
+                                  className="text-xs italic"
+                                  style={{ color: colors.text.secondary }}
+                                >
+                                  "{offer.tutorNote}"
+                                </p>
+                              )}
+                              <Button
                                 size="sm"
+                                className="w-full"
                                 style={{
-                                  backgroundColor: `${statusColor}20`,
-                                  color: statusColor,
-                                  fontSize: "10px",
-                                  flexShrink: 0,
+                                  backgroundColor: `${colors.state.warning}20`,
+                                  color: colors.state.warning,
+                                }}
+                                startContent={
+                                  <ArrowCounterClockwise
+                                    weight="bold"
+                                    className="w-3.5 h-3.5"
+                                  />
+                                }
+                                onPress={() => {
+                                  if (lesson)
+                                    handleOpenReschedule(lesson, offer);
                                 }}
                               >
                                 {t(
-                                  `studentDashboard.schedule.reschedule.requestStatus${req.status}`,
+                                  "studentDashboard.schedule.reschedule.viewPendingWithCount",
+                                  { count: offer.options?.length || 0 },
                                 )}
-                              </Chip>
+                              </Button>
                             </div>
-                            {lesson && (
-                              <p
-                                className="text-[11px] flex items-center gap-1"
-                                style={{ color: colors.text.tertiary }}
-                              >
-                                <Clock weight="duotone" className="w-3 h-3" />
-                                {new Date(lesson.startTime).toLocaleString(
-                                  dateLocale,
-                                  {
-                                    month: "short",
-                                    day: "numeric",
-                                    hour: "2-digit",
-                                    minute: "2-digit",
-                                  },
-                                )}
-                              </p>
-                            )}
+                          );
+                        })
+                    )}
+                  </div>
+                ) : sidebarView === "requests" ? (
+                  /* Pending student requests list */
+                  <div className="space-y-3 max-h-[600px] overflow-y-auto">
+                    {allStudentRequests.filter((r) => r.status === "Pending")
+                      .length === 0 ? (
+                      <p
+                        className="text-sm text-center py-6"
+                        style={{ color: colors.text.tertiary }}
+                      >
+                        {t(
+                          "studentDashboard.schedule.reschedule.noRequestsPending",
+                        )}
+                      </p>
+                    ) : (
+                      allStudentRequests
+                        .filter((r) => r.status === "Pending")
+                        .map((req) => {
+                          const lesson = lessons.find(
+                            (l) => l.id === req.lessonId,
+                          );
+                          return (
                             <div
-                              className="px-2.5 py-2 rounded-lg"
+                              key={req.id}
+                              className="p-3 rounded-xl space-y-2"
                               style={{
-                                backgroundColor: `${colors.primary.main}10`,
-                                border: `1px solid ${colors.primary.main}20`,
+                                backgroundColor: `${colors.primary.main}08`,
+                                border: `1px solid ${colors.primary.main}25`,
                               }}
                             >
-                              <p
-                                className="text-xs font-medium"
-                                style={{ color: colors.primary.main }}
+                              <div className="flex items-start justify-between gap-2">
+                                <p
+                                  className="font-semibold text-sm truncate"
+                                  style={{ color: colors.text.primary }}
+                                >
+                                  {lesson?.courseTitle ||
+                                    lesson?.sessionTitle ||
+                                    "—"}
+                                </p>
+                                <Chip
+                                  size="sm"
+                                  style={{
+                                    backgroundColor: `${colors.state.warning}20`,
+                                    color: colors.state.warning,
+                                    fontSize: "10px",
+                                    flexShrink: 0,
+                                  }}
+                                >
+                                  {t(
+                                    "studentDashboard.schedule.reschedule.requestStatusPending",
+                                  )}
+                                </Chip>
+                              </div>
+                              {lesson && (
+                                <p
+                                  className="text-xs flex items-center gap-1"
+                                  style={{ color: colors.text.secondary }}
+                                >
+                                  <Clock weight="duotone" className="w-3 h-3" />
+                                  {new Date(lesson.startTime).toLocaleString(
+                                    dateLocale,
+                                    {
+                                      month: "short",
+                                      day: "numeric",
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                    },
+                                  )}
+                                </p>
+                              )}
+                              <div
+                                className="px-2.5 py-2 rounded-lg"
+                                style={{
+                                  backgroundColor: `${colors.primary.main}10`,
+                                  border: `1px solid ${colors.primary.main}20`,
+                                }}
                               >
-                                {t(
-                                  "studentDashboard.schedule.reschedule.requestProposed",
-                                )}
-                              </p>
-                              <p
-                                className="text-xs mt-0.5"
-                                style={{ color: colors.text.primary }}
-                              >
-                                {new Date(req.proposedStartTime).toLocaleString(
-                                  dateLocale,
-                                  {
+                                <p
+                                  className="text-xs font-medium"
+                                  style={{ color: colors.primary.main }}
+                                >
+                                  {t(
+                                    "studentDashboard.schedule.reschedule.requestProposed",
+                                  )}
+                                </p>
+                                <p
+                                  className="text-xs mt-0.5"
+                                  style={{ color: colors.text.primary }}
+                                >
+                                  {new Date(
+                                    req.proposedStartTime,
+                                  ).toLocaleString(dateLocale, {
                                     weekday: "short",
                                     month: "short",
                                     day: "numeric",
                                     hour: "2-digit",
                                     minute: "2-digit",
-                                  },
+                                  })}
+                                  {" – "}
+                                  {new Date(
+                                    req.proposedEndTime,
+                                  ).toLocaleTimeString(dateLocale, {
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  })}
+                                </p>
+                              </div>
+                              {req.studentNote && (
+                                <p
+                                  className="text-xs italic"
+                                  style={{ color: colors.text.secondary }}
+                                >
+                                  "{req.studentNote}"
+                                </p>
+                              )}
+                              <p
+                                className="text-[10px]"
+                                style={{ color: colors.text.tertiary }}
+                              >
+                                {t(
+                                  "studentDashboard.schedule.reschedule.awaitingTutor",
                                 )}
-                                {" – "}
-                                {new Date(
-                                  req.proposedEndTime,
-                                ).toLocaleTimeString(dateLocale, {
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                })}
                               </p>
                             </div>
-                            {req.tutorNote && (
-                              <p
-                                className="text-[11px] italic"
-                                style={{ color: colors.text.secondary }}
-                              >
-                                "{req.tutorNote}"
-                              </p>
-                            )}
-                            <p
-                              className="text-[10px]"
-                              style={{ color: colors.text.tertiary }}
-                            >
-                              {new Date(req.createdAt).toLocaleDateString(
-                                dateLocale,
-                                {
-                                  month: "short",
-                                  day: "numeric",
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                },
-                              )}
-                            </p>
-                          </div>
-                        );
-                      })
+                          );
+                        })
                     )}
                   </div>
                 ) : (
@@ -1261,46 +1327,43 @@ const Schedule = () => {
                                   </Button>
                                 )}
                               </div>
-                              {offersByLesson[lesson.id] && (
-                                <div className="mt-2">
-                                  <Button
-                                    size="sm"
-                                    variant="flat"
-                                    className="w-full"
-                                    startContent={
-                                      <ArrowCounterClockwise
-                                        weight="duotone"
-                                        className="w-3.5 h-3.5"
-                                      />
-                                    }
-                                    style={
-                                      offersByLesson[lesson.id].status ===
-                                      "PendingStudentChoice"
-                                        ? {
-                                            backgroundColor: `${colors.state.warning}15`,
-                                            color: colors.state.warning,
-                                            border: `1px solid ${colors.state.warning}30`,
-                                          }
-                                        : {}
-                                    }
-                                    onPress={() =>
-                                      handleOpenReschedule(
-                                        lesson,
-                                        offersByLesson[lesson.id],
-                                      )
-                                    }
-                                  >
-                                    {offersByLesson[lesson.id].status ===
-                                    "PendingStudentChoice"
-                                      ? t(
-                                          "studentDashboard.schedule.reschedule.viewPending",
+                              {offersByLesson[lesson.id] &&
+                                offersByLesson[lesson.id].status !==
+                                  "Rejected" && (
+                                  <div className="mt-2">
+                                    <Button
+                                      size="sm"
+                                      variant="flat"
+                                      className="w-full"
+                                      startContent={
+                                        <Warning
+                                          weight="fill"
+                                          className="w-3.5 h-3.5"
+                                        />
+                                      }
+                                      style={{
+                                        backgroundColor: `${colors.state.warning}15`,
+                                        color: colors.state.warning,
+                                        border: `1px solid ${colors.state.warning}30`,
+                                      }}
+                                      onPress={() =>
+                                        handleOpenReschedule(
+                                          lesson,
+                                          offersByLesson[lesson.id],
                                         )
-                                      : t(
-                                          "studentDashboard.schedule.reschedule.viewBtn",
-                                        )}
-                                  </Button>
-                                </div>
-                              )}
+                                      }
+                                    >
+                                      {t(
+                                        "studentDashboard.schedule.reschedule.viewPendingWithCount",
+                                        {
+                                          count:
+                                            offersByLesson[lesson.id].options
+                                              ?.length || 0,
+                                        },
+                                      )}
+                                    </Button>
+                                  </div>
+                                )}
                               {canRequestReschedule(lesson) && (
                                 <div className="mt-2">
                                   {hasPendingRequest(lesson) ? (

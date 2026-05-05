@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import {
   Card,
@@ -100,6 +101,7 @@ const DetailRow = ({ label, children }) => {
 };
 
 const FinancialManagement = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const colors = useThemeColors();
   const { tableCardStyle, tableClassNames } = useTableStyles();
@@ -311,10 +313,10 @@ const FinancialManagement = () => {
       {/* Header */}
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.15 }}>
         <h1 className="text-2xl lg:text-3xl font-bold mb-1" style={{ color: colors.text.primary }}>
-          Financial Management
+          {t("adminDashboard.finance.title")}
         </h1>
         <p style={{ color: colors.text.secondary }}>
-          Monitor payment orders and transaction records across the platform.
+          {t("adminDashboard.finance.subtitle")}
         </p>
       </motion.div>
 

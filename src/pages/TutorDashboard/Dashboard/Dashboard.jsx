@@ -1,5 +1,13 @@
 import { useState, useEffect, useCallback } from "react";
-import { Card, CardBody, Button, Avatar, Progress, Image } from "@heroui/react";
+import {
+  Card,
+  CardBody,
+  Button,
+  Avatar,
+  Progress,
+  Image,
+  Skeleton,
+} from "@heroui/react";
 import UpcomingLessonsSkeleton from "../../../components/UpcomingLessonsSkeleton/UpcomingLessonsSkeleton";
 import { useTranslation } from "react-i18next";
 import { useThemeColors } from "../../../hooks/useThemeColors";
@@ -18,10 +26,11 @@ import {
 } from "@phosphor-icons/react";
 import IllustrationImage from "../../../assets/illustrations/wait.avif";
 import calendarIllustration from "../../../assets/illustrations/calendar.avif";
+import message from "../../../assets/illustrations/message.avif";
 import { useSelector } from "react-redux";
 import { selectUser } from "../../../store";
 import { useNavigate } from "react-router-dom";
-import { studentApi, coursesApi } from "../../../api";
+import { studentApi, coursesApi, paymentApi } from "../../../api";
 
 const CDN_BASE = "https://d20854st1o56hw.cloudfront.net/";
 const withCDN = (url) => {
@@ -42,6 +51,8 @@ const Dashboard = () => {
   const [recentStudentsLoading, setRecentStudentsLoading] = useState(true);
   const [recentReviews, setRecentReviews] = useState([]);
   const [recentReviewsLoading, setRecentReviewsLoading] = useState(true);
+  const [earningsSummary, setEarningsSummary] = useState(null);
+  const [earningsSummaryLoading, setEarningsSummaryLoading] = useState(true);
 
   const fetchUpcomingLessons = useCallback(async () => {
     if (!user?.tutorId) return;
@@ -66,11 +77,20 @@ const Dashboard = () => {
   }, [fetchUpcomingLessons]);
 
   useEffect(() => {
+    if (!user?.tutorId) return;
+    paymentApi
+      .getTotalEarning({ TutorId: user.tutorId })
+      .then((res) => setEarningsSummary(res?.data?.singleTutor || null))
+      .catch(() => setEarningsSummary(null))
+      .finally(() => setEarningsSummaryLoading(false));
+  }, [user?.tutorId]);
+
+  useEffect(() => {
     const fetchRecentStudents = async () => {
       try {
         const data = await coursesApi.getMyStudentEnrollments({
           Status: "InProgress,Completed",
-          "page-size": 4,
+          "page-size": 3,
           page: 1,
         });
         setRecentStudents(data?.data?.items ?? []);
@@ -101,41 +121,6 @@ const Dashboard = () => {
       return t("tutorDashboard.dashboard.tomorrow");
     return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
   };
-
-  const stats = [
-    {
-      icon: Users,
-      label: t("tutorDashboard.dashboard.stats.totalStudents"),
-      value: "24",
-      change: "+3",
-      color: colors.primary.main,
-      bg: colors.background.primaryLight,
-    },
-    {
-      icon: BookOpen,
-      label: t("tutorDashboard.dashboard.stats.activeCourses"),
-      value: "5",
-      change: "+1",
-      color: colors.state.info,
-      bg: `${colors.state.info}20`,
-    },
-    {
-      icon: Clock,
-      label: t("tutorDashboard.dashboard.stats.hoursTeached"),
-      value: "128",
-      change: "+12",
-      color: colors.state.warning,
-      bg: `${colors.state.warning}20`,
-    },
-    {
-      icon: CurrencyDollar,
-      label: t("tutorDashboard.dashboard.stats.monthlyEarnings"),
-      value: "$2,450",
-      change: "+18%",
-      color: colors.state.success,
-      bg: `${colors.state.success}20`,
-    },
-  ];
 
   useEffect(() => {
     if (!user?.tutorId) return;
@@ -237,61 +222,6 @@ const Dashboard = () => {
           </CardBody>
         </Card>
       </motion.div>
-
-      {/* Stats Grid */}
-      {/* <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.15 }}
-        className="grid grid-cols-2 lg:grid-cols-4 gap-4"
-      >
-        {stats.map((stat, index) => (
-          <Card
-            key={index}
-            shadow="none"
-            className="border-none"
-            style={{ backgroundColor: colors.background.light }}
-          >
-            <CardBody className="p-4">
-              <div className="flex items-center gap-3">
-                <div
-                  className="w-12 h-12 rounded-xl flex items-center justify-center"
-                  style={{ backgroundColor: stat.bg }}
-                >
-                  <stat.icon
-                    weight="duotone"
-                    className="w-6 h-6"
-                    style={{ color: stat.color }}
-                  />
-                </div>
-                <div className="flex-1">
-                  <p
-                    className="text-2xl font-bold"
-                    style={{ color: colors.text.primary }}
-                  >
-                    {stat.value}
-                  </p>
-                  <p
-                    className="text-xs"
-                    style={{ color: colors.text.secondary }}
-                  >
-                    {stat.label}
-                  </p>
-                </div>
-                <span
-                  className="text-xs font-medium px-2 py-1 rounded-full"
-                  style={{
-                    backgroundColor: `${colors.state.success}20`,
-                    color: colors.state.success,
-                  }}
-                >
-                  {stat.change}
-                </span>
-              </div>
-            </CardBody>
-          </Card>
-        ))}
-      </motion.div> */}
 
       {/* Main Content Grid */}
       <div className="grid lg:grid-cols-3 gap-6">
@@ -458,7 +388,7 @@ const Dashboard = () => {
                   ) : recentStudents.length === 0 ? (
                     <div className="flex flex-col items-center py-4 gap-3">
                       <img
-                        src="/src/assets/illustrations/message.avif"
+                        src={message}
                         alt="No students"
                         className="w-48 h-38 object-contain"
                       />
@@ -534,7 +464,7 @@ const Dashboard = () => {
 
         {/* Right Column - Reviews & Quick Stats */}
         <div className="space-y-6">
-          {/* Rating Overview */}
+          {/* Earnings Overview */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -546,43 +476,105 @@ const Dashboard = () => {
               style={{ backgroundColor: colors.background.light }}
             >
               <CardBody className="p-6">
-                <h2
-                  className="text-lg font-semibold mb-4"
-                  style={{ color: colors.text.primary }}
-                >
-                  <Star
-                    weight="duotone"
-                    className="w-5 h-5 inline-block mr-2"
-                    style={{ color: colors.state.warning }}
-                  />
-                  {t("tutorDashboard.dashboard.yourRating")}
-                </h2>
-
-                <div className="text-center mb-4">
-                  <p
-                    className="text-5xl font-bold"
+                <div className="flex items-center justify-between mb-4">
+                  <h2
+                    className="text-lg font-semibold"
                     style={{ color: colors.text.primary }}
                   >
-                    4.9
-                  </p>
-                  <div className="flex items-center justify-center gap-1 my-2">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <Star
-                        key={star}
-                        weight="fill"
-                        className="w-5 h-5"
-                        style={{ color: colors.state.warning }}
-                      />
-                    ))}
-                  </div>
-                  <p
-                    className="text-sm"
-                    style={{ color: colors.text.secondary }}
+                    <CurrencyDollar
+                      weight="duotone"
+                      className="w-5 h-5 inline-block mr-2"
+                      style={{ color: colors.state.success }}
+                    />
+                    {t("tutorDashboard.dashboard.earningsOverview")}
+                  </h2>
+                  <Button
+                    variant="light"
+                    size="sm"
+                    endContent={<ArrowRight className="w-4 h-4" />}
+                    style={{ color: colors.primary.main }}
+                    onPress={() => navigate("/tutor/earnings")}
                   >
-                    {t("tutorDashboard.dashboard.basedOn")} 48{" "}
-                    {t("tutorDashboard.dashboard.reviews")}
-                  </p>
+                    {t("tutorDashboard.dashboard.viewAll")}
+                  </Button>
                 </div>
+
+                {earningsSummaryLoading ? (
+                  <div className="space-y-3">
+                    <Skeleton className="h-20 w-full rounded-xl" />
+                    <div className="grid grid-cols-2 gap-3">
+                      <Skeleton className="h-14 w-full rounded-xl" />
+                      <Skeleton className="h-14 w-full rounded-xl" />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <div
+                      className="rounded-xl p-4"
+                      style={{
+                        backgroundColor: colors.background.primaryLight,
+                      }}
+                    >
+                      <p
+                        className="text-xs font-medium mb-1"
+                        style={{ color: colors.primary.main }}
+                      >
+                        {t("tutorDashboard.earnings.availableBalance")}
+                      </p>
+                      <p
+                        className="text-2xl font-bold"
+                        style={{ color: colors.text.primary }}
+                      >
+                        {(
+                          earningsSummary?.availableBalance || 0
+                        ).toLocaleString("vi-VN")}
+                        đ
+                      </p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div
+                        className="rounded-xl p-3"
+                        style={{ backgroundColor: colors.background.gray }}
+                      >
+                        <p
+                          className="text-xs mb-1"
+                          style={{ color: colors.text.tertiary }}
+                        >
+                          {t("tutorDashboard.earnings.totalNet")}
+                        </p>
+                        <p
+                          className="text-sm font-semibold"
+                          style={{ color: colors.text.primary }}
+                        >
+                          {(
+                            earningsSummary?.totalNetAmount || 0
+                          ).toLocaleString("vi-VN")}
+                          đ
+                        </p>
+                      </div>
+                      <div
+                        className="rounded-xl p-3"
+                        style={{ backgroundColor: colors.background.gray }}
+                      >
+                        <p
+                          className="text-xs mb-1"
+                          style={{ color: colors.text.tertiary }}
+                        >
+                          {t("tutorDashboard.earnings.platformFee")}
+                        </p>
+                        <p
+                          className="text-sm font-semibold"
+                          style={{ color: colors.text.primary }}
+                        >
+                          {(
+                            earningsSummary?.totalPlatformFee || 0
+                          ).toLocaleString("vi-VN")}
+                          đ
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </CardBody>
             </Card>
           </motion.div>
@@ -603,13 +595,33 @@ const Dashboard = () => {
                   className="text-lg font-semibold mb-4"
                   style={{ color: colors.text.primary }}
                 >
+                  <Star
+                    weight="duotone"
+                    className="w-5 h-5 inline-block mr-2"
+                    style={{ color: colors.state.warning }}
+                  />
                   {t("tutorDashboard.dashboard.recentReviews")}
                 </h2>
 
                 <div className="space-y-4">
                   {recentReviewsLoading ? (
-                    <div className="flex justify-center py-4">
-                      <span style={{ color: colors.text.tertiary }}>...</span>
+                    <div className="space-y-3">
+                      {Array.from({ length: 3 }).map((_, i) => (
+                        <div
+                          key={i}
+                          className="p-3 rounded-xl space-y-2"
+                          style={{ backgroundColor: colors.background.gray }}
+                        >
+                          <div className="flex items-center gap-2">
+                            <Skeleton className="w-8 h-8 rounded-full flex-shrink-0" />
+                            <div className="flex-1 space-y-1.5">
+                              <Skeleton className="h-3 w-2/3 rounded-lg" />
+                              <Skeleton className="h-2.5 w-1/3 rounded-lg" />
+                            </div>
+                          </div>
+                          <Skeleton className="h-3 w-full rounded-lg" />
+                        </div>
+                      ))}
                     </div>
                   ) : recentReviews.length === 0 ? (
                     <p

@@ -29,7 +29,7 @@ import {
   ArrowCounterClockwise,
   Warning,
 } from "@phosphor-icons/react";
-import { coursesApi, rescheduleApi } from "../../api";
+import { coursesApi, rescheduleApi, studentApi } from "../../api";
 import { selectUser } from "../../store";
 import VideoModal from "../VideoModal/VideoModal";
 import TutorRescheduleOfferModal from "../TutorRescheduleOfferModal/TutorRescheduleOfferModal";
@@ -89,6 +89,7 @@ const LessonDetailModal = ({
 
   const [rescheduleOffers, setRescheduleOffers] = useState([]);
   const [rescheduleRequests, setRescheduleRequests] = useState([]);
+  const [computedDeadline, setComputedDeadline] = useState(null);
 
   const {
     isOpen: isOfferOpen,
@@ -161,10 +162,41 @@ const LessonDetailModal = ({
             : [],
         );
       }
+
+      // Compute reschedule deadline internally when not provided via prop
+      if (
+        !rescheduleDeadline &&
+        (lesson.status === "NoTutor" || lesson.status === "Reschedule") &&
+        lesson.studentId
+      ) {
+        try {
+          const lessonsRes = await studentApi.getLessons({
+            StudentId: lesson.studentId,
+            "page-size": 200,
+          });
+          const allLessons = lessonsRes?.data?.items || [];
+          const next = allLessons
+            .filter(
+              (l) =>
+                new Date(l.startTime) > new Date(lesson.startTime) &&
+                l.status === "Scheduled",
+            )
+            .sort((a, b) => new Date(a.startTime) - new Date(b.startTime))[0];
+          setComputedDeadline(
+            next
+              ? new Date(new Date(next.startTime).getTime() - 24 * 60 * 60 * 1000)
+              : null,
+          );
+        } catch {
+          setComputedDeadline(null);
+        }
+      } else {
+        setComputedDeadline(null);
+      }
     } catch {
       // silently ignore
     }
-  }, [lesson, isOpen, isStudentView, user?.tutorId, user?.studentId]);
+  }, [lesson, isOpen, isStudentView, user?.tutorId, user?.studentId, rescheduleDeadline]);
 
   useEffect(() => {
     fetchRescheduleData();
@@ -333,6 +365,8 @@ const LessonDetailModal = ({
         (r) => r.lessonId === lesson.id && r.status === "Pending",
       ) || null
     : null;
+
+  const effectiveDeadline = rescheduleDeadline ?? computedDeadline;
 
   const handleInternalReschedule = () => {
     if (lesson.status === "NoTutor") onTicketOpen();
@@ -772,15 +806,15 @@ const LessonDetailModal = ({
                 </div>
               )}
               {/* Reschedule deadline — NoTutor */}
-              {rescheduleDeadline && (
+              {effectiveDeadline && (
                 <div
                   className="flex items-center gap-2 p-3 rounded-xl"
                   style={{
-                    backgroundColor: `${rescheduleDeadline < new Date() ? colors.state.error : colors.state.warning}12`,
-                    border: `1px solid ${rescheduleDeadline < new Date() ? colors.state.error : colors.state.warning}30`,
+                    backgroundColor: `${effectiveDeadline < new Date() ? colors.state.error : colors.state.warning}12`,
+                    border: `1px solid ${effectiveDeadline < new Date() ? colors.state.error : colors.state.warning}30`,
                   }}
                 >
-                  {rescheduleDeadline < new Date() ? (
+                  {effectiveDeadline < new Date() ? (
                     <Warning
                       weight="fill"
                       className="w-4 h-4 flex-shrink-0"
@@ -797,15 +831,15 @@ const LessonDetailModal = ({
                     className="text-sm"
                     style={{
                       color:
-                        rescheduleDeadline < new Date()
+                        effectiveDeadline < new Date()
                           ? colors.state.error
                           : colors.state.warning,
                     }}
                   >
-                    {rescheduleDeadline < new Date()
+                    {effectiveDeadline < new Date()
                       ? t("tutorDashboard.schedule.reschedule.deadlinePassed")
                       : t("tutorDashboard.schedule.reschedule.deadlineUntil", {
-                          date: rescheduleDeadline.toLocaleString(dateLocale, {
+                          date: effectiveDeadline.toLocaleString(dateLocale, {
                             month: "short",
                             day: "numeric",
                             hour: "2-digit",
@@ -822,6 +856,7 @@ const LessonDetailModal = ({
               </Button>
               {/* Tutor: propose reschedule or show pending chip */}
               {internalShowTutorReschedule &&
+                (!effectiveDeadline || effectiveDeadline >= new Date()) &&
                 (internalHasPendingOffer ? (
                   <Chip
                     size="sm"
@@ -953,7 +988,7 @@ const LessonDetailModal = ({
         isOpen={isTicketOpen}
         onClose={onTicketClose}
         userId={user?.userId}
-        rescheduleDeadline={rescheduleDeadline}
+        rescheduleDeadline={effectiveDeadline}
         onSuccess={() => {
           onTicketClose();
           fetchRescheduleData();

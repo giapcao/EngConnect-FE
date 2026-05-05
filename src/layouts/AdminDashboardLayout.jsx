@@ -124,14 +124,21 @@ const AdminDashboardLayout = () => {
       icon: ChartLine,
     },
     {
-      path: "/admin/finance",
+      submenuKey: "finance",
       label: t("adminDashboard.nav.finance"),
       icon: CurrencyDollar,
-    },
-    {
-      path: "/admin/payroll",
-      label: t("adminDashboard.nav.payroll"),
-      icon: Wallet,
+      children: [
+        {
+          path: "/admin/finance",
+          label: t("adminDashboard.nav.ordersTransactions"),
+          icon: CurrencyDollar,
+        },
+        {
+          path: "/admin/payroll",
+          label: t("adminDashboard.nav.payroll"),
+          icon: Wallet,
+        },
+      ],
     },
     {
       path: "/admin/support-tickets",

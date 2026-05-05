@@ -3,6 +3,7 @@ import { Button, Input, Tabs, Tab } from "@heroui/react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { useThemeColors } from "../../../hooks/useThemeColors";
+import useInputStyles from "../../../hooks/useInputStyles";
 import { motion } from "framer-motion";
 import { Plus, MagnifyingGlass } from "@phosphor-icons/react";
 import CourseCard from "../../../components/CourseCard/CourseCard";
@@ -13,6 +14,7 @@ import IconsDrawingImage from "../../../assets/illustrations/icons-drawing.avif"
 const MyCourses = () => {
   const { t } = useTranslation();
   const colors = useThemeColors();
+  const { filterInputClassNames, filterTabsClassNames } = useInputStyles();
   const navigate = useNavigate();
   const [selectedTab, setSelectedTab] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
@@ -122,12 +124,7 @@ const MyCourses = () => {
               style={{ color: colors.text.tertiary }}
             />
           }
-          classNames={{
-            inputWrapper: "shadow-none",
-          }}
-          style={{
-            backgroundColor: colors.background.light,
-          }}
+          classNames={filterInputClassNames}
           className="max-w-xs"
         />
 
@@ -136,10 +133,7 @@ const MyCourses = () => {
           onSelectionChange={setSelectedTab}
           //variant="light"
           color="primary"
-          classNames={{
-            tabList: "gap-2",
-            tab: "px-4",
-          }}
+          classNames={filterTabsClassNames}
         >
           <Tab key="all" title={t("tutorDashboard.myCourses.all")} />
           <Tab

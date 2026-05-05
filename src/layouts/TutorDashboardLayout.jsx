@@ -4,6 +4,7 @@ import {
   Button,
   Avatar,
   Badge,
+  Chip,
   Input,
   Dropdown,
   DropdownTrigger,
@@ -139,20 +140,34 @@ const TutorDashboardLayout = () => {
       >
         {/* Main Header Row */}
         <div className="px-4 lg:px-8 py-3 flex items-center justify-between relative">
-          {/* Logo */}
-          <Link
-            to="/"
-            className="flex items-center gap-2 no-underline flex-shrink-0"
-          >
-            <img
-              src={logoImage}
-              alt="EngConnect"
-              draggable={false}
-              onDragStart={(e) => e.preventDefault()}
-              onContextMenu={(e) => e.preventDefault()}
-              className="h-10 w-auto"
-            />
-          </Link>
+          {/* Logo + Role chip */}
+          <div className="flex items-center gap-2.5 flex-shrink-0">
+            <Link to="/" className="flex items-center no-underline">
+              <img
+                src={logoImage}
+                alt="EngConnect"
+                draggable={false}
+                onDragStart={(e) => e.preventDefault()}
+                onContextMenu={(e) => e.preventDefault()}
+                className="h-10 w-auto"
+              />
+            </Link>
+            <Chip
+              size="lg"
+              startContent={
+                <ChalkboardTeacher weight="fill" className="w-3.5 h-3.5" />
+              }
+              style={{
+                backgroundColor: "#0d948818",
+                color: "#0d9488",
+                border: "1px solid #0d948840",
+                fontSize: "14px",
+                fontWeight: 800,
+              }}
+            >
+              {t("tutorDashboard.role")}
+            </Chip>
+          </div>
 
           {/* Search Bar - Desktop */}
           <div className="hidden lg:flex absolute left-1/2 transform -translate-x-1/2 w-full max-w-2xl px-4">

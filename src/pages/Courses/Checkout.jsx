@@ -39,7 +39,24 @@ const Checkout = () => {
   const [submitting, setSubmitting] = useState(false);
 
   const requiredSlots = course?.numsSessionInWeek || 0;
-  const notEnoughSlots = !loading && schedules.length < requiredSlots;
+
+  const getSlotDurationMinutes = (slot) => {
+    const [sh, sm] = slot.startTime.split(":").map(Number);
+    const [eh, em] = slot.endTime.split(":").map(Number);
+    return eh * 60 + em - (sh * 60 + sm);
+  };
+
+  const lessonMinutes = (() => {
+    if (!course?.estimatedTimeLesson) return null;
+    const [lh, lm] = course.estimatedTimeLesson.split(":").map(Number);
+    return lh * 60 + lm;
+  })();
+
+  const matchingSlots = lessonMinutes
+    ? schedules.filter((s) => getSlotDurationMinutes(s) === lessonMinutes)
+    : schedules;
+
+  const notEnoughSlots = !loading && matchingSlots.length < requiredSlots;
 
   const fetchData = useCallback(async () => {
     try {
@@ -115,7 +132,7 @@ const Checkout = () => {
 
   const groupedSchedules = WEEKDAY_ORDER.map((day) => ({
     day,
-    slots: schedules
+    slots: matchingSlots
       .filter((s) => s.weekday === day)
       .sort((a, b) => a.startTime.localeCompare(b.startTime)),
   })).filter((g) => g.slots.length > 0);
@@ -242,7 +259,7 @@ const Checkout = () => {
                       />
                       {t("checkout.notEnoughSlots", {
                         required: requiredSlots,
-                        available: schedules.length,
+                        available: matchingSlots.length,
                       })}
                     </div>
                   )}

@@ -300,6 +300,7 @@ const CreateCourse = () => {
 
           if (!hasSessions) {
             // Modules exist but no sessions → start at step 3
+            // pricePerLesson stays as entered (0 sessions means can't derive it)
             setCreatedSessions({});
             setSessions(
               Object.fromEntries(
@@ -323,6 +324,15 @@ const CreateCourse = () => {
           } else {
             // Has sessions → load them and start at step 4 (resources)
             setCreatedSessions(allSessions);
+            // Derive pricePerLesson from stored total price ÷ session count
+            const totalSess = Object.values(allSessions).flat().length;
+            if (totalSess > 0 && c.price > 0) {
+              const perLesson = Math.round(c.price / totalSess);
+              setCourseData((prev) => ({
+                ...prev,
+                Price: perLesson.toLocaleString("vi-VN").replace(/,/g, "."),
+              }));
+            }
             const allSess = Object.values(allSessions).flat();
             const resMap = {};
             const createdResMap = {};
@@ -1522,6 +1532,10 @@ const CreateCourse = () => {
 
       if (isEditing) {
         // UPDATE mode
+        const pricePerLessonNum =
+          Number(courseData.Price.replace(/\./g, "")) || 0;
+        const currentSessionCount =
+          Object.values(createdSessions).flat().length;
         const payload = {
           title: courseData.Title,
           shortDescription: courseData.ShortDescription,
@@ -1529,7 +1543,7 @@ const CreateCourse = () => {
           outcomes: courseData.Outcomes,
           level: courseData.Level,
           estimatedTimeLesson: Number(courseData.EstimatedTimeLesson) || 0,
-          price: Number(courseData.Price.replace(/\./g, "")),
+          price: pricePerLessonNum * Math.max(currentSessionCount, 1),
           currency: courseData.Currency,
           numsSessionInWeek: Number(courseData.NumsSessionInWeek) || 0,
           isCertificate: courseData.IsCertificate,
@@ -1562,7 +1576,7 @@ const CreateCourse = () => {
         setStep(2);
         loadExistingModules();
       } else {
-        // CREATE mode
+        // CREATE mode — price is 0 until sessions are created in Step 3
         const payload = {
           Title: courseData.Title,
           ShortDescription: courseData.ShortDescription,
@@ -1570,7 +1584,7 @@ const CreateCourse = () => {
           Outcomes: courseData.Outcomes,
           Level: courseData.Level,
           EstimatedTimeLesson: Number(courseData.EstimatedTimeLesson) || 0,
-          Price: Number(courseData.Price.replace(/\./g, "")),
+          Price: 0,
           Currency: courseData.Currency,
           NumsSessionInWeek: Number(courseData.NumsSessionInWeek) || 0,
           IsCertificate: courseData.IsCertificate,
@@ -1836,6 +1850,30 @@ const CreateCourse = () => {
       // Refresh to get join-table IDs
       const sessionsData = await refreshCreatedSessions();
       const allSess = Object.values(sessionsData).flat();
+
+      // Now that session count is known, update course with correct total price
+      const pricePerLessonNum =
+        Number(courseData.Price.replace(/\./g, "")) || 0;
+      if (pricePerLessonNum > 0 && allSess.length > 0 && createdCourseId) {
+        try {
+          await coursesApi.updateCourse(createdCourseId, {
+            title: courseData.Title,
+            shortDescription: courseData.ShortDescription,
+            fullDescription: courseData.FullDescription,
+            outcomes: courseData.Outcomes,
+            level: courseData.Level,
+            estimatedTimeLesson: Number(courseData.EstimatedTimeLesson) || 0,
+            price: pricePerLessonNum * allSess.length,
+            currency: courseData.Currency,
+            numsSessionInWeek: Number(courseData.NumsSessionInWeek) || 0,
+            isCertificate: courseData.IsCertificate,
+            categoryIds: courseData.CategoryIds,
+          });
+        } catch {
+          // Non-blocking — price update fails silently, tutor can re-save from Step 1
+        }
+      }
+
       const resMap = {};
       const createdResMap = {};
       for (const s of allSess) {
@@ -2353,31 +2391,64 @@ const CreateCourse = () => {
                     <SelectItem key={level}>{level}</SelectItem>
                   ))}
                 </Select>
-                <Input
-                  label={t("tutorDashboard.createCourse.price")}
-                  placeholder="0"
-                  type="text"
-                  inputMode="numeric"
-                  labelPlacement="outside"
-                  value={courseData.Price}
-                  onChange={(e) => {
-                    const raw = e.target.value.replace(/\D/g, "");
-                    const formatted = raw.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-                    handleCourseChange("Price", formatted);
-                  }}
-                  isInvalid={!!validationErrors.Price}
-                  errorMessage={validationErrors.Price}
-                  classNames={inputClassNames}
-                  isRequired
-                  endContent={
-                    <span
-                      className="text-sm"
-                      style={{ color: colors.text.tertiary }}
-                    >
-                      VND
-                    </span>
-                  }
-                />
+                <div className="flex flex-col gap-1">
+                  <Input
+                    label={t("tutorDashboard.createCourse.price")}
+                    placeholder="0"
+                    type="text"
+                    inputMode="numeric"
+                    labelPlacement="outside"
+                    value={courseData.Price}
+                    onChange={(e) => {
+                      const raw = e.target.value.replace(/\D/g, "");
+                      const formatted = raw.replace(
+                        /\B(?=(\d{3})+(?!\d))/g,
+                        ".",
+                      );
+                      handleCourseChange("Price", formatted);
+                    }}
+                    isInvalid={!!validationErrors.Price}
+                    errorMessage={validationErrors.Price}
+                    classNames={inputClassNames}
+                    isRequired
+                    endContent={
+                      <span
+                        className="text-sm"
+                        style={{ color: colors.text.tertiary }}
+                      >
+                        VND
+                      </span>
+                    }
+                  />
+                  {(() => {
+                    const totalSessions =
+                      Object.values(createdSessions).flat().length;
+                    const priceNum =
+                      Number(courseData.Price.replace(/\./g, "")) || 0;
+                    if (totalSessions > 0 && priceNum > 0) {
+                      const total = priceNum * totalSessions;
+                      return (
+                        <p
+                          className="text-xs pl-1"
+                          style={{ color: colors.state.success }}
+                        >
+                          Estimated Total: {total.toLocaleString("vi-VN")} VND (
+                          {totalSessions} sessions ×{" "}
+                          {priceNum.toLocaleString("vi-VN")} VND)
+                        </p>
+                      );
+                    }
+                    return (
+                      <p
+                        className="text-xs pl-1"
+                        style={{ color: colors.text.tertiary }}
+                      >
+                        Total = Price/Lesson × sessions (calculated after Step
+                        3)
+                      </p>
+                    );
+                  })()}
+                </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <Input
@@ -2410,18 +2481,6 @@ const CreateCourse = () => {
                     </span>
                   }
                 />
-                <div className="flex items-end h-full pb-1">
-                  <Checkbox
-                    isSelected={courseData.IsCertificate}
-                    onValueChange={(v) =>
-                      handleCourseChange("IsCertificate", v)
-                    }
-                  >
-                    <span style={{ color: colors.text.primary }}>
-                      {t("tutorDashboard.createCourse.isCertificate")}
-                    </span>
-                  </Checkbox>
-                </div>
               </div>
               {/* Categories */}
               {categories.length > 0 && (
@@ -2433,37 +2492,43 @@ const CreateCourse = () => {
                     {t("tutorDashboard.createCourse.category")}
                   </p>
                   <div className="flex flex-wrap gap-2">
-                    {categories.map((cat) => (
-                      <Chip
-                        key={cat.id}
-                        variant={
-                          courseData.CategoryIds.includes(cat.id)
-                            ? "solid"
-                            : "flat"
-                        }
-                        className="cursor-pointer"
-                        style={{
-                          backgroundColor: courseData.CategoryIds.includes(
-                            cat.id,
-                          )
-                            ? colors.primary.main
-                            : colors.background.gray,
-                          color: courseData.CategoryIds.includes(cat.id)
-                            ? colors.text.white
-                            : colors.text.primary,
-                        }}
-                        onClick={() => {
-                          setCourseData((prev) => ({
-                            ...prev,
-                            CategoryIds: prev.CategoryIds.includes(cat.id)
-                              ? prev.CategoryIds.filter((id) => id !== cat.id)
-                              : [...prev.CategoryIds, cat.id],
-                          }));
-                        }}
-                      >
-                        {cat.name}
-                      </Chip>
-                    ))}
+                    {categories.map((cat) => {
+                      const isSelected = courseData.CategoryIds.includes(
+                        cat.id,
+                      );
+                      const isDisabled =
+                        !isSelected && courseData.CategoryIds.length >= 3;
+                      return (
+                        <Chip
+                          key={cat.id}
+                          variant={isSelected ? "solid" : "flat"}
+                          className={
+                            isDisabled
+                              ? "cursor-not-allowed opacity-40"
+                              : "cursor-pointer"
+                          }
+                          style={{
+                            backgroundColor: isSelected
+                              ? colors.primary.main
+                              : colors.background.gray,
+                            color: isSelected
+                              ? colors.text.white
+                              : colors.text.primary,
+                          }}
+                          onClick={() => {
+                            if (isDisabled) return;
+                            setCourseData((prev) => ({
+                              ...prev,
+                              CategoryIds: prev.CategoryIds.includes(cat.id)
+                                ? prev.CategoryIds.filter((id) => id !== cat.id)
+                                : [...prev.CategoryIds, cat.id],
+                            }));
+                          }}
+                        >
+                          {cat.name}
+                        </Chip>
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -4276,19 +4341,32 @@ const CreateCourse = () => {
                     )}{" "}
                     VND
                   </p>
-                </div>
-                <div>
-                  <span style={{ color: colors.text.secondary }}>
-                    {t("tutorDashboard.createCourse.isCertificate")}:
-                  </span>
-                  <p
-                    className="font-medium"
-                    style={{ color: colors.text.primary }}
-                  >
-                    {courseData.IsCertificate
-                      ? t("tutorDashboard.createCourse.yes")
-                      : t("tutorDashboard.createCourse.no")}
-                  </p>
+                  {(() => {
+                    const totalSessions =
+                      Object.values(createdSessions).flat().length;
+                    const priceNum =
+                      Number(courseData.Price.replace(/\./g, "")) || 0;
+                    if (totalSessions > 0 && priceNum > 0) {
+                      return (
+                        <p
+                          className="text-xs mt-0.5"
+                          style={{ color: colors.state.success }}
+                        >
+                          Total:{" "}
+                          {(priceNum * totalSessions).toLocaleString("vi-VN")}{" "}
+                          VND ({totalSessions} sessions)
+                        </p>
+                      );
+                    }
+                    return (
+                      <p
+                        className="text-xs mt-0.5"
+                        style={{ color: colors.text.tertiary }}
+                      >
+                        Total calculated after sessions are added
+                      </p>
+                    );
+                  })()}
                 </div>
               </div>
               {courseData.ShortDescription && (

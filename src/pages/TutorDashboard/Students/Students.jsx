@@ -17,6 +17,7 @@ import {
 } from "@heroui/react";
 import { useTranslation } from "react-i18next";
 import { useThemeColors } from "../../../hooks/useThemeColors";
+import useInputStyles from "../../../hooks/useInputStyles";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { selectUser } from "../../../store";
@@ -49,6 +50,7 @@ const Students = () => {
   const { t, i18n } = useTranslation();
   const dateLocale = i18n.language === "vi" ? "vi-VN" : "en-US";
   const colors = useThemeColors();
+  const { filterInputClassNames, filterTabsClassNames } = useInputStyles();
   const navigate = useNavigate();
   const user = useSelector(selectUser);
   const [selectedTab, setSelectedTab] = useState("all");
@@ -247,12 +249,7 @@ const Students = () => {
               style={{ color: colors.text.tertiary }}
             />
           }
-          classNames={{
-            inputWrapper: "shadow-none",
-          }}
-          style={{
-            backgroundColor: colors.background.light,
-          }}
+          classNames={filterInputClassNames}
           className="max-w-xs"
         />
 
@@ -261,10 +258,7 @@ const Students = () => {
           onSelectionChange={setSelectedTab}
           variant="solid"
           color="primary"
-          classNames={{
-            tabList: "gap-2",
-            tab: "px-4",
-          }}
+          classNames={filterTabsClassNames}
         >
           <Tab key="all" title={t("tutorDashboard.students.all")} />
           <Tab
