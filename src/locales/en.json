@@ -1279,6 +1279,8 @@
       "recordingAutoDelete": "This recording will be automatically deleted 90 days after the course is completed or expired.",
       "upcomingSidebarTab": "Upcoming",
       "noUpcoming": "No upcoming lessons",
+      "filterStudent": "Filter by Student",
+      "allStudents": "All Students",
       "dateLabel": "Date",
       "timeLabel": "Time",
       "viewDetail": "View",

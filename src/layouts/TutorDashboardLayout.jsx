@@ -162,7 +162,7 @@ const TutorDashboardLayout = () => {
                 color: "#0d9488",
                 border: "1px solid #0d948840",
                 fontSize: "14px",
-                fontWeight: 800,
+                fontWeight: 600,
               }}
             >
               {t("tutorDashboard.role")}

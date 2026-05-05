@@ -1277,6 +1277,8 @@
       "recordingAutoDelete": "Bản ghi này sẽ tự động bị xóa sau 90 ngày kể từ khi khóa học hoàn thành hoặc hết hạn.",
       "upcomingSidebarTab": "Sắp tới",
       "noUpcoming": "Không có buổi học sắp tới",
+      "filterStudent": "Lọc theo học viên",
+      "allStudents": "Tất cả học viên",
       "dateLabel": "Ngày",
       "timeLabel": "Thời gian",
       "viewDetail": "Xem",

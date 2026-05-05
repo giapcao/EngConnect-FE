@@ -52,6 +52,8 @@ import {
   LinkSimple,
   SpinnerGap,
   ArrowCounterClockwise,
+  FunnelSimple,
+  X,
 } from "@phosphor-icons/react";
 import calendarIllustration from "../../../assets/illustrations/calendar.avif";
 import VideoModal from "../../../components/VideoModal/VideoModal";
@@ -169,6 +171,11 @@ const Schedule = () => {
   const [isRequestsModalOpen, setIsRequestsModalOpen] = useState(false);
   const [isTicketsModalOpen, setIsTicketsModalOpen] = useState(false);
   const [lessonExtras, setLessonExtras] = useState({});
+
+  // Student filter
+  const [enrolledStudents, setEnrolledStudents] = useState([]);
+  const [filterStudentId, setFilterStudentId] = useState(null);
+  const [isStudentFilterOpen, setIsStudentFilterOpen] = useState(false);
 
   const allTimeOptions = [];
   for (let h = 6; h <= 22; h++) {
@@ -313,6 +320,29 @@ const Schedule = () => {
   useEffect(() => {
     fetchRescheduleTickets();
   }, [fetchRescheduleTickets]);
+
+  const fetchEnrolledStudents = useCallback(async () => {
+    try {
+      const res = await coursesApi.getMyStudentEnrollments({
+        Status: "InProgress,Completed",
+        "page-size": 200,
+      });
+      const items = res?.data?.items || [];
+      const seen = new Set();
+      const unique = items.filter((e) => {
+        if (seen.has(e.studentId)) return false;
+        seen.add(e.studentId);
+        return true;
+      });
+      setEnrolledStudents(unique);
+    } catch {
+      // silently ignore
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchEnrolledStudents();
+  }, [fetchEnrolledStudents]);
 
   const handleApproveRequest = async (req) => {
     setProcessingId(req.id);
@@ -521,24 +551,32 @@ const Schedule = () => {
   const now = new Date();
   const todayStr = now.toDateString();
 
+  const filteredLessons = useMemo(
+    () =>
+      filterStudentId
+        ? lessons.filter((l) => l.studentId === filterStudentId)
+        : lessons,
+    [lessons, filterStudentId],
+  );
+
   const todayLessons = useMemo(
     () =>
-      lessons
+      filteredLessons
         .filter((l) => new Date(l.startTime).toDateString() === todayStr)
         .sort((a, b) => new Date(a.startTime) - new Date(b.startTime)),
-    [lessons, todayStr],
+    [filteredLessons, todayStr],
   );
 
   const upcomingLessons = useMemo(
     () =>
-      lessons
+      filteredLessons
         .filter(
           (l) =>
             new Date(l.startTime) > now &&
             new Date(l.startTime).toDateString() !== todayStr,
         )
         .sort((a, b) => new Date(a.startTime) - new Date(b.startTime)),
-    [lessons, todayStr],
+    [filteredLessons, todayStr],
   );
 
   const studentFullName = (lesson) =>
@@ -664,7 +702,7 @@ const Schedule = () => {
   }, [currentTime]);
 
   const getLessonsForDay = (dayDate) => {
-    return lessons.filter((l) => {
+    return filteredLessons.filter((l) => {
       const lessonDate = new Date(l.startTime);
       return lessonDate.toDateString() === dayDate.toDateString();
     });
@@ -881,6 +919,63 @@ const Schedule = () => {
               </div>
             ),
           )}
+
+          {/* Student filter button / active chip — lessons tab only */}
+          {activeView === "lessons" &&
+            (filterStudentId ? (
+              (() => {
+                const s = enrolledStudents.find(
+                  (e) => e.studentId === filterStudentId,
+                );
+                return (
+                  <div
+                    className="flex items-center gap-1.5 h-9 px-3 rounded-xl text-xs font-medium cursor-pointer"
+                    style={{
+                      backgroundColor: `${colors.primary.main}18`,
+                      border: `1px solid ${colors.primary.main}40`,
+                      color: colors.primary.main,
+                    }}
+                    onClick={() => setIsStudentFilterOpen(true)}
+                  >
+                    <Avatar
+                      src={s?.studentAvatar}
+                      name={s?.studentName}
+                      size="sm"
+                      className="w-5 h-5 text-[9px]"
+                    />
+                    <span className="max-w-[120px] truncate">
+                      {s?.studentName}
+                    </span>
+                    <button
+                      className="ml-0.5 rounded-full hover:opacity-70"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setFilterStudentId(null);
+                      }}
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                );
+              })()
+            ) : (
+              <Button
+                size="sm"
+                variant="flat"
+                className="flex items-center gap-1.5 text-xs h-9 px-3"
+                style={{
+                  backgroundColor: `${colors.primary.main}12`,
+                  color: colors.primary.main,
+                  border: `1px solid ${colors.primary.main}30`,
+                }}
+                startContent={
+                  <FunnelSimple weight="duotone" className="w-4 h-4" />
+                }
+                onPress={() => setIsStudentFilterOpen(true)}
+              >
+                {t("tutorDashboard.schedule.filterStudent")}
+              </Button>
+            ))}
         </div>
       </motion.div>
 
@@ -2652,6 +2747,137 @@ const Schedule = () => {
                       );
                     })
                   )}
+                </div>
+              </ModalBody>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
+
+      {/* Student Filter Modal */}
+      <Modal
+        isOpen={isStudentFilterOpen}
+        onOpenChange={(open) => setIsStudentFilterOpen(open)}
+        size="sm"
+        scrollBehavior="inside"
+      >
+        <ModalContent style={{ backgroundColor: colors.background.light }}>
+          {(onClose) => (
+            <>
+              <ModalHeader style={{ color: colors.text.primary }}>
+                <div className="flex items-center gap-2">
+                  <FunnelSimple weight="duotone" className="w-5 h-5" />
+                  {t("tutorDashboard.schedule.filterStudent")}
+                </div>
+              </ModalHeader>
+              <ModalBody className="pb-4">
+                <div className="space-y-1.5">
+                  {/* All students option */}
+                  <button
+                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors text-left group"
+                    style={{
+                      backgroundColor: !filterStudentId
+                        ? `${colors.primary.main}18`
+                        : colors.background.gray,
+                      border: !filterStudentId
+                        ? `1px solid ${colors.primary.main}40`
+                        : `1px solid transparent`,
+                    }}
+                    onMouseEnter={(e) => {
+                      if (filterStudentId)
+                        e.currentTarget.style.backgroundColor =
+                          colors.background.primaryLight ||
+                          `${colors.primary.main}10`;
+                    }}
+                    onMouseLeave={(e) => {
+                      if (filterStudentId)
+                        e.currentTarget.style.backgroundColor =
+                          colors.background.gray;
+                    }}
+                    onClick={() => {
+                      setFilterStudentId(null);
+                      onClose();
+                    }}
+                  >
+                    <div
+                      className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+                      style={{
+                        backgroundColor: !filterStudentId
+                          ? `${colors.primary.main}25`
+                          : colors.background.light,
+                      }}
+                    >
+                      <User
+                        weight="duotone"
+                        className="w-4 h-4"
+                        style={{
+                          color: !filterStudentId
+                            ? colors.primary.main
+                            : colors.text.secondary,
+                        }}
+                      />
+                    </div>
+                    <span
+                      className="text-sm font-semibold"
+                      style={{
+                        color: !filterStudentId
+                          ? colors.primary.main
+                          : colors.text.primary,
+                      }}
+                    >
+                      {t("tutorDashboard.schedule.allStudents")}
+                    </span>
+                  </button>
+
+                  {enrolledStudents.map((enrollment) => {
+                    const isSelected =
+                      filterStudentId === enrollment.studentId;
+                    return (
+                      <button
+                        key={enrollment.studentId}
+                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors text-left"
+                        style={{
+                          backgroundColor: isSelected
+                            ? `${colors.primary.main}18`
+                            : colors.background.gray,
+                          border: isSelected
+                            ? `1px solid ${colors.primary.main}40`
+                            : `1px solid transparent`,
+                        }}
+                        onMouseEnter={(e) => {
+                          if (!isSelected)
+                            e.currentTarget.style.backgroundColor =
+                              `${colors.primary.main}10`;
+                        }}
+                        onMouseLeave={(e) => {
+                          if (!isSelected)
+                            e.currentTarget.style.backgroundColor =
+                              colors.background.gray;
+                        }}
+                        onClick={() => {
+                          setFilterStudentId(enrollment.studentId);
+                          onClose();
+                        }}
+                      >
+                        <Avatar
+                          src={enrollment.studentAvatar}
+                          name={enrollment.studentName}
+                          size="sm"
+                          className="w-8 h-8 flex-shrink-0"
+                        />
+                        <span
+                          className="text-sm font-medium truncate"
+                          style={{
+                            color: isSelected
+                              ? colors.primary.main
+                              : colors.text.primary,
+                          }}
+                        >
+                          {enrollment.studentName}
+                        </span>
+                      </button>
+                    );
+                  })}
                 </div>
               </ModalBody>
             </>

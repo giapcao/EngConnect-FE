@@ -5,6 +5,7 @@ import AdminRoute from "./AdminRoute";
 import NonAdminRoute from "./NonAdminRoute";
 import TutorRoute from "./TutorRoute";
 import RequireTutorRoute from "./RequireTutorRoute";
+import RequireAuthRoute from "./RequireAuthRoute";
 import DashboardLayout from "../layouts/DashboardLayout";
 import TutorDashboardLayout from "../layouts/TutorDashboardLayout";
 import AdminDashboardLayout from "../layouts/AdminDashboardLayout";
@@ -192,7 +193,9 @@ export const router = createBrowserRouter([
     path: "/student",
     element: (
       <NonAdminRoute>
-        <DashboardLayout />
+        <RequireAuthRoute>
+          <DashboardLayout />
+        </RequireAuthRoute>
       </NonAdminRoute>
     ),
     children: [
