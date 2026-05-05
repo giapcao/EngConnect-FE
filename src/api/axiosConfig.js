@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const axiosInstance = axios.create({
-  baseURL: "https://engconnect-qa.gdev.id.vn/api/",
+  baseURL: "https://engconnect-prod.gdev.id.vn/api/",
   timeout: 10000,
   headers: {
     "Content-Type": "application/json",
