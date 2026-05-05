@@ -28,6 +28,7 @@ import {
   ArrowRight,
   ArrowCounterClockwise,
   Warning,
+  Eye,
 } from "@phosphor-icons/react";
 import { coursesApi, rescheduleApi, studentApi } from "../../api";
 import { selectUser } from "../../store";
@@ -110,6 +111,12 @@ const LessonDetailModal = ({
     isOpen: isRequestOpen,
     onOpen: onRequestOpen,
     onClose: onRequestClose,
+  } = useDisclosure();
+
+  const {
+    isOpen: isViewReqOpen,
+    onOpen: onViewReqOpen,
+    onClose: onViewReqClose,
   } = useDisclosure();
 
   const {
@@ -900,9 +907,12 @@ const LessonDetailModal = ({
               {internalCanRequestReschedule &&
                 !internalPendingOffer &&
                 (internalPendingRequest ? (
-                  <Chip
-                    size="sm"
-                    className="h-9 px-3"
+                  <Button
+                    variant="flat"
+                    startContent={
+                      <ArrowCounterClockwise weight="bold" className="w-4 h-4" />
+                    }
+                    onPress={onViewReqOpen}
                     style={{
                       backgroundColor: `${colors.state.warning}20`,
                       color: colors.state.warning,
@@ -911,7 +921,7 @@ const LessonDetailModal = ({
                     {t(
                       "studentDashboard.schedule.reschedule.requestPendingChip",
                     )}
-                  </Chip>
+                  </Button>
                 ) : (
                   <Button
                     variant="flat"
@@ -1020,6 +1030,130 @@ const LessonDetailModal = ({
           onRefresh?.();
         }}
       />
+
+      {/* View pending reschedule request detail */}
+      <Modal isOpen={isViewReqOpen} onClose={onViewReqClose} size="sm" scrollBehavior="inside">
+        <ModalContent style={{ backgroundColor: colors.background.light }}>
+          {(onClose) => (
+            <>
+              <ModalHeader
+                className="flex items-center gap-2"
+                style={{ color: colors.text.primary }}
+              >
+                <ArrowCounterClockwise
+                  weight="duotone"
+                  className="w-5 h-5"
+                  style={{ color: colors.state.warning }}
+                />
+                {t("studentDashboard.schedule.reschedule.myRequestBtn")}
+              </ModalHeader>
+              <ModalBody className="pb-2">
+                <div
+                  className="p-3 rounded-xl mb-2"
+                  style={{ backgroundColor: colors.background.gray }}
+                >
+                  <p
+                    className="text-[10px] font-semibold uppercase tracking-wide mb-1"
+                    style={{ color: colors.text.tertiary }}
+                  >
+                    {t("studentDashboard.schedule.reschedule.originalLesson")}
+                  </p>
+                  <p className="font-medium text-sm" style={{ color: colors.text.primary }}>
+                    {lesson.courseTitle || lesson.sessionTitle}
+                  </p>
+                  {(lesson.tutorFirstName || lesson.tutorLastName) && (
+                    <p
+                      className="text-xs mt-1 flex items-center gap-1.5"
+                      style={{ color: colors.text.secondary }}
+                    >
+                      <Avatar
+                        src={lesson.tutorAvatar}
+                        name={[lesson.tutorFirstName, lesson.tutorLastName].filter(Boolean).join(" ")}
+                        size="sm"
+                        className="w-4 h-4 text-[8px] flex-shrink-0"
+                      />
+                      {[lesson.tutorFirstName, lesson.tutorLastName].filter(Boolean).join(" ")}
+                    </p>
+                  )}
+                  <p
+                    className="text-xs mt-1 flex items-center gap-1"
+                    style={{ color: colors.text.secondary }}
+                  >
+                    <Clock weight="duotone" className="w-3 h-3" />
+                    {new Date(lesson.startTime).toLocaleString(dateLocale, {
+                      weekday: "short",
+                      month: "short",
+                      day: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                    {lesson.endTime && (
+                      <>
+                        {" — "}
+                        {new Date(lesson.endTime).toLocaleTimeString(dateLocale, {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </>
+                    )}
+                  </p>
+                </div>
+
+                {internalPendingRequest && (
+                  <div className="space-y-3">
+                    <div
+                      className="p-3 rounded-xl"
+                      style={{
+                        backgroundColor: `${colors.primary.main}10`,
+                        border: `1px solid ${colors.primary.main}20`,
+                      }}
+                    >
+                      <p className="text-xs font-semibold mb-1" style={{ color: colors.primary.main }}>
+                        {t("studentDashboard.schedule.reschedule.requestProposed")}
+                      </p>
+                      <p className="text-sm font-medium" style={{ color: colors.text.primary }}>
+                        {new Date(internalPendingRequest.proposedStartTime).toLocaleString(dateLocale, {
+                          weekday: "short",
+                          month: "short",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                        {" – "}
+                        {new Date(internalPendingRequest.proposedEndTime).toLocaleTimeString(dateLocale, {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </p>
+                    </div>
+                    {internalPendingRequest.studentNote && (
+                      <div
+                        className="p-3 rounded-xl"
+                        style={{ backgroundColor: colors.background.gray }}
+                      >
+                        <p className="text-xs font-medium mb-1" style={{ color: colors.text.tertiary }}>
+                          {t("studentDashboard.schedule.reschedule.yourNote")}
+                        </p>
+                        <p className="text-sm italic" style={{ color: colors.text.primary }}>
+                          "{internalPendingRequest.studentNote}"
+                        </p>
+                      </div>
+                    )}
+                    <p className="text-xs text-center" style={{ color: colors.text.tertiary }}>
+                      {t("studentDashboard.schedule.reschedule.awaitingTutor")}
+                    </p>
+                  </div>
+                )}
+              </ModalBody>
+              <ModalFooter>
+                <Button variant="light" onPress={onClose}>
+                  {t("studentDashboard.schedule.reschedule.close")}
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
     </>
   );
 };

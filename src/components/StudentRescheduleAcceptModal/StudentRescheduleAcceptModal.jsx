@@ -16,7 +16,10 @@ import {
   CheckCircle,
   XCircle,
   ArrowRight,
+  User,
+  Eye,
 } from "@phosphor-icons/react";
+import { Avatar } from "@heroui/react";
 import { useTranslation } from "react-i18next";
 import { useThemeColors } from "../../hooks/useThemeColors";
 import { rescheduleApi } from "../../api";
@@ -27,6 +30,7 @@ export default function StudentRescheduleAcceptModal({
   isOpen,
   onClose,
   onSuccess,
+  onViewLesson,
   studentId,
 }) {
   const { t, i18n } = useTranslation();
@@ -150,13 +154,47 @@ export default function StudentRescheduleAcceptModal({
               >
                 {lesson.courseTitle || lesson.sessionTitle}
               </p>
-              <p
-                className="text-xs mt-0.5 flex items-center gap-1"
-                style={{ color: colors.text.secondary }}
-              >
-                <Clock weight="duotone" className="w-3 h-3" />
-                {formatDateTime(lesson.startTime)}
-              </p>
+              {(lesson.tutorFirstName || lesson.tutorLastName) && (
+                <p
+                  className="text-xs mt-1 flex items-center gap-1.5"
+                  style={{ color: colors.text.secondary }}
+                >
+                  <Avatar
+                    src={lesson.tutorAvatar}
+                    name={[lesson.tutorFirstName, lesson.tutorLastName]
+                      .filter(Boolean)
+                      .join(" ")}
+                    size="sm"
+                    className="w-4 h-4 text-[8px] flex-shrink-0"
+                  />
+                  {[lesson.tutorFirstName, lesson.tutorLastName]
+                    .filter(Boolean)
+                    .join(" ")}
+                </p>
+              )}
+              <div className="flex items-center justify-between mt-1 gap-2">
+                <p
+                  className="text-xs flex items-center gap-1"
+                  style={{ color: colors.text.secondary }}
+                >
+                  <Clock weight="duotone" className="w-3 h-3" />
+                  {formatDateTime(lesson.startTime)}
+                  {lesson.endTime && (
+                    <> — {formatTime(lesson.endTime)}</>
+                  )}
+                </p>
+                {onViewLesson && (
+                  <Button
+                    size="sm"
+                    variant="light"
+                    className="h-6 px-2 text-xs flex-shrink-0"
+                    startContent={<Eye className="w-3 h-3" />}
+                    onPress={onViewLesson}
+                  >
+                    {t("studentDashboard.schedule.viewDetail")}
+                  </Button>
+                )}
+              </div>
             </div>
 
             {/* Tutor note */}

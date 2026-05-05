@@ -630,17 +630,6 @@ const Schedule = () => {
     return new Date(new Date(next.startTime).getTime() - 24 * 60 * 60 * 1000);
   };
 
-  const canProposeReschedule = (lesson) => {
-    if (lesson.status === "Reschedule") return true;
-    if (lesson.status !== "Scheduled") return false;
-    return (new Date(lesson.startTime) - new Date()) / (1000 * 60 * 60) > 24;
-  };
-
-  const hasPendingOffer = (lesson) =>
-    rescheduleOffers.some(
-      (o) => o.lessonId === lesson.id && o.status === "PendingStudentChoice",
-    );
-
   const handleOpenReschedule = (lesson) => {
     setRescheduleLesson(lesson);
     if (lesson.status === "NoTutor") {
@@ -1793,45 +1782,6 @@ const Schedule = () => {
                                   </Button>
                                 )}
                               </div>
-                              {canProposeReschedule(lesson) && (
-                                <div className="mt-2">
-                                  {hasPendingOffer(lesson) ? (
-                                    <Chip
-                                      size="sm"
-                                      className="w-full justify-center h-7"
-                                      style={{
-                                        backgroundColor: `${colors.state.warning}20`,
-                                        color: colors.state.warning,
-                                        fontSize: "11px",
-                                      }}
-                                    >
-                                      {t(
-                                        "tutorDashboard.schedule.reschedule.pendingChip",
-                                      )}
-                                    </Chip>
-                                  ) : (
-                                    <Button
-                                      size="sm"
-                                      variant="flat"
-                                      className="w-full"
-                                      startContent={
-                                        <ArrowCounterClockwise
-                                          weight="duotone"
-                                          className="w-3.5 h-3.5"
-                                        />
-                                      }
-                                      onPress={(e) => {
-                                        e.stopPropagation?.();
-                                        handleOpenReschedule(lesson);
-                                      }}
-                                    >
-                                      {t(
-                                        "tutorDashboard.schedule.reschedule.proposeBtn",
-                                      )}
-                                    </Button>
-                                  )}
-                                </div>
-                              )}
                             </div>
                           );
                         })}
@@ -2073,44 +2023,6 @@ const Schedule = () => {
                                   </Button>
                                 )}
                               </div>
-                              {canProposeReschedule(lesson) && (
-                                <div className="mt-2">
-                                  {hasPendingOffer(lesson) ? (
-                                    <Chip
-                                      size="sm"
-                                      className="w-full justify-center h-7"
-                                      style={{
-                                        backgroundColor: `${colors.state.warning}20`,
-                                        color: colors.state.warning,
-                                        fontSize: "11px",
-                                      }}
-                                    >
-                                      {t(
-                                        "tutorDashboard.schedule.reschedule.pendingChip",
-                                      )}
-                                    </Chip>
-                                  ) : (
-                                    <Button
-                                      size="sm"
-                                      variant="flat"
-                                      className="w-full"
-                                      startContent={
-                                        <ArrowCounterClockwise
-                                          weight="duotone"
-                                          className="w-3.5 h-3.5"
-                                        />
-                                      }
-                                      onPress={() =>
-                                        handleOpenReschedule(lesson)
-                                      }
-                                    >
-                                      {t(
-                                        "tutorDashboard.schedule.reschedule.proposeBtn",
-                                      )}
-                                    </Button>
-                                  )}
-                                </div>
-                              )}
                             </div>
                           );
                         })}

@@ -769,6 +769,7 @@
         "requestTitle": "Request a Reschedule",
         "requestBtn": "Request Reschedule",
         "requestPendingChip": "Request Pending",
+        "yourNote": "Your note",
         "requestAvailableSlots": "Available time slots",
         "requestLoadingSlots": "Loading available slots...",
         "requestNoSlots": "No available slots in the reschedule window",

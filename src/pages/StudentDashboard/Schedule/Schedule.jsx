@@ -13,6 +13,11 @@ import {
   Avatar,
   Tabs,
   Tab,
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
   useDisclosure,
 } from "@heroui/react";
 import ScheduleSkeleton from "../../../components/ScheduleSkeleton/ScheduleSkeleton";
@@ -36,7 +41,6 @@ import {
 import calendarIllustration from "../../../assets/illustrations/calendar.avif";
 import LessonDetailModal from "../../../components/LessonDetailModal/LessonDetailModal";
 import StudentRescheduleAcceptModal from "../../../components/StudentRescheduleAcceptModal/StudentRescheduleAcceptModal";
-import StudentRescheduleRequestModal from "../../../components/StudentRescheduleRequestModal/StudentRescheduleRequestModal";
 
 const WEEKDAYS = [
   "Monday",
@@ -99,15 +103,17 @@ const Schedule = () => {
   const [offersByLesson, setOffersByLesson] = useState({});
   const [allOffers, setAllOffers] = useState([]);
 
-  // Reschedule request modal (student → tutor)
-  const {
-    isOpen: isRequestOpen,
-    onOpen: onRequestOpen,
-    onClose: onRequestClose,
-  } = useDisclosure();
-  const [requestLesson, setRequestLesson] = useState(null);
   const [studentRequestsByLesson, setStudentRequestsByLesson] = useState({});
   const [allStudentRequests, setAllStudentRequests] = useState([]);
+
+  // View existing request detail modal
+  const {
+    isOpen: isViewRequestOpen,
+    onOpen: onViewRequestOpen,
+    onClose: onViewRequestClose,
+  } = useDisclosure();
+  const [viewingRequest, setViewingRequest] = useState(null);
+  const [viewingRequestLesson, setViewingRequestLesson] = useState(null);
 
   const fetchLessons = useCallback(async () => {
     if (!user?.studentId) return;
@@ -239,17 +245,8 @@ const Schedule = () => {
     onRescheduleOpen();
   };
 
-  const canRequestReschedule = (lesson) =>
-    lesson.status === "Scheduled" &&
-    new Date(lesson.startTime) - new Date() > 24 * 60 * 60 * 1000;
-
   const hasPendingRequest = (lesson) =>
     studentRequestsByLesson[lesson.id]?.status === "Pending";
-
-  const handleOpenRequest = (lesson) => {
-    setRequestLesson(lesson);
-    onRequestOpen();
-  };
 
   const formatLessonTime = (dateStr) => {
     if (!dateStr) return "";
@@ -970,6 +967,9 @@ const Schedule = () => {
                           const lesson = lessons.find(
                             (l) => l.id === offer.lessonId,
                           );
+                          const tutorName = lesson
+                            ? tutorFullName(lesson)
+                            : null;
                           return (
                             <div
                               key={offer.id}
@@ -987,6 +987,20 @@ const Schedule = () => {
                                   lesson?.sessionTitle ||
                                   "—"}
                               </p>
+                              {tutorName && (
+                                <p
+                                  className="text-xs flex items-center gap-1"
+                                  style={{ color: colors.text.secondary }}
+                                >
+                                  <Avatar
+                                    src={lesson?.tutorAvatar}
+                                    name={tutorName}
+                                    size="sm"
+                                    className="w-4 h-4 text-[8px] flex-shrink-0"
+                                  />
+                                  {tutorName}
+                                </p>
+                              )}
                               {lesson && (
                                 <p
                                   className="text-xs flex items-center gap-1"
@@ -1001,6 +1015,17 @@ const Schedule = () => {
                                       hour: "2-digit",
                                       minute: "2-digit",
                                     },
+                                  )}
+                                  {lesson.endTime && (
+                                    <>
+                                      {" — "}
+                                      {new Date(
+                                        lesson.endTime,
+                                      ).toLocaleTimeString(dateLocale, {
+                                        hour: "2-digit",
+                                        minute: "2-digit",
+                                      })}
+                                    </>
                                   )}
                                 </p>
                               )}
@@ -1069,6 +1094,9 @@ const Schedule = () => {
                           const lesson = lessons.find(
                             (l) => l.id === req.lessonId,
                           );
+                          const tutorName = lesson
+                            ? tutorFullName(lesson)
+                            : null;
                           return (
                             <div
                               key={req.id}
@@ -1101,6 +1129,20 @@ const Schedule = () => {
                                   )}
                                 </Chip>
                               </div>
+                              {tutorName && (
+                                <p
+                                  className="text-xs flex items-center gap-1.5"
+                                  style={{ color: colors.text.secondary }}
+                                >
+                                  <Avatar
+                                    src={lesson?.tutorAvatar}
+                                    name={tutorName}
+                                    size="sm"
+                                    className="w-4 h-4 text-[8px] flex-shrink-0"
+                                  />
+                                  {tutorName}
+                                </p>
+                              )}
                               {lesson && (
                                 <p
                                   className="text-xs flex items-center gap-1"
@@ -1115,6 +1157,17 @@ const Schedule = () => {
                                       hour: "2-digit",
                                       minute: "2-digit",
                                     },
+                                  )}
+                                  {lesson.endTime && (
+                                    <>
+                                      {" — "}
+                                      {new Date(
+                                        lesson.endTime,
+                                      ).toLocaleTimeString(dateLocale, {
+                                        hour: "2-digit",
+                                        minute: "2-digit",
+                                      })}
+                                    </>
                                   )}
                                 </p>
                               )}
@@ -1163,14 +1216,33 @@ const Schedule = () => {
                                   "{req.studentNote}"
                                 </p>
                               )}
-                              <p
-                                className="text-[10px]"
-                                style={{ color: colors.text.tertiary }}
-                              >
-                                {t(
-                                  "studentDashboard.schedule.reschedule.awaitingTutor",
+                              <div className="flex items-center justify-between">
+                                <p
+                                  className="text-[10px]"
+                                  style={{ color: colors.text.tertiary }}
+                                >
+                                  {t(
+                                    "studentDashboard.schedule.reschedule.awaitingTutor",
+                                  )}
+                                </p>
+                                {lesson && (
+                                  <Button
+                                    size="sm"
+                                    variant="light"
+                                    className="h-7 px-2 text-xs"
+                                    startContent={
+                                      <Eye className="w-3 h-3" />
+                                    }
+                                    onPress={() =>
+                                      handleOpenLessonDetail(lesson)
+                                    }
+                                  >
+                                    {t(
+                                      "studentDashboard.schedule.viewDetail",
+                                    )}
+                                  </Button>
                                 )}
-                              </p>
+                              </div>
                             </div>
                           );
                         })
@@ -1364,40 +1436,36 @@ const Schedule = () => {
                                     </Button>
                                   </div>
                                 )}
-                              {canRequestReschedule(lesson) && (
+                              {hasPendingRequest(lesson) && (
                                 <div className="mt-2">
-                                  {hasPendingRequest(lesson) ? (
-                                    <Chip
-                                      size="sm"
-                                      className="w-full justify-center h-7"
-                                      style={{
-                                        backgroundColor: `${colors.state.warning}20`,
-                                        color: colors.state.warning,
-                                        fontSize: "11px",
-                                      }}
-                                    >
-                                      {t(
-                                        "studentDashboard.schedule.reschedule.requestPendingChip",
-                                      )}
-                                    </Chip>
-                                  ) : (
-                                    <Button
-                                      size="sm"
-                                      variant="flat"
-                                      className="w-full"
-                                      startContent={
-                                        <ArrowCounterClockwise
-                                          weight="duotone"
-                                          className="w-3.5 h-3.5"
-                                        />
+                                  <Button
+                                    size="sm"
+                                    className="w-full"
+                                    startContent={
+                                      <ArrowCounterClockwise
+                                        weight="bold"
+                                        className="w-3.5 h-3.5"
+                                      />
+                                    }
+                                    style={{
+                                      backgroundColor: `${colors.state.warning}20`,
+                                      color: colors.state.warning,
+                                      border: `1px solid ${colors.state.warning}30`,
+                                    }}
+                                    onPress={() => {
+                                      const req =
+                                        studentRequestsByLesson[lesson.id];
+                                      if (req) {
+                                        setViewingRequest(req);
+                                        setViewingRequestLesson(lesson);
+                                        onViewRequestOpen();
                                       }
-                                      onPress={() => handleOpenRequest(lesson)}
-                                    >
-                                      {t(
-                                        "studentDashboard.schedule.reschedule.requestBtn",
-                                      )}
-                                    </Button>
-                                  )}
+                                    }}
+                                  >
+                                    {t(
+                                      "studentDashboard.schedule.reschedule.requestPendingChip",
+                                    )}
+                                  </Button>
                                 </div>
                               )}
                             </div>
@@ -1432,21 +1500,205 @@ const Schedule = () => {
         isOpen={isRescheduleOpen}
         onClose={onRescheduleClose}
         studentId={user?.studentId}
+        onViewLesson={() => {
+          onRescheduleClose();
+          if (rescheduleLesson) handleOpenLessonDetail(rescheduleLesson);
+        }}
         onSuccess={() => {
           fetchOffers();
           fetchLessons();
         }}
       />
 
-      <StudentRescheduleRequestModal
-        lesson={requestLesson}
-        isOpen={isRequestOpen}
-        onClose={onRequestClose}
-        studentId={user?.studentId}
-        onSuccess={() => {
-          fetchStudentRequests();
-        }}
-      />
+      {/* View Request Detail Modal */}
+      <Modal
+        isOpen={isViewRequestOpen}
+        onClose={onViewRequestClose}
+        size="sm"
+        scrollBehavior="inside"
+      >
+        <ModalContent style={{ backgroundColor: colors.background.light }}>
+          {(onClose) => (
+            <>
+              <ModalHeader
+                className="flex items-center gap-2"
+                style={{ color: colors.text.primary }}
+              >
+                <ArrowCounterClockwise
+                  weight="duotone"
+                  className="w-5 h-5"
+                  style={{ color: colors.state.warning }}
+                />
+                {t("studentDashboard.schedule.reschedule.myRequestBtn")}
+              </ModalHeader>
+              <ModalBody className="pb-2">
+                {viewingRequestLesson && (
+                  <div
+                    className="p-3 rounded-xl mb-2"
+                    style={{ backgroundColor: colors.background.gray }}
+                  >
+                    <p
+                      className="text-[10px] font-semibold uppercase tracking-wide mb-1"
+                      style={{ color: colors.text.tertiary }}
+                    >
+                      {t("studentDashboard.schedule.reschedule.originalLesson")}
+                    </p>
+                    <p
+                      className="font-medium text-sm"
+                      style={{ color: colors.text.primary }}
+                    >
+                      {viewingRequestLesson.courseTitle ||
+                        viewingRequestLesson.sessionTitle}
+                    </p>
+                    {(viewingRequestLesson.tutorFirstName ||
+                      viewingRequestLesson.tutorLastName) && (
+                      <p
+                        className="text-xs mt-1 flex items-center gap-1.5"
+                        style={{ color: colors.text.secondary }}
+                      >
+                        <Avatar
+                          src={viewingRequestLesson.tutorAvatar}
+                          name={[
+                            viewingRequestLesson.tutorFirstName,
+                            viewingRequestLesson.tutorLastName,
+                          ]
+                            .filter(Boolean)
+                            .join(" ")}
+                          size="sm"
+                          className="w-4 h-4 text-[8px] flex-shrink-0"
+                        />
+                        {[
+                          viewingRequestLesson.tutorFirstName,
+                          viewingRequestLesson.tutorLastName,
+                        ]
+                          .filter(Boolean)
+                          .join(" ")}
+                      </p>
+                    )}
+                    <p
+                      className="text-xs mt-1 flex items-center gap-1"
+                      style={{ color: colors.text.secondary }}
+                    >
+                      <Clock weight="duotone" className="w-3 h-3" />
+                      {new Date(viewingRequestLesson.startTime).toLocaleString(
+                        i18n.language === "vi" ? "vi-VN" : "en-US",
+                        {
+                          weekday: "short",
+                          month: "short",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        },
+                      )}
+                      {viewingRequestLesson.endTime && (
+                        <>
+                          {" — "}
+                          {new Date(
+                            viewingRequestLesson.endTime,
+                          ).toLocaleTimeString(
+                            i18n.language === "vi" ? "vi-VN" : "en-US",
+                            { hour: "2-digit", minute: "2-digit" },
+                          )}
+                        </>
+                      )}
+                    </p>
+                  </div>
+                )}
+
+                {viewingRequest && (
+                  <div className="space-y-3">
+                    <div
+                      className="p-3 rounded-xl"
+                      style={{
+                        backgroundColor: `${colors.primary.main}10`,
+                        border: `1px solid ${colors.primary.main}20`,
+                      }}
+                    >
+                      <p
+                        className="text-xs font-semibold mb-1"
+                        style={{ color: colors.primary.main }}
+                      >
+                        {t(
+                          "studentDashboard.schedule.reschedule.requestProposed",
+                        )}
+                      </p>
+                      <p
+                        className="text-sm font-medium"
+                        style={{ color: colors.text.primary }}
+                      >
+                        {new Date(
+                          viewingRequest.proposedStartTime,
+                        ).toLocaleString(
+                          i18n.language === "vi" ? "vi-VN" : "en-US",
+                          {
+                            weekday: "short",
+                            month: "short",
+                            day: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          },
+                        )}
+                        {" – "}
+                        {new Date(
+                          viewingRequest.proposedEndTime,
+                        ).toLocaleTimeString(
+                          i18n.language === "vi" ? "vi-VN" : "en-US",
+                          { hour: "2-digit", minute: "2-digit" },
+                        )}
+                      </p>
+                    </div>
+
+                    {viewingRequest.studentNote && (
+                      <div
+                        className="p-3 rounded-xl"
+                        style={{ backgroundColor: colors.background.gray }}
+                      >
+                        <p
+                          className="text-xs font-medium mb-1"
+                          style={{ color: colors.text.tertiary }}
+                        >
+                          {t(
+                            "studentDashboard.schedule.reschedule.yourNote",
+                          )}
+                        </p>
+                        <p
+                          className="text-sm italic"
+                          style={{ color: colors.text.primary }}
+                        >
+                          "{viewingRequest.studentNote}"
+                        </p>
+                      </div>
+                    )}
+
+                    <p
+                      className="text-xs text-center"
+                      style={{ color: colors.text.tertiary }}
+                    >
+                      {t("studentDashboard.schedule.reschedule.awaitingTutor")}
+                    </p>
+                  </div>
+                )}
+              </ModalBody>
+              <ModalFooter>
+                <Button
+                  variant="flat"
+                  startContent={<Eye className="w-3.5 h-3.5" />}
+                  onPress={() => {
+                    onClose();
+                    if (viewingRequestLesson)
+                      handleOpenLessonDetail(viewingRequestLesson);
+                  }}
+                >
+                  {t("studentDashboard.schedule.viewDetail")}
+                </Button>
+                <Button variant="light" onPress={onClose}>
+                  {t("studentDashboard.schedule.reschedule.close")}
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
     </div>
   );
 };
