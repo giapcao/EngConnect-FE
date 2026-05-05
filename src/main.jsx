@@ -6,8 +6,14 @@ import { ToastProvider } from "@heroui/toast";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { Provider } from "react-redux";
 import { store } from "./store/store";
+import { clearCredentials } from "./store/slices/authSlice";
 import "./constants/colors.css";
 import "./i18n";
+
+// When the axios interceptor cannot refresh the token, dispatch a logout
+globalThis.addEventListener("auth:logout", () => {
+  store.dispatch(clearCredentials());
+});
 
 createRoot(document.getElementById("root")).render(
   <Provider store={store}>

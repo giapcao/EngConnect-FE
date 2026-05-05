@@ -49,6 +49,15 @@ import {
 import { coursesApi } from "../../../api";
 import { selectUser } from "../../../store";
 
+const CDN_BASE = "https://d20854st1o56hw.cloudfront.net/";
+// Strip duplicate CDN prefix that can occur when the backend stores a full URL
+// but another layer prepends the CDN base again.
+const normalizeResourceUrl = (url) => {
+  if (!url) return "";
+  if (url.startsWith(CDN_BASE + CDN_BASE)) return url.slice(CDN_BASE.length);
+  return url;
+};
+
 const LEVELS = [
   "Beginner",
   "Elementary",
@@ -159,9 +168,10 @@ const CreateCourse = () => {
   const [savingModule, setSavingModule] = useState(false);
   const [savingSession, setSavingSession] = useState(false);
 
-  // Save new modules/sessions in edit mode
+  // Save new modules/sessions/resources in edit mode
   const [savingNewModules, setSavingNewModules] = useState(false);
   const [savingNewSessions, setSavingNewSessions] = useState(false);
+  const [savingNewResources, setSavingNewResources] = useState(false);
   const [deletingModuleId, setDeletingModuleId] = useState(null);
   const [deletingSessionKey, setDeletingSessionKey] = useState(null);
   const [deletingResourceKey, setDeletingResourceKey] = useState(null);
@@ -419,7 +429,13 @@ const CreateCourse = () => {
   };
 
   const removeModule = (index) => {
-    if (modules.length <= 1) return;
+    // Allow removing the last new-module form if the user has reused/existing modules to fall back on
+    if (
+      modules.length <= 1 &&
+      selectedExistingModules.length === 0 &&
+      createdModules.length === 0
+    )
+      return;
     const mod = modules[index];
     if (mod.joinId) {
       setDeletedModuleIds((prev) => [...prev, mod.joinId]);
@@ -524,6 +540,26 @@ const CreateCourse = () => {
     });
     setCreatedSessions(allSessions);
     return allSessions;
+  };
+
+  const refreshCreatedResources = async () => {
+    const allSessions = Object.values(createdSessions).flat();
+    const resMap = {};
+    for (const sess of allSessions) {
+      try {
+        const rRes = await coursesApi.getAllCourseResources({
+          CourseSessionId: sess.id,
+          "page-size": 100,
+        });
+        if (rRes.isSuccess && rRes.data?.items?.length > 0) {
+          resMap[sess.id] = rRes.data.items;
+        }
+      } catch {
+        // keep existing
+      }
+    }
+    setCreatedResources(resMap);
+    return resMap;
   };
 
   // Handlers for created (saved) modules
@@ -976,6 +1012,65 @@ const CreateCourse = () => {
       );
     } finally {
       setSavingNewSessions(false);
+    }
+  };
+
+  // Save only NEW resources for the active session (edit mode)
+  const handleSaveNewResources = async () => {
+    const sessId = activeSessionForResources;
+    if (!sessId) return;
+    const newResources = (resources[sessId] || []).filter(
+      (r) => !r.id && r.title.trim(),
+    );
+    const selectedIds = selectedExistingResources[sessId] || [];
+    if (newResources.length === 0 && selectedIds.length === 0) return;
+    setSavingNewResources(true);
+    setError("");
+    try {
+      for (const r of newResources) {
+        const payload = {
+          CourseSessionId: sessId,
+          Title: r.title,
+          ResourceType: r.resourceType,
+        };
+        if (r.file) {
+          payload.ResourceFile = r.file;
+          payload.ResourceFileName = r.file.name;
+        }
+        await coursesApi.createCourseResource(payload);
+      }
+      if (selectedIds.length > 0) {
+        await coursesApi.addSessionResource({
+          courseSessionId: sessId,
+          courseResources: selectedIds.map((id) => ({ courseResourceId: id })),
+        });
+      }
+      // Reload from server to get fresh IDs/URLs
+      const refreshed = await refreshCreatedResources();
+      // Rebuild resources UI state from fresh server data
+      const resMap = {};
+      Object.entries(refreshed).forEach(([sId, resArr]) => {
+        resMap[sId] = resArr.map((r) => ({
+          id: r.id,
+          title: r.title || "",
+          resourceType: r.resourceType || "",
+          url: r.url || "",
+          file: null,
+        }));
+      });
+      setResources(resMap);
+      setSelectedExistingResources((prev) => ({ ...prev, [sessId]: [] }));
+      addToast({
+        title: t("tutorDashboard.createCourse.resourceSaved"),
+        color: "success",
+      });
+    } catch (err) {
+      setError(
+        err.response?.data?.error?.message ||
+          t("tutorDashboard.createCourse.error.createFailed"),
+      );
+    } finally {
+      setSavingNewResources(false);
     }
   };
 
@@ -1438,6 +1533,17 @@ const CreateCourse = () => {
 
   // Navigate back and populate form from created data
   const goBackToStep = (targetStep) => {
+    if (targetStep === 1 && createdModules.length > 0) {
+      // Going back to step 1 in edit mode — always reset new modules state
+      // (covers the case where goBackToStep(2) was never called, e.g. stepper
+      // jump from step 3/4 directly to step 1)
+      setModules([]);
+      setSelectedExistingModules([]);
+      setDeletedModuleIds([]);
+      setModuleOrder([]);
+      setEditingCreatedModuleId(null);
+      setCreatedModuleSnapshot(null);
+    }
     if (targetStep === 2 && createdModules.length > 0) {
       // Edit mode: keep createdModules as-is. Reset new modules.
       setModules([]);
@@ -1574,7 +1680,7 @@ const CreateCourse = () => {
         setThumbnailChanged(false);
         setDemoVideoChanged(false);
         setStep(2);
-        loadExistingModules();
+        loadExistingModules(createdCourseId);
       } else {
         // CREATE mode — price is 0 until sessions are created in Step 3
         const payload = {
@@ -1758,6 +1864,29 @@ const CreateCourse = () => {
         if (firstSession) {
           setActiveSessionForResources(firstSession.id);
           loadExistingResources(firstSession.id);
+        }
+
+        // Update total price = pricePerLesson × session count
+        const pricePerLessonNum =
+          Number(courseData.Price.replace(/\./g, "")) || 0;
+        if (pricePerLessonNum > 0 && allSess.length > 0 && createdCourseId) {
+          try {
+            await coursesApi.updateCourse(createdCourseId, {
+              title: courseData.Title,
+              shortDescription: courseData.ShortDescription,
+              fullDescription: courseData.FullDescription,
+              outcomes: courseData.Outcomes,
+              level: courseData.Level,
+              estimatedTimeLesson: Number(courseData.EstimatedTimeLesson) || 0,
+              price: pricePerLessonNum * allSess.length,
+              currency: courseData.Currency,
+              numsSessionInWeek: Number(courseData.NumsSessionInWeek) || 0,
+              isCertificate: courseData.IsCertificate,
+              categoryIds: courseData.CategoryIds,
+            });
+          } catch {
+            // Non-blocking
+          }
         }
       } finally {
         setLoading(false);
@@ -1966,7 +2095,8 @@ const CreateCourse = () => {
             allCreatedResources[sess.id] = updatedForSession;
           }
         }
-        setCreatedResources(allCreatedResources);
+        // Reload from server so goBackToStep(4) always shows correct fresh data
+        await refreshCreatedResources();
         setSelectedExistingResources({});
         setStep(5);
       } else {
@@ -2937,20 +3067,9 @@ const CreateCourse = () => {
                       number: mod.moduleNumber,
                     })}
                   </h3>
-                  {modules.length > 1 && (
-                    <Button
-                      isIconOnly
-                      variant="light"
-                      color="danger"
-                      size="sm"
-                      onPress={() =>
-                        setDeleteConfirm({ type: "module", index })
-                      }
-                    >
-                      <Trash className="w-4 h-4" />
-                    </Button>
-                  )}
-                  {modules.length <= 1 && createdModules.length > 0 && (
+                  {(modules.length > 1 ||
+                    selectedExistingModules.length > 0 ||
+                    createdModules.length > 0) && (
                     <Button
                       isIconOnly
                       variant="light"
@@ -3197,7 +3316,10 @@ const CreateCourse = () => {
               onPress={handleCreateModules}
               isLoading={loading}
               isDisabled={
-                loading || (createdModules.length === 0 && modules.length === 0)
+                loading ||
+                (createdModules.length === 0 &&
+                  modules.length === 0 &&
+                  selectedExistingModules.length === 0)
               }
               style={{
                 backgroundColor: colors.primary.main,
@@ -4170,7 +4292,7 @@ const CreateCourse = () => {
                                   {res.file
                                     ? res.file.name
                                     : res.id && res.url
-                                      ? res.url
+                                      ? normalizeResourceUrl(res.url)
                                           .split("/")
                                           .pop()
                                           .split("?")[0] || res.url
@@ -4180,7 +4302,7 @@ const CreateCourse = () => {
                                 </span>
                                 {res.id && res.url ? (
                                   <a
-                                    href={res.url}
+                                    href={normalizeResourceUrl(res.url)}
                                     target="_blank"
                                     rel="noreferrer"
                                     title={t("courses.detail.resources.open")}
@@ -4227,6 +4349,32 @@ const CreateCourse = () => {
                   >
                     {t("tutorDashboard.createCourse.addResource")}
                   </Button>
+
+                  {/* ===== SAVE NEW RESOURCES BUTTON (edit mode) ===== */}
+                  {Object.keys(createdResources).length > 0 &&
+                    ((resources[activeSessionForResources] || []).some(
+                      (r) => !r.id && r.title.trim(),
+                    ) ||
+                      (
+                        selectedExistingResources[activeSessionForResources] ||
+                        []
+                      ).length > 0) && (
+                      <Button
+                        color="success"
+                        size="lg"
+                        className="w-full text-white"
+                        onPress={handleSaveNewResources}
+                        isLoading={savingNewResources}
+                        isDisabled={savingNewResources}
+                        startContent={
+                          !savingNewResources && (
+                            <FloppyDisk className="w-5 h-5" />
+                          )
+                        }
+                      >
+                        {t("tutorDashboard.createCourse.saveNewResources")}
+                      </Button>
+                    )}
                 </>
               )}
             </>
@@ -4848,7 +4996,7 @@ const CreateCourse = () => {
                           {t("tutorDashboard.createCourse.resourceFile")}
                         </p>
                         <a
-                          href={resourceDetailData.url}
+                          href={normalizeResourceUrl(resourceDetailData.url)}
                           target="_blank"
                           rel="noreferrer"
                           className="flex items-center gap-1.5 text-sm"
@@ -4856,7 +5004,7 @@ const CreateCourse = () => {
                         >
                           <ArrowSquareOut size={16} />
                           <span className="break-all">
-                            {resourceDetailData.url}
+                            {normalizeResourceUrl(resourceDetailData.url)}
                           </span>
                         </a>
                       </div>

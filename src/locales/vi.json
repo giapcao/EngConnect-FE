@@ -753,6 +753,7 @@
         "noOffersPending": "Không có đề xuất đổi lịch nào từ gia sư",
         "noRequestsPending": "Không có yêu cầu đổi lịch nào đang chờ",
         "awaitingTutor": "Đang chờ gia sư phản hồi",
+        "awaitingStudent": "Đang chờ học viên phản hồi",
         "tutorOffered": "Gia sư đề xuất",
         "iRequested": "Tôi yêu cầu",
         "optionsProposed": "Đề xuất {{count}} thời gian",
@@ -1165,6 +1166,7 @@
       "sessionDeleted": "Đã xóa buổi học thành công",
       "saveNewModules": "Lưu Module Mới",
       "saveNewSessions": "Lưu Buổi Học Mới",
+      "saveNewResources": "Lưu Tài Nguyên Mới",
       "saved": "Đã lưu",
       "viewDetail": "Xem chi tiết",
       "moduleDetail": "Chi tiết Module",
@@ -1312,6 +1314,7 @@
         "title": "Đề xuất đổi lịch",
         "proposeBtn": "Đề xuất đổi lịch",
         "pendingChip": "Chờ xác nhận đổi lịch",
+        "tutorNote": "Ghi chú của bạn",
         "duration": "Buổi {{min}} phút",
         "windowHint": "Bạn có thể đề xuất khung giờ từ {{min}} đến {{max}}",
         "noteLabel": "Lý do đổi lịch",
@@ -1361,7 +1364,8 @@
         "reject": "Từ chối",
         "rejectNotePlaceholder": "Lý do từ chối (không bắt buộc)...",
         "confirmReject": "Xác nhận từ chối",
-        "cancelAction": "Hủy"
+        "cancelAction": "Hủy",
+        "pendingBtn": "Yêu cầu học viên"
       },
       "panel": {
         "offersBtn": "Đề xuất đổi lịch",

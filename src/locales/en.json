@@ -755,6 +755,7 @@
         "noOffersPending": "No pending offers from your tutors",
         "noRequestsPending": "No pending reschedule requests",
         "awaitingTutor": "Awaiting tutor response",
+        "awaitingStudent": "Awaiting student response",
         "tutorOffered": "Tutor Offered",
         "iRequested": "I Requested",
         "optionsProposed": "{{count}} option(s) proposed",
@@ -1167,6 +1168,7 @@
       "sessionDeleted": "Session deleted successfully",
       "saveNewModules": "Save New Modules",
       "saveNewSessions": "Save New Sessions",
+      "saveNewResources": "Save New Resources",
       "saved": "Saved",
       "viewDetail": "View Details",
       "moduleDetail": "Module Details",
@@ -1314,6 +1316,7 @@
         "title": "Propose Reschedule",
         "proposeBtn": "Propose Reschedule",
         "pendingChip": "Reschedule Pending",
+        "tutorNote": "Your note",
         "duration": "{{min}}m session",
         "windowHint": "You can propose slots from {{min}} to {{max}}",
         "noteLabel": "Reason for reschedule",
@@ -1363,7 +1366,8 @@
         "reject": "Reject",
         "rejectNotePlaceholder": "Reason for rejection (optional)...",
         "confirmReject": "Confirm Reject",
-        "cancelAction": "Cancel"
+        "cancelAction": "Cancel",
+        "pendingBtn": "Student Request"
       },
       "panel": {
         "offersBtn": "My Reschedule Offers",

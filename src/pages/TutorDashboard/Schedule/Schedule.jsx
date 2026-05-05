@@ -1744,6 +1744,24 @@ const Schedule = () => {
                                     })()}
                                 </div>
                               </div>
+                              {(() => {
+                                const hasPendOffer = rescheduleOffers.some(o => o.lessonId === lesson.id && o.status === "PendingStudentChoice");
+                                const hasPendReq = studentRequests.some(r => r.lessonId === lesson.id && r.status === "Pending");
+                                return (hasPendOffer || hasPendReq) ? (
+                                  <div className="flex flex-wrap gap-1 mt-1">
+                                    {hasPendOffer && (
+                                      <Chip size="sm" className="h-4 text-[10px]" style={{ backgroundColor: `${colors.state.warning}20`, color: colors.state.warning }}>
+                                        {t("tutorDashboard.schedule.reschedule.pendingChip")}
+                                      </Chip>
+                                    )}
+                                    {hasPendReq && (
+                                      <Chip size="sm" className="h-4 text-[10px]" style={{ backgroundColor: `${colors.primary.main}15`, color: colors.primary.main }}>
+                                        {t("tutorDashboard.schedule.studentRequest.pendingBtn")}
+                                      </Chip>
+                                    )}
+                                  </div>
+                                ) : null;
+                              })()}
                               <div className="flex items-center gap-2 mt-2">
                                 <Button
                                   size="sm"
@@ -1989,6 +2007,24 @@ const Schedule = () => {
                                     })()}
                                 </div>
                               </div>
+                              {(() => {
+                                const hasPendOffer = rescheduleOffers.some(o => o.lessonId === lesson.id && o.status === "PendingStudentChoice");
+                                const hasPendReq = studentRequests.some(r => r.lessonId === lesson.id && r.status === "Pending");
+                                return (hasPendOffer || hasPendReq) ? (
+                                  <div className="flex flex-wrap gap-1 mt-1">
+                                    {hasPendOffer && (
+                                      <Chip size="sm" className="h-4 text-[10px]" style={{ backgroundColor: `${colors.state.warning}20`, color: colors.state.warning }}>
+                                        {t("tutorDashboard.schedule.reschedule.pendingChip")}
+                                      </Chip>
+                                    )}
+                                    {hasPendReq && (
+                                      <Chip size="sm" className="h-4 text-[10px]" style={{ backgroundColor: `${colors.primary.main}15`, color: colors.primary.main }}>
+                                        {t("tutorDashboard.schedule.studentRequest.pendingBtn")}
+                                      </Chip>
+                                    )}
+                                  </div>
+                                ) : null;
+                              })()}
                               <div className="flex items-center gap-2 mt-2">
                                 <Button
                                   size="sm"
@@ -2276,26 +2312,62 @@ const Schedule = () => {
                                 lesson?.sessionTitle ||
                                 `Lesson #${offer.lessonId?.slice(0, 8)}`}
                             </p>
-                            {lesson && (
-                              <p
-                                className="text-xs flex items-center gap-1"
-                                style={{ color: colors.text.tertiary }}
-                              >
-                                <Clock
-                                  weight="duotone"
-                                  className="w-3.5 h-3.5"
+                            {(lesson?.studentFirstName || lesson?.studentLastName) && (
+                              <div className="flex items-center gap-1.5 mt-0.5">
+                                <Avatar
+                                  src={withCDN(lesson?.studentAvatar)}
+                                  name={[lesson?.studentFirstName, lesson?.studentLastName].filter(Boolean).join(" ")}
+                                  size="sm"
+                                  className="w-4 h-4 text-[8px] flex-shrink-0"
                                 />
-                                {new Date(lesson.startTime).toLocaleString(
-                                  dateLocale,
-                                  {
-                                    weekday: "short",
-                                    month: "short",
-                                    day: "numeric",
-                                    hour: "2-digit",
-                                    minute: "2-digit",
-                                  },
-                                )}
-                              </p>
+                                <p className="text-xs" style={{ color: colors.text.secondary }}>
+                                  {[lesson?.studentFirstName, lesson?.studentLastName].filter(Boolean).join(" ")}
+                                </p>
+                              </div>
+                            )}
+                            {lesson && (
+                              <div className="flex items-center justify-between gap-2">
+                                <p
+                                  className="text-xs flex items-center gap-1"
+                                  style={{ color: colors.text.tertiary }}
+                                >
+                                  <Clock
+                                    weight="duotone"
+                                    className="w-3.5 h-3.5 flex-shrink-0"
+                                  />
+                                  {new Date(lesson.startTime).toLocaleString(
+                                    dateLocale,
+                                    {
+                                      weekday: "short",
+                                      month: "short",
+                                      day: "numeric",
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                    },
+                                  )}
+                                  {lesson.endTime && (
+                                    <>
+                                      {" — "}
+                                      {new Date(lesson.endTime).toLocaleTimeString(dateLocale, {
+                                        hour: "2-digit",
+                                        minute: "2-digit",
+                                      })}
+                                    </>
+                                  )}
+                                </p>
+                                <Button
+                                  size="sm"
+                                  variant="light"
+                                  className="h-6 px-2 text-xs flex-shrink-0"
+                                  startContent={<Eye className="w-3 h-3" />}
+                                  onPress={() => {
+                                    setIsOffersModalOpen(false);
+                                    handleOpenLessonDetail(lesson);
+                                  }}
+                                >
+                                  {t("studentDashboard.schedule.viewDetail")}
+                                </Button>
+                              </div>
                             )}
                             {sortedOptions.map((opt, idx) => (
                               <div
@@ -2340,12 +2412,14 @@ const Schedule = () => {
                               </div>
                             ))}
                             {offer.tutorNote && (
-                              <p
-                                className="text-xs italic"
-                                style={{ color: colors.text.secondary }}
-                              >
-                                "{offer.tutorNote}"
-                              </p>
+                              <div className="px-2.5 py-1.5 rounded-lg" style={{ backgroundColor: colors.background.light }}>
+                                <p className="text-[10px] font-medium mb-0.5" style={{ color: colors.text.tertiary }}>
+                                  {t("tutorDashboard.schedule.reschedule.tutorNote")}
+                                </p>
+                                <p className="text-xs italic" style={{ color: colors.text.secondary }}>
+                                  "{offer.tutorNote}"
+                                </p>
+                              </div>
                             )}
                           </div>
                         );
@@ -2413,13 +2487,14 @@ const Schedule = () => {
                                 req.lessonId.slice(0, 8)}
                             </p>
                             {lesson && (
+                              <div className="flex items-center justify-between gap-2">
                               <p
                                 className="text-xs flex items-center gap-1"
                                 style={{ color: colors.text.tertiary }}
                               >
                                 <Clock
                                   weight="duotone"
-                                  className="w-3.5 h-3.5"
+                                  className="w-3.5 h-3.5 flex-shrink-0"
                                 />
                                 {t(
                                   "tutorDashboard.schedule.studentRequest.originalTime",
@@ -2434,7 +2509,29 @@ const Schedule = () => {
                                     minute: "2-digit",
                                   },
                                 )}
+                                {lesson.endTime && (
+                                  <>
+                                    {" — "}
+                                    {new Date(lesson.endTime).toLocaleTimeString(dateLocale, {
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                    })}
+                                  </>
+                                )}
                               </p>
+                              <Button
+                                size="sm"
+                                variant="light"
+                                className="h-6 px-2 text-xs flex-shrink-0"
+                                startContent={<Eye className="w-3 h-3" />}
+                                onPress={() => {
+                                  setIsRequestsModalOpen(false);
+                                  handleOpenLessonDetail(lesson);
+                                }}
+                              >
+                                {t("studentDashboard.schedule.viewDetail")}
+                              </Button>
+                              </div>
                             )}
                             <div
                               className="px-2.5 py-2 rounded-lg"
@@ -2475,12 +2572,14 @@ const Schedule = () => {
                               </p>
                             </div>
                             {req.studentNote && (
-                              <p
-                                className="text-xs italic"
-                                style={{ color: colors.text.secondary }}
-                              >
-                                "{req.studentNote}"
-                              </p>
+                              <div className="px-2.5 py-1.5 rounded-lg" style={{ backgroundColor: colors.background.light }}>
+                                <p className="text-[10px] font-medium mb-0.5" style={{ color: colors.text.tertiary }}>
+                                  {t("tutorDashboard.schedule.studentRequest.studentNote")}
+                                </p>
+                                <p className="text-xs italic" style={{ color: colors.text.secondary }}>
+                                  "{req.studentNote}"
+                                </p>
+                              </div>
                             )}
                             {isRejecting && (
                               <textarea
