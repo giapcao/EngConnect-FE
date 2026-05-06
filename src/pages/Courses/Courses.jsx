@@ -81,7 +81,7 @@ const Courses = () => {
     const fetchCourses = async () => {
       try {
         setLoading(true);
-        const params = { Status: "Published", "page-size": 50 };
+        const params = { Status: "Published", "page-size": 9 };
         if (searchQuery.trim()) params["search-term"] = searchQuery.trim();
         const res = await coursesApi.getAllCourses(params);
         const items = res?.data?.items || [];

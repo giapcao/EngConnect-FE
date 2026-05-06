@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useNotifications } from "../../../contexts/NotificationContext";
 import { useParams, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { selectUser } from "../../../store";
@@ -112,8 +113,8 @@ const StudentMyCourseDetail = () => {
   const colors = useThemeColors();
   const { theme } = useTheme();
   const user = useSelector(selectUser);
+  const { lastRecordAvailable, lastAiSummaryAvailable } = useNotifications();
   const { textareaClassNames } = useInputStyles();
-
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
   const [expandedModules, setExpandedModules] = useState({});
@@ -306,6 +307,42 @@ const StudentMyCourseDetail = () => {
     };
     fetchLessons();
   }, [user?.studentId, id]);
+
+  // Recording became available — inject URL directly without refetch
+  useEffect(() => {
+    if (!lastRecordAvailable) return;
+    setLessons((prev) =>
+      prev.map((l) =>
+        l.id === lastRecordAvailable.LessonId
+          ? {
+              ...l,
+              lessonRecord: {
+                ...(l.lessonRecord || {}),
+                recordUrl: lastRecordAvailable.RecordUrl,
+              },
+            }
+          : l,
+      ),
+    );
+  }, [lastRecordAvailable]);
+
+  // AI summary became available — refetch to get summarizeText
+  useEffect(() => {
+    if (!lastAiSummaryAvailable || !user?.studentId || !id) return;
+    const isInThisCourse = lessons.some(
+      (l) => l.id === lastAiSummaryAvailable.LessonId,
+    );
+    if (!isInThisCourse) return;
+    studentApi
+      .getLessons({
+        StudentId: user.studentId,
+        CourseId: id,
+        "page-size": 200,
+        "sort-params": "StartTime-asc",
+      })
+      .then((res) => setLessons(res?.data?.items || []))
+      .catch(console.error);
+  }, [lastAiSummaryAvailable]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!lessons.length) return;

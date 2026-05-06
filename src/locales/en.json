@@ -2889,5 +2889,20 @@
     "otherCoursesDesc": "Courses from other tutors this student is taking",
     "noEnrollments": "No enrolled courses yet.",
     "notFound": "Student profile not found."
+  },
+  "notifications": {
+    "tutorReady": {
+      "title": "Your tutor is ready!",
+      "description": "The session room is open. Join now before it starts.",
+      "join": "Join Now"
+    },
+    "recordAvailable": {
+      "title": "Recording available",
+      "description": "Your lesson recording is ready to watch."
+    },
+    "aiSummary": {
+      "title": "AI Summary ready",
+      "description": "Your lesson summary has been generated."
+    }
   }
 }

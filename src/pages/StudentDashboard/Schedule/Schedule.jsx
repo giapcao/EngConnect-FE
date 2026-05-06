@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { useNotifications } from "../../../contexts/NotificationContext";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { selectUser } from "../../../store";
@@ -66,6 +67,7 @@ const Schedule = () => {
   const navigate = useNavigate();
   const { selectClassNames } = useInputStyles();
   const user = useSelector(selectUser);
+  const { lastTutorReady } = useNotifications();
 
   const [lessons, setLessons] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -222,6 +224,18 @@ const Schedule = () => {
     [lessons, todayStr],
   );
 
+
+  // When tutor creates the room, instantly update meetingStatus so the Join button appears
+  useEffect(() => {
+    if (!lastTutorReady) return;
+    setLessons((prev) =>
+      prev.map((l) =>
+        l.id === lastTutorReady.LessonId
+          ? { ...l, meetingStatus: "Waiting" }
+          : l,
+      ),
+    );
+  }, [lastTutorReady]);
 
   const tutorFullName = (lesson) =>
     [lesson.tutorFirstName, lesson.tutorLastName].filter(Boolean).join(" ");

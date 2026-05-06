@@ -2886,5 +2886,20 @@
     "otherCoursesDesc": "Các khóa học từ gia sư khác mà học viên này đang tham gia",
     "noEnrollments": "Chưa đăng ký khóa học nào.",
     "notFound": "Không tìm thấy hồ sơ học viên."
+  },
+  "notifications": {
+    "tutorReady": {
+      "title": "Gia sư đã sẵn sàng!",
+      "description": "Phòng học đã mở. Tham gia ngay trước khi buổi học bắt đầu.",
+      "join": "Tham gia ngay"
+    },
+    "recordAvailable": {
+      "title": "Bản ghi buổi học có sẵn",
+      "description": "Bản ghi video buổi học của bạn đã sẵn sàng để xem."
+    },
+    "aiSummary": {
+      "title": "Tóm tắt AI đã sẵn sàng",
+      "description": "Bản tóm tắt buổi học của bạn đã được tạo."
+    }
   }
 }

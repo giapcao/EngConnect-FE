@@ -656,7 +656,7 @@ const TutorCourseDetail = () => {
           {t("courses.detail.backToCourses")}
         </Button>
         <div className="flex items-center gap-2">
-          {statusLower === "published" && (
+          {/* {statusLower === "published" && (
             <Button
               variant="flat"
               size="sm"
@@ -668,7 +668,7 @@ const TutorCourseDetail = () => {
             >
               {t("tutorDashboard.nav.homework")}
             </Button>
-          )}
+          )} */}
           {canEdit ? (
             isIncomplete ? (
               <Button

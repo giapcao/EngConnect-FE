@@ -7,6 +7,7 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import { Provider } from "react-redux";
 import { store } from "./store/store";
 import { clearCredentials } from "./store/slices/authSlice";
+import { NotificationProvider } from "./contexts/NotificationContext";
 import "./constants/colors.css";
 import "./i18n";
 
@@ -20,7 +21,9 @@ createRoot(document.getElementById("root")).render(
     <ThemeProvider>
       <HeroUIProvider>
         <ToastProvider placement="top-center" toastOffset={20} />
-        <App />
+        <NotificationProvider>
+          <App />
+        </NotificationProvider>
       </HeroUIProvider>
     </ThemeProvider>
   </Provider>,
