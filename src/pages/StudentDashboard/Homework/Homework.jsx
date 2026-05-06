@@ -98,8 +98,6 @@ const computeDueInfo = (dueAt, t) => {
   const now = new Date();
   const diffMs = due.getTime() - now.getTime();
   const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
-  if (diffMs < 0)
-    return { label: t("studentDashboard.homework.overdue"), tone: "danger" };
   if (diffDays === 0)
     return { label: t("studentDashboard.homework.dueToday"), tone: "danger" };
   if (diffDays === 1)
@@ -209,6 +207,12 @@ const Homework = () => {
             bg: `${colors.state.success}20`,
             color: colors.state.success,
             label: t("studentDashboard.homework.status.scored"),
+          };
+        case "OverDate":
+          return {
+            bg: `${colors.state.error}20`,
+            color: colors.state.error,
+            label: t("studentDashboard.homework.status.overDate"),
           };
         default:
           return {
@@ -491,19 +495,21 @@ const Homework = () => {
                     >
                       {chip.label}
                     </Chip>
-                    <div className="flex items-center gap-1.5">
-                      <Clock
-                        weight="bold"
-                        className="w-3.5 h-3.5"
-                        style={{ color: dueColor }}
-                      />
-                      <span
-                        className="text-xs font-semibold"
-                        style={{ color: dueColor }}
-                      >
-                        {due.label}
-                      </span>
-                    </div>
+                    {hw.status === "Assigned" && (
+                      <div className="flex items-center gap-1.5">
+                        <Clock
+                          weight="bold"
+                          className="w-3.5 h-3.5"
+                          style={{ color: dueColor }}
+                        />
+                        <span
+                          className="text-xs font-semibold"
+                          style={{ color: dueColor }}
+                        >
+                          {due.label}
+                        </span>
+                      </div>
+                    )}
                   </div>
 
                   {/* Title */}

@@ -21,6 +21,7 @@ import {
   ModalHeader,
   ModalBody,
   ModalFooter,
+  addToast,
 } from "@heroui/react";
 import { motion } from "framer-motion";
 import { useThemeColors } from "../../../hooks/useThemeColors";
@@ -69,6 +70,8 @@ import {
   studentApi,
   lessonHomeworkApi,
 } from "../../../api";
+import { supportApi } from "../../../api/supportApi";
+import StudentRefundRequestModal from "../../../components/StudentRefundRequestModal/StudentRefundRequestModal";
 import useInputStyles from "../../../hooks/useInputStyles";
 
 const formatDuration = (timeStr) => {
@@ -191,6 +194,12 @@ const StudentMyCourseDetail = () => {
     onClose: onHistoryClose,
   } = useDisclosure();
 
+  // Refund request state
+  const [refundLesson, setRefundLesson] = useState(null);
+  const [refundModalOpen, setRefundModalOpen] = useState(false);
+  const [refundNote, setRefundNote] = useState("");
+  const [submittingRefund, setSubmittingRefund] = useState(false);
+
   // Review state
   const [existingReview, setExistingReview] = useState(null);
   const [reviewLoading, setReviewLoading] = useState(true);
@@ -207,6 +216,54 @@ const StudentMyCourseDetail = () => {
 
   const toggleModule = (moduleId) => {
     setExpandedModules((prev) => ({ ...prev, [moduleId]: !prev[moduleId] }));
+  };
+
+  const handleOpenRefundRequest = (lesson) => {
+    setRefundLesson(lesson);
+    setRefundNote("");
+    setRefundModalOpen(true);
+  };
+
+  const handleSubmitRefundTicket = async () => {
+    if (!refundLesson || !user?.userId) return;
+    setSubmittingRefund(true);
+    try {
+      const lessonDate = new Date(refundLesson.startTime).toLocaleString(
+        dateLocale,
+        {
+          weekday: "short",
+          month: "short",
+          day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        },
+      );
+      const description =
+        `Student refund request for lesson where tutor was absent.\n` +
+        `Course: ${refundLesson.courseTitle || "—"}\n` +
+        `Session: ${refundLesson.sessionTitle || "—"}\n` +
+        `Date: ${lessonDate}\n` +
+        (refundNote.trim() ? `Note: ${refundNote.trim()}\n` : "") +
+        `\n[LessonId]: ${refundLesson.id}`;
+      await supportApi.createTicket({
+        createdBy: user.userId,
+        subject: `Refund Request — ${refundLesson.courseTitle || refundLesson.sessionTitle || "Lesson"} (${lessonDate})`,
+        description,
+        type: "Refund",
+      });
+      addToast({
+        title: t("studentDashboard.schedule.refundRequest.submitSuccess"),
+        color: "success",
+      });
+      setRefundModalOpen(false);
+    } catch {
+      addToast({
+        title: t("studentDashboard.schedule.refundRequest.submitFailed"),
+        color: "danger",
+      });
+    } finally {
+      setSubmittingRefund(false);
+    }
   };
 
   const toggleResources = useCallback(
@@ -267,6 +324,7 @@ const StudentMyCourseDetail = () => {
         const res = await coursesApi.getAllCourseEnrollments({
           StudentId: user.studentId,
           CourseId: id,
+          Status: "InProgress, Completed",
           "page-size": 1,
         });
         const item = res?.data?.items?.[0];
@@ -2645,6 +2703,9 @@ const StudentMyCourseDetail = () => {
         onClose={onLessonDetailClose}
         lesson={selectedLesson}
         role="student"
+        onRefundRequest={(lesson) => {
+          handleOpenRefundRequest(lesson);
+        }}
       />
 
       {/* Lesson History Modal */}
@@ -2826,6 +2887,23 @@ const StudentMyCourseDetail = () => {
         onClose={onHwSubmitClose}
         hw={selectedHwModal}
         onSubmitSuccess={handleHwSubmitSuccess}
+      />
+
+      {/* ==================== REFUND REQUEST MODAL ==================== */}
+      <StudentRefundRequestModal
+        isOpen={refundModalOpen}
+        lesson={refundLesson}
+        note={refundNote}
+        onNoteChange={setRefundNote}
+        isSubmitting={submittingRefund}
+        onClose={() => {
+          if (!submittingRefund) {
+            setRefundModalOpen(false);
+            setRefundNote("");
+            setRefundLesson(null);
+          }
+        }}
+        onSubmit={handleSubmitRefundTicket}
       />
     </div>
   );

@@ -29,6 +29,7 @@ import {
   ArrowCounterClockwise,
   Warning,
   Eye,
+  CurrencyDollar,
 } from "@phosphor-icons/react";
 import { coursesApi, rescheduleApi, studentApi } from "../../api";
 import { selectUser } from "../../store";
@@ -76,6 +77,7 @@ const LessonDetailModal = ({
   rescheduleDeadline,
   hasPendingOffer,
   onRefresh,
+  onRefundRequest,
 }) => {
   const { t, i18n } = useTranslation();
   const colors = useThemeColors();
@@ -162,10 +164,14 @@ const LessonDetailModal = ({
           rescheduleApi.getRequests({ "page-size": 200 }),
         ]);
         setRescheduleOffers(
-          offersRes.status === "fulfilled" ? offersRes.value?.data?.items || [] : [],
+          offersRes.status === "fulfilled"
+            ? offersRes.value?.data?.items || []
+            : [],
         );
         setRescheduleRequests(
-          requestsRes.status === "fulfilled" ? requestsRes.value?.data?.items || [] : [],
+          requestsRes.status === "fulfilled"
+            ? requestsRes.value?.data?.items || []
+            : [],
         );
       } else if (isStudentView && user?.studentId) {
         const [offersRes, requestsRes] = await Promise.allSettled([
@@ -906,7 +912,10 @@ const LessonDetailModal = ({
                   <Button
                     variant="flat"
                     startContent={
-                      <ArrowCounterClockwise weight="bold" className="w-4 h-4" />
+                      <ArrowCounterClockwise
+                        weight="bold"
+                        className="w-4 h-4"
+                      />
                     }
                     onPress={onViewOfferOpen}
                     style={{
@@ -997,6 +1006,24 @@ const LessonDetailModal = ({
                     {t("studentDashboard.schedule.reschedule.requestBtn")}
                   </Button>
                 ))}
+              {/* Student: request refund for NoTutor lesson */}
+              {isStudentView && lesson?.status === "NoTutor" && (
+                <Button
+                  startContent={
+                    <CurrencyDollar weight="bold" className="w-4 h-4" />
+                  }
+                  onPress={() => {
+                    onRefundRequest?.(lesson);
+                  }}
+                  style={{
+                    backgroundColor: `${colors.state.error}15`,
+                    color: colors.state.error,
+                    border: `1px solid ${colors.state.error}30`,
+                  }}
+                >
+                  {t("studentDashboard.schedule.refundRequest.requestBtn")}
+                </Button>
+              )}
               {canJoinLesson(lesson) && (
                 <Button
                   style={{
@@ -1092,43 +1119,98 @@ const LessonDetailModal = ({
       />
 
       {/* Tutor: view pending offer detail */}
-      <Modal isOpen={isViewOfferOpen} onClose={onViewOfferClose} size="sm" scrollBehavior="inside">
+      <Modal
+        isOpen={isViewOfferOpen}
+        onClose={onViewOfferClose}
+        size="sm"
+        scrollBehavior="inside"
+      >
         <ModalContent style={{ backgroundColor: colors.background.light }}>
           {(onClose) => (
             <>
-              <ModalHeader className="flex items-center gap-2" style={{ color: colors.text.primary }}>
-                <ArrowCounterClockwise weight="duotone" className="w-5 h-5" style={{ color: colors.state.warning }} />
+              <ModalHeader
+                className="flex items-center gap-2"
+                style={{ color: colors.text.primary }}
+              >
+                <ArrowCounterClockwise
+                  weight="duotone"
+                  className="w-5 h-5"
+                  style={{ color: colors.state.warning }}
+                />
                 {t("tutorDashboard.schedule.reschedule.pendingChip")}
               </ModalHeader>
               <ModalBody className="pb-2">
                 {internalTutorPendingOffer && (
                   <div className="space-y-2">
-                    {[...(internalTutorPendingOffer.options || [])].sort((a, b) => a.optionOrder - b.optionOrder).map((opt, idx, arr) => (
-                      <div key={opt.id || idx} className="px-3 py-2 rounded-xl" style={{ backgroundColor: `${colors.state.warning}10`, border: `1px solid ${colors.state.warning}30` }}>
-                        <p className="text-xs font-semibold mb-0.5" style={{ color: colors.state.warning }}>
-                          {arr.length > 1
-                            ? `${t("tutorDashboard.schedule.studentRequest.proposedTime")} ${idx + 1}`
-                            : t("tutorDashboard.schedule.studentRequest.proposedTime")}
-                        </p>
-                        <p className="text-sm" style={{ color: colors.text.primary }}>
-                          {new Date(opt.proposedStartTime).toLocaleString(dateLocale, { weekday: "short", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
-                          {" – "}
-                          {new Date(opt.proposedEndTime).toLocaleTimeString(dateLocale, { hour: "2-digit", minute: "2-digit" })}
-                        </p>
-                      </div>
-                    ))}
+                    {[...(internalTutorPendingOffer.options || [])]
+                      .sort((a, b) => a.optionOrder - b.optionOrder)
+                      .map((opt, idx, arr) => (
+                        <div
+                          key={opt.id || idx}
+                          className="px-3 py-2 rounded-xl"
+                          style={{
+                            backgroundColor: `${colors.state.warning}10`,
+                            border: `1px solid ${colors.state.warning}30`,
+                          }}
+                        >
+                          <p
+                            className="text-xs font-semibold mb-0.5"
+                            style={{ color: colors.state.warning }}
+                          >
+                            {arr.length > 1
+                              ? `${t("tutorDashboard.schedule.studentRequest.proposedTime")} ${idx + 1}`
+                              : t(
+                                  "tutorDashboard.schedule.studentRequest.proposedTime",
+                                )}
+                          </p>
+                          <p
+                            className="text-sm"
+                            style={{ color: colors.text.primary }}
+                          >
+                            {new Date(opt.proposedStartTime).toLocaleString(
+                              dateLocale,
+                              {
+                                weekday: "short",
+                                month: "short",
+                                day: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              },
+                            )}
+                            {" – "}
+                            {new Date(opt.proposedEndTime).toLocaleTimeString(
+                              dateLocale,
+                              { hour: "2-digit", minute: "2-digit" },
+                            )}
+                          </p>
+                        </div>
+                      ))}
                     {internalTutorPendingOffer.tutorNote && (
-                      <div className="px-3 py-2 rounded-xl" style={{ backgroundColor: colors.background.gray }}>
-                        <p className="text-xs font-medium mb-0.5" style={{ color: colors.text.tertiary }}>
+                      <div
+                        className="px-3 py-2 rounded-xl"
+                        style={{ backgroundColor: colors.background.gray }}
+                      >
+                        <p
+                          className="text-xs font-medium mb-0.5"
+                          style={{ color: colors.text.tertiary }}
+                        >
                           {t("tutorDashboard.schedule.reschedule.tutorNote")}
                         </p>
-                        <p className="text-sm italic" style={{ color: colors.text.primary }}>
+                        <p
+                          className="text-sm italic"
+                          style={{ color: colors.text.primary }}
+                        >
                           "{internalTutorPendingOffer.tutorNote}"
                         </p>
                       </div>
                     )}
-                    <p className="text-xs text-center" style={{ color: colors.text.tertiary }}>
-                      {t("studentDashboard.schedule.reschedule.awaitingStudent")}
+                    <p
+                      className="text-xs text-center"
+                      style={{ color: colors.text.tertiary }}
+                    >
+                      {t(
+                        "studentDashboard.schedule.reschedule.awaitingStudent",
+                      )}
                     </p>
                   </div>
                 )}
@@ -1144,41 +1226,113 @@ const LessonDetailModal = ({
       </Modal>
 
       {/* Tutor: act on student pending request */}
-      <Modal isOpen={isStudentReqOpen} onClose={() => { onStudentReqClose(); setStudentReqRejecting(false); setStudentReqRejectNote(""); }} size="sm" scrollBehavior="inside">
+      <Modal
+        isOpen={isStudentReqOpen}
+        onClose={() => {
+          onStudentReqClose();
+          setStudentReqRejecting(false);
+          setStudentReqRejectNote("");
+        }}
+        size="sm"
+        scrollBehavior="inside"
+      >
         <ModalContent style={{ backgroundColor: colors.background.light }}>
           {(onClose) => (
             <>
-              <ModalHeader className="flex items-center gap-2" style={{ color: colors.text.primary }}>
-                <ArrowCounterClockwise weight="duotone" className="w-5 h-5" style={{ color: colors.primary.main }} />
+              <ModalHeader
+                className="flex items-center gap-2"
+                style={{ color: colors.text.primary }}
+              >
+                <ArrowCounterClockwise
+                  weight="duotone"
+                  className="w-5 h-5"
+                  style={{ color: colors.primary.main }}
+                />
                 {t("tutorDashboard.schedule.panel.studentRequestsBtn")}
               </ModalHeader>
               <ModalBody className="pb-2">
                 {internalStudentReqForTutor && (
                   <div className="space-y-2">
                     {(lesson.studentFirstName || lesson.studentLastName) && (
-                      <div className="flex items-center gap-2 p-2 rounded-xl" style={{ backgroundColor: colors.background.gray }}>
-                        <Avatar src={withCDN(lesson.studentAvatar)} name={[lesson.studentFirstName, lesson.studentLastName].filter(Boolean).join(" ")} size="sm" className="w-7 h-7 flex-shrink-0" />
-                        <p className="text-sm font-medium" style={{ color: colors.text.primary }}>
-                          {[lesson.studentFirstName, lesson.studentLastName].filter(Boolean).join(" ")}
+                      <div
+                        className="flex items-center gap-2 p-2 rounded-xl"
+                        style={{ backgroundColor: colors.background.gray }}
+                      >
+                        <Avatar
+                          src={withCDN(lesson.studentAvatar)}
+                          name={[
+                            lesson.studentFirstName,
+                            lesson.studentLastName,
+                          ]
+                            .filter(Boolean)
+                            .join(" ")}
+                          size="sm"
+                          className="w-7 h-7 flex-shrink-0"
+                        />
+                        <p
+                          className="text-sm font-medium"
+                          style={{ color: colors.text.primary }}
+                        >
+                          {[lesson.studentFirstName, lesson.studentLastName]
+                            .filter(Boolean)
+                            .join(" ")}
                         </p>
                       </div>
                     )}
-                    <div className="px-3 py-2 rounded-xl" style={{ backgroundColor: `${colors.primary.main}10`, border: `1px solid ${colors.primary.main}20` }}>
-                      <p className="text-xs font-semibold mb-0.5" style={{ color: colors.primary.main }}>
-                        {t("tutorDashboard.schedule.studentRequest.proposedTime")}
+                    <div
+                      className="px-3 py-2 rounded-xl"
+                      style={{
+                        backgroundColor: `${colors.primary.main}10`,
+                        border: `1px solid ${colors.primary.main}20`,
+                      }}
+                    >
+                      <p
+                        className="text-xs font-semibold mb-0.5"
+                        style={{ color: colors.primary.main }}
+                      >
+                        {t(
+                          "tutorDashboard.schedule.studentRequest.proposedTime",
+                        )}
                       </p>
-                      <p className="text-sm" style={{ color: colors.text.primary }}>
-                        {new Date(internalStudentReqForTutor.proposedStartTime).toLocaleString(dateLocale, { weekday: "short", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                      <p
+                        className="text-sm"
+                        style={{ color: colors.text.primary }}
+                      >
+                        {new Date(
+                          internalStudentReqForTutor.proposedStartTime,
+                        ).toLocaleString(dateLocale, {
+                          weekday: "short",
+                          month: "short",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
                         {" – "}
-                        {new Date(internalStudentReqForTutor.proposedEndTime).toLocaleTimeString(dateLocale, { hour: "2-digit", minute: "2-digit" })}
+                        {new Date(
+                          internalStudentReqForTutor.proposedEndTime,
+                        ).toLocaleTimeString(dateLocale, {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
                       </p>
                     </div>
                     {internalStudentReqForTutor.studentNote && (
-                      <div className="px-3 py-2 rounded-xl" style={{ backgroundColor: colors.background.gray }}>
-                        <p className="text-xs font-medium mb-0.5" style={{ color: colors.text.tertiary }}>
-                          {t("tutorDashboard.schedule.studentRequest.studentNote")}
+                      <div
+                        className="px-3 py-2 rounded-xl"
+                        style={{ backgroundColor: colors.background.gray }}
+                      >
+                        <p
+                          className="text-xs font-medium mb-0.5"
+                          style={{ color: colors.text.tertiary }}
+                        >
+                          {t(
+                            "tutorDashboard.schedule.studentRequest.studentNote",
+                          )}
                         </p>
-                        <p className="text-sm italic" style={{ color: colors.text.primary }}>
+                        <p
+                          className="text-sm italic"
+                          style={{ color: colors.text.primary }}
+                        >
                           "{internalStudentReqForTutor.studentNote}"
                         </p>
                       </div>
@@ -1187,10 +1341,18 @@ const LessonDetailModal = ({
                       <textarea
                         rows={2}
                         value={studentReqRejectNote}
-                        onChange={(e) => setStudentReqRejectNote(e.target.value)}
-                        placeholder={t("tutorDashboard.schedule.studentRequest.rejectNotePlaceholder")}
+                        onChange={(e) =>
+                          setStudentReqRejectNote(e.target.value)
+                        }
+                        placeholder={t(
+                          "tutorDashboard.schedule.studentRequest.rejectNotePlaceholder",
+                        )}
                         className="w-full px-2 py-1.5 rounded-lg text-xs resize-none outline-none"
-                        style={{ backgroundColor: colors.background.light, color: colors.text.primary, border: `1px solid ${colors.state.warning}40` }}
+                        style={{
+                          backgroundColor: colors.background.light,
+                          color: colors.text.primary,
+                          border: `1px solid ${colors.state.warning}40`,
+                        }}
                       />
                     )}
                   </div>
@@ -1199,19 +1361,36 @@ const LessonDetailModal = ({
               <ModalFooter>
                 {!studentReqRejecting ? (
                   <>
-                    <Button variant="light" onPress={() => { setStudentReqRejecting(true); setStudentReqRejectNote(""); }} style={{ color: colors.state.error }}>
+                    <Button
+                      variant="light"
+                      onPress={() => {
+                        setStudentReqRejecting(true);
+                        setStudentReqRejectNote("");
+                      }}
+                      style={{ color: colors.state.error }}
+                    >
                       {t("tutorDashboard.schedule.studentRequest.reject")}
                     </Button>
                     <Button
                       isLoading={studentReqProcessing}
-                      style={{ backgroundColor: colors.state.success, color: "#fff" }}
+                      style={{
+                        backgroundColor: colors.state.success,
+                        color: "#fff",
+                      }}
                       onPress={async () => {
                         if (!internalStudentReqForTutor) return;
                         setStudentReqProcessing(true);
                         try {
-                          await rescheduleApi.updateRequest(internalStudentReqForTutor.id, {
-                            request: { id: internalStudentReqForTutor.id, status: "Approved", tutorNote: "" },
-                          });
+                          await rescheduleApi.updateRequest(
+                            internalStudentReqForTutor.id,
+                            {
+                              request: {
+                                id: internalStudentReqForTutor.id,
+                                status: "Approved",
+                                tutorNote: "",
+                              },
+                            },
+                          );
                           onClose();
                           fetchRescheduleData();
                           onRefresh?.();
@@ -1225,19 +1404,35 @@ const LessonDetailModal = ({
                   </>
                 ) : (
                   <>
-                    <Button variant="light" onPress={() => { setStudentReqRejecting(false); setStudentReqRejectNote(""); }}>
+                    <Button
+                      variant="light"
+                      onPress={() => {
+                        setStudentReqRejecting(false);
+                        setStudentReqRejectNote("");
+                      }}
+                    >
                       {t("tutorDashboard.schedule.studentRequest.cancelAction")}
                     </Button>
                     <Button
                       isLoading={studentReqProcessing}
-                      style={{ backgroundColor: colors.state.error, color: "#fff" }}
+                      style={{
+                        backgroundColor: colors.state.error,
+                        color: "#fff",
+                      }}
                       onPress={async () => {
                         if (!internalStudentReqForTutor) return;
                         setStudentReqProcessing(true);
                         try {
-                          await rescheduleApi.updateRequest(internalStudentReqForTutor.id, {
-                            request: { id: internalStudentReqForTutor.id, status: "Rejected", tutorNote: studentReqRejectNote },
-                          });
+                          await rescheduleApi.updateRequest(
+                            internalStudentReqForTutor.id,
+                            {
+                              request: {
+                                id: internalStudentReqForTutor.id,
+                                status: "Rejected",
+                                tutorNote: studentReqRejectNote,
+                              },
+                            },
+                          );
                           onClose();
                           setStudentReqRejecting(false);
                           setStudentReqRejectNote("");
@@ -1248,7 +1443,9 @@ const LessonDetailModal = ({
                         }
                       }}
                     >
-                      {t("tutorDashboard.schedule.studentRequest.confirmReject")}
+                      {t(
+                        "tutorDashboard.schedule.studentRequest.confirmReject",
+                      )}
                     </Button>
                   </>
                 )}

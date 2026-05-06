@@ -1236,6 +1236,11 @@ const Homework = () => {
                       backgroundColor: colors.background.input,
                       color: colors.text.primary,
                     }}
+                    min={new Date(
+                      Date.now() - new Date().getTimezoneOffset() * 60000,
+                    )
+                      .toISOString()
+                      .slice(0, 16)}
                     value={createForm.dueAt}
                     onChange={(e) =>
                       setCreateForm((p) => ({ ...p, dueAt: e.target.value }))

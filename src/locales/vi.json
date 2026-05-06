@@ -784,6 +784,23 @@
         "myRequestsTab": "Yêu cầu của tôi",
         "noRequests": "Bạn chưa gửi yêu cầu đổi lịch nào",
         "requestProposed": "Thời gian đề xuất"
+      },
+      "refundRequest": {
+        "requestBtn": "Yêu cầu hoàn tiền",
+        "modalTitle": "Yêu cầu hoàn tiền",
+        "modalHint": "Gia sư đã vắng mặt trong buổi học này. Gửi yêu cầu hoàn tiền để đội admin xét duyệt.",
+        "sessionLabel": "Buổi học",
+        "tutorLabel": "Gia sư",
+        "noteLabel": "Ghi chú (tùy chọn)",
+        "notePlaceholder": "Thêm chi tiết cho admin...",
+        "adminPreviewTitle": "Admin sẽ nhận được",
+        "adminPreviewType": "Loại ticket: Hoàn tiền",
+        "adminPreviewLesson": "Lesson ID đính kèm để xác minh",
+        "submitBtn": "Gửi yêu cầu",
+        "submitSuccess": "Đã gửi yêu cầu hoàn tiền thành công",
+        "submitFailed": "Gửi yêu cầu hoàn tiền thất bại",
+        "ticketsBtn": "Ticket Hoàn Tiền",
+        "noTickets": "Chưa có ticket hoàn tiền nào"
       }
     },
     "homework": {
@@ -806,7 +823,8 @@
         "notStarted": "Chưa bắt đầu",
         "assigned": "Cần làm",
         "submitted": "Đã nộp",
-        "scored": "Đã chấm"
+        "scored": "Đã chấm",
+        "overDate": "Quá hạn"
       },
       "empty": "Chưa có bài tập nào",
       "emptyDesc": "Gia sư chưa giao bài tập cho bạn.",
@@ -2073,10 +2091,10 @@
       "courseList": "Danh sách khóa học",
       "courseVerification": "Xác minh khóa học",
       "categories": "Danh mục",
-      "analytics": "Phân tích",
       "finance": "Tài chính",
       "ordersTransactions": "Đơn hàng & Giao dịch",
       "payroll": "Trả lương",
+      "commission": "Hoa hồng",
       "settings": "Cài đặt",
       "supportTickets": "Phiếu hỗ trợ",
       "schedule": "Lịch học",
@@ -2643,6 +2661,28 @@
         "empty": "Chưa có dữ liệu"
       }
     },
+    "commission": {
+      "title": "Cài đặt Hoa hồng",
+      "subtitle": "Cấu hình tỷ lệ hoa hồng của nền tảng trên doanh thu bán khóa học",
+      "currentRate": "Tỷ lệ hoa hồng hiện tại",
+      "applyFrom": "Hiệu lực từ",
+      "applyTo": "Hết hạn vào",
+      "noExpiry": "Không có hạn (vĩnh viễn)",
+      "howItWorksTitle": "Cách hoạt động",
+      "howItWorksDesc": "Nền tảng giữ lại {{percent}}% từ mỗi giao dịch bán khóa học. Phần còn lại được ghi nhận vào thu nhập của gia sư.",
+      "edit": "Chỉnh sửa",
+      "editTitle": "Chỉnh sửa cấu hình hoa hồng",
+      "fieldName": "Tên cấu hình",
+      "fieldPercent": "Tỷ lệ hoa hồng (%)",
+      "fieldApplyFrom": "Hiệu lực từ",
+      "cancel": "Hủy",
+      "save": "Lưu thay đổi",
+      "saveSuccess": "Cập nhật cấu hình hoa hồng thành công",
+      "saveFailed": "Cập nhật cấu hình hoa hồng thất bại",
+      "fetchFailed": "Không thể tải cấu hình hoa hồng",
+      "noConfig": "Không tìm thấy cấu hình hoa hồng",
+      "invalidPercent": "Vui lòng nhập tỷ lệ hợp lệ từ 0 đến 100"
+    },
     "supportTickets": {
       "title": "Phiếu hỗ trợ",
       "subtitle": "Quản lý và phản hồi các yêu cầu hỗ trợ từ người dùng",
@@ -2693,6 +2733,24 @@
         "alreadyApproved": "Đã duyệt — trạng thái buổi học đã cập nhật",
         "approveSuccess": "Đã đặt trạng thái buổi học thành Reschedule",
         "approveFailed": "Cập nhật trạng thái buổi học thất bại",
+        "lessonIdNotFound": "Không tìm thấy Lesson ID trong mô tả phiếu"
+      },
+      "refund": {
+        "title": "Duyệt hoàn tiền",
+        "hint": "Học viên yêu cầu hoàn tiền vì gia sư vắng mặt. Nhập mật khẩu admin để xử lý hoàn tiền cho buổi học này.",
+        "approveBtn": "Duyệt hoàn tiền",
+        "alreadyProcessed": "Đã hoàn tiền — số dư học viên được cập nhật",
+        "confirmTitle": "Xác nhận hoàn tiền",
+        "confirmHint": "Nhập mật khẩu admin để xác nhận hoàn tiền.",
+        "adminPassword": "Mật khẩu admin",
+        "passwordPlaceholder": "Mật khẩu tài khoản của bạn",
+        "noteLabel": "Ghi chú nội bộ (tùy chọn)",
+        "notePlaceholder": "Ghi chú cho lần hoàn tiền này...",
+        "passwordRequired": "Vui lòng nhập mật khẩu",
+        "invalidPassword": "Mật khẩu admin không đúng",
+        "confirmBtn": "Xác nhận hoàn tiền",
+        "approveSuccess": "Đã xử lý hoàn tiền thành công",
+        "approveFailed": "Xử lý hoàn tiền thất bại",
         "lessonIdNotFound": "Không tìm thấy Lesson ID trong mô tả phiếu"
       },
       "payout": {

@@ -79,8 +79,6 @@ const computeDueInfo = (dueAt, t) => {
   const now = new Date();
   const diffMs = due.getTime() - now.getTime();
   const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
-  if (diffMs < 0)
-    return { label: t("studentDashboard.homework.overdue"), tone: "danger" };
   if (diffDays === 0)
     return { label: t("studentDashboard.homework.dueToday"), tone: "danger" };
   if (diffDays === 1)
@@ -195,6 +193,12 @@ export default function StudentHomeworkDetailModal({
           color: colors.state.success,
           label: t("studentDashboard.homework.status.scored"),
         };
+      case "OverDate":
+        return {
+          bg: `${colors.state.error}20`,
+          color: colors.state.error,
+          label: t("studentDashboard.homework.status.overDate"),
+        };
       default:
         return {
           bg: `${colors.text.tertiary}20`,
@@ -231,7 +235,7 @@ export default function StudentHomeworkDetailModal({
             >
               {statusChip.label}
             </Chip>
-            {hw.dueAt && (
+            {hw.dueAt && hw.status === "Assigned" && (
               <div
                 className="flex items-center gap-1"
                 style={{ color: dueColor }}

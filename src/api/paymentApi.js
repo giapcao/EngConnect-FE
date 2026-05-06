@@ -50,4 +50,20 @@ export const paymentApi = {
     const response = await axiosInstance.get("/payments/v1/payroll-periods", { params });
     return response.data;
   },
+
+  // ── Student Refunds (No-Tutor) ────────────────────────
+  approveStudentRefundNoTutor: async (data) => {
+    const response = await axiosInstance.post("/payments/v1/student-refunds/no-tutor", data);
+    return response.data;
+  },
+
+  // ── Commission Configs ────────────────────────────────
+  getCommissionConfigs: async (params = {}) => {
+    const response = await axiosInstance.get("/commission-configs", { params });
+    return response.data;
+  },
+  updateCommissionConfig: async (id, data) => {
+    const response = await axiosInstance.patch(`/commission-configs/${id}`, data);
+    return response.data;
+  },
 };

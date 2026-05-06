@@ -34,7 +34,6 @@ import {
   X,
   Bell,
   CaretDown,
-  ChartLine,
   CurrencyDollar,
   GraduationCap,
   ChalkboardTeacher,
@@ -45,6 +44,7 @@ import {
   Ticket,
   CalendarDots,
   Wallet,
+  Percent,
 } from "@phosphor-icons/react";
 
 const AdminDashboardLayout = () => {
@@ -119,11 +119,6 @@ const AdminDashboardLayout = () => {
       icon: CalendarDots,
     },
     {
-      path: "/admin/analytics",
-      label: t("adminDashboard.nav.analytics"),
-      icon: ChartLine,
-    },
-    {
       submenuKey: "finance",
       label: t("adminDashboard.nav.finance"),
       icon: CurrencyDollar,
@@ -137,6 +132,11 @@ const AdminDashboardLayout = () => {
           path: "/admin/payroll",
           label: t("adminDashboard.nav.payroll"),
           icon: Wallet,
+        },
+        {
+          path: "/admin/commission",
+          label: t("adminDashboard.nav.commission"),
+          icon: Percent,
         },
       ],
     },

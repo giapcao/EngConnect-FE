@@ -67,7 +67,11 @@ const formatDate = (iso) =>
   });
 
 const formatSlots = (slots = []) =>
-  slots.map((s) => `${s.weekday} ${s.startTime.slice(0, 5)}–${s.endTime.slice(0, 5)}`).join("\n");
+  slots
+    .map(
+      (s) => `${s.weekday} ${s.startTime.slice(0, 5)}–${s.endTime.slice(0, 5)}`,
+    )
+    .join("\n");
 
 const ORDER_STATUSES = ["All", "Paid", "Pending", "Cancelled"];
 const TXN_STATUSES = ["All", "Success", "Pending", "Failed"];
@@ -90,7 +94,10 @@ const DetailRow = ({ label, children }) => {
   const colors = useThemeColors();
   return (
     <div className="flex flex-col gap-0.5">
-      <span className="text-xs font-medium uppercase tracking-wide" style={{ color: "#9CA3AF" }}>
+      <span
+        className="text-xs font-medium uppercase tracking-wide"
+        style={{ color: "#9CA3AF" }}
+      >
         {label}
       </span>
       <div className="text-sm" style={{ color: colors.text.primary }}>
@@ -140,8 +147,16 @@ const FinancialManagement = () => {
   const [studentMap, setStudentMap] = useState({});
 
   // Modals
-  const { isOpen: isOrderOpen, onOpen: onOrderOpen, onClose: onOrderClose } = useDisclosure();
-  const { isOpen: isTxnOpen, onOpen: onTxnOpen, onClose: onTxnClose } = useDisclosure();
+  const {
+    isOpen: isOrderOpen,
+    onOpen: onOrderOpen,
+    onClose: onOrderClose,
+  } = useDisclosure();
+  const {
+    isOpen: isTxnOpen,
+    onOpen: onTxnOpen,
+    onClose: onTxnClose,
+  } = useDisclosure();
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [selectedTxn, setSelectedTxn] = useState(null);
 
@@ -169,9 +184,17 @@ const FinancialManagement = () => {
       try {
         const [allOrders, paidOrders, allTxns, failedTxns] = await Promise.all([
           adminApi.getPaymentOrders({ page: 1, "page-size": 1 }),
-          adminApi.getPaymentOrders({ page: 1, "page-size": 1, Status: "Paid" }),
+          adminApi.getPaymentOrders({
+            page: 1,
+            "page-size": 1,
+            Status: "Paid",
+          }),
           adminApi.getPaymentTransactions({ page: 1, "page-size": 1 }),
-          adminApi.getPaymentTransactions({ page: 1, "page-size": 1, Status: "Failed" }),
+          adminApi.getPaymentTransactions({
+            page: 1,
+            "page-size": 1,
+            Status: "Failed",
+          }),
         ]);
         setStats({
           totalOrders: allOrders.data?.totalItems || 0,
@@ -230,27 +253,39 @@ const FinancialManagement = () => {
     }
   }, [txnsPage, txnsDebSearch, txnsStatus]);
 
-  useEffect(() => { fetchOrders(); }, [fetchOrders]);
-  useEffect(() => { fetchTxns(); }, [fetchTxns]);
+  useEffect(() => {
+    fetchOrders();
+  }, [fetchOrders]);
+  useEffect(() => {
+    fetchTxns();
+  }, [fetchTxns]);
 
   // Resolve course names
   useEffect(() => {
     if (!orders.length) return;
     const ids = [
-      ...new Set(orders.map((o) => parseMeta(o.metaData).courseId).filter(Boolean)),
+      ...new Set(
+        orders.map((o) => parseMeta(o.metaData).courseId).filter(Boolean),
+      ),
     ];
     const missing = ids.filter((id) => !courseMap[id]);
     if (!missing.length) return;
     Promise.all(
       missing.map((id) =>
-        coursesApi.getCourseById(id)
-          .then((res) => ({ id, title: res.data?.title || res.data?.name || "Unknown Course" }))
-          .catch(() => ({ id, title: "Unknown Course" }))
-      )
+        coursesApi
+          .getCourseById(id)
+          .then((res) => ({
+            id,
+            title: res.data?.title || res.data?.name || "Unknown Course",
+          }))
+          .catch(() => ({ id, title: "Unknown Course" })),
+      ),
     ).then((results) => {
       setCourseMap((prev) => {
         const next = { ...prev };
-        results.forEach(({ id, title }) => { next[id] = title; });
+        results.forEach(({ id, title }) => {
+          next[id] = title;
+        });
         return next;
       });
     });
@@ -260,14 +295,18 @@ const FinancialManagement = () => {
   useEffect(() => {
     const ids = [
       ...new Set(
-        [...orders.map((o) => o.studentId), ...txns.map((t) => t.studentId)].filter(Boolean)
+        [
+          ...orders.map((o) => o.studentId),
+          ...txns.map((t) => t.studentId),
+        ].filter(Boolean),
       ),
     ];
     const missing = ids.filter((id) => !studentMap[id]);
     if (!missing.length) return;
     Promise.all(
       missing.map((id) =>
-        adminApi.getStudentById(id)
+        adminApi
+          .getStudentById(id)
           .then((res) => {
             const u = res.data?.user;
             const name = u
@@ -275,12 +314,14 @@ const FinancialManagement = () => {
               : "Unknown";
             return { id, name };
           })
-          .catch(() => ({ id, name: "Unknown" }))
-      )
+          .catch(() => ({ id, name: "Unknown" })),
+      ),
     ).then((results) => {
       setStudentMap((prev) => {
         const next = { ...prev };
-        results.forEach(({ id, name }) => { next[id] = name; });
+        results.forEach(({ id, name }) => {
+          next[id] = name;
+        });
         return next;
       });
     });
@@ -297,22 +338,55 @@ const FinancialManagement = () => {
   };
 
   const statCards = [
-    { label: "Total Orders", value: stats.totalOrders, icon: Receipt, color: colors.primary.main, bg: colors.background.primaryLight },
-    { label: "Paid Orders", value: stats.paidOrders, icon: CheckCircle, color: colors.state.success, bg: `${colors.state.success}20` },
-    { label: "Total Transactions", value: stats.totalTxns, icon: ArrowsLeftRight, color: "#8B5CF6", bg: "#8B5CF620" },
-    { label: "Failed Transactions", value: stats.failedTxns, icon: XCircle, color: colors.state.error, bg: `${colors.state.error}20` },
+    {
+      label: "Total Orders",
+      value: stats.totalOrders,
+      icon: Receipt,
+      color: colors.primary.main,
+      bg: colors.background.primaryLight,
+    },
+    {
+      label: "Paid Orders",
+      value: stats.paidOrders,
+      icon: CheckCircle,
+      color: colors.state.success,
+      bg: `${colors.state.success}20`,
+    },
+    {
+      label: "Total Transactions",
+      value: stats.totalTxns,
+      icon: ArrowsLeftRight,
+      color: "#8B5CF6",
+      bg: "#8B5CF620",
+    },
+    {
+      label: "Failed Transactions",
+      value: stats.failedTxns,
+      icon: XCircle,
+      color: colors.state.error,
+      bg: `${colors.state.error}20`,
+    },
   ];
 
   // Derived data for selected items
   const orderMeta = selectedOrder ? parseMeta(selectedOrder.metaData) : {};
-  const txnOrder = selectedTxn ? orders.find((o) => o.id === selectedTxn.orderId) : null;
+  const txnOrder = selectedTxn
+    ? orders.find((o) => o.id === selectedTxn.orderId)
+    : null;
   const txnOrderMeta = txnOrder ? parseMeta(txnOrder.metaData) : {};
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.15 }}>
-        <h1 className="text-2xl lg:text-3xl font-bold mb-1" style={{ color: colors.text.primary }}>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.15 }}
+      >
+        <h1
+          className="text-2xl lg:text-3xl font-bold mb-1"
+          style={{ color: colors.text.primary }}
+        >
           {t("adminDashboard.finance.title")}
         </h1>
         <p style={{ color: colors.text.secondary }}>
@@ -323,16 +397,44 @@ const FinancialManagement = () => {
       {/* Stat Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {statCards.map((s, i) => (
-          <motion.div key={i} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.15, delay: i * 0.05 }}>
-            <Card shadow="none" className="border-none" style={{ backgroundColor: colors.background.light }}>
-              <CardBody className="p-5">
-                <div className="w-11 h-11 rounded-xl flex items-center justify-center mb-3" style={{ backgroundColor: s.bg }}>
-                  <s.icon className="w-5 h-5" weight="duotone" style={{ color: s.color }} />
+          <motion.div
+            key={i}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.15, delay: i * 0.05 }}
+          >
+            <Card
+              shadow="none"
+              className="border-none"
+              style={{ backgroundColor: colors.background.light }}
+            >
+              <CardBody className="p-4">
+                <div className="flex items-center gap-3">
+                  <div
+                    className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                    style={{ backgroundColor: s.bg }}
+                  >
+                    <s.icon
+                      className="w-5 h-5"
+                      weight="duotone"
+                      style={{ color: s.color }}
+                    />
+                  </div>
+                  <div className="min-w-0">
+                    <p
+                      className="text-lg font-bold truncate"
+                      style={{ color: colors.text.primary }}
+                    >
+                      {s.value.toLocaleString()}
+                    </p>
+                    <p
+                      className="text-xs truncate"
+                      style={{ color: colors.text.secondary }}
+                    >
+                      {s.label}
+                    </p>
+                  </div>
                 </div>
-                <p className="text-2xl font-bold" style={{ color: colors.text.primary }}>
-                  {s.value.toLocaleString()}
-                </p>
-                <p className="text-sm mt-1" style={{ color: colors.text.secondary }}>{s.label}</p>
               </CardBody>
             </Card>
           </motion.div>
@@ -340,8 +442,17 @@ const FinancialManagement = () => {
       </div>
 
       {/* Tabs */}
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.15 }}>
-        <Tabs selectedKey={activeTab} onSelectionChange={setActiveTab} variant="underlined" classNames={{ tabList: "gap-6", cursor: "w-full" }}>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.15 }}
+      >
+        <Tabs
+          selectedKey={activeTab}
+          onSelectionChange={setActiveTab}
+          variant="underlined"
+          classNames={{ tabList: "gap-6", cursor: "w-full" }}
+        >
           <Tab key="orders" title="Orders" />
           <Tab key="transactions" title="Transactions" />
         </Tabs>
@@ -349,24 +460,49 @@ const FinancialManagement = () => {
 
       {/* Orders Tab */}
       {activeTab === "orders" && (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.15 }} className="space-y-4">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.15 }}
+          className="space-y-4"
+        >
           <div className="flex flex-col sm:flex-row gap-3">
             <Input
               placeholder="Search orders..."
               value={ordersSearch}
               onValueChange={setOrdersSearch}
-              startContent={<MagnifyingGlass className="w-4 h-4" style={{ color: colors.text.tertiary }} />}
+              startContent={
+                <MagnifyingGlass
+                  className="w-4 h-4"
+                  style={{ color: colors.text.tertiary }}
+                />
+              }
               classNames={inputClassNames}
               className="max-w-xs"
             />
             <Dropdown>
               <DropdownTrigger>
-                <Button variant="flat" startContent={<Funnel className="w-4 h-4" />} endContent={<CaretDown className="w-4 h-4" />} style={{ color: colors.text.primary }}>
+                <Button
+                  variant="flat"
+                  startContent={<Funnel className="w-4 h-4" />}
+                  endContent={<CaretDown className="w-4 h-4" />}
+                  style={{ color: colors.text.primary }}
+                >
                   Status: {ordersStatus}
                 </Button>
               </DropdownTrigger>
-              <DropdownMenu aria-label="Order status filter" selectedKeys={[ordersStatus]} selectionMode="single" onAction={(key) => { setOrdersStatus(key); setOrdersPage(1); }}>
-                {ORDER_STATUSES.map((s) => <DropdownItem key={s}>{s}</DropdownItem>)}
+              <DropdownMenu
+                aria-label="Order status filter"
+                selectedKeys={[ordersStatus]}
+                selectionMode="single"
+                onAction={(key) => {
+                  setOrdersStatus(key);
+                  setOrdersPage(1);
+                }}
+              >
+                {ORDER_STATUSES.map((s) => (
+                  <DropdownItem key={s}>{s}</DropdownItem>
+                ))}
               </DropdownMenu>
             </Dropdown>
           </div>
@@ -379,7 +515,15 @@ const FinancialManagement = () => {
                 bottomContent={
                   ordersTotal > 1 && (
                     <div className="flex w-full justify-center py-4">
-                      <Pagination isCompact showControls showShadow color="primary" page={ordersPage} total={ordersTotal} onChange={setOrdersPage} />
+                      <Pagination
+                        isCompact
+                        showControls
+                        showShadow
+                        color="primary"
+                        page={ordersPage}
+                        total={ordersTotal}
+                        onChange={setOrdersPage}
+                      />
                     </div>
                   )
                 }
@@ -397,44 +541,76 @@ const FinancialManagement = () => {
                 <TableBody
                   isLoading={ordersLoading}
                   loadingContent={<Spinner color="primary" />}
-                  emptyContent={!ordersLoading && <span style={{ color: colors.text.tertiary }}>No orders found.</span>}
+                  emptyContent={
+                    !ordersLoading && (
+                      <span style={{ color: colors.text.tertiary }}>
+                        No orders found.
+                      </span>
+                    )
+                  }
                 >
                   {orders.map((order) => {
                     const meta = parseMeta(order.metaData);
                     return (
                       <TableRow key={order.id}>
                         <TableCell>
-                          <span className="font-mono text-sm font-semibold" style={{ color: colors.primary.main }}>
+                          <span
+                            className="font-mono text-sm font-semibold"
+                            style={{ color: colors.primary.main }}
+                          >
                             #{order.orderNo}
                           </span>
                         </TableCell>
                         <TableCell>
-                          <span className="text-sm" style={{ color: colors.text.secondary }}>
-                            {order.studentId ? studentMap[order.studentId] || "Loading..." : "—"}
+                          <span
+                            className="text-sm"
+                            style={{ color: colors.text.secondary }}
+                          >
+                            {order.studentId
+                              ? studentMap[order.studentId] || "Loading..."
+                              : "—"}
                           </span>
                         </TableCell>
                         <TableCell>
-                          <span className="text-sm font-medium" style={{ color: colors.text.primary }}>
-                            {meta.courseId ? courseMap[meta.courseId] || "Loading..." : "—"}
+                          <span
+                            className="text-sm font-medium"
+                            style={{ color: colors.text.primary }}
+                          >
+                            {meta.courseId
+                              ? courseMap[meta.courseId] || "Loading..."
+                              : "—"}
                           </span>
                         </TableCell>
                         <TableCell>
-                          <span className="text-sm" style={{ color: colors.text.secondary }}>
+                          <span
+                            className="text-sm"
+                            style={{ color: colors.text.secondary }}
+                          >
                             {formatSlots(meta.scheduleSlots) || "—"}
                           </span>
                         </TableCell>
                         <TableCell>
-                          <span className="font-medium text-sm" style={{ color: colors.text.primary }}>
+                          <span
+                            className="font-medium text-sm"
+                            style={{ color: colors.text.primary }}
+                          >
                             {formatAmount(order.totalAmount, order.currency)}
                           </span>
                         </TableCell>
                         <TableCell>
-                          <Chip size="sm" variant="flat" color={orderStatusColor(order.status)}>
+                          <Chip
+                            size="sm"
+                            variant="flat"
+                            color={orderStatusColor(order.status)}
+                          >
                             {order.status}
                           </Chip>
                         </TableCell>
                         <TableCell>
-                          <span className="text-sm" style={{ color: colors.text.tertiary }}>
+                          <span
+                            className="text-sm"
+                            style={{ color: colors.text.tertiary }}
+                          >
                             {formatDate(order.createdAt)}
                           </span>
                         </TableCell>
@@ -445,7 +621,10 @@ const FinancialManagement = () => {
                             variant="light"
                             onPress={() => handleViewOrder(order)}
                           >
-                            <Eye className="w-4 h-4" style={{ color: colors.text.secondary }} />
+                            <Eye
+                              className="w-4 h-4"
+                              style={{ color: colors.text.secondary }}
+                            />
                           </Button>
                         </TableCell>
                       </TableRow>
@@ -460,24 +639,49 @@ const FinancialManagement = () => {
 
       {/* Transactions Tab */}
       {activeTab === "transactions" && (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.15 }} className="space-y-4">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.15 }}
+          className="space-y-4"
+        >
           <div className="flex flex-col sm:flex-row gap-3">
             <Input
               placeholder="Search transactions..."
               value={txnsSearch}
               onValueChange={setTxnsSearch}
-              startContent={<MagnifyingGlass className="w-4 h-4" style={{ color: colors.text.tertiary }} />}
+              startContent={
+                <MagnifyingGlass
+                  className="w-4 h-4"
+                  style={{ color: colors.text.tertiary }}
+                />
+              }
               classNames={inputClassNames}
               className="max-w-xs"
             />
             <Dropdown>
               <DropdownTrigger>
-                <Button variant="flat" startContent={<Funnel className="w-4 h-4" />} endContent={<CaretDown className="w-4 h-4" />} style={{ color: colors.text.primary }}>
+                <Button
+                  variant="flat"
+                  startContent={<Funnel className="w-4 h-4" />}
+                  endContent={<CaretDown className="w-4 h-4" />}
+                  style={{ color: colors.text.primary }}
+                >
                   Status: {txnsStatus}
                 </Button>
               </DropdownTrigger>
-              <DropdownMenu aria-label="Transaction status filter" selectedKeys={[txnsStatus]} selectionMode="single" onAction={(key) => { setTxnsStatus(key); setTxnsPage(1); }}>
-                {TXN_STATUSES.map((s) => <DropdownItem key={s}>{s}</DropdownItem>)}
+              <DropdownMenu
+                aria-label="Transaction status filter"
+                selectedKeys={[txnsStatus]}
+                selectionMode="single"
+                onAction={(key) => {
+                  setTxnsStatus(key);
+                  setTxnsPage(1);
+                }}
+              >
+                {TXN_STATUSES.map((s) => (
+                  <DropdownItem key={s}>{s}</DropdownItem>
+                ))}
               </DropdownMenu>
             </Dropdown>
           </div>
@@ -490,7 +694,15 @@ const FinancialManagement = () => {
                 bottomContent={
                   txnsTotal > 1 && (
                     <div className="flex w-full justify-center py-4">
-                      <Pagination isCompact showControls showShadow color="primary" page={txnsPage} total={txnsTotal} onChange={setTxnsPage} />
+                      <Pagination
+                        isCompact
+                        showControls
+                        showShadow
+                        color="primary"
+                        page={txnsPage}
+                        total={txnsTotal}
+                        onChange={setTxnsPage}
+                      />
                     </div>
                   )
                 }
@@ -507,32 +719,56 @@ const FinancialManagement = () => {
                 <TableBody
                   isLoading={txnsLoading}
                   loadingContent={<Spinner color="primary" />}
-                  emptyContent={!txnsLoading && <span style={{ color: colors.text.tertiary }}>No transactions found.</span>}
+                  emptyContent={
+                    !txnsLoading && (
+                      <span style={{ color: colors.text.tertiary }}>
+                        No transactions found.
+                      </span>
+                    )
+                  }
                 >
                   {txns.map((txn) => (
                     <TableRow key={txn.id}>
                       <TableCell>
-                        <span className="font-mono text-sm font-semibold" style={{ color: colors.primary.main }}>
+                        <span
+                          className="font-mono text-sm font-semibold"
+                          style={{ color: colors.primary.main }}
+                        >
                           #{txn.orderNo}
                         </span>
                       </TableCell>
                       <TableCell>
-                        <span className="text-sm" style={{ color: colors.text.secondary }}>
-                          {txn.studentId ? studentMap[txn.studentId] || "Loading..." : "—"}
+                        <span
+                          className="text-sm"
+                          style={{ color: colors.text.secondary }}
+                        >
+                          {txn.studentId
+                            ? studentMap[txn.studentId] || "Loading..."
+                            : "—"}
                         </span>
                       </TableCell>
                       <TableCell>
-                        <span className="font-medium text-sm" style={{ color: colors.text.primary }}>
+                        <span
+                          className="font-medium text-sm"
+                          style={{ color: colors.text.primary }}
+                        >
                           {formatAmount(txn.amount, txn.currency)}
                         </span>
                       </TableCell>
                       <TableCell>
-                        <Chip size="sm" variant="flat" color={txnStatusColor(txn.status)}>
+                        <Chip
+                          size="sm"
+                          variant="flat"
+                          color={txnStatusColor(txn.status)}
+                        >
                           {txn.status}
                         </Chip>
                       </TableCell>
                       <TableCell>
-                        <span className="font-mono text-xs" style={{ color: colors.text.tertiary }}>
+                        <span
+                          className="font-mono text-xs"
+                          style={{ color: colors.text.tertiary }}
+                        >
                           {txn.bankTransactionId
                             ? txn.bankTransactionId.length > 20
                               ? txn.bankTransactionId.slice(0, 20) + "…"
@@ -541,7 +777,10 @@ const FinancialManagement = () => {
                         </span>
                       </TableCell>
                       <TableCell>
-                        <span className="text-sm" style={{ color: colors.text.tertiary }}>
+                        <span
+                          className="text-sm"
+                          style={{ color: colors.text.tertiary }}
+                        >
                           {formatDate(txn.createdAt)}
                         </span>
                       </TableCell>
@@ -552,7 +791,10 @@ const FinancialManagement = () => {
                           variant="light"
                           onPress={() => handleViewTxn(txn)}
                         >
-                          <Eye className="w-4 h-4" style={{ color: colors.text.secondary }} />
+                          <Eye
+                            className="w-4 h-4"
+                            style={{ color: colors.text.secondary }}
+                          />
                         </Button>
                       </TableCell>
                     </TableRow>
@@ -565,7 +807,12 @@ const FinancialManagement = () => {
       )}
 
       {/* Order Detail Modal */}
-      <Modal isOpen={isOrderOpen} onClose={onOrderClose} size="md" scrollBehavior="inside">
+      <Modal
+        isOpen={isOrderOpen}
+        onClose={onOrderClose}
+        size="md"
+        scrollBehavior="inside"
+      >
         <ModalContent style={{ backgroundColor: colors.background.light }}>
           <ModalHeader style={{ color: colors.text.primary }}>
             Order #{selectedOrder?.orderNo} — Details
@@ -574,7 +821,11 @@ const FinancialManagement = () => {
             {selectedOrder && (
               <div className="space-y-4">
                 <DetailRow label="Status">
-                  <Chip size="sm" variant="flat" color={orderStatusColor(selectedOrder.status)}>
+                  <Chip
+                    size="sm"
+                    variant="flat"
+                    color={orderStatusColor(selectedOrder.status)}
+                  >
                     {selectedOrder.status}
                   </Chip>
                 </DetailRow>
@@ -583,9 +834,13 @@ const FinancialManagement = () => {
                   <button
                     className="flex items-center gap-1 font-medium hover:underline"
                     style={{ color: colors.primary.main }}
-                    onClick={() => { onOrderClose(); navigate(`/admin/students/${selectedOrder.studentId}`); }}
+                    onClick={() => {
+                      onOrderClose();
+                      navigate(`/admin/students/${selectedOrder.studentId}`);
+                    }}
                   >
-                    {studentMap[selectedOrder.studentId] || selectedOrder.studentId}
+                    {studentMap[selectedOrder.studentId] ||
+                      selectedOrder.studentId}
                     <ArrowSquareOut className="w-3.5 h-3.5" />
                   </button>
                 </DetailRow>
@@ -595,7 +850,10 @@ const FinancialManagement = () => {
                     <button
                       className="flex items-center gap-1 font-medium hover:underline"
                       style={{ color: colors.primary.main }}
-                      onClick={() => { onOrderClose(); navigate(`/admin/courses/${orderMeta.courseId}`); }}
+                      onClick={() => {
+                        onOrderClose();
+                        navigate(`/admin/courses/${orderMeta.courseId}`);
+                      }}
                     >
                       {courseMap[orderMeta.courseId] || orderMeta.courseId}
                       <ArrowSquareOut className="w-3.5 h-3.5" />
@@ -607,22 +865,38 @@ const FinancialManagement = () => {
                   <DetailRow label="Schedule">
                     <div className="space-y-0.5">
                       {orderMeta.scheduleSlots.map((s, i) => (
-                        <div key={i}>{s.weekday} — {s.startTime.slice(0, 5)} – {s.endTime.slice(0, 5)}</div>
+                        <div key={i}>
+                          {s.weekday} — {s.startTime.slice(0, 5)} –{" "}
+                          {s.endTime.slice(0, 5)}
+                        </div>
                       ))}
                     </div>
                   </DetailRow>
                 )}
 
                 <DetailRow label="Amount">
-                  <span className="font-semibold">{formatAmount(selectedOrder.totalAmount, selectedOrder.currency)}</span>
+                  <span className="font-semibold">
+                    {formatAmount(
+                      selectedOrder.totalAmount,
+                      selectedOrder.currency,
+                    )}
+                  </span>
                 </DetailRow>
 
-                <DetailRow label="Description">{selectedOrder.description || "—"}</DetailRow>
+                <DetailRow label="Description">
+                  {selectedOrder.description || "—"}
+                </DetailRow>
 
-                <DetailRow label="Payment Reference">{selectedOrder.paymentReference || "—"}</DetailRow>
+                <DetailRow label="Payment Reference">
+                  {selectedOrder.paymentReference || "—"}
+                </DetailRow>
 
-                <DetailRow label="Created At">{formatDate(selectedOrder.createdAt)}</DetailRow>
-                <DetailRow label="Updated At">{formatDate(selectedOrder.updatedAt)}</DetailRow>
+                <DetailRow label="Created At">
+                  {formatDate(selectedOrder.createdAt)}
+                </DetailRow>
+                <DetailRow label="Updated At">
+                  {formatDate(selectedOrder.updatedAt)}
+                </DetailRow>
               </div>
             )}
           </ModalBody>
@@ -630,7 +904,12 @@ const FinancialManagement = () => {
       </Modal>
 
       {/* Transaction Detail Modal */}
-      <Modal isOpen={isTxnOpen} onClose={onTxnClose} size="md" scrollBehavior="inside">
+      <Modal
+        isOpen={isTxnOpen}
+        onClose={onTxnClose}
+        size="md"
+        scrollBehavior="inside"
+      >
         <ModalContent style={{ backgroundColor: colors.background.light }}>
           <ModalHeader style={{ color: colors.text.primary }}>
             Transaction — Order #{selectedTxn?.orderNo}
@@ -639,7 +918,11 @@ const FinancialManagement = () => {
             {selectedTxn && (
               <div className="space-y-4">
                 <DetailRow label="Status">
-                  <Chip size="sm" variant="flat" color={txnStatusColor(selectedTxn.status)}>
+                  <Chip
+                    size="sm"
+                    variant="flat"
+                    color={txnStatusColor(selectedTxn.status)}
+                  >
                     {selectedTxn.status}
                   </Chip>
                 </DetailRow>
@@ -648,7 +931,10 @@ const FinancialManagement = () => {
                   <button
                     className="flex items-center gap-1 font-medium hover:underline"
                     style={{ color: colors.primary.main }}
-                    onClick={() => { onTxnClose(); navigate(`/admin/students/${selectedTxn.studentId}`); }}
+                    onClick={() => {
+                      onTxnClose();
+                      navigate(`/admin/students/${selectedTxn.studentId}`);
+                    }}
                   >
                     {studentMap[selectedTxn.studentId] || selectedTxn.studentId}
                     <ArrowSquareOut className="w-3.5 h-3.5" />
@@ -660,26 +946,40 @@ const FinancialManagement = () => {
                     <button
                       className="flex items-center gap-1 font-medium hover:underline"
                       style={{ color: colors.primary.main }}
-                      onClick={() => { onTxnClose(); navigate(`/admin/courses/${txnOrderMeta.courseId}`); }}
+                      onClick={() => {
+                        onTxnClose();
+                        navigate(`/admin/courses/${txnOrderMeta.courseId}`);
+                      }}
                     >
-                      {courseMap[txnOrderMeta.courseId] || txnOrderMeta.courseId}
+                      {courseMap[txnOrderMeta.courseId] ||
+                        txnOrderMeta.courseId}
                       <ArrowSquareOut className="w-3.5 h-3.5" />
                     </button>
                   </DetailRow>
                 )}
 
                 <DetailRow label="Amount">
-                  <span className="font-semibold">{formatAmount(selectedTxn.amount, selectedTxn.currency)}</span>
+                  <span className="font-semibold">
+                    {formatAmount(selectedTxn.amount, selectedTxn.currency)}
+                  </span>
                 </DetailRow>
 
                 <DetailRow label="Bank Transaction ID">
-                  <span className="font-mono text-xs">{selectedTxn.bankTransactionId || "—"}</span>
+                  <span className="font-mono text-xs">
+                    {selectedTxn.bankTransactionId || "—"}
+                  </span>
                 </DetailRow>
 
-                <DetailRow label="Payment Method">{selectedTxn.paymentMethod || "—"}</DetailRow>
+                <DetailRow label="Payment Method">
+                  {selectedTxn.paymentMethod || "—"}
+                </DetailRow>
 
-                <DetailRow label="Created At">{formatDate(selectedTxn.createdAt)}</DetailRow>
-                <DetailRow label="Updated At">{formatDate(selectedTxn.updatedAt)}</DetailRow>
+                <DetailRow label="Created At">
+                  {formatDate(selectedTxn.createdAt)}
+                </DetailRow>
+                <DetailRow label="Updated At">
+                  {formatDate(selectedTxn.updatedAt)}
+                </DetailRow>
               </div>
             )}
           </ModalBody>

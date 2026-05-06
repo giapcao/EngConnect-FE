@@ -786,6 +786,23 @@
         "myRequestsTab": "My Requests",
         "noRequests": "You haven't sent any reschedule requests yet",
         "requestProposed": "Proposed time"
+      },
+      "refundRequest": {
+        "requestBtn": "Request Refund",
+        "modalTitle": "Request Refund",
+        "modalHint": "Your tutor was absent for this lesson. Submit a refund request and our admin team will review it.",
+        "sessionLabel": "Session",
+        "tutorLabel": "Tutor",
+        "noteLabel": "Note (optional)",
+        "notePlaceholder": "Add any details for the admin...",
+        "adminPreviewTitle": "Admin will receive",
+        "adminPreviewType": "Ticket type: Refund",
+        "adminPreviewLesson": "Lesson ID attached for verification",
+        "submitBtn": "Submit Request",
+        "submitSuccess": "Refund request submitted successfully",
+        "submitFailed": "Failed to submit refund request",
+        "ticketsBtn": "Refund Tickets",
+        "noTickets": "No refund tickets yet"
       }
     },
     "homework": {
@@ -808,7 +825,8 @@
         "notStarted": "Not started",
         "assigned": "To do",
         "submitted": "Submitted",
-        "scored": "Scored"
+        "scored": "Scored",
+        "overDate": "Overdue"
       },
       "empty": "No homework yet",
       "emptyDesc": "Your tutor hasn't assigned any homework.",
@@ -2075,10 +2093,10 @@
       "courseList": "Course List",
       "courseVerification": "Course Verification",
       "categories": "Categories",
-      "analytics": "Analytics",
       "finance": "Finance",
       "ordersTransactions": "Orders & Transactions",
       "payroll": "Payroll",
+      "commission": "Commission",
       "settings": "Settings",
       "supportTickets": "Support Tickets",
       "schedule": "Schedule",
@@ -2646,6 +2664,28 @@
         "empty": "No earnings data"
       }
     },
+    "commission": {
+      "title": "Commission Settings",
+      "subtitle": "Configure the platform's commission rate on course sales",
+      "currentRate": "Current Commission Rate",
+      "applyFrom": "Effective From",
+      "applyTo": "Expires On",
+      "noExpiry": "No expiry (permanent)",
+      "howItWorksTitle": "How it works",
+      "howItWorksDesc": "The platform retains {{percent}}% of each course sale. The remaining amount is credited to the tutor's earnings.",
+      "edit": "Edit",
+      "editTitle": "Edit Commission Config",
+      "fieldName": "Config Name",
+      "fieldPercent": "Commission Percentage",
+      "fieldApplyFrom": "Effective From",
+      "cancel": "Cancel",
+      "save": "Save Changes",
+      "saveSuccess": "Commission config updated successfully",
+      "saveFailed": "Failed to update commission config",
+      "fetchFailed": "Failed to load commission config",
+      "noConfig": "No commission config found",
+      "invalidPercent": "Please enter a valid percentage between 0 and 100"
+    },
     "supportTickets": {
       "title": "Support Tickets",
       "subtitle": "Manage and respond to user support requests",
@@ -2696,6 +2736,24 @@
         "alreadyApproved": "Reschedule approved — lesson status updated",
         "approveSuccess": "Lesson status set to Reschedule",
         "approveFailed": "Failed to update lesson status",
+        "lessonIdNotFound": "Could not find Lesson ID in ticket description"
+      },
+      "refund": {
+        "title": "Refund Approval",
+        "hint": "Student requested a refund because the tutor was absent. Enter your admin password to process the refund for this lesson.",
+        "approveBtn": "Approve Refund",
+        "alreadyProcessed": "Refund processed — student balance updated",
+        "confirmTitle": "Confirm Refund",
+        "confirmHint": "Enter your admin password to authorize this refund.",
+        "adminPassword": "Admin Password",
+        "passwordPlaceholder": "Your account password",
+        "noteLabel": "Internal note (optional)",
+        "notePlaceholder": "Note for this refund...",
+        "passwordRequired": "Password is required",
+        "invalidPassword": "Incorrect admin password",
+        "confirmBtn": "Confirm Refund",
+        "approveSuccess": "Refund processed successfully",
+        "approveFailed": "Failed to process refund",
         "lessonIdNotFound": "Could not find Lesson ID in ticket description"
       },
       "payout": {

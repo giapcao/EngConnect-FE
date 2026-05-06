@@ -6,6 +6,7 @@ import {
   Input,
   Select,
   SelectItem,
+  Pagination,
 } from "@heroui/react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -60,6 +61,9 @@ const Courses = () => {
   const [allCourses, setAllCourses] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const PAGE_SIZE = 9;
   const { inputClassNames, selectClassNames } = useInputStyles();
 
   // Sidebar collapse states
@@ -76,18 +80,29 @@ const Courses = () => {
       .catch(() => {});
   }, []);
 
-  // Fetch courses whenever searchQuery changes (uses API search-term)
+  // Reset to page 1 when search/filters change
+  useEffect(() => {
+    setPage(1);
+  }, [searchQuery, selectedCategories, selectedLevels, sortBy]);
+
+  // Fetch courses whenever searchQuery or page changes (uses API search-term)
   useEffect(() => {
     const fetchCourses = async () => {
       try {
         setLoading(true);
-        const params = { Status: "Published", "page-size": 9 };
+        const params = {
+          Status: "Published",
+          "page-size": PAGE_SIZE,
+          page: page,
+        };
         if (searchQuery.trim()) params["search-term"] = searchQuery.trim();
         const res = await coursesApi.getAllCourses(params);
         const items = res?.data?.items || [];
+        const total = res?.data?.totalItems ?? items.length;
         setCourses(items);
-        // Keep unfiltered snapshot for sidebar counts (no search-term)
-        if (!searchQuery.trim()) setAllCourses(items);
+        setTotalPages(Math.max(1, Math.ceil(total / PAGE_SIZE)));
+        // Keep unfiltered snapshot for sidebar counts (no search-term, page 1)
+        if (!searchQuery.trim() && page === 1) setAllCourses(items);
       } catch (err) {
         console.error("Failed to fetch courses:", err);
       } finally {
@@ -95,27 +110,7 @@ const Courses = () => {
       }
     };
     fetchCourses();
-  }, [searchQuery]);
-
-  // Count courses per category (based on unfiltered allCourses for sidebar)
-  const categoryCounts = useMemo(() => {
-    const counts = {};
-    allCourses.forEach((c) => {
-      c.courseCategories?.forEach((cat) => {
-        counts[cat.categoryId] = (counts[cat.categoryId] || 0) + 1;
-      });
-    });
-    return counts;
-  }, [allCourses]);
-
-  // Count courses per level (based on unfiltered allCourses for sidebar)
-  const levelCounts = useMemo(() => {
-    const counts = {};
-    allCourses.forEach((c) => {
-      if (c.level) counts[c.level] = (counts[c.level] || 0) + 1;
-    });
-    return counts;
-  }, [allCourses]);
+  }, [searchQuery, page]);
 
   const toggleCategory = (id) => {
     setSelectedCategories((prev) => {
@@ -656,42 +651,60 @@ const Courses = () => {
                   )}
                 </div>
               ) : (
-                <motion.div
-                  key={
-                    [...selectedCategories].join() +
-                    [...selectedLevels].join() +
-                    searchQuery +
-                    sortBy
-                  }
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.3 }}
-                  className="grid sm:grid-cols-2 xl:grid-cols-3 gap-5"
-                >
-                  {filteredCourses.map((course, i) => (
-                    <motion.div
-                      key={course.id}
-                      initial={{ opacity: 0, y: 16 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.35, delay: i * 0.04 }}
-                      whileHover={{
-                        y: -6,
-                        transition: {
-                          type: "spring",
-                          stiffness: 400,
-                          damping: 25,
-                        },
-                      }}
-                    >
-                      <CourseCard
-                        course={course}
-                        showCategory={true}
-                        showTutorInfo={true}
-                        style={{ backgroundColor: colors.background.gray }}
+                <>
+                  <motion.div
+                    key={
+                      [...selectedCategories].join() +
+                      [...selectedLevels].join() +
+                      searchQuery +
+                      sortBy +
+                      page
+                    }
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.3 }}
+                    className="grid sm:grid-cols-2 xl:grid-cols-3 gap-5"
+                  >
+                    {filteredCourses.map((course, i) => (
+                      <motion.div
+                        key={course.id}
+                        initial={{ opacity: 0, y: 16 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.35, delay: i * 0.04 }}
+                        whileHover={{
+                          y: -6,
+                          transition: {
+                            type: "spring",
+                            stiffness: 400,
+                            damping: 25,
+                          },
+                        }}
+                      >
+                        <CourseCard
+                          course={course}
+                          showCategory={true}
+                          showTutorInfo={true}
+                          style={{ backgroundColor: colors.background.gray }}
+                        />
+                      </motion.div>
+                    ))}
+                  </motion.div>
+
+                  {totalPages > 1 && (
+                    <div className="flex justify-center mt-8">
+                      <Pagination
+                        total={totalPages}
+                        page={page}
+                        onChange={(p) => {
+                          setPage(p);
+                          window.scrollTo({ top: 0, behavior: "smooth" });
+                        }}
+                        color="primary"
+                        showControls
                       />
-                    </motion.div>
-                  ))}
-                </motion.div>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </div>
