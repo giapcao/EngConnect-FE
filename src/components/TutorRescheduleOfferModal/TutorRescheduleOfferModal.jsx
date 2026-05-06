@@ -165,16 +165,22 @@ export default function TutorRescheduleOfferModal({
   const confirmGapTime = (gap) => {
     if (!activeTime) return;
     const start = new Date(activeTime);
-    if (start < gap.start || start > gap.latestStart) return;
+    if (start < gap.start || start > gap.latestStart) {
+      setError(t("tutorDashboard.schedule.reschedule.errorOutOfWindow"));
+      return;
+    }
+    const startISO = start.toISOString();
+    const isDuplicate = selectedOptions.some((o) => o.startISO === startISO);
+    if (isDuplicate) {
+      setError(t("tutorDashboard.schedule.reschedule.errorDuplicate"));
+      return;
+    }
     const end = new Date(start.getTime() + durationMs);
     setSelectedOptions([
       ...selectedOptions,
-      {
-        id: Date.now(),
-        startISO: start.toISOString(),
-        endISO: end.toISOString(),
-      },
+      { id: Date.now(), startISO, endISO: end.toISOString() },
     ]);
+    setError(null);
     setActiveGapKey(null);
     setActiveTime("");
   };

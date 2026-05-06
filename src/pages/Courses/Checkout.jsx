@@ -10,6 +10,7 @@ import {
   ArrowLeft,
   Clock,
   Warning,
+  XCircle,
   Check,
   CalendarDots,
 } from "@phosphor-icons/react";
@@ -37,6 +38,8 @@ const Checkout = () => {
   const [selectedSlots, setSelectedSlots] = useState([]);
   const [paymentMethod] = useState("Payos");
   const [submitting, setSubmitting] = useState(false);
+  const [checkoutError, setCheckoutError] = useState("");
+  const [conflictSlotIds, setConflictSlotIds] = useState(new Set());
 
   const requiredSlots = course?.numsSessionInWeek || 0;
 
@@ -85,7 +88,30 @@ const Checkout = () => {
     fetchData();
   }, [fetchData]);
 
+  const parseConflictSlots = (message, slotList) => {
+    // message: "...: Thursday 15:30 - 17:00; Tuesday 14:30 - 16:00."
+    const afterColon = message.split(": ").slice(1).join(": ").replace(/\.$/, "");
+    const parts = afterColon.split("; ").map((s) => s.trim()).filter(Boolean);
+    const ids = new Set();
+    parts.forEach((part) => {
+      // part: "Thursday 15:30 - 17:00"
+      const match = part.match(/^(\w+)\s+(\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})$/);
+      if (!match) return;
+      const [, weekday, start, end] = match;
+      const found = slotList.find(
+        (s) =>
+          s.weekday === weekday &&
+          s.startTime.slice(0, 5) === start &&
+          s.endTime.slice(0, 5) === end,
+      );
+      if (found) ids.add(found.id);
+    });
+    return ids;
+  };
+
   const toggleSlot = (slotId) => {
+    setCheckoutError("");
+    setConflictSlotIds(new Set());
     setSelectedSlots((prev) => {
       if (prev.includes(slotId)) {
         return prev.filter((id) => id !== slotId);
@@ -101,6 +127,7 @@ const Checkout = () => {
 
   const handleCheckout = async () => {
     if (!canCheckout) return;
+    setCheckoutError("");
     setSubmitting(true);
     try {
       const res = await studentApi.checkout({
@@ -110,9 +137,15 @@ const Checkout = () => {
       });
       if (res.isSuccess && res.data?.paymentLink) {
         window.location.href = res.data.paymentLink;
+      } else if (!res.isSuccess) {
+        setCheckoutError(res.error?.message || "Checkout failed.");
       }
     } catch (err) {
-      console.error("Checkout failed:", err);
+      const msg = err.response?.data?.error?.message;
+      setCheckoutError(msg || "Checkout failed. Please try again.");
+      if (msg) {
+        setConflictSlotIds(parseConflictSlots(msg, schedules));
+      }
     } finally {
       setSubmitting(false);
     }
@@ -264,6 +297,34 @@ const Checkout = () => {
                     </div>
                   )}
 
+                  {/* Conflict error banner */}
+                  {checkoutError && conflictSlotIds.size > 0 && (
+                    <div
+                      className="flex items-start gap-2 p-3 rounded-lg mb-4 text-sm"
+                      style={{
+                        backgroundColor: `${colors.state.error}15`,
+                        color: colors.state.error,
+                        border: `1px solid ${colors.state.error}30`,
+                      }}
+                    >
+                      <XCircle weight="fill" className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                      <span>{t("checkout.slotConflict")}</span>
+                    </div>
+                  )}
+                  {checkoutError && conflictSlotIds.size === 0 && (
+                    <div
+                      className="flex items-start gap-2 p-3 rounded-lg mb-4 text-sm"
+                      style={{
+                        backgroundColor: `${colors.state.error}15`,
+                        color: colors.state.error,
+                        border: `1px solid ${colors.state.error}30`,
+                      }}
+                    >
+                      <Warning weight="fill" className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                      <span>{checkoutError}</span>
+                    </div>
+                  )}
+
                   {/* Schedule slots grouped by day */}
                   {groupedSchedules.length === 0 ? (
                     <div
@@ -287,9 +348,8 @@ const Checkout = () => {
                           </h3>
                           <div className="flex flex-wrap gap-2">
                             {slots.map((slot) => {
-                              const isSelected = selectedSlots.includes(
-                                slot.id,
-                              );
+                              const isSelected = selectedSlots.includes(slot.id);
+                              const isConflict = conflictSlotIds.has(slot.id);
                               const isDisabled =
                                 !isSelected &&
                                 selectedSlots.length >= requiredSlots;
@@ -301,31 +361,39 @@ const Checkout = () => {
                                   onClick={() => toggleSlot(slot.id)}
                                   className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all"
                                   style={{
-                                    backgroundColor: isSelected
+                                    backgroundColor: isConflict
+                                      ? `${colors.state.error}18`
+                                      : isSelected
                                       ? colors.primary.main
                                       : colors.background.light,
-                                    color: isSelected
+                                    color: isConflict
+                                      ? colors.state.error
+                                      : isSelected
                                       ? "#fff"
                                       : colors.text.primary,
-                                    border: isSelected
+                                    border: isConflict
+                                      ? `2px solid ${colors.state.error}`
+                                      : isSelected
                                       ? `2px solid ${colors.primary.main}`
                                       : `1px solid ${colors.border.light}`,
                                     opacity: isDisabled ? 0.5 : 1,
-                                    cursor: isDisabled
-                                      ? "not-allowed"
-                                      : "pointer",
+                                    cursor: isDisabled ? "not-allowed" : "pointer",
                                   }}
                                 >
-                                  {isSelected ? (
+                                  {isConflict ? (
+                                    <XCircle weight="fill" className="w-4 h-4" />
+                                  ) : isSelected ? (
                                     <Check weight="bold" className="w-4 h-4" />
                                   ) : (
-                                    <Clock
-                                      weight="duotone"
-                                      className="w-4 h-4"
-                                    />
+                                    <Clock weight="duotone" className="w-4 h-4" />
                                   )}
                                   {formatTime(slot.startTime)} —{" "}
                                   {formatTime(slot.endTime)}
+                                  {isConflict && (
+                                    <span className="text-xs font-semibold ml-1">
+                                      {t("checkout.conflict")}
+                                    </span>
+                                  )}
                                 </button>
                               );
                             })}

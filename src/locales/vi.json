@@ -1326,13 +1326,15 @@
         "submit": "Gửi đề xuất",
         "errorNote": "Vui lòng nhập lý do đổi lịch",
         "errorMin": "Vui lòng thêm ít nhất một khung giờ",
+        "errorDuplicate": "Khung giờ này đã có trong danh sách đề xuất",
+        "errorOutOfWindow": "Thời gian đã chọn nằm ngoài khung giờ khả dụng",
         "errorInvalid": "Một hoặc nhiều khung giờ không hợp lệ",
         "errorRange": "Tất cả khung giờ phải nằm trong khoảng cho phép",
         "errorSubmit": "Gửi đề xuất thất bại. Vui lòng thử lại.",
         "deadlineUntil": "Hạn đổi lịch: {{date}}",
         "deadlinePassed": "Đã hết hạn đổi lịch",
         "loadingSlots": "Đang kiểm tra lịch trống...",
-        "selectedTimes": "Giờ đề xuất ({{count}}/3)",
+        "selectedTimes": "Giờ đề xuất ({{count}}/3, tối thiểu 1)",
         "noSelected": "Chưa chọn giờ nào — hãy chọn từ các khung giờ bên dưới",
         "availableWindows": "Khung giờ trống",
         "noAvailableSlots": "Không có khung giờ trống trong khoảng này",
@@ -1926,7 +1928,9 @@
     "slotsSelected": "Khung giờ đã chọn",
     "payment": "Thanh toán",
     "total": "Tổng cộng",
-    "pay": "Thanh toán ngay"
+    "pay": "Thanh toán ngay",
+    "slotConflict": "Một số khung giờ bạn chọn bị trùng với lịch hiện tại. Vui lòng bỏ chọn các khung giờ được đánh dấu và chọn khung giờ khác.",
+    "conflict": "Trùng lịch"
   },
   "paymentReturn": {
     "verifying": "Đang xác minh thanh toán...",

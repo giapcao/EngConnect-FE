@@ -13,6 +13,15 @@ import {
   Spinner,
   Tooltip,
   useDisclosure,
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  Input,
+  Textarea,
+  Select,
+  SelectItem,
 } from "@heroui/react";
 import { motion } from "framer-motion";
 import { useThemeColors } from "../../../hooks/useThemeColors";
@@ -35,9 +44,12 @@ import {
   VideoCamera,
   Play,
   FileText,
+  Plus,
+  Star,
+  ClipboardText,
 } from "@phosphor-icons/react";
 import { selectUser } from "../../../store";
-import { studentApi, coursesApi } from "../../../api";
+import { studentApi, coursesApi, lessonHomeworkApi } from "../../../api";
 import LessonDetailModal from "../../../components/LessonDetailModal/LessonDetailModal";
 import VideoModal from "../../../components/VideoModal/VideoModal";
 import LessonSummaryModal from "../../../components/LessonSummaryModal/LessonSummaryModal";
@@ -115,6 +127,7 @@ const canJoinLesson = (lesson) =>
   (lesson.status !== "Completed" &&
     lesson.status !== "NoStudent" &&
     lesson.status !== "NoTutor" &&
+    lesson.status !== "Settled" &&
     lesson.status !== "Cancelled" &&
     lesson.meetingStatus !== "Ended");
 
@@ -156,6 +169,23 @@ const StudentDetail = () => {
     onClose: onSummaryClose,
   } = useDisclosure();
   const [summaryText, setSummaryText] = useState("");
+
+  // Homework modal
+  const {
+    isOpen: isHwOpen,
+    onOpen: onHwOpen,
+    onClose: onHwClose,
+  } = useDisclosure();
+  const [hwLesson, setHwLesson] = useState(null);
+  const [hwItems, setHwItems] = useState([]);
+  const [hwLoading, setHwLoading] = useState(false);
+  const [showCreateHw, setShowCreateHw] = useState(false);
+  const [newHw, setNewHw] = useState({ courseResourceId: "", description: "", maxScore: "100", dueAt: "" });
+  const [hwSubmitting, setHwSubmitting] = useState(false);
+  const [gradingId, setGradingId] = useState(null);
+  const [gradeForm, setGradeForm] = useState({ score: "", tutorFeedback: "" });
+  const [sessionResources, setSessionResources] = useState([]);
+  const [resourcesLoading, setResourcesLoading] = useState(false);
 
   useEffect(() => {
     const fetchStudent = async () => {
@@ -251,15 +281,14 @@ const StudentDetail = () => {
       case "Scheduled":
         return colors.primary.main;
       case "Completed":
+      case "Settled":
         return colors.state.success;
       case "Cancelled":
+      case "NoStudent":
+      case "NoTutor":
         return colors.state.error;
       case "InProgress":
         return colors.state.warning;
-      case "NoStudent":
-        return colors.state.error;
-      case "NoTutor":
-        return colors.state.error;
       default:
         return colors.text.secondary;
     }
@@ -270,6 +299,7 @@ const StudentDetail = () => {
       case "Scheduled":
         return t("tutorDashboard.schedule.lessonStatus.scheduled");
       case "Completed":
+      case "Settled":
         return t("tutorDashboard.schedule.lessonStatus.completed");
       case "Cancelled":
         return t("tutorDashboard.schedule.lessonStatus.cancelled");
@@ -326,6 +356,96 @@ const StudentDetail = () => {
     setSummaryText(lesson.lessonScript?.summarizeText || "");
     setSelectedLesson(lesson);
     onSummaryOpen();
+  };
+
+  const fetchHwItems = async (lessonId) => {
+    setHwLoading(true);
+    try {
+      const res = await lessonHomeworkApi.getHomeworks({ LessonId: lessonId, "page-size": 50 });
+      setHwItems(res?.data?.items || []);
+    } catch {
+      setHwItems([]);
+    } finally {
+      setHwLoading(false);
+    }
+  };
+
+  const openHomework = async (lesson) => {
+    setHwLesson(lesson);
+    setShowCreateHw(false);
+    setGradingId(null);
+    setGradeForm({ score: "", tutorFeedback: "" });
+    setNewHw({ courseResourceId: "", description: "", maxScore: "100", dueAt: "" });
+    setSessionResources([]);
+    onHwOpen();
+    fetchHwItems(lesson.id);
+    // Load resources for the session
+    if (lesson.sessionId) {
+      setResourcesLoading(true);
+      try {
+        const res = await coursesApi.getAllCourseResources({
+          CourseSessionId: lesson.sessionId,
+          "page-size": 100,
+        });
+        setSessionResources(res?.data?.items || []);
+      } catch {
+        setSessionResources([]);
+      } finally {
+        setResourcesLoading(false);
+      }
+    }
+  };
+
+  const handleCreateHw = async () => {
+    if (!newHw.description.trim()) return;
+    setHwSubmitting(true);
+    try {
+      await lessonHomeworkApi.createHomework({
+        lessonId: hwLesson.id,
+        courseResourceId: newHw.courseResourceId || undefined,
+        description: newHw.description,
+        maxScore: Number(newHw.maxScore) || 100,
+        dueAt: newHw.dueAt ? new Date(newHw.dueAt).toISOString() : null,
+      });
+      setShowCreateHw(false);
+      setNewHw({ courseResourceId: "", description: "", maxScore: "100", dueAt: "" });
+      fetchHwItems(hwLesson.id);
+    } catch {
+      // ignore
+    } finally {
+      setHwSubmitting(false);
+    }
+  };
+
+  const handleAssign = async (hw) => {
+    try {
+      await lessonHomeworkApi.assignHomework(hw.id);
+      fetchHwItems(hwLesson.id);
+    } catch {
+      // ignore
+    }
+  };
+
+  const handleGrade = async (hw) => {
+    setHwSubmitting(true);
+    try {
+      await lessonHomeworkApi.gradeHomework(hw.id, Number(gradeForm.score), gradeForm.tutorFeedback);
+      setGradingId(null);
+      fetchHwItems(hwLesson.id);
+    } catch {
+      // ignore
+    } finally {
+      setHwSubmitting(false);
+    }
+  };
+
+  const hwStatusProps = (status) => {
+    switch (status) {
+      case "Assigned": return { color: colors.state.warning, label: "Assigned" };
+      case "Submitted": return { color: colors.primary.main, label: "Submitted" };
+      case "Scored": return { color: colors.state.success, label: "Scored" };
+      default: return { color: colors.text.tertiary, label: "Draft" };
+    }
   };
 
   const myEnrollments = enrollments.filter(
@@ -859,38 +979,31 @@ const StudentDetail = () => {
 
                                       {/* Action row */}
                                       <div
-                                        className="flex items-center gap-2 px-4 py-2 flex-wrap"
+                                        className="flex items-center gap-2 px-4 py-2 flex-wrap border-t"
                                         style={{
-                                          backgroundColor:
-                                            colors.background.gray,
+                                          borderColor: colors.border.medium,
+                                          backgroundColor: colors.border.medium,
                                         }}
                                       >
-                                        {/* Homework badge */}
-                                        {hwList.length > 0 && (
-                                          <Chip
-                                            size="sm"
-                                            className="h-6"
-                                            startContent={
-                                              <NotePencil
-                                                weight="duotone"
-                                                className="w-3 h-3 ml-0.5"
-                                                style={{
-                                                  color: colors.primary.main,
-                                                }}
-                                              />
-                                            }
-                                            style={{
-                                              backgroundColor: `${colors.primary.main}15`,
-                                              color: colors.primary.main,
-                                              fontSize: "11px",
-                                            }}
-                                          >
-                                            {hwList.length}{" "}
-                                            {t(
-                                              "studentDashboard.homework.title",
-                                            )}
-                                          </Chip>
-                                        )}
+                                        {/* Homework badge — clickable */}
+                                        <button
+                                          type="button"
+                                          className="flex items-center gap-1 rounded-full px-2 py-0.5 transition-opacity hover:opacity-80"
+                                          style={{
+                                            backgroundColor: `${colors.primary.main}15`,
+                                            color: colors.primary.main,
+                                            fontSize: "11px",
+                                          }}
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            openHomework(primary);
+                                          }}
+                                        >
+                                          <NotePencil weight="duotone" className="w-3 h-3" />
+                                          {hwList.length > 0
+                                            ? `${hwList.length} ${t("studentDashboard.homework.title")}`
+                                            : `+ ${t("studentDashboard.homework.title")}`}
+                                        </button>
 
                                         <div className="flex items-center gap-1.5 ml-auto">
                                           {/* Start / Join button */}
@@ -1093,6 +1206,232 @@ const StudentDetail = () => {
         onClose={onSummaryClose}
         summarizeText={summaryText}
       />
+
+      {/* Homework Modal */}
+      <Modal
+        isOpen={isHwOpen}
+        onClose={onHwClose}
+        size="lg"
+        scrollBehavior="inside"
+      >
+        <ModalContent style={{ backgroundColor: colors.background.light }}>
+          <ModalHeader style={{ color: colors.text.primary }}>
+            <div className="flex items-center gap-2">
+              <ClipboardText weight="duotone" className="w-5 h-5" style={{ color: colors.primary.main }} />
+              <span>{hwLesson?.sessionTitle || "Homework"}</span>
+            </div>
+          </ModalHeader>
+          <ModalBody className="pb-2">
+            {hwLoading ? (
+              <div className="flex justify-center py-8"><Spinner color="primary" /></div>
+            ) : (
+              <div className="space-y-3">
+                {hwItems.length === 0 && !showCreateHw && (
+                  <p className="text-sm text-center py-4" style={{ color: colors.text.tertiary }}>
+                    No homework assigned for this lesson yet.
+                  </p>
+                )}
+                {hwItems.map((hw) => {
+                  const sp = hwStatusProps(hw.status);
+                  const isGrading = gradingId === hw.id;
+                  return (
+                    <div
+                      key={hw.id}
+                      className="rounded-xl p-3 border space-y-2"
+                      style={{ borderColor: colors.border.medium, backgroundColor: colors.background.gray }}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="text-sm font-medium flex-1" style={{ color: colors.text.primary }}>
+                          {hw.description || "—"}
+                        </p>
+                        <Chip
+                          size="sm"
+                          style={{ backgroundColor: `${sp.color}20`, color: sp.color, fontSize: "10px" }}
+                        >
+                          {sp.label}
+                        </Chip>
+                      </div>
+                      <div className="flex items-center gap-3 text-xs" style={{ color: colors.text.tertiary }}>
+                        {hw.dueAt && <span>Due: {new Date(hw.dueAt).toLocaleDateString()}</span>}
+                        <span>Max: {hw.maxScore} pts</span>
+                        {hw.score != null && <span style={{ color: colors.state.success }}>Score: {hw.score}</span>}
+                      </div>
+                      {hw.submissionUrl && (
+                        <a
+                          href={hw.submissionUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-xs flex items-center gap-1 hover:underline"
+                          style={{ color: colors.primary.main }}
+                        >
+                          <ArrowSquareOut className="w-3 h-3" /> View submission
+                        </a>
+                      )}
+                      {hw.tutorFeedback && (
+                        <p className="text-xs italic" style={{ color: colors.text.secondary }}>
+                          Feedback: {hw.tutorFeedback}
+                        </p>
+                      )}
+                      <div className="flex gap-2 pt-1">
+                        {hw.status === "NotStarted" && (
+                          <Button size="sm" color="primary" variant="flat" onPress={() => handleAssign(hw)}>
+                            Assign to Student
+                          </Button>
+                        )}
+                        {hw.status === "Submitted" && !isGrading && (
+                          <Button
+                            size="sm"
+                            variant="flat"
+                            style={{ backgroundColor: `${colors.state.success}20`, color: colors.state.success }}
+                            startContent={<Star weight="fill" className="w-3.5 h-3.5" />}
+                            onPress={() => {
+                              setGradingId(hw.id);
+                              setGradeForm({ score: "", tutorFeedback: "" });
+                            }}
+                          >
+                            Grade
+                          </Button>
+                        )}
+                        {isGrading && (
+                          <div className="w-full space-y-2">
+                            <div className="flex gap-2">
+                              <Input
+                                size="sm"
+                                type="number"
+                                placeholder={`Score / ${hw.maxScore}`}
+                                value={gradeForm.score}
+                                onChange={(e) => setGradeForm((p) => ({ ...p, score: e.target.value }))}
+                                className="w-28"
+                              />
+                              <Input
+                                size="sm"
+                                placeholder="Feedback (optional)"
+                                value={gradeForm.tutorFeedback}
+                                onChange={(e) => setGradeForm((p) => ({ ...p, tutorFeedback: e.target.value }))}
+                                className="flex-1"
+                              />
+                            </div>
+                            <div className="flex gap-2">
+                              <Button size="sm" color="success" isLoading={hwSubmitting} onPress={() => handleGrade(hw)}>
+                                Submit Grade
+                              </Button>
+                              <Button size="sm" variant="light" onPress={() => setGradingId(null)}>
+                                Cancel
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {/* Create form */}
+                {showCreateHw && (
+                  <div className="rounded-xl p-4 border space-y-4" style={{ borderColor: colors.border.medium }}>
+                    <p className="text-sm font-semibold" style={{ color: colors.text.primary }}>Create homework</p>
+
+                    {/* Lesson resource */}
+                    <div className="space-y-1">
+                      <p className="text-sm" style={{ color: colors.text.secondary }}>Lesson resource</p>
+                      {resourcesLoading ? (
+                        <Spinner size="sm" color="primary" />
+                      ) : sessionResources.length === 0 ? (
+                        <p className="text-xs italic" style={{ color: colors.text.tertiary }}>
+                          This lesson has no resources. Add one in the course first.
+                        </p>
+                      ) : (
+                        <Select
+                          size="sm"
+                          placeholder="Select a resource (optional)"
+                          selectedKeys={newHw.courseResourceId ? [newHw.courseResourceId] : []}
+                          onSelectionChange={(keys) =>
+                            setNewHw((p) => ({ ...p, courseResourceId: Array.from(keys)[0] || "" }))
+                          }
+                        >
+                          {sessionResources.map((r) => (
+                            <SelectItem key={r.id}>{r.title || r.url || r.id}</SelectItem>
+                          ))}
+                        </Select>
+                      )}
+                      <p className="text-xs" style={{ color: colors.text.tertiary }}>
+                        Attach a resource from this lesson as reference material
+                      </p>
+                    </div>
+
+                    {/* Description */}
+                    <div className="space-y-1">
+                      <p className="text-sm" style={{ color: colors.text.secondary }}>Description</p>
+                      <Textarea
+                        size="sm"
+                        placeholder="Describe what the student needs to do"
+                        value={newHw.description}
+                        onChange={(e) => setNewHw((p) => ({ ...p, description: e.target.value }))}
+                        minRows={2}
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <p className="text-sm" style={{ color: colors.text.secondary }}>Max score</p>
+                        <Input
+                          size="sm"
+                          type="number"
+                          placeholder="100"
+                          value={newHw.maxScore}
+                          onChange={(e) => setNewHw((p) => ({ ...p, maxScore: e.target.value }))}
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-sm" style={{ color: colors.text.secondary }}>Due date</p>
+                        <Input
+                          size="sm"
+                          type="datetime-local"
+                          value={newHw.dueAt}
+                          onChange={(e) => setNewHw((p) => ({ ...p, dueAt: e.target.value }))}
+                        />
+                        <p className="text-xs" style={{ color: colors.text.tertiary }}>Leave empty for no deadline</p>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-2">
+                      <Button size="sm" color="primary" isLoading={hwSubmitting} onPress={handleCreateHw}>
+                        Create
+                      </Button>
+                      <Button size="sm" variant="light" onPress={() => setShowCreateHw(false)}>Cancel</Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </ModalBody>
+          <ModalFooter className="pt-2 flex items-center justify-between">
+            <button
+              type="button"
+              className="text-xs flex items-center gap-1 hover:underline"
+              style={{ color: colors.text.tertiary }}
+              onClick={() => { onHwClose(); navigate("/tutor/homework"); }}
+            >
+              <ArrowSquareOut className="w-3 h-3" />
+              View all in Homework page
+            </button>
+            <div className="flex gap-2">
+              {!showCreateHw && (
+                <Button
+                  size="sm"
+                  variant="flat"
+                  color="primary"
+                  startContent={<Plus className="w-3.5 h-3.5" />}
+                  onPress={() => setShowCreateHw(true)}
+                >
+                  Add Homework
+                </Button>
+              )}
+              <Button size="sm" variant="light" onPress={onHwClose}>Close</Button>
+            </div>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </div>
   );
 };

@@ -1328,13 +1328,15 @@
         "submit": "Send Proposal",
         "errorNote": "Please explain the reason for rescheduling",
         "errorMin": "Please add at least one time option",
+        "errorDuplicate": "This time slot is already in your proposed list",
+        "errorOutOfWindow": "Selected time is outside the available window",
         "errorInvalid": "One or more time options are invalid",
         "errorRange": "All options must be within the allowed window",
         "errorSubmit": "Failed to submit proposal. Please try again.",
         "deadlineUntil": "Reschedule by {{date}}",
         "deadlinePassed": "Reschedule window closed",
         "loadingSlots": "Checking available times...",
-        "selectedTimes": "Proposed times ({{count}}/3)",
+        "selectedTimes": "Proposed times ({{count}}/3, min 1)",
         "noSelected": "No times selected yet — pick from the windows below",
         "availableWindows": "Available time windows",
         "noAvailableSlots": "No available time windows in this period",
@@ -1928,7 +1930,9 @@
     "slotsSelected": "Slots selected",
     "payment": "Payment",
     "total": "Total",
-    "pay": "Pay Now"
+    "pay": "Pay Now",
+    "slotConflict": "Some selected slots conflict with your existing schedule. Please deselect the highlighted slots and choose different ones.",
+    "conflict": "Conflict"
   },
   "paymentReturn": {
     "verifying": "Verifying your payment...",
